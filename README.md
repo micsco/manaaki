@@ -34,10 +34,10 @@ The app runs at `http://localhost:3000`. Vite automatically proxies all `/api` r
 
 ## Environment variables
 
-| Variable | Required | Description |
-|---|---|---|
-| `VITE_MEALIE_BASE_URL` | Yes | URL of your Mealie instance. Used by the Vite dev server proxy. |
-| `VITE_MEALIE_API_TOKEN` | Yes | Long-lived API token from your Mealie profile. |
+| Variable                | Required | Description                                                     |
+| ----------------------- | -------- | --------------------------------------------------------------- |
+| `VITE_MEALIE_BASE_URL`  | Yes      | URL of your Mealie instance. Used by the Vite dev server proxy. |
+| `VITE_MEALIE_API_TOKEN` | Yes      | Long-lived API token from your Mealie profile.                  |
 
 Both variables are baked into the JS bundle at build time by Vite. Do not commit your `.env` file.
 
@@ -71,6 +71,7 @@ pnpm build   # outputs to dist/
 ```
 
 The build output is a static SPA — just a `/_shell.html` and assets. You need a reverse proxy that:
+
 1. Forwards `/api/*` to your Mealie instance
 2. Falls back to `/_shell.html` for everything else
 
@@ -121,12 +122,12 @@ recipes.example.com {
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `pnpm dev` | Start dev server at `http://localhost:3000` with Mealie API proxy |
-| `pnpm build` | Production build — outputs static files to `dist/` |
-| `pnpm preview` | Preview the production build locally |
-| `pnpm generate` | Regenerate the Mealie API client from the live OpenAPI spec |
+| Command         | Description                                                       |
+| --------------- | ----------------------------------------------------------------- |
+| `pnpm dev`      | Start dev server at `http://localhost:3000` with Mealie API proxy |
+| `pnpm build`    | Production build — outputs static files to `dist/`                |
+| `pnpm preview`  | Preview the production build locally                              |
+| `pnpm generate` | Regenerate the Mealie API client from the live OpenAPI spec       |
 
 ---
 

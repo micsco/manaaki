@@ -23,13 +23,13 @@ not replace or modify the Mealie backend.
 
 ### Stack
 
-| Layer | Choice | Rationale |
-|---|---|---|
-| Framework | [TanStack Start](https://tanstack.com/start) (SPA mode) | File-based routing, type-safe links, no SSR overhead |
-| Language | TypeScript | End-to-end type safety |
-| API client | [@hey-api/openapi-ts](https://heyapi.dev) + Fetch | Generated from Mealie's OpenAPI spec, zero runtime overhead |
-| HTTP | Native `fetch` | No extra dependency; built into every modern browser |
-| Package manager | pnpm | Fast, disk-efficient |
+| Layer           | Choice                                                  | Rationale                                                   |
+| --------------- | ------------------------------------------------------- | ----------------------------------------------------------- |
+| Framework       | [TanStack Start](https://tanstack.com/start) (SPA mode) | File-based routing, type-safe links, no SSR overhead        |
+| Language        | TypeScript                                              | End-to-end type safety                                      |
+| API client      | [@hey-api/openapi-ts](https://heyapi.dev) + Fetch       | Generated from Mealie's OpenAPI spec, zero runtime overhead |
+| HTTP            | Native `fetch`                                          | No extra dependency; built into every modern browser        |
+| Package manager | pnpm                                                    | Fast, disk-efficient                                        |
 
 ### Rendering mode
 
@@ -149,8 +149,8 @@ pnpm generate
 
 ### Environment variables
 
-| Variable | Default | Description |
-|---|---|---|
+| Variable               | Default                 | Description                     |
+| ---------------------- | ----------------------- | ------------------------------- |
 | `VITE_MEALIE_BASE_URL` | `http://localhost:9000` | Base URL of the Mealie instance |
 
 > Variables are baked in at build time by Vite. For production, set them in your deployment
@@ -160,10 +160,10 @@ pnpm generate
 
 ## Decisions log
 
-| Decision | Rationale |
-|---|---|
-| SPA mode over SSR | No server needed; CDN-deployable; Mealie API handles all data |
-| hey-api codegen | Types always in sync with the Mealie spec; eliminates hand-written boilerplate |
-| Native fetch (no axios/ky) | Zero extra dependency; sufficient for our use case |
-| In-memory token storage | Protects against XSS; session-scoped is acceptable for a kitchen app |
-| Generated code committed | Makes the repo self-contained; avoids network calls in CI builds |
+| Decision                   | Rationale                                                                      |
+| -------------------------- | ------------------------------------------------------------------------------ |
+| SPA mode over SSR          | No server needed; CDN-deployable; Mealie API handles all data                  |
+| hey-api codegen            | Types always in sync with the Mealie spec; eliminates hand-written boilerplate |
+| Native fetch (no axios/ky) | Zero extra dependency; sufficient for our use case                             |
+| In-memory token storage    | Protects against XSS; session-scoped is acceptable for a kitchen app           |
+| Generated code committed   | Makes the repo self-contained; avoids network calls in CI builds               |
