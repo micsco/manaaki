@@ -1,0 +1,16 @@
+dist/**
+build/**
+node_modules/**
+.claude/**
+.agents/**
+.devin/**
+src/api/generated/**/*
+src/routeTree.gen.ts
+pnpm-lock.yaml
+*.config.js
+*.config.ts
+.github/**
+.vscode/**
+scripts/**
+.devin/**
+*.config.local.json
