@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { getCurrentUser } from '../api/auth'
 
 export const Route = createFileRoute('/')({
@@ -14,6 +14,9 @@ function Home() {
       <h1>What's Cookin'?</h1>
       <p>
         Signed in as <strong>{user.fullName ?? user.username}</strong> ({user.email})
+      </p>
+      <p>
+        <Link to="/recipes">Browse recipes →</Link>
       </p>
     </main>
   )
