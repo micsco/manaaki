@@ -1,0 +1,181 @@
+import { type ChangeEvent, type ReactNode, useCallback, useState } from "react"
+import type { RecipeStep } from "../api/generated/types.gen"
+import { useSessionStorage } from "../hooks/useSessionStorage"
+
+interface InstructionStepProps {
+  step: RecipeStep
+  index: number
+  recipeId: string
+  isCookMode?: boolean
+  className?: string
+}
+
+/**
+ * Instruction step component with checkbox completion and collapse functionality.
+ * When checked, the step collapses to a single line with a ticked number indicator.
+ */
+export function InstructionStep({
+  step,
+  index,
+  recipeId,
+  isCookMode = false,
+  className = "",
+}: InstructionStepProps) {
+  // Create a unique key for this step in this recipe
+  const storageKey = `recipe-${recipeId}-step-${index}`
+  
+  const [isChecked, setIsChecked] = useSessionStorage(storageKey, false)
+  const [isExpanded, setIsExpanded] = useState(!isChecked) // Start collapsed if checked
+
+  const handleToggle = useCallback(() => {
+    const newCheckedState = !isChecked
+    setIsChecked(newCheckedState)
+    
+    // Auto-collapse when checked, expand when unchecked
+    if (newCheckedState) {
+      setIsExpanded(false)
+    } else {
+      setIsExpanded(true)
+    }
+  }, [isChecked, setIsChecked])
+
+  const handleCheckboxChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation()
+    const newCheckedState = e.target.checked
+    setIsChecked(newCheckedState)
+    
+    // Auto-collapse when checked, expand when unchecked
+    if (newCheckedState) {
+      setIsExpanded(false)
+    } else {
+      setIsExpanded(true)
+    }
+  }, [setIsChecked])
+
+  const toggleExpanded = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (isChecked) {
+      setIsExpanded(!isExpanded)
+    }
+  }, [isChecked, isExpanded])
+
+  const stepNumber = index + 1
+
+  return (
+    <li 
+      className={`group relative border border-gray-800 rounded-lg transition-all duration-300 ${
+        isChecked 
+          ? "bg-gray-800/30 border-gray-700" 
+          : "bg-gray-900/50 hover:bg-gray-800/50"
+      } ${className}`}
+    >
+      <div 
+        className={`flex items-start gap-4 p-4 cursor-pointer transition-all duration-300 ${
+          isChecked && !isExpanded ? "py-3" : ""
+        }`}
+        onClick={handleToggle}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            handleToggle()
+          }
+        }}
+      >
+        {/* Step number / checkbox */}
+        <div className="relative flex-shrink-0">
+          <input
+            type="checkbox"
+            checked={isChecked}
+            onChange={handleCheckboxChange}
+            className="sr-only"
+            aria-label={`Mark step ${stepNumber} as complete`}
+          />
+          <div 
+            className={`
+              flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-all duration-300
+              ${isChecked 
+                ? "bg-green-600 text-white border-2 border-green-500" 
+                : "bg-orange-600 text-white border-2 border-orange-500"
+              }
+              ${isChecked ? "hover:border-green-400" : "hover:border-orange-400"}
+            `}
+          >
+            {isChecked ? (
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            ) : (
+              stepNumber
+            )}
+          </div>
+        </div>
+
+        {/* Step content */}
+        <div className="flex-1 min-w-0">
+          {/* Step title */}
+          {step.title && (
+            <h3 
+              className={`
+                font-semibold mb-2 transition-all duration-300
+                ${isChecked 
+                  ? "text-gray-400 line-through" 
+                  : isCookMode ? "text-gray-100 text-lg" : "text-gray-200"
+                }
+              `}
+            >
+              {step.title}
+            </h3>
+          )}
+
+          {/* Step text - collapsible */}
+          <div 
+            className={`
+              transition-all duration-300 overflow-hidden
+              ${isChecked && !isExpanded ? "max-h-0 opacity-0" : "max-h-96 opacity-100"}
+            `}
+          >
+            <p 
+              className={`
+                leading-relaxed transition-all duration-300
+                ${isChecked 
+                  ? "text-gray-500" 
+                  : isCookMode ? "text-gray-100 text-base" : "text-gray-300"
+                }
+              `}
+            >
+              {step.text}
+            </p>
+          </div>
+
+          {/* Expand/collapse indicator for completed steps */}
+          {isChecked && (
+            <button
+              onClick={toggleExpanded}
+              className="mt-2 text-xs text-orange-400 hover:text-orange-300 transition-colors duration-200 flex items-center gap-1"
+              aria-label={isExpanded ? "Collapse step" : "Expand step"}
+            >
+              <svg 
+                className={`
+                  w-3 h-3 transition-transform duration-200
+                  ${isExpanded ? "rotate-180" : ""}
+                `} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+              {isExpanded ? "Show less" : "Show more"}
+            </button>
+          )}
+        </div>
+      </div>
+    </li>
+  )
+}

@@ -4,6 +4,7 @@ import { getOneApiRecipesSlugGet } from "../api/generated/sdk.gen"
 import type { RecipeOutput, RecipeStep } from "../api/generated/types.gen"
 import { CookModeToggle } from "../components/CookModeToggle"
 import { IngredientCheckbox } from "../components/IngredientCheckbox"
+import { InstructionStep } from "../components/InstructionStep"
 import { KitchenLayout } from "../components/KitchenLayout"
 import { StepByStepCooking } from "../components/StepByStepCooking"
 import { Badge, Button } from "../components/ui"
@@ -26,17 +27,7 @@ function formatTime(t: string | null | undefined): string | null {
   return t.replace("PT", "").replace("H", "h ").replace("M", "m").trim()
 }
 
-function InstructionStep({ step, index }: { step: RecipeStep; index: number }) {
-  return (
-    <li className="relative pb-6 pl-8 last:pb-0">
-      {step.title && <h3 className="mb-2 font-semibold text-gray-200">{step.title}</h3>}
-      <div className="absolute top-0 left-0 flex h-6 w-6 items-center justify-center rounded-full bg-orange-600 font-semibold text-sm text-white">
-        {index + 1}
-      </div>
-      <p className="text-gray-300 leading-relaxed">{step.text}</p>
-    </li>
-  )
-}
+
 
 function RecipeDetail() {
   const recipe = Route.useLoaderData()
@@ -297,9 +288,15 @@ function RecipeDetail() {
                     </Button>
                   )}
                 </div>
-                <ol className={isCookMode ? "cook-mode-text" : ""}>
+                <ol className={`space-y-3 ${isCookMode ? "cook-mode-text" : ""}`}>
                   {recipe.recipeInstructions?.map((step, i) => (
-                    <InstructionStep key={step.id ?? i} step={step} index={i} />
+                    <InstructionStep 
+                      key={step.id ?? i} 
+                      step={step} 
+                      index={i} 
+                      recipeId={recipe.id || ""}
+                      isCookMode={isCookMode}
+                    />
                   ))}
                 </ol>
               </section>
