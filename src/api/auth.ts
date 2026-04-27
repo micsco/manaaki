@@ -11,8 +11,11 @@
  * token on every outgoing request.
  */
 
+// Import from ./client (not ./generated) so the auth interceptor is registered
+// before any request is made.
 import { getLoggedInUserApiUsersSelfGet } from './generated'
 import type { UserOut } from './generated'
+import './client'
 
 // ---------------------------------------------------------------------------
 // Internal state
