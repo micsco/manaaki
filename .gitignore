@@ -4,3 +4,8 @@ dist
 .env.local
 .claude/
 openapi-ts-error-*.log
+
+# Temporary/cache directories
+.agents/
+.tanstack/
+skills-lock.json
