@@ -11,17 +11,17 @@
  * token on every outgoing request.
  */
 
+import type { UserOut } from "./generated"
 // Import from ./client (not ./generated) so the auth interceptor is registered
 // before any request is made.
-import { getLoggedInUserApiUsersSelfGet } from './generated'
-import type { UserOut } from './generated'
-import './client'
+import { getLoggedInUserApiUsersSelfGet } from "./generated"
+import "./client"
 
 // ---------------------------------------------------------------------------
 // Internal state
 // ---------------------------------------------------------------------------
 
-let _token: string | null = import.meta.env.VITE_MEALIE_API_TOKEN ?? null
+const _token: string | null = import.meta.env.VITE_MEALIE_API_TOKEN ?? null
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -47,7 +47,7 @@ export async function getCurrentUser(): Promise<UserOut> {
   })
 
   if (error || !data) {
-    throw new Error('Failed to fetch current user — check your API token')
+    throw new Error("Failed to fetch current user — check your API token")
   }
 
   return data

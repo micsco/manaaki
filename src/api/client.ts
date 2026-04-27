@@ -9,16 +9,17 @@
  * The auth interceptor attaches the API token to every outgoing request.
  * Token management lives in src/api/auth.ts.
  */
-import { client } from './generated/client.gen'
-import { getToken } from './auth'
+
+import { getToken } from "./auth"
+import { client } from "./generated/client.gen"
 
 // Use the current origin so requests go through whichever proxy is in front
-client.setConfig({ baseUrl: '' })
+client.setConfig({ baseUrl: "" })
 
-client.interceptors.request.use((request) => {
+client.interceptors.request.use(request => {
   const token = getToken()
   if (token) {
-    request.headers.set('Authorization', `Bearer ${token}`)
+    request.headers.set("Authorization", `Bearer ${token}`)
   }
   return request
 })
