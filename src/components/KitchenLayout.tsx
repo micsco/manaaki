@@ -12,7 +12,7 @@ export function KitchenLayout({ children, title, backButton, actions }: KitchenL
   const { isCookMode } = useCookMode()
 
   if (isCookMode) {
-    // Cook mode: minimal UI, maximize content area
+    // Cook mode: minimal UI, maximize content area with two-column support
     return (
       <div className="min-h-screen bg-gray-950 text-gray-100">
         {/* Minimal header in cook mode */}
@@ -26,8 +26,8 @@ export function KitchenLayout({ children, title, backButton, actions }: KitchenL
           </div>
         </header>
 
-        {/* Full-width content for cook mode */}
-        <main className="max-w-none">{children}</main>
+        {/* Content with max-width for two-column layout in cook mode */}
+        <main className="max-w-6xl mx-auto px-4 py-6">{children}</main>
       </div>
     )
   }
