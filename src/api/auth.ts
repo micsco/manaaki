@@ -18,6 +18,7 @@ import {
 } from './generated'
 import type { UserOut } from './generated'
 
+
 // ---------------------------------------------------------------------------
 // Internal state
 // ---------------------------------------------------------------------------
@@ -97,6 +98,64 @@ export async function logout(): Promise<void> {
     await logoutApiAuthLogoutPost({ throwOnError: false }).catch(() => undefined)
   }
   _token = null
+}
+
+// ---------------------------------------------------------------------------
+// OAuth / OIDC redirect flow
+// ---------------------------------------------------------------------------
+
+/**
+ * Initiate the OAuth login flow.
+ *
+ * Redirects the browser to the Mealie server's `/api/auth/oauth` endpoint,
+ * which in turn redirects to the configured IdP (e.g. Google). After the user
+ * authenticates, the IdP redirects back to Mealie, which then redirects the
+ * browser to `/login` with `?code=...&state=...` query params.
+ *
+ * Call this in response to a "Sign in with OAuth" button click.
+ */
+export function oauthRedirect(): void {
+  const baseUrl = import.meta.env.VITE_MEALIE_BASE_URL ?? 'http://localhost:9000'
+  window.location.href = `${baseUrl}/api/auth/oauth`
+}
+
+/**
+ * Complete the OAuth login flow.
+ *
+ * Should be called when the app loads on the `/login` page and the URL
+ * contains `?code=...&state=...` query params — indicating a redirect back
+ * from the IdP via Mealie.
+ *
+ * Forwards the raw query string to Mealie's `/api/auth/oauth/callback` endpoint,
+ * which exchanges the code for a Mealie bearer token and returns it.
+ *
+ * @param searchParams - The URLSearchParams from the current location
+ * @returns The authenticated user, or null if the params were not an OAuth callback
+ */
+export async function handleOauthCallback(
+  searchParams: URLSearchParams,
+): Promise<UserOut | null> {
+  if (!searchParams.has('code') || !searchParams.has('state')) {
+    return null
+  }
+
+  // Forward all query params to Mealie's callback endpoint.
+  // The generated SDK type declares query?: never because the OpenAPI spec doesn't
+  // describe these params — they are forwarded transparently by Mealie from the IdP.
+  // We use native fetch here to avoid fighting the generated SDK's type constraints.
+  const baseUrl = import.meta.env.VITE_MEALIE_BASE_URL ?? 'http://localhost:9000'
+  const response = await fetch(
+    `${baseUrl}/api/auth/oauth/callback?${searchParams.toString()}`,
+  )
+
+  if (!response.ok) {
+    throw new Error('OAuth callback failed: Mealie rejected the authorization code')
+  }
+
+  const tokenData = (await response.json()) as TokenResponse
+  _token = tokenData.access_token
+
+  return getCurrentUser()
 }
 
 /**
