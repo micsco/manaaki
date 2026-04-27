@@ -1,165 +1,42 @@
 /**
- * In-memory authentication store for the Mealie API.
+ * Authentication for the Mealie API.
  *
- * Tokens are held in module-level variables and are intentionally NOT persisted
- * to localStorage or sessionStorage — this avoids XSS token theft. The
- * trade-off is that a page refresh requires the user to log in again. A
- * "remember me" persistence layer can be added in a future iteration.
+ * Uses a long-lived API token generated from your Mealie profile page
+ * (Settings → API Tokens). Set it in your .env file:
  *
- * The `getToken()` export is consumed by the request interceptor in
- * src/api/client.ts, which attaches the bearer token to every outgoing request.
+ *   VITE_MEALIE_API_TOKEN=your-token-here
+ *
+ * The token is read at module initialisation time and held in memory.
+ * The request interceptor in src/api/client.ts attaches it as a Bearer
+ * token on every outgoing request.
  */
 
-import {
-  getTokenApiAuthTokenPost,
-  logoutApiAuthLogoutPost,
-  refreshTokenApiAuthRefreshGet,
-  getLoggedInUserApiUsersSelfGet,
-} from './generated'
+import { getLoggedInUserApiUsersSelfGet } from './generated'
 import type { UserOut } from './generated'
-
 
 // ---------------------------------------------------------------------------
 // Internal state
 // ---------------------------------------------------------------------------
 
-/** The Mealie auth token response shape (not declared in the OpenAPI spec). */
-interface TokenResponse {
-  access_token: string
-  token_type: string
-}
-
-let _token: string | null = null
+let _token: string | null = import.meta.env.VITE_MEALIE_API_TOKEN ?? null
 
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
-/** Returns the current in-memory bearer token, or null if not authenticated. */
+/** Returns the current bearer token, or null if not set. */
 export function getToken(): string | null {
   return _token
 }
 
-/** Returns true if there is an active token in memory. */
+/** Returns true if a token is present. */
 export function isAuthenticated(): boolean {
   return _token !== null
 }
 
 /**
- * Log in with username + password.
- * Stores the returned bearer token in memory and returns the current user.
- */
-export async function login(
-  username: string,
-  password: string,
-): Promise<UserOut> {
-  const { data, error } = await getTokenApiAuthTokenPost({
-    body: { username, password },
-    throwOnError: false,
-  })
-
-  if (error || !data) {
-    throw new Error('Login failed: invalid credentials or server error')
-  }
-
-  const tokenData = data as TokenResponse
-  _token = tokenData.access_token
-
-  return getCurrentUser()
-}
-
-/**
- * Refresh the current token using the /api/auth/refresh endpoint.
- * Must already be authenticated.
- */
-export async function refreshToken(): Promise<void> {
-  if (!_token) throw new Error('Cannot refresh: not authenticated')
-
-  const { data, error } = await refreshTokenApiAuthRefreshGet({
-    throwOnError: false,
-  })
-
-  if (error || !data) {
-    _token = null
-    throw new Error('Token refresh failed')
-  }
-
-  const tokenData = data as TokenResponse
-  _token = tokenData.access_token
-}
-
-/**
- * Log out the current user.
- * Calls the server logout endpoint and clears the in-memory token.
- */
-export async function logout(): Promise<void> {
-  if (_token) {
-    // Best-effort server-side logout; clear token regardless of outcome
-    await logoutApiAuthLogoutPost({ throwOnError: false }).catch(() => undefined)
-  }
-  _token = null
-}
-
-// ---------------------------------------------------------------------------
-// OAuth / OIDC redirect flow
-// ---------------------------------------------------------------------------
-
-/**
- * Initiate the OAuth login flow.
- *
- * Redirects the browser to `/api/auth/oauth`, which is proxied to the Mealie
- * backend by Vite in development and by the reverse proxy in production.
- * Mealie then redirects to the configured IdP (e.g. Google). After the user
- * authenticates, the IdP redirects back to Mealie, which redirects the
- * browser to `/login?code=...&state=...` on this app.
- *
- * Call this in response to a "Sign in with OAuth" button click.
- */
-export function oauthRedirect(): void {
-  window.location.href = '/api/auth/oauth'
-}
-
-/**
- * Complete the OAuth login flow.
- *
- * Should be called when the app loads on the `/login` page and the URL
- * contains `?code=...&state=...` query params — indicating a redirect back
- * from the IdP via Mealie.
- *
- * Forwards the raw query string to Mealie's `/api/auth/oauth/callback` endpoint,
- * which exchanges the code for a Mealie bearer token and returns it.
- *
- * @param searchParams - The URLSearchParams from the current location
- * @returns The authenticated user, or null if the params were not an OAuth callback
- */
-export async function handleOauthCallback(
-  searchParams: URLSearchParams,
-): Promise<UserOut | null> {
-  if (!searchParams.has('code') || !searchParams.has('state')) {
-    return null
-  }
-
-  // Forward all query params to Mealie's callback endpoint.
-  // The generated SDK type declares query?: never because the OpenAPI spec doesn't
-  // describe these params — they are forwarded transparently by Mealie from the IdP.
-  // We use native fetch with a relative URL so the request goes through the Vite
-  // proxy in development and the reverse proxy in production.
-  const response = await fetch(
-    `/api/auth/oauth/callback?${searchParams.toString()}`,
-  )
-
-  if (!response.ok) {
-    throw new Error('OAuth callback failed: Mealie rejected the authorization code')
-  }
-
-  const tokenData = (await response.json()) as TokenResponse
-  _token = tokenData.access_token
-
-  return getCurrentUser()
-}
-
-/**
  * Fetch the currently authenticated user's profile.
+ * Useful for verifying the token is valid on startup.
  */
 export async function getCurrentUser(): Promise<UserOut> {
   const { data, error } = await getLoggedInUserApiUsersSelfGet({
@@ -167,7 +44,7 @@ export async function getCurrentUser(): Promise<UserOut> {
   })
 
   if (error || !data) {
-    throw new Error('Failed to fetch current user')
+    throw new Error('Failed to fetch current user — check your API token')
   }
 
   return data

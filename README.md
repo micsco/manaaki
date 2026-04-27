@@ -22,7 +22,7 @@ pnpm install
 
 # 2. Configure your environment
 cp .env.example .env
-# Edit VITE_MEALIE_BASE_URL to point at your Mealie instance
+# Edit .env — set VITE_MEALIE_BASE_URL and VITE_MEALIE_API_TOKEN
 
 # 3. Start the dev server
 pnpm dev
@@ -34,49 +34,45 @@ The app runs at `http://localhost:3000`. Vite automatically proxies all `/api` r
 
 ## Environment variables
 
-| Variable | Default | Description |
+| Variable | Required | Description |
 |---|---|---|
-| `VITE_MEALIE_BASE_URL` | `http://localhost:9000` | URL of the Mealie backend. Used by the Vite dev server proxy. |
+| `VITE_MEALIE_BASE_URL` | Yes | URL of your Mealie instance. Used by the Vite dev server proxy. |
+| `VITE_MEALIE_API_TOKEN` | Yes | Long-lived API token from your Mealie profile. |
 
-> In production this variable only affects the dev server proxy. API requests from the built app use relative `/api` paths, which your reverse proxy routes to Mealie.
+Both variables are baked into the JS bundle at build time by Vite. Do not commit your `.env` file.
+
+### Generating an API token
+
+1. Open your Mealie instance and sign in
+2. Click your avatar → **Profile**
+3. Scroll to **API Tokens** → **Generate**
+4. Copy the token into `VITE_MEALIE_API_TOKEN` in your `.env`
 
 ---
 
-## Authentication
+## How requests work
 
-What's Cookin' supports two login methods:
-
-- **Username / password** — always available
-- **OAuth / OIDC** (e.g. Google, Authentik, Keycloak) — when enabled on your Mealie instance
-
-Authentication is handled entirely by Mealie's backend. This app never talks to the IdP directly.
-
-### How the OAuth flow works
+All API calls use relative `/api/...` paths. In development these are proxied by Vite to `VITE_MEALIE_BASE_URL`. In production they are handled by your reverse proxy. The API token is attached as a `Bearer` header on every request.
 
 ```
-User clicks "Sign in with OAuth"
-  → browser navigates to /api/auth/oauth
-  → proxied to Mealie, which redirects to the IdP (Google, etc.)
-  → user authenticates with IdP
-  → IdP redirects back to /login?code=...&state=...  (on this app)
-  → this app POSTs the code to /api/auth/oauth/callback
-  → Mealie exchanges it, validates the user, returns a bearer token
-  → app stores the token and navigates home
+Browser → /api/recipes
+  [dev]  → Vite proxy → http://your-mealie:9000/api/recipes
+  [prod] → nginx/Caddy → http://mealie:9000/api/recipes
 ```
 
-Because all `/api` paths are proxied, Mealie sees requests arriving from `localhost:3000` (dev) or your domain (production) and constructs its OAuth redirect URI accordingly — pointing straight back at this app. No extra configuration is needed for the redirect to land in the right place.
+---
 
-### Development setup
+## Production deployment
 
-1. Set `VITE_MEALIE_BASE_URL` in your `.env` to your Mealie instance URL
-2. Run `pnpm dev`
-3. Register `http://localhost:3000/login` as an allowed redirect URI in your IdP (e.g. Google Cloud Console → OAuth 2.0 client → Authorised redirect URIs)
+Build the app:
 
-That's it. The Vite proxy handles the rest.
+```sh
+pnpm build   # outputs to dist/
+```
 
-### Production setup
-
-The built app uses relative `/api` paths throughout, so you just need a reverse proxy that routes `/api` to Mealie and everything else to the static files.
+The build output is a static SPA — just a `/_shell.html` and assets. You need a reverse proxy that:
+1. Forwards `/api/*` to your Mealie instance
+2. Falls back to `/_shell.html` for everything else
 
 **nginx**
 
@@ -84,7 +80,6 @@ The built app uses relative `/api` paths throughout, so you just need a reverse 
 server {
     server_name recipes.example.com;
 
-    # Mealie API
     location /api/ {
         proxy_pass http://mealie:9000/api/;
         proxy_set_header Host $host;
@@ -92,7 +87,6 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # What's Cookin' static files
     location / {
         root /path/to/dist;
         try_files $uri /_shell.html;
@@ -115,32 +109,13 @@ recipes.example.com {
 }
 ```
 
-**Cloudflare Pages / Netlify**
-
-Add a redirect rule to proxy `/api/*` to your Mealie instance:
+**Netlify**
 
 ```
-# Netlify _redirects
+# public/_redirects
 /api/*  https://mealie.example.com/api/:splat  200
-
-# Catch-all for SPA
-/*  /_shell.html  200
+/*      /_shell.html                            200
 ```
-
-> **Note for Cloudflare Pages**: the `/api` proxy requires a Cloudflare Worker or a Pages Function. Alternatively, host Mealie on the same domain via a reverse proxy and point Cloudflare's DNS at it.
-
-### IdP redirect URI
-
-In all cases, register your app's `/login` URL with your IdP:
-
-| IdP | Where | Value |
-|---|---|---|
-| **Google** | Cloud Console → OAuth 2.0 client → Authorised redirect URIs | `https://recipes.example.com/login` |
-| **Authentik** | Application → Redirect URIs | `https://recipes.example.com/login` |
-| **Keycloak** | Client → Valid redirect URIs | `https://recipes.example.com/login` and `https://recipes.example.com/login?direct=1` |
-| **Authelia** | Client → Redirect URIs | `https://recipes.example.com/login` |
-
-For local dev, also register `http://localhost:3000/login`.
 
 ---
 
@@ -149,7 +124,7 @@ For local dev, also register `http://localhost:3000/login`.
 | Command | Description |
 |---|---|
 | `pnpm dev` | Start dev server at `http://localhost:3000` with Mealie API proxy |
-| `pnpm build` | Production build — outputs static files including `/_shell.html` |
+| `pnpm build` | Production build — outputs static files to `dist/` |
 | `pnpm preview` | Preview the production build locally |
 | `pnpm generate` | Regenerate the Mealie API client from the live OpenAPI spec |
 
@@ -160,13 +135,13 @@ For local dev, also register `http://localhost:3000/login`.
 ```
 src/
 ├── api/
-│   ├── auth.ts           # Login, logout, OAuth redirect & callback, token store
-│   ├── client.ts         # Configures the generated API client (baseUrl, auth interceptor)
+│   ├── auth.ts           # Token store and getCurrentUser helper
+│   ├── client.ts         # Configures the generated API client (auth interceptor)
 │   └── generated/        # Auto-generated from Mealie's OpenAPI spec — do not edit
 ├── routes/
 │   ├── __root.tsx        # Root layout
 │   ├── index.tsx         # Home page
-│   └── login.tsx         # Login page (handles both password and OAuth callback)
+│   └── login.tsx         # Shown when no API token is configured
 ```
 
 See [`PLAN.md`](./PLAN.md) for the full architecture notes and roadmap.
