@@ -7,7 +7,18 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "generate": "openapi-ts"
+    "generate": "openapi-ts",
+    "check": "biome check src --files-max-size=1048576",
+    "check:ci": "biome ci src --files-max-size=1048576",
+    "check:fix": "biome check --write src --files-max-size=1048576",
+    "format": "biome format --write src",
+    "format:check": "biome format src",
+    "type-check": "tsc --noEmit",
+    "validate": "pnpm run type-check && pnpm run check",
+    "validate:ci": "pnpm run type-check && pnpm run check:ci",
+    "dev:safe": "./scripts/dev.sh",
+    "build:safe": "./scripts/build.sh",
+    "pre-push": "./scripts/pre-push.sh"
   },
   "repository": {
     "type": "git",
@@ -23,17 +34,25 @@
   },
   "homepage": "https://github.com/micsco/whats-cookin#readme",
   "dependencies": {
+    "@base-ui/react": "^1.0.0",
+    "@tanstack/intent": "^0.0.36",
     "@tanstack/react-router": "^1.168.25",
     "@tanstack/react-start": "^1.167.50",
+    "@tanstack/router-core": "^1.168.17",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.13",
     "@hey-api/openapi-ts": "^0.96.1",
+    "@j178/prek": "^0.3.11",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
     "typescript": "^6.0.3",
     "vite": "^8.0.10"
   }
