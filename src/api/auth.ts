@@ -107,16 +107,16 @@ export async function logout(): Promise<void> {
 /**
  * Initiate the OAuth login flow.
  *
- * Redirects the browser to the Mealie server's `/api/auth/oauth` endpoint,
- * which in turn redirects to the configured IdP (e.g. Google). After the user
- * authenticates, the IdP redirects back to Mealie, which then redirects the
- * browser to `/login` with `?code=...&state=...` query params.
+ * Redirects the browser to `/api/auth/oauth`, which is proxied to the Mealie
+ * backend by Vite in development and by the reverse proxy in production.
+ * Mealie then redirects to the configured IdP (e.g. Google). After the user
+ * authenticates, the IdP redirects back to Mealie, which redirects the
+ * browser to `/login?code=...&state=...` on this app.
  *
  * Call this in response to a "Sign in with OAuth" button click.
  */
 export function oauthRedirect(): void {
-  const baseUrl = import.meta.env.VITE_MEALIE_BASE_URL ?? 'http://localhost:9000'
-  window.location.href = `${baseUrl}/api/auth/oauth`
+  window.location.href = '/api/auth/oauth'
 }
 
 /**
@@ -142,10 +142,10 @@ export async function handleOauthCallback(
   // Forward all query params to Mealie's callback endpoint.
   // The generated SDK type declares query?: never because the OpenAPI spec doesn't
   // describe these params — they are forwarded transparently by Mealie from the IdP.
-  // We use native fetch here to avoid fighting the generated SDK's type constraints.
-  const baseUrl = import.meta.env.VITE_MEALIE_BASE_URL ?? 'http://localhost:9000'
+  // We use native fetch with a relative URL so the request goes through the Vite
+  // proxy in development and the reverse proxy in production.
   const response = await fetch(
-    `${baseUrl}/api/auth/oauth/callback?${searchParams.toString()}`,
+    `/api/auth/oauth/callback?${searchParams.toString()}`,
   )
 
   if (!response.ok) {
