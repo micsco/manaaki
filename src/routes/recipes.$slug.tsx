@@ -9,8 +9,8 @@ export const Route = createFileRoute('/recipes/$slug')({
 })
 
 function recipeImageUrl(recipe: RecipeOutput): string | null {
-  if (!recipe.slug || !recipe.image) return null
-  return `/api/media/recipes/${recipe.slug}/images/original.webp`
+  if (!recipe.id || !recipe.image) return null
+  return `/api/media/recipes/${recipe.id}/images/original.webp`
 }
 
 function formatTime(t: string | null | undefined): string | null {

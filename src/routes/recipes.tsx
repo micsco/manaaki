@@ -11,8 +11,8 @@ export const Route = createFileRoute('/recipes')({
 })
 
 function recipeImageUrl(recipe: RecipeSummary): string | null {
-  if (!recipe.slug || !recipe.image) return null
-  return `/api/media/recipes/${recipe.slug}/images/min-original.webp`
+  if (!recipe.id || !recipe.image) return null
+  return `/api/media/recipes/${recipe.id}/images/min-original.webp`
 }
 
 function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
