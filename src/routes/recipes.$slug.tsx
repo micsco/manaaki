@@ -3,6 +3,7 @@ import { useQueryState } from "nuqs"
 import { getOneApiRecipesSlugGet } from "../api/generated/sdk.gen"
 import type { RecipeOutput, RecipeStep } from "../api/generated/types.gen"
 import { CookModeToggle } from "../components/CookModeToggle"
+import { IngredientCheckbox } from "../components/IngredientCheckbox"
 import { KitchenLayout } from "../components/KitchenLayout"
 import { StepByStepCooking } from "../components/StepByStepCooking"
 import { Badge, Button } from "../components/ui"
@@ -27,9 +28,9 @@ function formatTime(t: string | null | undefined): string | null {
 
 function InstructionStep({ step, index }: { step: RecipeStep; index: number }) {
   return (
-    <li className="relative pl-8 pb-6 last:pb-0">
-      {step.title && <h3 className="font-semibold text-gray-200 mb-2">{step.title}</h3>}
-      <div className="absolute left-0 top-0 w-6 h-6 bg-orange-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+    <li className="relative pb-6 pl-8 last:pb-0">
+      {step.title && <h3 className="mb-2 font-semibold text-gray-200">{step.title}</h3>}
+      <div className="absolute top-0 left-0 flex h-6 w-6 items-center justify-center rounded-full bg-orange-600 font-semibold text-sm text-white">
         {index + 1}
       </div>
       <p className="text-gray-300 leading-relaxed">{step.text}</p>
@@ -66,7 +67,7 @@ function RecipeDetail() {
         title={recipe.name ?? undefined}
         backButton={
           <Button onClick={() => setShowStepByStep(false)} variant="ghost" size="sm">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -89,9 +90,9 @@ function RecipeDetail() {
   const backButton = (
     <Link
       to="/recipes"
-      className="inline-flex items-center gap-2 text-orange-400 hover:text-orange-300 font-medium"
+      className="inline-flex items-center gap-2 font-medium text-orange-400 hover:text-orange-300"
     >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
       </svg>
       All recipes
@@ -106,7 +107,7 @@ function RecipeDetail() {
           size="sm"
           className="bg-green-600 hover:bg-green-700"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -142,7 +143,7 @@ function RecipeDetail() {
             {img && (
               <div className="mb-8">
                 <img
-                  className="w-full h-64 object-cover rounded-lg shadow-lg"
+                  className="h-64 w-full rounded-lg object-cover shadow-lg"
                   src={img}
                   alt={recipe.name ?? ""}
                   width={800}
@@ -151,40 +152,36 @@ function RecipeDetail() {
               </div>
             )}
 
-            <h1 className="font-bold text-gray-100 mb-4 text-4xl">
-              {recipe.name}
-            </h1>
+            <h1 className="mb-4 font-bold text-4xl text-gray-100">{recipe.name}</h1>
 
             {recipe.description && (
-              <p className="text-gray-300 mb-6 leading-relaxed text-lg">
-                {recipe.description}
-              </p>
+              <p className="mb-6 text-gray-300 text-lg leading-relaxed">{recipe.description}</p>
             )}
 
             {/* Recipe metadata */}
-            <dl className="grid gap-4 mb-6 p-4 bg-gray-900 rounded-lg grid-cols-2 md:grid-cols-4">
+            <dl className="mb-6 grid grid-cols-2 gap-4 rounded-lg bg-gray-900 p-4 md:grid-cols-4">
               {prepTime && (
                 <>
-                  <dt className="text-sm font-medium text-gray-500">Prep</dt>
-                  <dd className="text-sm text-gray-200 font-semibold">{prepTime}</dd>
+                  <dt className="font-medium text-gray-500 text-sm">Prep</dt>
+                  <dd className="font-semibold text-gray-200 text-sm">{prepTime}</dd>
                 </>
               )}
               {cookTime && (
                 <>
-                  <dt className="text-sm font-medium text-gray-500">Cook</dt>
-                  <dd className="text-sm text-gray-200 font-semibold">{cookTime}</dd>
+                  <dt className="font-medium text-gray-500 text-sm">Cook</dt>
+                  <dd className="font-semibold text-gray-200 text-sm">{cookTime}</dd>
                 </>
               )}
               {totalTime && (
                 <>
-                  <dt className="text-sm font-medium text-gray-500">Total</dt>
-                  <dd className="text-sm text-gray-200 font-semibold">{totalTime}</dd>
+                  <dt className="font-medium text-gray-500 text-sm">Total</dt>
+                  <dd className="font-semibold text-gray-200 text-sm">{totalTime}</dd>
                 </>
               )}
               {recipe.recipeServings != null && recipe.recipeServings > 0 && (
                 <>
-                  <dt className="text-sm font-medium text-gray-500">Servings</dt>
-                  <dd className="text-sm text-gray-200 font-semibold">
+                  <dt className="font-medium text-gray-500 text-sm">Servings</dt>
+                  <dd className="font-semibold text-gray-200 text-sm">
                     {recipe.recipeServings}
                     {recipe.recipeYield ? ` ${recipe.recipeYield}` : ""}
                   </dd>
@@ -192,17 +189,19 @@ function RecipeDetail() {
               )}
               {recipe.rating != null && (
                 <>
-                  <dt className="text-sm font-medium text-gray-500">Rating</dt>
-                  <dd className="text-sm text-gray-200 font-semibold">
+                  <dt className="font-medium text-gray-500 text-sm">Rating</dt>
+                  <dd className="font-semibold text-gray-200 text-sm">
                     <span className="text-yellow-500">{"★".repeat(Math.round(recipe.rating))}</span>
-                    <span className="text-gray-600">{"☆".repeat(5 - Math.round(recipe.rating))}</span>
+                    <span className="text-gray-600">
+                      {"☆".repeat(5 - Math.round(recipe.rating))}
+                    </span>
                   </dd>
                 </>
               )}
             </dl>
 
             {recipe.recipeCategory?.length || recipe.tags?.length ? (
-              <div className="flex flex-wrap gap-2 mb-8">
+              <div className="mb-8 flex flex-wrap gap-2">
                 {recipe.recipeCategory?.map(c => (
                   <Badge key={c.id ?? c.slug} variant="category">
                     {c.name}
@@ -223,31 +222,38 @@ function RecipeDetail() {
 
         {/* Two-column layout for both normal and cook mode */}
         {(hasIngredients || hasInstructions) && (
-          <div className={`grid gap-8 ${isCookMode ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 lg:grid-cols-2"}`}>
+          <div
+            className={`grid gap-8 ${isCookMode ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 lg:grid-cols-2"}`}
+          >
             {hasIngredients && (
-              <section className="bg-gray-900 rounded-lg p-6">
-                <h2 className={`font-semibold text-gray-100 mb-4 ${isCookMode ? "text-lg" : "text-xl"}`}>
+              <section className="rounded-lg bg-gray-900 p-6">
+                <h2
+                  className={`mb-4 font-semibold text-gray-100 ${isCookMode ? "text-lg" : "text-xl"}`}
+                >
                   Ingredients
                 </h2>
-                <ul className={`space-y-2 ${isCookMode ? "cook-mode-text" : ""}`}>
-                  {recipe.recipeIngredient!.map((ing, i) => {
+                <ul className={`space-y-1 ${isCookMode ? "cook-mode-text" : ""}`}>
+                  {recipe.recipeIngredient?.map((ing, i) => {
                     if (ing.title) {
                       return (
                         <li
                           key={i}
-                          className={`font-semibold text-gray-200 mt-4 mb-2 ${isCookMode ? "text-lg" : ""}`}
+                          className={`mt-4 mb-2 font-semibold text-gray-200 ${isCookMode ? "text-lg" : ""}`}
                         >
                           {ing.title}
                         </li>
                       )
                     }
                     return (
-                      <li
+                      <IngredientCheckbox
                         key={i}
-                        className={`text-gray-300 ${isCookMode ? "text-base leading-relaxed" : ""}`}
+                        ingredient={ing.display || ing.originalText || ""}
+                        recipeId={recipe.id || ""}
+                        ingredientIndex={i}
+                        className={isCookMode ? "text-base leading-relaxed" : ""}
                       >
                         {ing.display || ing.originalText}
-                      </li>
+                      </IngredientCheckbox>
                     )
                   })}
                 </ul>
@@ -255,9 +261,11 @@ function RecipeDetail() {
             )}
 
             {hasInstructions && (
-              <section className="bg-gray-900 rounded-lg p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className={`font-semibold text-gray-100 ${isCookMode ? "text-lg" : "text-xl"}`}>
+              <section className="rounded-lg bg-gray-900 p-6">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2
+                    className={`font-semibold text-gray-100 ${isCookMode ? "text-lg" : "text-xl"}`}
+                  >
                     Instructions
                   </h2>
                   {!isCookMode && (
@@ -266,7 +274,12 @@ function RecipeDetail() {
                       size="sm"
                       className="bg-green-600 hover:bg-green-700"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -285,7 +298,7 @@ function RecipeDetail() {
                   )}
                 </div>
                 <ol className={isCookMode ? "cook-mode-text" : ""}>
-                  {recipe.recipeInstructions!.map((step, i) => (
+                  {recipe.recipeInstructions?.map((step, i) => (
                     <InstructionStep key={step.id ?? i} step={step} index={i} />
                   ))}
                 </ol>
@@ -295,11 +308,11 @@ function RecipeDetail() {
         )}
 
         {!isCookMode && recipe.notes && recipe.notes.length > 0 && (
-          <section className="bg-gray-900 rounded-lg p-6 mt-8">
-            <h2 className="text-xl font-semibold text-gray-100 mb-4">Notes</h2>
+          <section className="mt-8 rounded-lg bg-gray-900 p-6">
+            <h2 className="mb-4 font-semibold text-gray-100 text-xl">Notes</h2>
             {recipe.notes.map((note, i) => (
               <div key={i} className="mb-4 last:mb-0">
-                {note.title && <h3 className="font-semibold text-gray-200 mb-2">{note.title}</h3>}
+                {note.title && <h3 className="mb-2 font-semibold text-gray-200">{note.title}</h3>}
                 <p className="text-gray-300">{note.text}</p>
               </div>
             ))}
@@ -307,13 +320,13 @@ function RecipeDetail() {
         )}
 
         {!isCookMode && recipe.orgURL && (
-          <p className="text-sm text-gray-400 mt-8">
+          <p className="mt-8 text-gray-400 text-sm">
             Source:{" "}
             <a
               href={recipe.orgURL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-orange-400 hover:text-orange-300 underline"
+              className="text-orange-400 underline hover:text-orange-300"
             >
               {recipe.orgURL}
             </a>

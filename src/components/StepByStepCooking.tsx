@@ -52,11 +52,11 @@ export function StepByStepCooking({ steps, onComplete }: StepByStepCookingProps)
 
   if (isCompleted) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
         <div className="mb-8">
-          <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mb-4 mx-auto">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-600">
             <svg
-              className="w-8 h-8 text-white"
+              className="h-8 w-8 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -71,7 +71,7 @@ export function StepByStepCooking({ steps, onComplete }: StepByStepCookingProps)
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-100 mb-2">Recipe Complete!</h2>
+          <h2 className="mb-2 font-bold text-2xl text-gray-100">Recipe Complete!</h2>
           <p className="text-gray-400">Enjoy your delicious meal!</p>
         </div>
 
@@ -88,20 +88,20 @@ export function StepByStepCooking({ steps, onComplete }: StepByStepCookingProps)
   const step = steps[currentStep]
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
+    <div className="flex h-[calc(100vh-8rem)] flex-col">
       {/* Progress indicator */}
-      <div className="px-4 py-3 bg-gray-900 border-b border-gray-800">
-        <div className="flex items-center justify-between max-w-4xl mx-auto">
-          <span className="text-sm font-medium text-gray-400">
+      <div className="border-gray-800 border-b bg-gray-900 px-4 py-3">
+        <div className="mx-auto flex max-w-4xl items-center justify-between">
+          <span className="font-medium text-gray-400 text-sm">
             Step {currentStep + 1} of {steps.length}
           </span>
-          <span className="text-sm text-gray-500">
+          <span className="text-gray-500 text-sm">
             {Math.round(((currentStep + 1) / steps.length) * 100)}% complete
           </span>
         </div>
-        <div className="w-full bg-gray-800 rounded-full h-2 mt-2">
+        <div className="mt-2 h-2 w-full rounded-full bg-gray-800">
           <div
-            className="bg-orange-600 h-2 rounded-full transition-all duration-300"
+            className="h-2 rounded-full bg-orange-600 transition-all duration-300"
             style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
           />
         </div>
@@ -109,14 +109,14 @@ export function StepByStepCooking({ steps, onComplete }: StepByStepCookingProps)
 
       {/* Step content */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="mx-auto max-w-4xl">
           <div className="cook-mode-step-active mb-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-orange-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
+            <div className="mb-4 flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-600 font-bold text-white text-xl">
                 {currentStep + 1}
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-100">
+                <h3 className="font-bold text-gray-100 text-xl">
                   {step.title || `Step ${currentStep + 1}`}
                 </h3>
               </div>
@@ -126,10 +126,10 @@ export function StepByStepCooking({ steps, onComplete }: StepByStepCookingProps)
           </div>
 
           {/* Timer placeholder (could be enhanced with actual timer functionality) */}
-          <div className="bg-gray-900 rounded-lg p-4 mb-6">
+          <div className="mb-6 rounded-lg bg-gray-900 p-4">
             <div className="flex items-center gap-3">
               <svg
-                className="w-5 h-5 text-orange-400"
+                className="h-5 w-5 text-orange-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -143,15 +143,15 @@ export function StepByStepCooking({ steps, onComplete }: StepByStepCookingProps)
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span className="text-sm text-gray-400">Timer available here</span>
+              <span className="text-gray-400 text-sm">Timer available here</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Navigation controls */}
-      <div className="px-4 py-4 bg-gray-900 border-t border-gray-800">
-        <div className="flex items-center justify-between max-w-4xl mx-auto">
+      <div className="border-gray-800 border-t bg-gray-900 px-4 py-4">
+        <div className="mx-auto flex max-w-4xl items-center justify-between">
           <Button
             onClick={handlePrevious}
             disabled={currentStep === 0}
@@ -162,7 +162,7 @@ export function StepByStepCooking({ steps, onComplete }: StepByStepCookingProps)
           </Button>
 
           <div className="text-center">
-            <p className="text-sm text-gray-500 mb-2">Press Space to continue</p>
+            <p className="mb-2 text-gray-500 text-sm">Press Space to continue</p>
           </div>
 
           <Button onClick={handleNext} className="min-w-[100px]">

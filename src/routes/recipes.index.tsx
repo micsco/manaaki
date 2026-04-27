@@ -29,28 +29,28 @@ function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
         <Link
           to="/recipes/$slug"
           params={{ slug: recipe.slug }}
-          className="block focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950 rounded-lg"
+          className="block rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950"
         >
           {img ? (
             <img
               src={img}
               alt={recipe.name ?? ""}
-              className="w-full h-48 object-cover"
+              className="h-48 w-full object-cover"
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-48 bg-gray-800" aria-hidden="true" />
+            <div className="h-48 w-full bg-gray-800" aria-hidden="true" />
           )}
           <div className="p-4">
-            <h3 className="text-lg font-semibold text-gray-100 mb-2 line-clamp-2">{recipe.name}</h3>
+            <h3 className="mb-2 line-clamp-2 font-semibold text-gray-100 text-lg">{recipe.name}</h3>
             {recipe.description && (
-              <p className="text-sm text-gray-400 mb-3 line-clamp-2">{recipe.description}</p>
+              <p className="mb-3 line-clamp-2 text-gray-400 text-sm">{recipe.description}</p>
             )}
-            <div className="flex items-center gap-3 text-sm text-gray-500">
+            <div className="flex items-center gap-3 text-gray-500 text-sm">
               {recipe.totalTime && (
                 <Badge variant="tag" className="flex items-center gap-1">
                   <svg
-                    className="w-3 h-3"
+                    className="h-3 w-3"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -70,7 +70,7 @@ function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
               {recipe.rating != null && (
                 <Badge variant="rating" className="flex items-center gap-1">
                   <svg
-                    className="w-3 h-3"
+                    className="h-3 w-3"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                     aria-label="Star rating"
@@ -86,11 +86,11 @@ function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
         </Link>
       ) : (
         <div className="p-4">
-          <h3 className="text-lg font-semibold text-gray-100 mb-2 line-clamp-2">{recipe.name}</h3>
+          <h3 className="mb-2 line-clamp-2 font-semibold text-gray-100 text-lg">{recipe.name}</h3>
           {recipe.description && (
-            <p className="text-sm text-gray-400 mb-3 line-clamp-2">{recipe.description}</p>
+            <p className="mb-3 line-clamp-2 text-gray-400 text-sm">{recipe.description}</p>
           )}
-          <p className="text-sm text-gray-500">No slug available</p>
+          <p className="text-gray-500 text-sm">No slug available</p>
         </div>
       )}
     </Card>
@@ -102,13 +102,13 @@ function RecipeList() {
 
   return (
     <main className="min-h-screen bg-gray-950">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-100 mb-2">Recipes</h1>
-          <p className="text-lg text-gray-400">{data.total ?? data.items.length} recipes</p>
+          <h1 className="mb-2 font-bold text-4xl text-gray-100">Recipes</h1>
+          <p className="text-gray-400 text-lg">{data.total ?? data.items.length} recipes</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {data.items.map(recipe => (
             <RecipeCard key={recipe.id ?? recipe.slug} recipe={recipe} />
           ))}

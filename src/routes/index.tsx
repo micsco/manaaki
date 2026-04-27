@@ -13,14 +13,14 @@ function Home() {
 
   return (
     <main className="min-h-screen bg-gray-950">
-      <div className="max-w-4xl mx-auto px-4 py-16">
-        <div className="text-center animate-fade-in">
-          <h1 className="text-5xl font-bold text-gray-100 mb-8 bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+      <div className="mx-auto max-w-4xl px-4 py-16">
+        <div className="animate-fade-in text-center">
+          <h1 className="mb-8 bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text font-bold text-5xl text-gray-100 text-transparent">
             What's Cookin'?
           </h1>
 
-          <div className="bg-gray-900 rounded-lg p-6 mb-8 inline-block">
-            <p className="text-lg text-gray-300 mb-4">
+          <div className="mb-8 inline-block rounded-lg bg-gray-900 p-6">
+            <p className="mb-4 text-gray-300 text-lg">
               Signed in as{" "}
               <span className="font-semibold text-orange-400">
                 {user.fullName ?? user.username}
@@ -37,7 +37,7 @@ function Home() {
             <Button asChild size="lg" className="gap-2">
               <Link to="/recipes">
                 Browse recipes
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"

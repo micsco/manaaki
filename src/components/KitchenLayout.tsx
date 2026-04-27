@@ -16,18 +16,18 @@ export function KitchenLayout({ children, title, backButton, actions }: KitchenL
     return (
       <div className="min-h-screen bg-gray-950 text-gray-100">
         {/* Minimal header in cook mode */}
-        <header className="sticky top-0 z-10 bg-gray-950/95 backdrop-blur-sm border-b border-gray-800 px-4 py-2">
-          <div className="flex items-center justify-between max-w-7xl mx-auto">
+        <header className="sticky top-0 z-10 border-gray-800 border-b bg-gray-950/95 px-4 py-2 backdrop-blur-sm">
+          <div className="mx-auto flex max-w-7xl items-center justify-between">
             <div className="flex items-center gap-3">
               {backButton}
-              {title && <h1 className="text-lg font-semibold text-gray-100 truncate">{title}</h1>}
+              {title && <h1 className="truncate font-semibold text-gray-100 text-lg">{title}</h1>}
             </div>
             <div className="flex items-center gap-2">{actions}</div>
           </div>
         </header>
 
         {/* Content with max-width for two-column layout in cook mode */}
-        <main className="max-w-6xl mx-auto px-4 py-6">{children}</main>
+        <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
       </div>
     )
   }
@@ -35,7 +35,7 @@ export function KitchenLayout({ children, title, backButton, actions }: KitchenL
   // Normal mode: centered layout with proper spacing
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
-      <main className="max-w-6xl mx-auto px-4 py-6">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
     </div>
   )
 }

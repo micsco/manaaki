@@ -1,5 +1,5 @@
-import { createContext, type ReactNode, useContext, useEffect } from "react"
 import { useQueryState } from "nuqs"
+import { createContext, type ReactNode, useContext, useEffect } from "react"
 
 interface CookModeContextType {
   isCookMode: boolean
@@ -47,7 +47,7 @@ export function CookModeProvider({ children }: CookModeProviderProps) {
 
     window.addEventListener("keydown", handleKeyPress)
     return () => window.removeEventListener("keydown", handleKeyPress)
-  }, [])
+  }, [toggleCookMode])
 
   // Prevent screen timeout in cook mode
   useEffect(() => {

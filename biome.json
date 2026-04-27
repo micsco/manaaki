@@ -137,6 +137,10 @@
     },
     "linter": {
       "enabled": true
+    },
+    "parser": {
+      "allowWrongLineComments": true,
+      "tailwindDirectives": true
     }
   },
   "overrides": [

@@ -45,10 +45,10 @@ function RootComponent() {
 
 function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950">
+    <div className="flex min-h-screen items-center justify-center bg-gray-950">
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-100 mb-4">404</h1>
-        <p className="text-lg text-gray-400">Page not found.</p>
+        <h1 className="mb-4 font-bold text-4xl text-gray-100">404</h1>
+        <p className="text-gray-400 text-lg">Page not found.</p>
       </div>
     </div>
   )
