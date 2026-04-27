@@ -1,9 +1,9 @@
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react"
+import { createContext, type ReactNode, useContext, useEffect } from "react"
+import { useQueryState } from "nuqs"
 
 interface CookModeContextType {
   isCookMode: boolean
   toggleCookMode: () => void
-  setCookMode: (enabled: boolean) => void
 }
 
 const CookModeContext = createContext<CookModeContextType | undefined>(undefined)
@@ -21,27 +21,20 @@ interface CookModeProviderProps {
 }
 
 export function CookModeProvider({ children }: CookModeProviderProps) {
-  const [isCookMode, setIsCookMode] = useState(() => {
-    // Check localStorage for saved preference
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("cookMode")
-      return saved === "true"
-    }
-    return false
+  const [isCookMode, setIsCookMode] = useQueryState("cook", {
+    // Parse URL param to boolean
+    parse: (value: string) => value === "true",
+    // Serialize boolean to URL param
+    serialize: (value: boolean) => value.toString(),
+    // Default to false if not present
+    defaultValue: false,
+    // Clear the param when false to keep URLs clean
+    clearOnDefault: true,
   })
 
   const toggleCookMode = () => {
     setIsCookMode(prev => !prev)
   }
-
-  const setCookMode = (enabled: boolean) => {
-    setIsCookMode(enabled)
-  }
-
-  // Save preference to localStorage
-  useEffect(() => {
-    localStorage.setItem("cookMode", isCookMode.toString())
-  }, [isCookMode])
 
   // Add keyboard shortcut (Ctrl/Cmd + K) for cook mode
   useEffect(() => {
@@ -79,7 +72,7 @@ export function CookModeProvider({ children }: CookModeProviderProps) {
   }, [isCookMode])
 
   return (
-    <CookModeContext.Provider value={{ isCookMode, toggleCookMode, setCookMode }}>
+    <CookModeContext.Provider value={{ isCookMode, toggleCookMode }}>
       {children}
     </CookModeContext.Provider>
   )

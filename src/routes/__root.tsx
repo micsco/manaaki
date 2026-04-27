@@ -1,4 +1,5 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router"
+import { NuqsAdapter } from "nuqs/adapters/tanstack-router"
 import type { ReactNode } from "react"
 import { CookModeProvider } from "../contexts/CookModeContext"
 import "../styles/globals.css"
@@ -33,9 +34,11 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
-      <CookModeProvider>
-        <Outlet />
-      </CookModeProvider>
+      <NuqsAdapter>
+        <CookModeProvider>
+          <Outlet />
+        </CookModeProvider>
+      </NuqsAdapter>
     </RootDocument>
   )
 }

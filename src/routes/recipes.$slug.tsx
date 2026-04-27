@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { useState } from "react"
+import { useQueryState } from "nuqs"
 import { getOneApiRecipesSlugGet } from "../api/generated/sdk.gen"
 import type { RecipeOutput, RecipeStep } from "../api/generated/types.gen"
 import { CookModeToggle } from "../components/CookModeToggle"
@@ -40,7 +40,16 @@ function InstructionStep({ step, index }: { step: RecipeStep; index: number }) {
 function RecipeDetail() {
   const recipe = Route.useLoaderData()
   const { isCookMode } = useCookMode()
-  const [showStepByStep, setShowStepByStep] = useState(false)
+  const [showStepByStep, setShowStepByStep] = useQueryState("step", {
+    // Parse URL param to boolean
+    parse: (value: string) => value === "true",
+    // Serialize boolean to URL param
+    serialize: (value: boolean) => value.toString(),
+    // Default to false if not present
+    defaultValue: false,
+    // Clear the param when false to keep URLs clean
+    clearOnDefault: true,
+  })
   const img = recipeImageUrl(recipe)
 
   const prepTime = formatTime(recipe.prepTime)
