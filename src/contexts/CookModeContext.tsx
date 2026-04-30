@@ -1,5 +1,5 @@
 import { useQueryState } from "nuqs"
-import { createContext, type ReactNode, useContext, useEffect } from "react"
+import { createContext, type ReactNode, useCallback, useContext, useEffect } from "react"
 
 interface CookModeContextType {
   isCookMode: boolean
@@ -32,9 +32,9 @@ export function CookModeProvider({ children }: CookModeProviderProps) {
     clearOnDefault: true,
   })
 
-  const toggleCookMode = () => {
+  const toggleCookMode = useCallback(() => {
     setIsCookMode(prev => !prev)
-  }
+  }, [setIsCookMode])
 
   // Add keyboard shortcut (Ctrl/Cmd + K) for cook mode
   useEffect(() => {

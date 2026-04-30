@@ -32,10 +32,10 @@ export function useSessionStorage<T>(key: string, initialValue: T) {
       try {
         // Allow value to be a function so we have same API as useState
         const valueToStore = value instanceof Function ? value(storedValue) : value
-        
+
         // Save state
         setStoredValue(valueToStore)
-        
+
         // Save to session storage
         if (typeof window !== "undefined") {
           window.sessionStorage.setItem(key, JSON.stringify(valueToStore))

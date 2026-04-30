@@ -1,4 +1,4 @@
-import { type ChangeEvent, type ReactNode, useCallback, useState } from "react"
+import { type ChangeEvent, useCallback, useState } from "react"
 import type { RecipeStep } from "../api/generated/types.gen"
 import { useSessionStorage } from "../hooks/useSessionStorage"
 
@@ -8,6 +8,100 @@ interface InstructionStepProps {
   recipeId: string
   isCookMode?: boolean
   className?: string
+}
+
+function StepNumberIndicator({
+  isChecked,
+  stepNumber,
+}: {
+  isChecked: boolean
+  stepNumber: number
+}) {
+  return (
+    <div
+      className={`flex h-8 w-8 items-center justify-center rounded-full font-semibold text-sm transition-all duration-300 ${
+        isChecked
+          ? "border-2 border-green-500 bg-green-600 text-white hover:border-green-400"
+          : "border-2 border-orange-500 bg-orange-600 text-white hover:border-orange-400"
+      }`}
+    >
+      {isChecked ? (
+        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+          <path
+            fillRule="evenodd"
+            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+            clipRule="evenodd"
+          />
+        </svg>
+      ) : (
+        stepNumber
+      )}
+    </div>
+  )
+}
+
+function StepContent({
+  step,
+  isChecked,
+  isExpanded,
+  isCookMode,
+  onToggleExpanded,
+}: {
+  step: RecipeStep
+  isChecked: boolean
+  isExpanded: boolean
+  isCookMode: boolean
+  onToggleExpanded: (e: React.MouseEvent) => void
+}) {
+  return (
+    <div className="min-w-0 flex-1">
+      {step.title && (
+        <h3
+          className={`mb-2 font-semibold transition-all duration-300 ${
+            isChecked
+              ? "text-gray-400 line-through"
+              : isCookMode
+                ? "text-gray-100 text-lg"
+                : "text-gray-200"
+          }`}
+        >
+          {step.title}
+        </h3>
+      )}
+
+      <div
+        className={`overflow-hidden transition-all duration-300 ${isChecked && !isExpanded ? "max-h-0 opacity-0" : "max-h-96 opacity-100"}`}
+      >
+        <p
+          className={`leading-relaxed transition-all duration-300 ${
+            isChecked ? "text-gray-500" : isCookMode ? "text-base text-gray-100" : "text-gray-300"
+          }`}
+        >
+          {step.text}
+        </p>
+      </div>
+
+      {isChecked && (
+        <button
+          type="button"
+          onClick={onToggleExpanded}
+          className="mt-2 flex items-center gap-1 text-orange-400 text-xs transition-colors duration-200 hover:text-orange-300"
+          aria-label={isExpanded ? "Collapse step" : "Expand step"}
+        >
+          <svg
+            className={`h-3 w-3 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+          {isExpanded ? "Show less" : "Show more"}
+        </button>
+      )}
+    </div>
+  )
 }
 
 /**
@@ -23,61 +117,54 @@ export function InstructionStep({
 }: InstructionStepProps) {
   // Create a unique key for this step in this recipe
   const storageKey = `recipe-${recipeId}-step-${index}`
-  
+
   const [isChecked, setIsChecked] = useSessionStorage(storageKey, false)
   const [isExpanded, setIsExpanded] = useState(!isChecked) // Start collapsed if checked
 
   const handleToggle = useCallback(() => {
     const newCheckedState = !isChecked
     setIsChecked(newCheckedState)
-    
     // Auto-collapse when checked, expand when unchecked
-    if (newCheckedState) {
-      setIsExpanded(false)
-    } else {
-      setIsExpanded(true)
-    }
+    setIsExpanded(!newCheckedState)
   }, [isChecked, setIsChecked])
 
-  const handleCheckboxChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation()
-    const newCheckedState = e.target.checked
-    setIsChecked(newCheckedState)
-    
-    // Auto-collapse when checked, expand when unchecked
-    if (newCheckedState) {
-      setIsExpanded(false)
-    } else {
-      setIsExpanded(true)
-    }
-  }, [setIsChecked])
+  const handleCheckboxChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      e.stopPropagation()
+      const newCheckedState = e.target.checked
+      setIsChecked(newCheckedState)
+      // Auto-collapse when checked, expand when unchecked
+      setIsExpanded(!newCheckedState)
+    },
+    [setIsChecked]
+  )
 
-  const toggleExpanded = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (isChecked) {
-      setIsExpanded(!isExpanded)
-    }
-  }, [isChecked, isExpanded])
+  const toggleExpanded = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (isChecked) {
+        setIsExpanded(!isExpanded)
+      }
+    },
+    [isChecked, isExpanded]
+  )
 
   const stepNumber = index + 1
 
   return (
-    <li 
-      className={`group relative border border-gray-800 rounded-lg transition-all duration-300 ${
-        isChecked 
-          ? "bg-gray-800/30 border-gray-700" 
-          : "bg-gray-900/50 hover:bg-gray-800/50"
+    <li
+      className={`group relative rounded-lg border border-gray-800 transition-all duration-300 ${
+        isChecked ? "border-gray-700 bg-gray-800/30" : "bg-gray-900/50 hover:bg-gray-800/50"
       } ${className}`}
     >
-      <div 
-        className={`flex items-start gap-4 p-4 cursor-pointer transition-all duration-300 ${
+      <button
+        type="button"
+        className={`flex w-full cursor-pointer items-start gap-4 p-4 text-left transition-all duration-300 ${
           isChecked && !isExpanded ? "py-3" : ""
         }`}
         onClick={handleToggle}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+        onKeyDown={e => {
+          if (e.key === "Enter" || e.key === " ") {
             e.preventDefault()
             handleToggle()
           }
@@ -92,90 +179,17 @@ export function InstructionStep({
             className="sr-only"
             aria-label={`Mark step ${stepNumber} as complete`}
           />
-          <div 
-            className={`
-              flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-all duration-300
-              ${isChecked 
-                ? "bg-green-600 text-white border-2 border-green-500" 
-                : "bg-orange-600 text-white border-2 border-orange-500"
-              }
-              ${isChecked ? "hover:border-green-400" : "hover:border-orange-400"}
-            `}
-          >
-            {isChecked ? (
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            ) : (
-              stepNumber
-            )}
-          </div>
+          <StepNumberIndicator isChecked={isChecked} stepNumber={stepNumber} />
         </div>
 
-        {/* Step content */}
-        <div className="flex-1 min-w-0">
-          {/* Step title */}
-          {step.title && (
-            <h3 
-              className={`
-                font-semibold mb-2 transition-all duration-300
-                ${isChecked 
-                  ? "text-gray-400 line-through" 
-                  : isCookMode ? "text-gray-100 text-lg" : "text-gray-200"
-                }
-              `}
-            >
-              {step.title}
-            </h3>
-          )}
-
-          {/* Step text - collapsible */}
-          <div 
-            className={`
-              transition-all duration-300 overflow-hidden
-              ${isChecked && !isExpanded ? "max-h-0 opacity-0" : "max-h-96 opacity-100"}
-            `}
-          >
-            <p 
-              className={`
-                leading-relaxed transition-all duration-300
-                ${isChecked 
-                  ? "text-gray-500" 
-                  : isCookMode ? "text-gray-100 text-base" : "text-gray-300"
-                }
-              `}
-            >
-              {step.text}
-            </p>
-          </div>
-
-          {/* Expand/collapse indicator for completed steps */}
-          {isChecked && (
-            <button
-              onClick={toggleExpanded}
-              className="mt-2 text-xs text-orange-400 hover:text-orange-300 transition-colors duration-200 flex items-center gap-1"
-              aria-label={isExpanded ? "Collapse step" : "Expand step"}
-            >
-              <svg 
-                className={`
-                  w-3 h-3 transition-transform duration-200
-                  ${isExpanded ? "rotate-180" : ""}
-                `} 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-              {isExpanded ? "Show less" : "Show more"}
-            </button>
-          )}
-        </div>
-      </div>
+        <StepContent
+          step={step}
+          isChecked={isChecked}
+          isExpanded={isExpanded}
+          isCookMode={isCookMode}
+          onToggleExpanded={toggleExpanded}
+        />
+      </button>
     </li>
   )
 }

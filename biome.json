@@ -151,6 +151,9 @@
       },
       "formatter": {
         "enabled": false
+      },
+      "assist": {
+        "enabled": false
       }
     },
     {
