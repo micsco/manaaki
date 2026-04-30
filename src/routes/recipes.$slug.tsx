@@ -12,6 +12,9 @@ import { useCookMode } from "../contexts/CookModeContext"
 import { recipeImageUrl } from "../utils/recipe"
 
 export const Route = createFileRoute("/recipes/$slug")({
+  head: ({ loaderData }) => ({
+    meta: [{ title: `${loaderData?.name ?? "Recipe"} · What's Cookin'` }],
+  }),
   loader: async ({ params }) => {
     const r = await getOneApiRecipesSlugGet({ path: { slug: params.slug } })
     if (!r.data) throw new Error("Recipe not found")
