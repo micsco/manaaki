@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
+import { ChevronLeft, CirclePlay } from "lucide-react"
 import { useQueryState } from "nuqs"
 import { getOneApiRecipesSlugGet } from "../api/generated/sdk.gen"
 import type { RecipeIngredientOutput, RecipeOutput, RecipeStep } from "../api/generated/types.gen"
@@ -148,26 +149,7 @@ function InstructionsSection({
         </h2>
         {!isCookMode && (
           <Button onClick={onStartStepByStep} size="sm" className="bg-green-600 hover:bg-green-700">
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <CirclePlay className="h-4 w-4" aria-hidden="true" />
             Step-by-Step
           </Button>
         )}
@@ -239,15 +221,7 @@ function BackToRecipesLink() {
       to="/recipes"
       className="inline-flex items-center gap-2 font-medium text-orange-400 hover:text-orange-300"
     >
-      <svg
-        className="h-4 w-4"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-      </svg>
+      <ChevronLeft className="h-4 w-4" aria-hidden="true" />
       All recipes
     </Link>
   )
@@ -256,26 +230,7 @@ function BackToRecipesLink() {
 function StartCookingButton({ isCookMode, onClick }: { isCookMode: boolean; onClick: () => void }) {
   return (
     <Button onClick={onClick} size="sm" className="bg-green-600 hover:bg-green-700">
-      <svg
-        className="h-4 w-4"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-        />
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
+      <CirclePlay className="h-4 w-4" aria-hidden="true" />
       {isCookMode ? "Start Cooking" : "Step-by-Step"}
     </Button>
   )
@@ -302,20 +257,7 @@ function StepByStepView({ recipe, onExit }: { recipe: RecipeOutput; onExit: () =
       title={recipe.name ?? undefined}
       backButton={
         <Button onClick={onExit} variant="ghost" size="sm">
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
+          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           Back to Recipe
         </Button>
       }

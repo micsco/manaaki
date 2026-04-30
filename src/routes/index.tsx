@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
+import { ChevronRight } from "lucide-react"
 import { getCurrentUser } from "../api/auth"
 import { CookModeToggle } from "../components/CookModeToggle"
 import { Button } from "../components/ui"
@@ -37,20 +38,7 @@ function Home() {
             <Button asChild size="lg" className="gap-2">
               <Link to="/recipes">
                 Browse recipes
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+                <ChevronRight className="h-5 w-5" aria-hidden="true" />
               </Link>
             </Button>
           </div>

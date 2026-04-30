@@ -1,3 +1,4 @@
+import { Check, ChevronDown } from "lucide-react"
 import { type ChangeEvent, useCallback, useState } from "react"
 import type { RecipeStep } from "../api/generated/types.gen"
 import { useSessionStorage } from "../hooks/useSessionStorage"
@@ -25,17 +26,7 @@ function StepNumberIndicator({
           : "border-2 border-orange-500 bg-orange-600 text-white hover:border-orange-400"
       }`}
     >
-      {isChecked ? (
-        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-          <path
-            fillRule="evenodd"
-            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-            clipRule="evenodd"
-          />
-        </svg>
-      ) : (
-        stepNumber
-      )}
+      {isChecked ? <Check className="h-4 w-4" aria-hidden="true" /> : stepNumber}
     </div>
   )
 }
@@ -88,15 +79,10 @@ function StepContent({
           className="mt-2 flex items-center gap-1 text-orange-400 text-xs transition-colors duration-200 hover:text-orange-300"
           aria-label={isExpanded ? "Collapse step" : "Expand step"}
         >
-          <svg
+          <ChevronDown
             className={`h-3 w-3 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
             aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
+          />
           {isExpanded ? "Show less" : "Show more"}
         </button>
       )}

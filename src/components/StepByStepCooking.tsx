@@ -1,3 +1,4 @@
+import { Check, Clock } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import type { RecipeStep } from "../api/generated/types.gen"
 import { Button } from "./ui"
@@ -55,21 +56,7 @@ export function StepByStepCooking({ steps, onComplete }: StepByStepCookingProps)
       <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
         <div className="mb-8">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-600">
-            <svg
-              className="h-8 w-8 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-label="Check mark"
-            >
-              <title>Completed</title>
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+            <Check className="h-8 w-8 text-white" aria-hidden="true" />
           </div>
           <h2 className="mb-2 font-bold text-2xl text-gray-100">Recipe Complete!</h2>
           <p className="text-gray-400">Enjoy your delicious meal!</p>
@@ -128,21 +115,7 @@ export function StepByStepCooking({ steps, onComplete }: StepByStepCookingProps)
           {/* Timer placeholder (could be enhanced with actual timer functionality) */}
           <div className="mb-6 rounded-lg bg-gray-900 p-4">
             <div className="flex items-center gap-3">
-              <svg
-                className="h-5 w-5 text-orange-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-label="Timer icon"
-              >
-                <title>Timer</title>
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <Clock className="h-5 w-5 text-orange-400" aria-hidden="true" />
               <span className="text-gray-400 text-sm">Timer available here</span>
             </div>
           </div>
