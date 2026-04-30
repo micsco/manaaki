@@ -1,8 +1,9 @@
+import { mdiStarCircleOutline, mdiTimerOutline } from "@mdi/js"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { Clock, Star } from "lucide-react"
 import { useState } from "react"
 import { getAllApiRecipesGet } from "../api/generated/sdk.gen"
 import type { RecipeSummary } from "../api/generated/types.gen"
+import { Icon } from "../components/Icon"
 import { Badge, Card } from "../components/ui"
 import { recipeImageUrl } from "../utils/recipe"
 
@@ -55,13 +56,13 @@ function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
             <div className="flex items-center gap-3 text-gray-500 text-sm">
               {recipe.totalTime && (
                 <Badge variant="tag" className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" aria-hidden="true" />
+                  <Icon path={mdiTimerOutline} size={0.55} aria-hidden={true} />
                   {recipe.totalTime}
                 </Badge>
               )}
               {recipe.rating != null && (
                 <Badge variant="rating" className="flex items-center gap-1">
-                  <Star className="h-3 w-3 fill-current" aria-hidden="true" />
+                  <Icon path={mdiStarCircleOutline} size={0.55} aria-hidden={true} />
                   {recipe.rating.toFixed(1)}
                 </Badge>
               )}

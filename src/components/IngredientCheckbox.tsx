@@ -1,4 +1,4 @@
-import { Check } from "lucide-react"
+import { mdiCheck } from "@mdi/js"
 import { type ChangeEvent, type ReactNode, useCallback } from "react"
 import type {
   CreateIngredientFood,
@@ -8,6 +8,7 @@ import type {
 } from "../api/generated/types.gen"
 import { useSessionStorage } from "../hooks/useSessionStorage"
 import { formatQuantity } from "../utils/recipe"
+import { Icon } from "./Icon"
 
 interface IngredientCheckboxProps {
   ingredient: string
@@ -156,7 +157,7 @@ export function IngredientCheckbox({
         />
         {isChecked && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <Check className="h-3 w-3 text-white" aria-hidden="true" />
+            <Icon path={mdiCheck} size={0.5} className="text-white" aria-hidden={true} />
           </div>
         )}
       </div>

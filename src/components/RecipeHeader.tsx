@@ -1,15 +1,15 @@
+import { mdiAccountGroup, mdiChevronLeft, mdiStarCircleOutline, mdiTimerOutline } from "@mdi/js"
 import { Link } from "@tanstack/react-router"
-import type { LucideIcon } from "lucide-react"
-import { ChevronLeft, Clock, Star, Users } from "lucide-react"
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { formatTime } from "../utils/recipe"
+import { Icon } from "./Icon"
 import { Badge } from "./ui"
 
 function HeroRating({ rating }: { rating: number }) {
   return (
     <div className="flex flex-col items-start gap-1">
       <span className="flex items-center gap-1 font-sans font-semibold text-gray-400 text-xs uppercase tracking-widest">
-        <Star className="h-3 w-3" aria-hidden="true" />
+        <Icon path={mdiStarCircleOutline} size={0.6} aria-hidden={true} />
         Rating
       </span>
       <span className="text-sm leading-none">
@@ -20,19 +20,11 @@ function HeroRating({ rating }: { rating: number }) {
   )
 }
 
-function HeroStat({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string
-  value: string
-  icon: LucideIcon
-}) {
+function HeroStat({ label, value, icon }: { label: string; value: string; icon: string }) {
   return (
     <div className="flex flex-col items-start gap-1">
       <span className="flex items-center gap-1 font-sans font-semibold text-gray-400 text-xs uppercase tracking-widest">
-        <Icon className="h-3 w-3" aria-hidden="true" />
+        <Icon path={icon} size={0.6} aria-hidden={true} />
         {label}
       </span>
       <span className="font-sans font-semibold text-sm text-white">{value}</span>
@@ -48,12 +40,12 @@ function HeroStats({ recipe }: { recipe: RecipeOutput }) {
   if (!prepTime && !cookTime && !totalTime && !recipe.recipeServings && rating == null) return null
   return (
     <div className="flex shrink-0 flex-wrap items-end gap-x-6 gap-y-3 pb-1">
-      {prepTime && <HeroStat icon={Clock} label="Prep" value={prepTime} />}
-      {cookTime && <HeroStat icon={Clock} label="Cook" value={cookTime} />}
-      {totalTime && <HeroStat icon={Clock} label="Total" value={totalTime} />}
+      {prepTime && <HeroStat icon={mdiTimerOutline} label="Prep" value={prepTime} />}
+      {cookTime && <HeroStat icon={mdiTimerOutline} label="Cook" value={cookTime} />}
+      {totalTime && <HeroStat icon={mdiTimerOutline} label="Total" value={totalTime} />}
       {recipe.recipeServings != null && recipe.recipeServings > 0 && (
         <HeroStat
-          icon={Users}
+          icon={mdiAccountGroup}
           label="Serves"
           value={`${recipe.recipeServings}${recipe.recipeYield ? ` ${recipe.recipeYield}` : ""}`}
         />
@@ -73,7 +65,7 @@ export function RecipeHeader({ recipe, img }: { recipe: RecipeOutput; img: strin
           to="/recipes"
           className="absolute top-4 left-4 z-20 inline-flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 font-medium text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/60"
         >
-          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+          <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
           All recipes
         </Link>
 
@@ -99,7 +91,6 @@ export function RecipeHeader({ recipe, img }: { recipe: RecipeOutput; img: strin
             <h1 className="max-w-2xl font-bold font-serif text-4xl text-white leading-tight drop-shadow-lg md:text-5xl lg:text-6xl">
               {recipe.name}
             </h1>
-
             <HeroStats recipe={recipe} />
           </div>
         </div>

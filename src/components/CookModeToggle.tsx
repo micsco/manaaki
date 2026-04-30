@@ -1,5 +1,6 @@
-import { UtensilsCrossed } from "lucide-react"
+import { mdiChefHat } from "@mdi/js"
 import { useCookMode } from "../contexts/CookModeContext"
+import { Icon } from "./Icon"
 
 export function CookModeToggle() {
   const { isCookMode, toggleCookMode } = useCookMode()
@@ -14,7 +15,7 @@ export function CookModeToggle() {
           : "bg-gray-800 text-gray-300 hover:bg-gray-700 active:bg-gray-600"
       }`}
     >
-      <UtensilsCrossed className="h-4 w-4 shrink-0" aria-hidden="true" />
+      <Icon path={mdiChefHat} size={0.75} aria-hidden={true} />
       {isCookMode ? "Exit Cook Mode" : "Cook Mode"}
     </button>
   )

@@ -1,7 +1,8 @@
+import { mdiChevronLeft } from "@mdi/js"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { ChevronLeft } from "lucide-react"
 import { getOneApiRecipesSlugGet } from "../api/generated/sdk.gen"
 import type { RecipeOutput } from "../api/generated/types.gen"
+import { Icon } from "../components/Icon"
 import { KitchenLayout } from "../components/KitchenLayout"
 import { RecipeBody } from "../components/RecipeBody"
 import { RecipeHeader } from "../components/RecipeHeader"
@@ -32,7 +33,7 @@ function RecipeDetail() {
       to="/recipes"
       className="inline-flex items-center gap-2 font-medium text-orange-400 hover:text-orange-300"
     >
-      <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+      <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
       All recipes
     </Link>
   )

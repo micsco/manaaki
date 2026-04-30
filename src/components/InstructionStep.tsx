@@ -1,8 +1,9 @@
-import { Check, ChevronDown } from "lucide-react"
+import { mdiCheck, mdiChevronDown } from "@mdi/js"
 import { type ChangeEvent, useCallback, useState } from "react"
 import type { RecipeStep } from "../api/generated/types.gen"
 import { useCookMode } from "../contexts/CookModeContext"
 import { useSessionStorage } from "../hooks/useSessionStorage"
+import { Icon } from "./Icon"
 
 interface InstructionStepProps {
   step: RecipeStep
@@ -26,7 +27,7 @@ function StepNumberIndicator({
           : "border-2 border-orange-500 bg-orange-600 text-white hover:border-orange-400"
       }`}
     >
-      {isChecked ? <Check className="h-4 w-4" aria-hidden="true" /> : stepNumber}
+      {isChecked ? <Icon path={mdiCheck} size={0.65} aria-hidden={true} /> : stepNumber}
     </div>
   )
 }
@@ -78,9 +79,11 @@ function StepContent({
           className="mt-2 flex items-center gap-1 text-orange-400 text-xs transition-colors duration-200 hover:text-orange-300"
           aria-label={isExpanded ? "Collapse step" : "Expand step"}
         >
-          <ChevronDown
-            className={`h-3 w-3 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
-            aria-hidden="true"
+          <Icon
+            path={mdiChevronDown}
+            size={0.55}
+            className={`transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+            aria-hidden={true}
           />
           {isExpanded ? "Show less" : "Show more"}
         </button>
