@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import { ChevronLeft } from "lucide-react"
 import { getOneApiRecipesSlugGet } from "../api/generated/sdk.gen"
 import type { RecipeOutput } from "../api/generated/types.gen"
-import { CookModeToggle } from "../components/CookModeToggle"
 import { KitchenLayout } from "../components/KitchenLayout"
 import { RecipeBody } from "../components/RecipeBody"
 import { RecipeHeader } from "../components/RecipeHeader"
@@ -36,11 +35,10 @@ function RecipeDetail() {
       All recipes
     </Link>
   )
-  const actions = <CookModeToggle />
 
   return (
-    <KitchenLayout title={recipe.name ?? undefined} backButton={backButton} actions={actions}>
-      {!isCookMode && <RecipeHeader recipe={recipe} img={img} actions={actions} />}
+    <KitchenLayout title={recipe.name ?? undefined} backButton={backButton}>
+      {!isCookMode && <RecipeHeader recipe={recipe} img={img} />}
       <RecipeBody recipe={recipe} />
     </KitchenLayout>
   )

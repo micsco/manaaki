@@ -1,17 +1,8 @@
-import type { ReactNode } from "react"
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { RecipeMetadata } from "./RecipeMetadata"
 import { Badge } from "./ui"
 
-export function RecipeHeader({
-  recipe,
-  img,
-  actions,
-}: {
-  recipe: RecipeOutput
-  img: string | null
-  actions: ReactNode
-}) {
+export function RecipeHeader({ recipe, img }: { recipe: RecipeOutput; img: string | null }) {
   return (
     <>
       {img && (
@@ -44,7 +35,6 @@ export function RecipeHeader({
           ))}
         </div>
       ) : null}
-      <div className="mb-8">{actions}</div>
     </>
   )
 }
