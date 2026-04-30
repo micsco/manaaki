@@ -1,0 +1,13 @@
+node_modules
+dist
+.output
+.tanstack
+.git
+.github
+.vscode
+.claude
+.agents
+.env
+.env.local
+*.md
+LICENSE
