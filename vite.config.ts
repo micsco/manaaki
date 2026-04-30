@@ -25,6 +25,9 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       tanstackStart({
+        prerender: {
+          enabled: false,
+        },
         spa: {
           enabled: true,
         },
