@@ -49,7 +49,7 @@ export function RecipeHeader({ recipe, img }: { recipe: RecipeOutput; img: strin
         <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
 
         {/* Overlaid title + stats */}
-        <div className="absolute right-0 bottom-0 left-0 px-6 pb-8 md:px-10">
+        <div className="absolute right-0 bottom-0 left-0 px-6 pb-12 md:px-10 md:pb-16">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <h1 className="max-w-2xl font-bold font-serif text-4xl text-white leading-tight drop-shadow-lg md:text-5xl lg:text-6xl">
               {recipe.name}
