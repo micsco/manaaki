@@ -7,6 +7,9 @@ import { Badge, Card } from "../components/ui"
 import { recipeImageUrl } from "../utils/recipe"
 
 export const Route = createFileRoute("/recipes/")({
+  head: () => ({
+    meta: [{ title: "Recipes · What's Cookin'" }],
+  }),
   loader: async () => {
     const response = await getAllApiRecipesGet({
       query: { perPage: 50, orderBy: "dateAdded", orderDirection: "desc" },

@@ -5,6 +5,9 @@ import { CookModeToggle } from "../components/CookModeToggle"
 import { Button } from "../components/ui"
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [{ title: "What's Cookin'" }],
+  }),
   loader: getCurrentUser,
   component: Home,
 })
