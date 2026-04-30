@@ -7,32 +7,12 @@ server {
 
     server_tokens off;
 
-    # ── Mealie API proxy ──────────────────────────────────────────────────────
-    #
-    # All /api/* requests are forwarded to the Mealie backend running on the
-    # internal Docker network. The Authorization header is injected here using
-    # the MEALIE_API_TOKEN runtime environment variable so that the token is
-    # never baked into the JS bundle or visible in the browser.
-    #
-    # Only GET requests are permitted and only the three endpoint groups the
-    # app actually uses are exposed. Everything else returns 403 or 405.
-    #
-    # Environment variables substituted at container start-up by envsubst:
-    #   MEALIE_INTERNAL_URL  — e.g. http://scottfamilynz-mealie-cvtizz-mealie-1:9000
-    #   MEALIE_API_TOKEN     — long-lived Mealie API token
-    #
-    # DNS resolution strategy:
-    #   Using a variable for proxy_pass causes nginx to resolve the hostname at
-    #   request time rather than at startup. This means the container starts
-    #   cleanly even if Mealie is temporarily unavailable, and automatically
-    #   reconnects when it comes back up. Docker's embedded DNS is at 127.0.0.11.
-
+    # Using a variable for proxy_pass causes nginx to resolve the hostname at
+    # request time rather than startup, so the container starts cleanly even if
+    # Mealie is temporarily down. Docker's embedded DNS is at 127.0.0.11.
     resolver 127.0.0.11 valid=30s ipv6=off;
     set $mealie "${MEALIE_INTERNAL_URL}";
 
-    # --- Allowed endpoint groups (GET only) ----------------------------------
-
-    # /api/recipes and /api/recipes/<slug>/... (recipe list + detail + assets)
     location ~ ^/api/recipes(/.*)?$ {
         if ($request_method != GET) {
             return 405;
@@ -41,7 +21,6 @@ server {
         include /etc/nginx/conf.d/mealie-proxy-headers.conf;
     }
 
-    # /api/users/self (current-user probe used by the root route loader)
     location = /api/users/self {
         if ($request_method != GET) {
             return 405;
@@ -50,7 +29,6 @@ server {
         include /etc/nginx/conf.d/mealie-proxy-headers.conf;
     }
 
-    # /api/media/recipes/<id>/images/<size>.webp (recipe images)
     location ~ ^/api/media/recipes/ {
         if ($request_method != GET) {
             return 405;
@@ -59,26 +37,19 @@ server {
         include /etc/nginx/conf.d/mealie-proxy-headers.conf;
     }
 
-    # All other /api/* paths are explicitly denied
     location /api/ {
         return 403;
     }
 
-    # ── SPA ───────────────────────────────────────────────────────────────────
-
-    # Cache hashed assets aggressively
     location /assets/ {
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
 
-    # SPA: fall back to _shell.html for all non-asset routes so TanStack
-    # Router can handle client-side navigation to any path
     location / {
         try_files $uri $uri/ /_shell.html;
     }
 
-    # Gzip compression
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml image/svg+xml;
     gzip_min_length 256;

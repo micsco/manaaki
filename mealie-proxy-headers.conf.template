@@ -1,7 +1,3 @@
-# Shared proxy headers for all Mealie API proxy locations.
-# Included by nginx.conf.template — substituted at container start-up.
-
-# Inject the Mealie token server-side; strip any token the browser may send
 proxy_set_header Authorization "Bearer ${MEALIE_API_TOKEN}";
 
 proxy_set_header Host $http_host;

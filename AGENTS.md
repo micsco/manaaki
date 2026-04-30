@@ -26,6 +26,14 @@ dev proxy in `vite.config.ts` injects the token identically to nginx.
 **Do not** set `VITE_MEALIE_API_TOKEN` or `VITE_MEALIE_BASE_URL` — those were
 removed to prevent the token from leaking into the JS bundle.
 
+## Code Style
+
+No comments. Code should be self-explanatory through clear naming and structure.
+
+- Use descriptive variable and function names
+- Only add a comment if it explains a non-obvious workaround or external constraint that cannot be expressed in code
+- If code needs a comment to be understood, refactor it first
+
 ## Commands
 
 | Task                  | Command             |

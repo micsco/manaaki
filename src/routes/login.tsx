@@ -4,15 +4,6 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 })
 
-/**
- * Shown when the Mealie API proxy is unreachable or the server-side token is
- * invalid. Previously this page guided users to set VITE_MEALIE_API_TOKEN;
- * now the token is held entirely on the server and never sent to the browser.
- *
- * If you see this page in production, check the deployment environment for:
- *   MEALIE_API_TOKEN     — long-lived Mealie API token
- *   MEALIE_INTERNAL_URL  — internal Docker URL for Mealie
- */
 function LoginPage() {
   return (
     <main>
