@@ -4,6 +4,7 @@ import { useState } from "react"
 import { getAllApiRecipesGet } from "../api/generated/sdk.gen"
 import type { RecipeSummary } from "../api/generated/types.gen"
 import { Badge, Card } from "../components/ui"
+import { recipeImageUrl } from "../utils/recipe"
 
 export const Route = createFileRoute("/recipes/")({
   loader: async () => {
@@ -18,14 +19,9 @@ export const Route = createFileRoute("/recipes/")({
   component: RecipeList,
 })
 
-function recipeImageUrl(recipe: RecipeSummary): string | null {
-  if (!recipe.id) return null
-  return `/api/media/recipes/${recipe.id}/images/min-original.webp`
-}
-
 function RecipeImage({ recipe }: { recipe: RecipeSummary }) {
   const [failed, setFailed] = useState(false)
-  const img = recipeImageUrl(recipe)
+  const img = recipeImageUrl(recipe.id, "min-original")
   if (!img || failed) return <div className="h-48 w-full bg-gray-800" aria-hidden="true" />
   return (
     <img

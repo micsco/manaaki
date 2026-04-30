@@ -10,6 +10,7 @@ import { KitchenLayout } from "../components/KitchenLayout"
 import { StepByStepCooking } from "../components/StepByStepCooking"
 import { Badge, Button } from "../components/ui"
 import { useCookMode } from "../contexts/CookModeContext"
+import { formatTime, recipeImageUrl } from "../utils/recipe"
 
 export const Route = createFileRoute("/recipes/$slug")({
   loader: async ({ params }) => {
@@ -19,17 +20,6 @@ export const Route = createFileRoute("/recipes/$slug")({
   },
   component: RecipeDetail,
 })
-
-function recipeImageUrl(recipe: RecipeOutput): string | null {
-  if (!recipe.id) return null
-  return `/api/media/recipes/${recipe.id}/images/original.webp`
-}
-
-function formatTime(t: string | null | undefined): string | null {
-  if (!t) return null
-  // ISO 8601 duration — just show the raw value for now
-  return t.replace("PT", "").replace("H", "h ").replace("M", "m").trim()
-}
 
 function RecipeMetadata({ recipe }: { recipe: RecipeOutput }) {
   const prepTime = formatTime(recipe.prepTime)
@@ -337,7 +327,7 @@ function RecipeDetail() {
     return <StepByStepView recipe={recipe} onExit={() => setShowStepByStep(false)} />
   }
 
-  const img = recipeImageUrl(recipe)
+  const img = recipeImageUrl(recipe.id, "original")
   const backButton = <BackToRecipesLink />
   const actions = (
     <div className="flex items-center gap-3">
