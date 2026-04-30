@@ -5,5 +5,10 @@ export default defineConfig({
   output: {
     path: 'src/api/generated',
   },
-  plugins: ['@hey-api/client-fetch'],
+  plugins: [
+    {
+      name: '@hey-api/client-fetch',
+      baseUrl: false,
+    },
+  ],
 })
