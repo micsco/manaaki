@@ -1,23 +1,116 @@
 import { Check } from "lucide-react"
 import { type ChangeEvent, type ReactNode, useCallback } from "react"
+import type {
+  CreateIngredientFood,
+  CreateIngredientUnit,
+  IngredientFoodOutput,
+  IngredientUnitOutput,
+} from "../api/generated/types.gen"
 import { useSessionStorage } from "../hooks/useSessionStorage"
+import { formatQuantity } from "../utils/recipe"
 
 interface IngredientCheckboxProps {
   ingredient: string
   recipeId: string
   ingredientIndex: number
+  /** Structured ingredient data — when provided, renders a visual hierarchy. */
+  quantity?: number | null
+  unit?: IngredientUnitOutput | CreateIngredientUnit | null
+  food?: IngredientFoodOutput | CreateIngredientFood | null
+  note?: string | null
   children?: ReactNode
   className?: string
+}
+
+/** Returns the best display label for a unit, respecting abbreviation preferences. */
+function unitLabel(
+  unit: IngredientUnitOutput | CreateIngredientUnit,
+  quantity: number | null | undefined
+): string {
+  const isPlural = quantity != null && quantity !== 1
+
+  // IngredientUnitOutput has useAbbreviation; CreateIngredientUnit may too
+  const useAbbr = "useAbbreviation" in unit ? unit.useAbbreviation : false
+  if (useAbbr) {
+    const abbr =
+      isPlural && "pluralAbbreviation" in unit ? unit.pluralAbbreviation : unit.abbreviation
+    if (abbr) return abbr
+  }
+
+  const plural = "pluralName" in unit ? unit.pluralName : undefined
+  return (isPlural && plural) || unit.name
+}
+
+interface StructuredIngredientProps {
+  quantity?: number | null
+  unit?: IngredientUnitOutput | CreateIngredientUnit | null
+  food?: IngredientFoodOutput | CreateIngredientFood | null
+  note?: string | null
+  isChecked: boolean
+}
+
+/**
+ * Renders a structured ingredient with visual hierarchy:
+ * quantity+unit in lighter muted text, food name prominent, note below in small muted text.
+ */
+function StructuredIngredient({
+  quantity,
+  unit,
+  food,
+  note,
+  isChecked,
+}: StructuredIngredientProps) {
+  const checkedClass = "text-gray-500 line-through opacity-75"
+  return (
+    <span
+      className={`flex-1 select-none transition-all duration-200 ${isChecked ? checkedClass : ""}`}
+    >
+      {/* Line 1: quantity + unit (muted) + food name (prominent) */}
+      <span className="flex flex-wrap items-baseline gap-x-1.5 leading-relaxed">
+        {(quantity != null || unit != null) && (
+          <span
+            className={`font-normal ${isChecked ? "" : "text-gray-400 group-hover:text-gray-300"}`}
+          >
+            {formatQuantity(quantity)}
+            {unit && <span className="ml-1">{unitLabel(unit, quantity)}</span>}
+          </span>
+        )}
+        {food && (
+          <span
+            className={`font-medium ${isChecked ? "" : "text-gray-100 group-hover:text-gray-50"}`}
+          >
+            {food.name}
+          </span>
+        )}
+      </span>
+      {/* Line 2: note (smaller, more muted) */}
+      {note && (
+        <span
+          className={`mt-0.5 block text-sm leading-snug ${isChecked ? "" : "text-gray-500 group-hover:text-gray-400"}`}
+        >
+          {note}
+        </span>
+      )}
+    </span>
+  )
 }
 
 /**
  * Checkbox component for recipe ingredients with session storage persistence.
  * Toggles when clicking either the checkbox or the ingredient text.
+ *
+ * When `quantity`, `unit`, `food`, or `note` props are provided, renders a
+ * visual hierarchy matching Mealie's style: quantity+unit in lighter text,
+ * food name prominent, and note in smaller muted text below.
  */
 export function IngredientCheckbox({
   ingredient,
   recipeId,
   ingredientIndex,
+  quantity,
+  unit,
+  food,
+  note,
   children,
   className = "",
 }: IngredientCheckboxProps) {
@@ -37,6 +130,10 @@ export function IngredientCheckbox({
     },
     [setIsChecked]
   )
+
+  const hasStructuredData = food != null || unit != null || quantity != null
+  const checkedTextClass = "text-gray-500 line-through opacity-75"
+  const uncheckedTextClass = "text-gray-300 group-hover:text-gray-200"
 
   return (
     <li
@@ -63,15 +160,24 @@ export function IngredientCheckbox({
           </div>
         )}
       </div>
-      <span
-        className={`flex-1 select-none leading-relaxed transition-all duration-200 ${
-          isChecked
-            ? "text-gray-500 line-through opacity-75"
-            : "text-gray-300 group-hover:text-gray-200"
-        }`}
-      >
-        {children || ingredient}
-      </span>
+
+      {hasStructuredData ? (
+        <StructuredIngredient
+          quantity={quantity}
+          unit={unit}
+          food={food}
+          note={note}
+          isChecked={isChecked}
+        />
+      ) : (
+        <span
+          className={`flex-1 select-none leading-relaxed transition-all duration-200 ${
+            isChecked ? checkedTextClass : uncheckedTextClass
+          }`}
+        >
+          {children || ingredient}
+        </span>
+      )}
     </li>
   )
 }

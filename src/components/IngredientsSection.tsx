@@ -34,6 +34,10 @@ export function IngredientsSection({
               ingredient={text}
               recipeId={recipeId}
               ingredientIndex={i}
+              quantity={ing.quantity}
+              unit={ing.unit}
+              food={ing.food}
+              note={ing.note}
               className={isCookMode ? "text-base leading-relaxed" : ""}
             >
               {ing.display || ing.originalText}
