@@ -4,14 +4,42 @@ import { IngredientsSection } from "./IngredientsSection"
 import { InstructionsSection } from "./InstructionsSection"
 import { RecipeNotes } from "./RecipeNotes"
 
+function RecipeFooter({ recipe }: { recipe: RecipeOutput }) {
+  return (
+    <div className="mx-auto max-w-6xl px-6 pb-12 md:px-10">
+      <RecipeNotes notes={recipe.notes ?? []} />
+      {recipe.orgURL && (
+        <p className="mt-6 text-gray-500 text-sm">
+          Source:{" "}
+          <a
+            href={recipe.orgURL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-orange-400 underline hover:text-orange-300"
+          >
+            {recipe.orgURL}
+          </a>
+        </p>
+      )}
+    </div>
+  )
+}
+
 export function RecipeBody({ recipe }: { recipe: RecipeOutput }) {
   const { isCookMode } = useCookMode()
   const hasIngredients = (recipe.recipeIngredient?.length ?? 0) > 0
   const hasInstructions = (recipe.recipeInstructions?.length ?? 0) > 0
+
   return (
-    <div>
+    <div className={isCookMode ? "" : "bg-gray-950"}>
       {hasIngredients || hasInstructions ? (
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div
+          className={
+            isCookMode
+              ? "grid grid-cols-1 gap-8 lg:grid-cols-2"
+              : "mx-auto grid max-w-6xl grid-cols-1 gap-0 px-6 py-10 md:grid-cols-2 md:divide-x md:divide-gray-800 md:px-10"
+          }
+        >
           {hasIngredients && (
             <IngredientsSection
               ingredients={recipe.recipeIngredient ?? []}
@@ -26,20 +54,7 @@ export function RecipeBody({ recipe }: { recipe: RecipeOutput }) {
           )}
         </div>
       ) : null}
-      {!isCookMode && <RecipeNotes notes={recipe.notes ?? []} />}
-      {!isCookMode && recipe.orgURL && (
-        <p className="mt-8 text-gray-400 text-sm">
-          Source:{" "}
-          <a
-            href={recipe.orgURL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-orange-400 underline hover:text-orange-300"
-          >
-            {recipe.orgURL}
-          </a>
-        </p>
-      )}
+      {!isCookMode && <RecipeFooter recipe={recipe} />}
     </div>
   )
 }

@@ -26,7 +26,8 @@ function RecipeDetail() {
   const recipe = Route.useLoaderData()
   const { isCookMode } = useCookMode()
   const img = recipeImageUrl(recipe.id, "original")
-  const backButton = (
+
+  const cookModeBackButton = (
     <Link
       to="/recipes"
       className="inline-flex items-center gap-2 font-medium text-orange-400 hover:text-orange-300"
@@ -37,7 +38,7 @@ function RecipeDetail() {
   )
 
   return (
-    <KitchenLayout title={recipe.name ?? undefined} backButton={backButton}>
+    <KitchenLayout title={recipe.name ?? undefined} backButton={cookModeBackButton}>
       {!isCookMode && <RecipeHeader recipe={recipe} img={img} />}
       <RecipeBody recipe={recipe} />
     </KitchenLayout>
