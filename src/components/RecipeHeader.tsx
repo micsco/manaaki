@@ -1,13 +1,38 @@
 import { Link } from "@tanstack/react-router"
-import { ChevronLeft } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+import { ChevronLeft, Clock, Star, Users } from "lucide-react"
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { formatTime } from "../utils/recipe"
 import { Badge } from "./ui"
 
-function HeroStat({ label, value }: { label: string; value: string }) {
+function HeroRating({ rating }: { rating: number }) {
   return (
-    <div className="flex flex-col items-start gap-0.5">
-      <span className="font-sans font-semibold text-gray-400 text-xs uppercase tracking-widest">
+    <div className="flex flex-col items-start gap-1">
+      <span className="flex items-center gap-1 font-sans font-semibold text-gray-400 text-xs uppercase tracking-widest">
+        <Star className="h-3 w-3" aria-hidden="true" />
+        Rating
+      </span>
+      <span className="text-sm leading-none">
+        <span className="text-yellow-400">{"★".repeat(rating)}</span>
+        <span className="text-gray-600">{"★".repeat(5 - rating)}</span>
+      </span>
+    </div>
+  )
+}
+
+function HeroStat({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string
+  value: string
+  icon: LucideIcon
+}) {
+  return (
+    <div className="flex flex-col items-start gap-1">
+      <span className="flex items-center gap-1 font-sans font-semibold text-gray-400 text-xs uppercase tracking-widest">
+        <Icon className="h-3 w-3" aria-hidden="true" />
         {label}
       </span>
       <span className="font-sans font-semibold text-sm text-white">{value}</span>
@@ -15,10 +40,30 @@ function HeroStat({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function RecipeHeader({ recipe, img }: { recipe: RecipeOutput; img: string | null }) {
-  const totalTime = formatTime(recipe.totalTime) ?? formatTime(recipe.cookTime)
+function HeroStats({ recipe }: { recipe: RecipeOutput }) {
+  const prepTime = formatTime(recipe.prepTime)
+  const cookTime = formatTime(recipe.cookTime)
+  const totalTime = formatTime(recipe.totalTime)
   const rating = recipe.rating != null ? Math.round(recipe.rating) : null
+  if (!prepTime && !cookTime && !totalTime && !recipe.recipeServings && rating == null) return null
+  return (
+    <div className="flex shrink-0 flex-wrap items-end gap-x-6 gap-y-3 pb-1">
+      {prepTime && <HeroStat icon={Clock} label="Prep" value={prepTime} />}
+      {cookTime && <HeroStat icon={Clock} label="Cook" value={cookTime} />}
+      {totalTime && <HeroStat icon={Clock} label="Total" value={totalTime} />}
+      {recipe.recipeServings != null && recipe.recipeServings > 0 && (
+        <HeroStat
+          icon={Users}
+          label="Serves"
+          value={`${recipe.recipeServings}${recipe.recipeYield ? ` ${recipe.recipeYield}` : ""}`}
+        />
+      )}
+      {rating != null && <HeroRating rating={rating} />}
+    </div>
+  )
+}
 
+export function RecipeHeader({ recipe, img }: { recipe: RecipeOutput; img: string | null }) {
   return (
     <div className="bg-gray-950 text-gray-100">
       {/* Hero */}
@@ -55,29 +100,7 @@ export function RecipeHeader({ recipe, img }: { recipe: RecipeOutput; img: strin
               {recipe.name}
             </h1>
 
-            {/* Stats row */}
-            {(totalTime || recipe.recipeServings || rating != null) && (
-              <div className="flex shrink-0 items-end gap-6 pb-1">
-                {totalTime && <HeroStat label="Time" value={totalTime} />}
-                {recipe.recipeServings != null && recipe.recipeServings > 0 && (
-                  <HeroStat
-                    label="Serves"
-                    value={`${recipe.recipeServings}${recipe.recipeYield ? ` ${recipe.recipeYield}` : ""}`}
-                  />
-                )}
-                {rating != null && (
-                  <div className="flex flex-col items-start gap-0.5">
-                    <span className="font-sans font-semibold text-gray-400 text-xs uppercase tracking-widest">
-                      Rating
-                    </span>
-                    <span className="text-base leading-none">
-                      <span className="text-yellow-400">{"★".repeat(rating)}</span>
-                      <span className="text-gray-600">{"★".repeat(5 - rating)}</span>
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
+            <HeroStats recipe={recipe} />
           </div>
         </div>
       </div>
