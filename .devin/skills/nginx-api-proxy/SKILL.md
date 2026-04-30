@@ -149,6 +149,34 @@ docker ps --filter "name=mealie" --format "{{.Names}}"
 
 ---
 
+## DNS resolution — why `resolver` + `set $variable` matters
+
+By default nginx resolves all `proxy_pass` hostnames at **startup**. If the
+upstream container isn't running yet, nginx refuses to start with "host not
+found in upstream". This is fragile in Docker where service start order is
+not guaranteed.
+
+The fix used here:
+
+```nginx
+resolver 127.0.0.11 valid=30s ipv6=off;   # Docker's embedded DNS
+set $mealie "${MEALIE_INTERNAL_URL}";      # variable, not a literal
+
+proxy_pass $mealie;                        # resolved per-request
+```
+
+When `proxy_pass` targets a **variable**, nginx defers resolution to the first
+request that needs it and re-resolves every `valid=30s`. This means:
+
+- The container starts cleanly even if Mealie is down
+- If Mealie restarts and gets a new IP, nginx picks it up automatically
+- `127.0.0.11` is Docker's built-in resolver available in every container
+
+`ipv6=off` prevents nginx from trying AAAA records, which Docker DNS doesn't
+reliably serve and can cause spurious failures.
+
+---
+
 ## How `envsubst` works
 
 `envsubst` is a simple tool that replaces `${VAR}` placeholders in text with
