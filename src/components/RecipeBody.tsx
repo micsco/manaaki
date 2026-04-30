@@ -4,13 +4,7 @@ import { IngredientsSection } from "./IngredientsSection"
 import { InstructionsSection } from "./InstructionsSection"
 import { RecipeNotes } from "./RecipeNotes"
 
-export function RecipeBody({
-  recipe,
-  onStartStepByStep,
-}: {
-  recipe: RecipeOutput
-  onStartStepByStep: () => void
-}) {
+export function RecipeBody({ recipe }: { recipe: RecipeOutput }) {
   const { isCookMode } = useCookMode()
   const hasIngredients = (recipe.recipeIngredient?.length ?? 0) > 0
   const hasInstructions = (recipe.recipeInstructions?.length ?? 0) > 0
@@ -28,7 +22,6 @@ export function RecipeBody({
             <InstructionsSection
               steps={recipe.recipeInstructions ?? []}
               recipeId={recipe.id ?? ""}
-              onStartStepByStep={onStartStepByStep}
             />
           )}
         </div>
