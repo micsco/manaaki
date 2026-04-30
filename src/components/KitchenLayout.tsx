@@ -35,7 +35,10 @@ export function KitchenLayout({ children, title, backButton, actions }: KitchenL
   // Normal mode: centered layout with proper spacing
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
-      <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-6">
+        {backButton && <div className="mb-6">{backButton}</div>}
+        {children}
+      </main>
     </div>
   )
 }

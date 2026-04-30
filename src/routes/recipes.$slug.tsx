@@ -84,12 +84,7 @@ function RecipeDetail() {
   )
 
   return (
-    <KitchenLayout
-      title={isCookMode ? (recipe.name ?? undefined) : undefined}
-      backButton={isCookMode ? backButton : undefined}
-      actions={isCookMode ? actions : undefined}
-    >
-      {!isCookMode && <div className="mb-6">{backButton}</div>}
+    <KitchenLayout title={recipe.name ?? undefined} backButton={backButton} actions={actions}>
       {!isCookMode && <RecipeHeader recipe={recipe} img={img} actions={actions} />}
       <RecipeBody recipe={recipe} onStartStepByStep={() => setShowStepByStep(true)} />
     </KitchenLayout>
