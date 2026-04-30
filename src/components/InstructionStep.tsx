@@ -1,13 +1,13 @@
 import { Check, ChevronDown } from "lucide-react"
 import { type ChangeEvent, useCallback, useState } from "react"
 import type { RecipeStep } from "../api/generated/types.gen"
+import { useCookMode } from "../contexts/CookModeContext"
 import { useSessionStorage } from "../hooks/useSessionStorage"
 
 interface InstructionStepProps {
   step: RecipeStep
   index: number
   recipeId: string
-  isCookMode?: boolean
   className?: string
 }
 
@@ -35,15 +35,14 @@ function StepContent({
   step,
   isChecked,
   isExpanded,
-  isCookMode,
   onToggleExpanded,
 }: {
   step: RecipeStep
   isChecked: boolean
   isExpanded: boolean
-  isCookMode: boolean
   onToggleExpanded: (e: React.MouseEvent) => void
 }) {
+  const { isCookMode } = useCookMode()
   return (
     <div className="min-w-0 flex-1">
       {step.title && (
@@ -94,13 +93,7 @@ function StepContent({
  * Instruction step component with checkbox completion and collapse functionality.
  * When checked, the step collapses to a single line with a ticked number indicator.
  */
-export function InstructionStep({
-  step,
-  index,
-  recipeId,
-  isCookMode = false,
-  className = "",
-}: InstructionStepProps) {
+export function InstructionStep({ step, index, recipeId, className = "" }: InstructionStepProps) {
   // Create a unique key for this step in this recipe
   const storageKey = `recipe-${recipeId}-step-${index}`
 
@@ -172,7 +165,6 @@ export function InstructionStep({
           step={step}
           isChecked={isChecked}
           isExpanded={isExpanded}
-          isCookMode={isCookMode}
           onToggleExpanded={toggleExpanded}
         />
       </button>

@@ -79,12 +79,11 @@ function RecipeMetadata({ recipe }: { recipe: RecipeOutput }) {
 function IngredientsSection({
   ingredients,
   recipeId,
-  isCookMode,
 }: {
   ingredients: RecipeIngredientOutput[]
   recipeId: string
-  isCookMode: boolean
 }) {
+  const { isCookMode } = useCookMode()
   return (
     <section className="rounded-lg bg-gray-900 p-6">
       <h2 className={`mb-4 font-semibold text-gray-100 ${isCookMode ? "text-lg" : "text-xl"}`}>
@@ -123,14 +122,13 @@ function IngredientsSection({
 function InstructionsSection({
   steps,
   recipeId,
-  isCookMode,
   onStartStepByStep,
 }: {
   steps: RecipeStep[]
   recipeId: string
-  isCookMode: boolean
   onStartStepByStep: () => void
 }) {
+  const { isCookMode } = useCookMode()
   return (
     <section className="rounded-lg bg-gray-900 p-6">
       <div className="mb-4 flex items-center justify-between">
@@ -151,7 +149,6 @@ function InstructionsSection({
             step={step}
             index={i}
             recipeId={recipeId}
-            isCookMode={isCookMode}
           />
         ))}
       </ol>
@@ -217,7 +214,8 @@ function BackToRecipesLink() {
   )
 }
 
-function StartCookingButton({ isCookMode, onClick }: { isCookMode: boolean; onClick: () => void }) {
+function StartCookingButton({ onClick }: { onClick: () => void }) {
+  const { isCookMode } = useCookMode()
   return (
     <Button onClick={onClick} size="sm" className="bg-green-600 hover:bg-green-700">
       <CirclePlay className="h-4 w-4" aria-hidden="true" />
@@ -259,13 +257,12 @@ function StepByStepView({ recipe, onExit }: { recipe: RecipeOutput; onExit: () =
 
 function RecipeBody({
   recipe,
-  isCookMode,
   onStartStepByStep,
 }: {
   recipe: RecipeOutput
-  isCookMode: boolean
   onStartStepByStep: () => void
 }) {
+  const { isCookMode } = useCookMode()
   const hasIngredients = (recipe.recipeIngredient?.length ?? 0) > 0
   const hasInstructions = (recipe.recipeInstructions?.length ?? 0) > 0
   return (
@@ -276,14 +273,12 @@ function RecipeBody({
             <IngredientsSection
               ingredients={recipe.recipeIngredient ?? []}
               recipeId={recipe.id ?? ""}
-              isCookMode={isCookMode}
             />
           )}
           {hasInstructions && (
             <InstructionsSection
               steps={recipe.recipeInstructions ?? []}
               recipeId={recipe.id ?? ""}
-              isCookMode={isCookMode}
               onStartStepByStep={onStartStepByStep}
             />
           )}
@@ -331,9 +326,7 @@ function RecipeDetail() {
   const backButton = <BackToRecipesLink />
   const actions = (
     <div className="flex items-center gap-3">
-      {hasInstructions && (
-        <StartCookingButton isCookMode={isCookMode} onClick={() => setShowStepByStep(true)} />
-      )}
+      {hasInstructions && <StartCookingButton onClick={() => setShowStepByStep(true)} />}
       <CookModeToggle />
     </div>
   )
@@ -346,11 +339,7 @@ function RecipeDetail() {
     >
       {!isCookMode && <div className="mb-6">{backButton}</div>}
       {!isCookMode && <RecipeNormalHeader recipe={recipe} img={img} actions={actions} />}
-      <RecipeBody
-        recipe={recipe}
-        isCookMode={isCookMode}
-        onStartStepByStep={() => setShowStepByStep(true)}
-      />
+      <RecipeBody recipe={recipe} onStartStepByStep={() => setShowStepByStep(true)} />
     </KitchenLayout>
   )
 }
