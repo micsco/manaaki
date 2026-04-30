@@ -1,7 +1,9 @@
 server {
     listen 80;
     root /usr/share/nginx/html;
-    index index.html;
+
+    # TanStack Start SPA builds to _shell.html, not index.html
+    index _shell.html;
 
     server_tokens off;
 
@@ -70,9 +72,10 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
-    # SPA: serve index.html for all non-asset routes
+    # SPA: fall back to _shell.html for all non-asset routes so TanStack
+    # Router can handle client-side navigation to any path
     location / {
-        try_files $uri $uri/ /index.html;
+        try_files $uri $uri/ /_shell.html;
     }
 
     # Gzip compression
