@@ -23,29 +23,24 @@ RUN pnpm build
 # ── Stage 2: Serve ──────────────────────────────────────────────────────────────
 FROM nginx:stable-alpine AS serve
 
-# Copy nginx config templates. These are processed at container start-up by
-# envsubst, which substitutes MEALIE_INTERNAL_URL and MEALIE_API_TOKEN.
-COPY nginx.conf.template /etc/nginx/templates/nginx.conf.template
-COPY mealie-proxy-headers.conf.template /etc/nginx/templates/mealie-proxy-headers.conf.template
+# Store templates outside /etc/nginx/templates/ to prevent the nginx image's
+# built-in entrypoint from running envsubst on them (it would clobber nginx's
+# own $variables like $host, $uri, $mealie). We run envsubst ourselves in
+# docker-entrypoint.sh with an explicit variable allowlist instead.
+COPY nginx.conf.template /etc/nginx/conf-templates/nginx.conf.template
+COPY mealie-proxy-headers.conf.template /etc/nginx/conf-templates/mealie-proxy-headers.conf.template
+
+# Entrypoint script: runs envsubst then starts nginx
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 # Copy only the static build output
 COPY --from=build /app/dist/client /usr/share/nginx/html
 
 EXPOSE 80
 
-# At start-up:
-# 1. Substitute env vars into both templates and write to the nginx conf directory
-# 2. Start nginx in the foreground
-#
 # Required runtime environment variables:
 #   MEALIE_INTERNAL_URL  — internal Docker URL for Mealie, e.g.
 #                          http://scottfamilynz-mealie-cvtizz-mealie-1:9000
 #   MEALIE_API_TOKEN     — long-lived Mealie API token (never baked into JS)
-CMD ["/bin/sh", "-c", \
-  "envsubst '${MEALIE_INTERNAL_URL} ${MEALIE_API_TOKEN}' \
-     < /etc/nginx/templates/nginx.conf.template \
-     > /etc/nginx/conf.d/default.conf && \
-   envsubst '${MEALIE_INTERNAL_URL} ${MEALIE_API_TOKEN}' \
-     < /etc/nginx/templates/mealie-proxy-headers.conf.template \
-     > /etc/nginx/conf.d/mealie-proxy-headers.conf && \
-   nginx -g 'daemon off;'"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
