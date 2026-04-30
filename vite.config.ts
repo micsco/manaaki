@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     server: {
-      port: 3000,
+      port: Number(process.env.PORT) || 3000,
       proxy: {
         // Proxy all /api requests to the Mealie backend during development.
         // This means Mealie's OAuth redirect URI (constructed relative to the
