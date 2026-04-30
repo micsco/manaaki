@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
+import { useState } from "react"
 import { getAllApiRecipesGet } from "../api/generated/sdk.gen"
 import type { RecipeSummary } from "../api/generated/types.gen"
 import { Badge, Card } from "../components/ui"
@@ -6,7 +7,7 @@ import { Badge, Card } from "../components/ui"
 export const Route = createFileRoute("/recipes/")({
   loader: async () => {
     const response = await getAllApiRecipesGet({
-      query: { perPage: 50, orderBy: "name", orderDirection: "asc" },
+      query: { perPage: 50, orderBy: "dateAdded", orderDirection: "desc" },
     })
     if (!response.data) {
       throw new Error("Failed to load recipes")
@@ -17,12 +18,26 @@ export const Route = createFileRoute("/recipes/")({
 })
 
 function recipeImageUrl(recipe: RecipeSummary): string | null {
-  if (!recipe.id || !recipe.image) return null
+  if (!recipe.id) return null
   return `/api/media/recipes/${recipe.id}/images/min-original.webp`
 }
 
-function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
+function RecipeImage({ recipe }: { recipe: RecipeSummary }) {
+  const [failed, setFailed] = useState(false)
   const img = recipeImageUrl(recipe)
+  if (!img || failed) return <div className="h-48 w-full bg-gray-800" aria-hidden="true" />
+  return (
+    <img
+      src={img}
+      alt={recipe.name ?? ""}
+      className="h-48 w-full object-cover"
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
+  )
+}
+
+function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
   return (
     <Card hover className="overflow-hidden">
       {recipe.slug ? (
@@ -31,16 +46,7 @@ function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
           params={{ slug: recipe.slug }}
           className="block rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950"
         >
-          {img ? (
-            <img
-              src={img}
-              alt={recipe.name ?? ""}
-              className="h-48 w-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div className="h-48 w-full bg-gray-800" aria-hidden="true" />
-          )}
+          <RecipeImage recipe={recipe} />
           <div className="p-4">
             <h3 className="mb-2 line-clamp-2 font-semibold text-gray-100 text-lg">{recipe.name}</h3>
             {recipe.description && (
