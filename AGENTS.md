@@ -34,6 +34,21 @@ No comments. Code should be self-explanatory through clear naming and structure.
 - Only add a comment if it explains a non-obvious workaround or external constraint that cannot be expressed in code
 - If code needs a comment to be understood, refactor it first
 
+## Skills
+
+Agent skills from `vercel-labs/agent-skills` are symlinked under `.devin/skills/`.
+The symlinks point into `.agents/` (gitignored). After cloning, restore them with:
+
+```
+npx skills add vercel-labs/agent-skills --yes
+```
+
+To update to the latest versions:
+
+```
+npx skills update vercel-labs/agent-skills --yes
+```
+
 ## Commands
 
 | Task                  | Command             |
