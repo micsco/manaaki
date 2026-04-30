@@ -1,30 +1,26 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useEffect } from "react"
-import { isAuthenticated } from "../api/auth"
+import { createFileRoute } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
 })
 
+/**
+ * Shown when the Mealie API proxy is unreachable or the server-side token is
+ * invalid. Previously this page guided users to set VITE_MEALIE_API_TOKEN;
+ * now the token is held entirely on the server and never sent to the browser.
+ *
+ * If you see this page in production, check the deployment environment for:
+ *   MEALIE_API_TOKEN     — long-lived Mealie API token
+ *   MEALIE_INTERNAL_URL  — internal Docker URL for Mealie
+ */
 function LoginPage() {
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    if (isAuthenticated()) {
-      navigate({ to: "/" })
-    }
-  }, [navigate])
-
   return (
     <main>
-      <h1>Not configured</h1>
+      <h1>Unable to connect</h1>
+      <p>The app could not reach the Mealie API. This usually means the server is misconfigured.</p>
       <p>
-        No API token found. Set <code>VITE_MEALIE_API_TOKEN</code> in your <code>.env</code> file
-        and restart the dev server.
-      </p>
-      <p>
-        You can generate a token from your Mealie profile under{" "}
-        <strong>Settings → API Tokens</strong>.
+        Check that <code>MEALIE_API_TOKEN</code> and <code>MEALIE_INTERNAL_URL</code> are set
+        correctly in the deployment environment, then redeploy.
       </p>
     </main>
   )

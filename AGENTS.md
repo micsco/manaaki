@@ -3,8 +3,28 @@
 ## Project
 
 TanStack Start SPA (React 19, TypeScript 6, Vite 8). Connects to a self-hosted
-Mealie instance via a generated `@hey-api/openapi-ts` client. Auth is a static
-API token baked in at build time (`VITE_MEALIE_API_TOKEN`).
+Mealie instance via a generated `@hey-api/openapi-ts` client.
+
+### API proxy architecture
+
+The Mealie API token lives **only on the server** — it is never in the JS bundle.
+In production, nginx (inside the container) acts as a reverse proxy: it adds the
+`Authorization: Bearer` header to `/api/*` requests and only exposes a GET-only
+allowlist of Mealie endpoints. See `.devin/skills/nginx-api-proxy/SKILL.md` for
+full documentation.
+
+**Runtime environment variables** (set in Dokploy → Environment, not build args):
+
+| Variable | Purpose |
+|----------|---------|
+| `MEALIE_API_TOKEN` | Long-lived Mealie API token |
+| `MEALIE_INTERNAL_URL` | Docker-internal URL for Mealie (e.g. `http://scottfamilynz-mealie-cvtizz-mealie-1:9000`) |
+
+For local development, copy `.env.example` to `.env` and set both vars. The Vite
+dev proxy in `vite.config.ts` injects the token identically to nginx.
+
+**Do not** set `VITE_MEALIE_API_TOKEN` or `VITE_MEALIE_BASE_URL` — those were
+removed to prevent the token from leaking into the JS bundle.
 
 ## Commands
 
@@ -83,6 +103,9 @@ This Biome-powered setup ensures that errors are caught immediately during devel
 # Skill mappings - load `use` with `npx @tanstack/intent@latest load <use>`.
 
 skills:
+
+- when: "adding api endpoints, changing the mealie token, nginx proxy config, allowed routes, internal docker url, mealie connectivity, or MEALIE_API_TOKEN / MEALIE_INTERNAL_URL"
+  use: "nginx-api-proxy"
 
 - when: "working with routes, route trees, createRoute, createRootRoute, file naming conventions, or general router concepts"
   use: "@tanstack/router-core#router-core"
