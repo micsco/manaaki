@@ -22,32 +22,15 @@ interface CookModeProviderProps {
 
 export function CookModeProvider({ children }: CookModeProviderProps) {
   const [isCookMode, setIsCookMode] = useQueryState("cook", {
-    // Parse URL param to boolean
     parse: (value: string) => value === "true",
-    // Serialize boolean to URL param
     serialize: (value: boolean) => value.toString(),
-    // Default to false if not present
     defaultValue: false,
-    // Clear the param when false to keep URLs clean
     clearOnDefault: true,
   })
 
   const toggleCookMode = useCallback(() => {
     setIsCookMode(prev => !prev)
   }, [setIsCookMode])
-
-  // Add keyboard shortcut (Ctrl/Cmd + K) for cook mode
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-        e.preventDefault()
-        toggleCookMode()
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyPress)
-    return () => window.removeEventListener("keydown", handleKeyPress)
-  }, [toggleCookMode])
 
   // Prevent screen timeout in cook mode
   useEffect(() => {
