@@ -64,7 +64,7 @@ describe("IngredientsSection", () => {
 
     it("renders all ingredients", () => {
       render(<IngredientsSection ingredients={ingredients} recipeId="test-recipe" />)
-      expect(screen.getAllByRole("checkbox")).toHaveLength(2)
+      expect(screen.getAllByRole("button")).toHaveLength(2)
     })
 
     it("renders section title when ingredient has a title", () => {
@@ -72,9 +72,9 @@ describe("IngredientsSection", () => {
       expect(screen.getByText("Dry ingredients")).toBeInTheDocument()
     })
 
-    it("does not render a checkbox for section title items", () => {
+    it("does not render a button for section title items", () => {
       render(<IngredientsSection ingredients={ingredientsWithSection} recipeId="test-recipe" />)
-      expect(screen.getAllByRole("checkbox")).toHaveLength(2)
+      expect(screen.getAllByRole("button")).toHaveLength(2)
     })
   })
 
@@ -86,11 +86,11 @@ describe("IngredientsSection", () => {
       expect(screen.getByRole("heading", { name: /ingredients/i })).toBeInTheDocument()
     })
 
-    it("renders all ingredient checkboxes", () => {
+    it("renders all ingredient buttons", () => {
       render(<IngredientsSection ingredients={ingredients} recipeId="test-recipe" />, {
         wrapper: ({ children }) => <CookModeWrapper cookMode>{children}</CookModeWrapper>,
       })
-      expect(screen.getAllByRole("checkbox")).toHaveLength(2)
+      expect(screen.getAllByRole("button")).toHaveLength(2)
     })
 
     it("renders section titles in cook mode too", () => {

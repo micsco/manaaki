@@ -16,19 +16,14 @@ describe("IngredientCheckbox", () => {
       expect(screen.getByText("2 cups flour")).toBeInTheDocument()
     })
 
-    it("renders children when provided instead of ingredient prop", () => {
-      render(<IngredientCheckbox {...defaultProps}>Custom label</IngredientCheckbox>)
-      expect(screen.getByText("Custom label")).toBeInTheDocument()
-    })
-
-    it("renders a checkbox", () => {
+    it("renders a button", () => {
       render(<IngredientCheckbox {...defaultProps} />)
-      expect(screen.getByRole("checkbox")).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /2 cups flour/i })).toBeInTheDocument()
     })
 
     it("starts unchecked", () => {
       render(<IngredientCheckbox {...defaultProps} />)
-      expect(screen.getByRole("checkbox")).not.toBeChecked()
+      expect(screen.getByRole("button").getAttribute("aria-label")).not.toMatch(/checked/)
     })
 
     it("renders structured ingredient: food name", () => {
@@ -48,32 +43,32 @@ describe("IngredientCheckbox", () => {
   })
 
   describe("toggle behaviour", () => {
-    it("checks the checkbox when clicked", async () => {
+    it("marks as checked when clicked", async () => {
       const user = userEvent.setup()
       render(<IngredientCheckbox {...defaultProps} />)
 
-      await user.click(screen.getByRole("checkbox"))
+      await user.click(screen.getByRole("button"))
 
-      expect(screen.getByRole("checkbox")).toBeChecked()
+      expect(screen.getByRole("button").getAttribute("aria-label")).toMatch(/checked/)
     })
 
     it("unchecks when clicked a second time", async () => {
       const user = userEvent.setup()
       render(<IngredientCheckbox {...defaultProps} />)
 
-      await user.click(screen.getByRole("checkbox"))
-      await user.click(screen.getByRole("checkbox"))
+      await user.click(screen.getByRole("button"))
+      await user.click(screen.getByRole("button"))
 
-      expect(screen.getByRole("checkbox")).not.toBeChecked()
+      expect(screen.getByRole("button").getAttribute("aria-label")).not.toMatch(/checked/)
     })
 
-    it("toggles when the list item row is clicked", async () => {
+    it("toggles when the ingredient text is clicked", async () => {
       const user = userEvent.setup()
       render(<IngredientCheckbox {...defaultProps} />)
 
       await user.click(screen.getByText("2 cups flour"))
 
-      expect(screen.getByRole("checkbox")).toBeChecked()
+      expect(screen.getByRole("button").getAttribute("aria-label")).toMatch(/checked/)
     })
   })
 
@@ -82,7 +77,7 @@ describe("IngredientCheckbox", () => {
       const user = userEvent.setup()
       render(<IngredientCheckbox {...defaultProps} />)
 
-      await user.click(screen.getByRole("checkbox"))
+      await user.click(screen.getByRole("button"))
 
       expect(sessionStorage.getItem("recipe-test-recipe-ingredient-0")).toBe("true")
     })
@@ -92,7 +87,7 @@ describe("IngredientCheckbox", () => {
 
       render(<IngredientCheckbox {...defaultProps} />)
 
-      expect(screen.getByRole("checkbox")).toBeChecked()
+      expect(screen.getByRole("button").getAttribute("aria-label")).toMatch(/checked/)
     })
 
     it("uses unique storage keys per ingredient index", async () => {
@@ -104,8 +99,8 @@ describe("IngredientCheckbox", () => {
         </>
       )
 
-      const checkboxes = screen.getAllByRole("checkbox")
-      await user.click(checkboxes[0])
+      const buttons = screen.getAllByRole("button")
+      await user.click(buttons[0])
 
       expect(sessionStorage.getItem("recipe-test-recipe-ingredient-0")).toBe("true")
       expect(sessionStorage.getItem("recipe-test-recipe-ingredient-1")).toBeNull()

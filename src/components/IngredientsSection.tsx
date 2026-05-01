@@ -18,7 +18,7 @@ export function IngredientsSection({
       <h2 className="mb-6 font-sans font-semibold text-gray-500 text-xs uppercase tracking-widest">
         Ingredients
       </h2>
-      <ul className="space-y-0.5">
+      <ul>
         {ingredients.map((ing, i) => {
           if (ing.title) {
             return (
@@ -41,9 +41,7 @@ export function IngredientsSection({
               unit={ing.unit}
               food={ing.food}
               note={ing.note}
-            >
-              {ing.display || ing.originalText}
-            </IngredientCheckbox>
+            />
           )
         })}
       </ul>
