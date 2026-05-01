@@ -69,7 +69,7 @@ export function InstructionSectionHeader({
       <button
         type="button"
         onClick={toggleAll}
-        className="flex w-full items-center justify-between gap-3 pb-2 text-left"
+        className="flex w-full items-center justify-between gap-3 py-3 text-left"
       >
         <span
           className={`font-semibold text-sm uppercase tracking-widest transition-colors ${
