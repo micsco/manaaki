@@ -52,10 +52,10 @@ export function InstructionsSection({
         </h2>
         {!isCookMode && <CookModeToggle />}
       </div>
-      <ol className="space-y-3">
+      <ol className="space-y-0.5">
         {hasSections
           ? groups.map((group, gi) => (
-              <li key={group.title ?? `group-${gi}`} className="list-none space-y-3">
+              <li key={group.title ?? `group-${gi}`} className="list-none space-y-0.5">
                 {group.title && (
                   <InstructionSectionHeader
                     title={group.title}
