@@ -9,6 +9,7 @@ interface InstructionStepProps {
   index: number
   recipeId: string
   className?: string
+  hideTitle?: boolean
 }
 
 function StepNumberIndicator({
@@ -36,15 +37,17 @@ function StepContent({
   isChecked,
   isExpanded,
   onToggleExpanded,
+  hideTitle,
 }: {
   step: RecipeStep
   isChecked: boolean
   isExpanded: boolean
   onToggleExpanded: (e: React.MouseEvent) => void
+  hideTitle?: boolean
 }) {
   return (
     <div className="min-w-0 flex-1">
-      {step.title && (
+      {step.title && !hideTitle && (
         <h3
           className={`mb-2 font-semibold transition-all duration-300 ${
             isChecked ? "text-gray-400 line-through" : "text-gray-200"
@@ -88,7 +91,13 @@ function StepContent({
  * Instruction step component with checkbox completion and collapse functionality.
  * When checked, the step collapses to a single line with a ticked number indicator.
  */
-export function InstructionStep({ step, index, recipeId, className = "" }: InstructionStepProps) {
+export function InstructionStep({
+  step,
+  index,
+  recipeId,
+  className = "",
+  hideTitle = false,
+}: InstructionStepProps) {
   // Create a unique key for this step in this recipe
   const storageKey = `recipe-${recipeId}-step-${index}`
 
@@ -161,6 +170,7 @@ export function InstructionStep({ step, index, recipeId, className = "" }: Instr
           isChecked={isChecked}
           isExpanded={isExpanded}
           onToggleExpanded={toggleExpanded}
+          hideTitle={hideTitle}
         />
       </button>
     </li>

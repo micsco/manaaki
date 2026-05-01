@@ -36,9 +36,10 @@ export function useSessionStorage<T>(key: string, initialValue: T) {
         // Save state
         setStoredValue(valueToStore)
 
-        // Save to session storage
+        // Save to session storage and notify same-tab listeners
         if (typeof window !== "undefined") {
           window.sessionStorage.setItem(key, JSON.stringify(valueToStore))
+          window.dispatchEvent(new CustomEvent("session-storage", { detail: { key } }))
         }
       } catch (error) {
         console.warn(`Error setting sessionStorage key "${key}":`, error)
@@ -49,7 +50,15 @@ export function useSessionStorage<T>(key: string, initialValue: T) {
 
   useEffect(() => {
     setStoredValue(readValue())
-  }, [readValue])
+
+    const onSessionStorage = (e: Event) => {
+      if ((e as CustomEvent<{ key: string }>).detail.key === key) {
+        setStoredValue(readValue())
+      }
+    }
+    window.addEventListener("session-storage", onSessionStorage)
+    return () => window.removeEventListener("session-storage", onSessionStorage)
+  }, [readValue, key])
 
   return [storedValue, setValue] as const
 }
