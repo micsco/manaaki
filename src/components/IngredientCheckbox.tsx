@@ -62,6 +62,7 @@ function StructuredIngredient({
   isChecked,
 }: StructuredIngredientProps) {
   const checkedClass = "text-gray-500 line-through opacity-75"
+  const noteOnly = food == null && quantity == null && unit == null
   return (
     <span
       className={`flex-1 select-none transition-all duration-200 ${isChecked ? checkedClass : ""}`}
@@ -83,7 +84,13 @@ function StructuredIngredient({
           </span>
         )}
         {note && (
-          <span className={`text-sm ${isChecked ? "" : "text-gray-500 group-hover:text-gray-400"}`}>
+          <span
+            className={
+              noteOnly
+                ? `font-normal ${isChecked ? "" : "text-gray-300 group-hover:text-gray-200"}`
+                : `text-sm ${isChecked ? "" : "text-gray-500 group-hover:text-gray-400"}`
+            }
+          >
             {note}
           </span>
         )}
@@ -128,7 +135,7 @@ export function IngredientCheckbox({
     [setIsChecked]
   )
 
-  const hasStructuredData = food != null || unit != null || quantity != null
+  const hasStructuredData = food != null || unit != null || quantity != null || note != null
   const checkedTextClass = "text-gray-500 line-through opacity-75"
   const uncheckedTextClass = "text-gray-300 group-hover:text-gray-200"
 
