@@ -22,15 +22,23 @@ vi.mock("@tanstack/react-router", async importOriginal => {
 })
 
 const minimalRecipe: RecipeOutput = {
-  id: "abc123",
+  id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
   slug: "banana-bread",
   name: "Banana Bread",
   recipeIngredient: [],
   recipeInstructions: [],
 }
 
-const prevRecipe: RecipeNavItem = { id: "prev111", slug: "apple-pie", name: "Apple Pie" }
-const nextRecipe: RecipeNavItem = { id: "next222", slug: "carrot-cake", name: "Carrot Cake" }
+const prevRecipe: RecipeNavItem = {
+  id: "11111111-1111-4111-8111-111111111111",
+  slug: "apple-pie",
+  name: "Apple Pie",
+}
+const nextRecipe: RecipeNavItem = {
+  id: "22222222-2222-4222-8222-222222222222",
+  slug: "carrot-cake",
+  name: "Carrot Cake",
+}
 
 describe("RecipeHeader", () => {
   it("renders the recipe title", () => {
@@ -73,7 +81,7 @@ describe("RecipeHeader", () => {
     )
     expect(screen.getByRole("link", { name: /previous recipe/i })).toHaveAttribute(
       "href",
-      `/recipes/${encodeRecipeId("prev111")}/apple-pie`
+      `/recipes/${encodeRecipeId("11111111-1111-4111-8111-111111111111")}/apple-pie`
     )
   })
 
@@ -88,7 +96,7 @@ describe("RecipeHeader", () => {
     )
     expect(screen.getByRole("link", { name: /next recipe/i })).toHaveAttribute(
       "href",
-      `/recipes/${encodeRecipeId("next222")}/carrot-cake`
+      `/recipes/${encodeRecipeId("22222222-2222-4222-8222-222222222222")}/carrot-cake`
     )
   })
 

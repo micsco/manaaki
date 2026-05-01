@@ -52,7 +52,8 @@
     "nuqs": "^2.8.9",
     "posthog-node": "^5.32.0",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",
