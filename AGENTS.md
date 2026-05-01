@@ -149,5 +149,8 @@ skills:
 - when: "setting up SSR, streaming, renderRouterToStream, or server-side data hydration"
   use: "@tanstack/router-core#router-core/ssr"
 - when: "fixing TypeScript errors in router types, using Register declaration, getRouteApi, or LinkProps utilities"
-use: "@tanstack/router-core#router-core/type-safety"
+  use: "@tanstack/router-core#router-core/type-safety"
+
+- when: "writing tests, setting up vitest, react testing library, playwright, unit tests, component tests, hook tests, e2e tests, mocking, userEvent, screen queries, jest-dom, or debugging act warnings"
+  use: "react-testing"
 <!-- intent-skills:end -->
