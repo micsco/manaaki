@@ -42,6 +42,7 @@
     "@base-ui/react": "^1.0.0",
     "@mdi/js": "^7.4.47",
     "@mdi/react": "^1.6.1",
+    "@posthog/react": "^1.9.0",
     "@tanstack/intent": "^0.0.36",
     "@tanstack/react-hotkeys": "^0.10.0",
     "@tanstack/react-query": "^5.100.6",
@@ -49,6 +50,7 @@
     "@tanstack/react-start": "^1.167.50",
     "@tanstack/router-core": "^1.168.17",
     "nuqs": "^2.8.9",
+    "posthog-node": "^5.32.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },

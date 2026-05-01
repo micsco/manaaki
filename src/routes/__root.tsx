@@ -1,3 +1,4 @@
+import { PostHogProvider } from "@posthog/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router"
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router"
@@ -37,13 +38,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootComponent() {
   return (
     <RootDocument>
-      <QueryClientProvider client={queryClient}>
-        <NuqsAdapter>
-          <CookModeProvider>
-            <Outlet />
-          </CookModeProvider>
-        </NuqsAdapter>
-      </QueryClientProvider>
+      <PostHogProvider
+        apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN}
+        options={{
+          api_host: "/ingest",
+          ui_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+          defaults: "2025-05-24",
+          capture_exceptions: true,
+          debug: import.meta.env.DEV,
+        }}
+      >
+        <QueryClientProvider client={queryClient}>
+          <NuqsAdapter>
+            <CookModeProvider>
+              <Outlet />
+            </CookModeProvider>
+          </NuqsAdapter>
+        </QueryClientProvider>
+      </PostHogProvider>
     </RootDocument>
   )
 }

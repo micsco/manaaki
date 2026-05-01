@@ -24,6 +24,21 @@ export default defineConfig(({ mode }) => {
             })
           },
         },
+        '/ingest/static': {
+          target: 'https://eu-assets.i.posthog.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/ingest/, ''),
+        },
+        '/ingest/array': {
+          target: 'https://eu-assets.i.posthog.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/ingest/, ''),
+        },
+        '/ingest': {
+          target: 'https://eu.i.posthog.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/ingest/, ''),
+        },
       },
     },
     resolve: {

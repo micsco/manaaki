@@ -1,4 +1,5 @@
 import { mdiCheck } from "@mdi/js"
+import { usePostHog } from "@posthog/react"
 import { useCallback } from "react"
 import type { RecipeStep } from "../api/generated/types.gen"
 import { useSessionStorage } from "../hooks/useSessionStorage"
@@ -14,10 +15,16 @@ interface InstructionStepProps {
 export function InstructionStep({ step, index, recipeId, className = "" }: InstructionStepProps) {
   const storageKey = `recipe-${recipeId}-step-${index}`
   const [isChecked, setIsChecked] = useSessionStorage(storageKey, false)
+  const posthog = usePostHog()
 
   const handleToggle = useCallback(() => {
-    setIsChecked(prev => !prev)
-  }, [setIsChecked])
+    const nextChecked = !isChecked
+    posthog.capture(nextChecked ? "recipe_step_completed" : "recipe_step_uncompleted", {
+      recipe_id: recipeId,
+      step_number: index + 1,
+    })
+    setIsChecked(nextChecked)
+  }, [isChecked, posthog, recipeId, index, setIsChecked])
 
   const stepNumber = index + 1
 

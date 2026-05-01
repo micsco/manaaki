@@ -10,8 +10,31 @@ server {
     # Using a variable for proxy_pass causes nginx to resolve the hostname at
     # request time rather than startup, so the container starts cleanly even if
     # Mealie is temporarily down. Docker's embedded DNS is at 127.0.0.11.
-    resolver 127.0.0.11 valid=30s ipv6=off;
+    resolver 127.0.0.11 8.8.8.8 valid=30s ipv6=off;
     set $mealie "${MEALIE_INTERNAL_URL}";
+    set $posthog_assets "https://eu-assets.i.posthog.com";
+    set $posthog "https://eu.i.posthog.com";
+
+    location /ingest/static {
+        rewrite ^/ingest(/.*)$ $1 break;
+        proxy_pass $posthog_assets;
+        proxy_ssl_server_name on;
+        proxy_set_header Host eu-assets.i.posthog.com;
+    }
+
+    location /ingest/array {
+        rewrite ^/ingest(/.*)$ $1 break;
+        proxy_pass $posthog_assets;
+        proxy_ssl_server_name on;
+        proxy_set_header Host eu-assets.i.posthog.com;
+    }
+
+    location /ingest {
+        rewrite ^/ingest(/.*)$ $1 break;
+        proxy_pass $posthog;
+        proxy_ssl_server_name on;
+        proxy_set_header Host eu.i.posthog.com;
+    }
 
     location ~ ^/api/recipes(/.*)?$ {
         if ($request_method != GET) {

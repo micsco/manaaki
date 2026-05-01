@@ -5,6 +5,7 @@ import {
   mdiStarCircleOutline,
   mdiTimerOutline,
 } from "@mdi/js"
+import { usePostHog } from "@posthog/react"
 import { Link } from "@tanstack/react-router"
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { useGroupSlug } from "../hooks/useGroupSlug"
@@ -76,6 +77,7 @@ export function RecipeHeader({
 }) {
   const groupSlug = useGroupSlug()
   const mealieUrl = mealieRecipeUrl(recipe.slug, groupSlug)
+  const posthog = usePostHog()
 
   return (
     <div className="bg-gray-950 text-gray-100">
@@ -97,6 +99,13 @@ export function RecipeHeader({
               rel="noopener noreferrer"
               aria-label="View in Mealie"
               className="inline-flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 font-medium text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+              onClick={() =>
+                posthog.capture("recipe_viewed_in_mealie", {
+                  recipe_id: recipe.id,
+                  recipe_slug: recipe.slug,
+                  recipe_name: recipe.name,
+                })
+              }
             >
               <MealieLogo className="h-4 w-4" />
               View in Mealie
@@ -113,6 +122,14 @@ export function RecipeHeader({
                 params={{ slug: prevSlug }}
                 aria-label="Previous recipe"
                 className="inline-flex items-center justify-center rounded-full bg-black/40 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                onClick={() =>
+                  posthog.capture("recipe_navigated", {
+                    direction: "prev",
+                    method: "click",
+                    from_slug: recipe.slug,
+                    to_slug: prevSlug,
+                  })
+                }
               >
                 <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
               </Link>
@@ -127,6 +144,14 @@ export function RecipeHeader({
                 params={{ slug: nextSlug }}
                 aria-label="Next recipe"
                 className="inline-flex items-center justify-center rounded-full bg-black/40 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                onClick={() =>
+                  posthog.capture("recipe_navigated", {
+                    direction: "next",
+                    method: "click",
+                    from_slug: recipe.slug,
+                    to_slug: nextSlug,
+                  })
+                }
               >
                 <Icon path={mdiChevronRight} size={0.75} aria-hidden={true} />
               </Link>

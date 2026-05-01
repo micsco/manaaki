@@ -1,4 +1,5 @@
 import { mdiStarCircleOutline, mdiTimerOutline } from "@mdi/js"
+import { usePostHog } from "@posthog/react"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
@@ -33,6 +34,8 @@ function RecipeImage({ recipe }: { recipe: RecipeSummary }) {
 }
 
 function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
+  const posthog = usePostHog()
+
   return (
     <Card hover className="overflow-hidden">
       {recipe.slug ? (
@@ -40,6 +43,15 @@ function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
           to="/recipes/$slug"
           params={{ slug: recipe.slug }}
           className="block rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+          onClick={() =>
+            posthog.capture("recipe_card_clicked", {
+              recipe_id: recipe.id,
+              recipe_slug: recipe.slug,
+              recipe_name: recipe.name,
+              recipe_rating: recipe.rating,
+              recipe_total_time: recipe.totalTime,
+            })
+          }
         >
           <RecipeImage recipe={recipe} />
           <div className="p-4">

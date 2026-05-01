@@ -1,4 +1,5 @@
 import { mdiCheck } from "@mdi/js"
+import { usePostHog } from "@posthog/react"
 import { useCallback } from "react"
 import type {
   CreateIngredientFood,
@@ -98,10 +99,17 @@ export function IngredientCheckbox({
 }: IngredientCheckboxProps) {
   const storageKey = `recipe-${recipeId}-ingredient-${ingredientIndex}`
   const [isChecked, setIsChecked] = useSessionStorage(storageKey, false)
+  const posthog = usePostHog()
 
   const handleToggle = useCallback(() => {
-    setIsChecked(prev => !prev)
-  }, [setIsChecked])
+    const nextChecked = !isChecked
+    posthog.capture(nextChecked ? "ingredient_checked" : "ingredient_unchecked", {
+      recipe_id: recipeId,
+      ingredient_index: ingredientIndex,
+      ingredient: ingredient,
+    })
+    setIsChecked(nextChecked)
+  }, [isChecked, posthog, recipeId, ingredientIndex, ingredient, setIsChecked])
 
   const hasStructuredData =
     food != null || unit != null || (quantity != null && quantity !== 0) || note != null

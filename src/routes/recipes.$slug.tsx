@@ -1,6 +1,8 @@
 import { mdiChevronLeft } from "@mdi/js"
+import { usePostHog } from "@posthog/react"
 import { useHotkey } from "@tanstack/react-hotkeys"
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
+import { useEffect } from "react"
 import { getOneApiRecipesSlugGet } from "../api/generated/sdk.gen"
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { Icon } from "../components/Icon"
@@ -31,13 +33,41 @@ function RecipeDetail() {
   const img = recipeImageUrl(recipe.id, "original")
   const navigate = useNavigate()
   const { prevSlug, nextSlug } = useRecipeNav(recipe.slug ?? "")
+  const posthog = usePostHog()
+
+  useEffect(() => {
+    posthog.capture("recipe_viewed", {
+      recipe_id: recipe.id,
+      recipe_slug: recipe.slug,
+      recipe_name: recipe.name,
+      recipe_rating: recipe.rating,
+      recipe_total_time: recipe.totalTime,
+      has_image: !!img,
+    })
+  }, [recipe.id, recipe.slug, recipe.name, recipe.rating, recipe.totalTime, img, posthog])
 
   useHotkey("ArrowLeft", () => {
-    if (prevSlug) navigate({ to: "/recipes/$slug", params: { slug: prevSlug } })
+    if (prevSlug) {
+      posthog.capture("recipe_navigated", {
+        direction: "prev",
+        method: "keyboard",
+        from_slug: recipe.slug,
+        to_slug: prevSlug,
+      })
+      navigate({ to: "/recipes/$slug", params: { slug: prevSlug } })
+    }
   })
 
   useHotkey("ArrowRight", () => {
-    if (nextSlug) navigate({ to: "/recipes/$slug", params: { slug: nextSlug } })
+    if (nextSlug) {
+      posthog.capture("recipe_navigated", {
+        direction: "next",
+        method: "keyboard",
+        from_slug: recipe.slug,
+        to_slug: nextSlug,
+      })
+      navigate({ to: "/recipes/$slug", params: { slug: nextSlug } })
+    }
   })
 
   const cookModeBackButton = (
