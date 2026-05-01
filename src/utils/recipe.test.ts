@@ -160,14 +160,30 @@ describe("cleanNote", () => {
     expect(cleanNote(", lightly beaten")).toBe("lightly beaten")
   })
 
-  it("strips a trailing Note reference", () => {
+  it("strips a trailing Note N reference", () => {
     expect(cleanNote("excess fat trimmed Note 1")).toBe("excess fat trimmed")
   })
 
-  it("strips a leading comma and trailing Note reference together", () => {
+  it("strips a bare trailing Note with no number", () => {
+    expect(cleanNote("or 3 all purpose or light Note")).toBe("or 3 all purpose or light")
+  })
+
+  it("strips leading comma, double commas, and trailing Note reference", () => {
     expect(cleanNote(", or 150 gram prawns small, , cooked and peeled, Note 3")).toBe(
-      "or 150 gram prawns small, , cooked and peeled,"
+      "or 150 gram prawns small, cooked and peeled"
     )
+  })
+
+  it("collapses double commas in the middle", () => {
+    expect(cleanNote("cooked,, refrigerated overnight,")).toBe("cooked, refrigerated overnight")
+  })
+
+  it("removes a stray space before a comma", () => {
+    expect(cleanNote("or ¾ cup , finely chopped")).toBe("or ¾ cup, finely chopped")
+  })
+
+  it("strips a trailing comma", () => {
+    expect(cleanNote("cooked and peeled,")).toBe("cooked and peeled")
   })
 
   it("returns null for null", () => {

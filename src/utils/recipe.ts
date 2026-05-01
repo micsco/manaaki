@@ -37,8 +37,11 @@ const FRACTIONS: Record<number, string> = {
 export function cleanNote(note: string | null | undefined): string | null {
   if (!note) return null
   const cleaned = note
-    .replace(/\s*Note\s+\d+\s*$/i, "")
+    .replace(/\s*\bNote\s*\d*\s*$/i, "")
     .replace(/^,\s*/, "")
+    .replace(/\s*,\s*,+/g, ",")
+    .replace(/\s+,/g, ",")
+    .replace(/,+\s*$/, "")
     .trim()
   return cleaned || null
 }
