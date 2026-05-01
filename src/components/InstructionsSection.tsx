@@ -63,13 +63,12 @@ export function InstructionsSection({
                     indices={group.steps.map(s => s.index)}
                   />
                 )}
-                {group.steps.map(({ step, index }, si) => (
+                {group.steps.map(({ step, index }) => (
                   <InstructionStep
                     key={step.id ?? step.text ?? index}
                     step={step}
                     index={index}
                     recipeId={recipeId}
-                    hideTitle={si === 0}
                   />
                 ))}
               </li>

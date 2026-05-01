@@ -1,4 +1,4 @@
-import { mdiCheck, mdiMinus } from "@mdi/js"
+import { mdiCheck } from "@mdi/js"
 import { useCallback, useEffect, useState } from "react"
 import { Icon } from "./Icon"
 
@@ -33,7 +33,6 @@ function useGroupCheckedState(recipeId: string, indices: number[]) {
   }, [recipeId, indices])
 
   const allChecked = checked.length > 0 && checked.every(Boolean)
-  const someChecked = checked.some(Boolean)
 
   const toggleAll = useCallback(() => {
     const next = !allChecked
@@ -49,7 +48,7 @@ function useGroupCheckedState(recipeId: string, indices: number[]) {
     setChecked(indices.map(() => next))
   }, [allChecked, indices, recipeId])
 
-  return { allChecked, someChecked, toggleAll }
+  return { allChecked, toggleAll }
 }
 
 interface InstructionSectionHeaderProps {
@@ -63,30 +62,25 @@ export function InstructionSectionHeader({
   recipeId,
   indices,
 }: InstructionSectionHeaderProps) {
-  const { allChecked, someChecked, toggleAll } = useGroupCheckedState(recipeId, indices)
+  const { allChecked, toggleAll } = useGroupCheckedState(recipeId, indices)
 
   return (
-    <li className="mt-6 first:mt-0">
+    <li className="mt-8 first:mt-0">
       <button
         type="button"
         onClick={toggleAll}
-        className="flex w-full items-center gap-3 rounded-lg border border-gray-700 bg-gray-800/60 px-4 py-2.5 text-left transition-colors hover:border-gray-600 hover:bg-gray-800"
+        className="flex w-full items-center justify-between gap-3 pb-2 text-left"
       >
-        <div
-          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors ${
-            allChecked
-              ? "border-orange-600 bg-orange-600"
-              : someChecked
-                ? "border-orange-500 bg-transparent"
-                : "border-gray-500 bg-transparent"
+        <span
+          className={`font-semibold text-sm uppercase tracking-widest transition-colors ${
+            allChecked ? "text-gray-500" : "text-gray-400"
           }`}
         >
-          {allChecked && <Icon path={mdiCheck} size={0.5} className="text-white" aria-hidden />}
-          {someChecked && !allChecked && (
-            <Icon path={mdiMinus} size={0.5} className="text-orange-400" aria-hidden />
-          )}
-        </div>
-        <span className="font-semibold text-gray-200 text-sm">{title}</span>
+          {title}
+        </span>
+        {allChecked && (
+          <Icon path={mdiCheck} size={0.65} className="shrink-0 text-green-500" aria-hidden />
+        )}
       </button>
     </li>
   )
