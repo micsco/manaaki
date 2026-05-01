@@ -1,4 +1,4 @@
-import MdiIcon from "@mdi/react"
+import { Icon as MdiIcon } from "@mdi/react"
 
 interface IconProps {
   path: string
