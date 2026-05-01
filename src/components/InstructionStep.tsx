@@ -22,10 +22,10 @@ export function InstructionStep({ step, index, recipeId, className = "" }: Instr
   const stepNumber = index + 1
 
   return (
-    <li className={`group ${className}`}>
+    <li className={`group border-gray-800 border-t last:border-b ${className}`}>
       <button
         type="button"
-        className="flex w-full cursor-pointer items-baseline gap-3 py-2 text-left transition-colors hover:text-gray-200"
+        className="flex w-full cursor-pointer items-baseline gap-3 py-3 text-left transition-colors hover:text-gray-200"
         onClick={handleToggle}
         onKeyDown={e => {
           if (e.key === "Enter" || e.key === " ") {
