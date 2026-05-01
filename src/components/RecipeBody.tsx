@@ -31,12 +31,12 @@ export function RecipeBody({ recipe }: { recipe: RecipeOutput }) {
   const hasInstructions = (recipe.recipeInstructions?.length ?? 0) > 0
 
   return (
-    <div className={isCookMode ? "" : "bg-gray-950"}>
+    <div className={isCookMode ? "h-full" : "bg-gray-950"}>
       {hasIngredients || hasInstructions ? (
         <div
           className={
             isCookMode
-              ? "grid grid-cols-1 gap-8 lg:grid-cols-2"
+              ? "grid h-full grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-gray-800"
               : "mx-auto grid max-w-6xl grid-cols-1 gap-0 px-6 py-10 md:grid-cols-2 md:divide-x md:divide-gray-800 md:px-10"
           }
         >

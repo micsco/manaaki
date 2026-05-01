@@ -1,7 +1,6 @@
 import { mdiCheck, mdiChevronDown } from "@mdi/js"
 import { type ChangeEvent, useCallback, useState } from "react"
 import type { RecipeStep } from "../api/generated/types.gen"
-import { useCookMode } from "../contexts/CookModeContext"
 import { useSessionStorage } from "../hooks/useSessionStorage"
 import { Icon } from "./Icon"
 
@@ -43,17 +42,12 @@ function StepContent({
   isExpanded: boolean
   onToggleExpanded: (e: React.MouseEvent) => void
 }) {
-  const { isCookMode } = useCookMode()
   return (
     <div className="min-w-0 flex-1">
       {step.title && (
         <h3
           className={`mb-2 font-semibold transition-all duration-300 ${
-            isChecked
-              ? "text-gray-400 line-through"
-              : isCookMode
-                ? "text-gray-100 text-lg"
-                : "text-gray-200"
+            isChecked ? "text-gray-400 line-through" : "text-gray-200"
           }`}
         >
           {step.title}
@@ -64,9 +58,7 @@ function StepContent({
         className={`overflow-hidden transition-all duration-300 ${isChecked && !isExpanded ? "max-h-0 opacity-0" : "max-h-96 opacity-100"}`}
       >
         <p
-          className={`leading-relaxed transition-all duration-300 ${
-            isChecked ? "text-gray-500" : isCookMode ? "text-base text-gray-100" : "text-gray-300"
-          }`}
+          className={`leading-relaxed transition-all duration-300 ${isChecked ? "text-gray-500" : "text-gray-300"}`}
         >
           {step.text}
         </p>

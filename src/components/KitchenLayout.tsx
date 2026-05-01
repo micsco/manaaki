@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { useCookMode } from "../contexts/CookModeContext"
+import { CookModeToggle } from "./CookModeToggle"
 
 interface KitchenLayoutProps {
   children: ReactNode
@@ -11,20 +12,21 @@ export function KitchenLayout({ children, title, backButton }: KitchenLayoutProp
   const { isCookMode } = useCookMode()
 
   if (isCookMode) {
-    // Cook mode: minimal sticky header, full-width content
     return (
-      <div className="min-h-screen bg-gray-950 text-gray-100">
-        <header className="sticky top-0 z-10 border-gray-800 border-b bg-gray-950/95 px-4 py-3 backdrop-blur-sm">
+      <div className="flex h-screen flex-col bg-gray-950 text-gray-100">
+        <header className="shrink-0 border-gray-800 border-b bg-gray-950/95 px-4 py-3 backdrop-blur-sm">
           <div className="mx-auto flex max-w-7xl items-center gap-3">
             {backButton}
-            {title && <h1 className="truncate font-semibold text-gray-100 text-lg">{title}</h1>}
+            {title && (
+              <h1 className="flex-1 truncate font-semibold text-gray-100 text-lg">{title}</h1>
+            )}
+            <CookModeToggle />
           </div>
         </header>
-        <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+        <main className="min-h-0 flex-1">{children}</main>
       </div>
     )
   }
 
-  // Normal mode: recipe page owns its own layout entirely
   return <>{children}</>
 }
