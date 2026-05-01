@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { formatQuantity, formatTime, mealieRecipeUrl, recipeImageUrl } from "./recipe"
+import { cleanNote, formatQuantity, formatTime, mealieRecipeUrl, recipeImageUrl } from "./recipe"
 
 describe("mealieRecipeUrl", () => {
   it("returns the full Mealie recipe URL for a valid slug and group slug", () => {
@@ -148,5 +148,37 @@ describe("formatQuantity", () => {
   it("formats eighth fractions", () => {
     expect(formatQuantity(0.125)).toBe("⅛")
     expect(formatQuantity(0.875)).toBe("⅞")
+  })
+})
+
+describe("cleanNote", () => {
+  it("returns a plain note unchanged", () => {
+    expect(cleanNote("lightly beaten")).toBe("lightly beaten")
+  })
+
+  it("strips a leading comma and space", () => {
+    expect(cleanNote(", lightly beaten")).toBe("lightly beaten")
+  })
+
+  it("strips a trailing Note reference", () => {
+    expect(cleanNote("excess fat trimmed Note 1")).toBe("excess fat trimmed")
+  })
+
+  it("strips a leading comma and trailing Note reference together", () => {
+    expect(cleanNote(", or 150 gram prawns small, , cooked and peeled, Note 3")).toBe(
+      "or 150 gram prawns small, , cooked and peeled,"
+    )
+  })
+
+  it("returns null for null", () => {
+    expect(cleanNote(null)).toBeNull()
+  })
+
+  it("returns null for undefined", () => {
+    expect(cleanNote(undefined)).toBeNull()
+  })
+
+  it("returns null for a note that is only whitespace after cleaning", () => {
+    expect(cleanNote(", Note 1")).toBeNull()
   })
 })

@@ -7,7 +7,7 @@ import type {
   IngredientUnitOutput,
 } from "../api/generated/types.gen"
 import { useSessionStorage } from "../hooks/useSessionStorage"
-import { formatQuantity } from "../utils/recipe"
+import { cleanNote, formatQuantity } from "../utils/recipe"
 import { Icon } from "./Icon"
 
 interface IngredientCheckboxProps {
@@ -82,9 +82,9 @@ function StructuredIngredient({
             {food.name}
           </span>
         )}
-        {note && (
+        {cleanNote(note) && (
           <span className={`text-sm ${isChecked ? "" : "text-gray-500 group-hover:text-gray-400"}`}>
-            — {note}
+            — {cleanNote(note)}
           </span>
         )}
       </span>
