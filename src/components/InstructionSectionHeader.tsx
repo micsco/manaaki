@@ -65,7 +65,7 @@ export function InstructionSectionHeader({
   const { allChecked, toggleAll } = useGroupCheckedState(recipeId, indices)
 
   return (
-    <li className="mt-8 first:mt-0">
+    <div className="mt-8 first:mt-0">
       <button
         type="button"
         onClick={toggleAll}
@@ -82,6 +82,6 @@ export function InstructionSectionHeader({
           <Icon path={mdiCheck} size={0.65} className="shrink-0 text-green-500" aria-hidden />
         )}
       </button>
-    </li>
+    </div>
   )
 }
