@@ -18,7 +18,7 @@ export function IngredientsSection({
       <h2 className="mb-6 font-sans font-semibold text-gray-500 text-xs uppercase tracking-widest">
         Ingredients
       </h2>
-      <ul className="space-y-2">
+      <ul className="space-y-0.5">
         {ingredients.map((ing, i) => {
           if (ing.title) {
             return (

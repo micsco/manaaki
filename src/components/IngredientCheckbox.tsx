@@ -138,7 +138,7 @@ export function IngredientCheckbox({
 
   return (
     <li
-      className={`group -mx-3 flex cursor-pointer items-start gap-3 rounded-lg p-3 transition-all duration-200 hover:bg-gray-800/30 ${className}`}
+      className={`group -mx-2 flex cursor-pointer items-start gap-3 rounded-lg px-2 py-1.5 transition-all duration-200 hover:bg-gray-800/30 ${className}`}
       onClick={handleToggle}
       onKeyDown={e => {
         if (e.key === "Enter" || e.key === " ") {
