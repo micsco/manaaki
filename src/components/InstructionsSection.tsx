@@ -52,18 +52,19 @@ export function InstructionsSection({
         </h2>
         {!isCookMode && <CookModeToggle />}
       </div>
-      <ol className="space-y-0.5">
-        {hasSections
-          ? groups.map((group, gi) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: group index is stable; groups are derived from recipe steps with no stable ID
-              <li key={`${recipeId}-group-${gi}`} className="list-none space-y-0.5">
-                {group.title && (
-                  <InstructionSectionHeader
-                    title={group.title}
-                    recipeId={recipeId}
-                    indices={group.steps.map(s => s.index)}
-                  />
-                )}
+      {hasSections ? (
+        <div>
+          {groups.map((group, gi) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: group index is stable; groups are derived from recipe steps with no stable ID
+            <section key={`${recipeId}-group-${gi}`}>
+              {group.title && (
+                <InstructionSectionHeader
+                  title={group.title}
+                  recipeId={recipeId}
+                  indices={group.steps.map(s => s.index)}
+                />
+              )}
+              <ol>
                 {group.steps.map(({ step, index }) => (
                   <InstructionStep
                     key={step.id ?? `${recipeId}-${index}`}
@@ -72,17 +73,22 @@ export function InstructionsSection({
                     recipeId={recipeId}
                   />
                 ))}
-              </li>
-            ))
-          : steps.map((step, i) => (
-              <InstructionStep
-                key={step.id ?? `${recipeId}-${i}`}
-                step={step}
-                index={i}
-                recipeId={recipeId}
-              />
-            ))}
-      </ol>
+              </ol>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <ol>
+          {steps.map((step, i) => (
+            <InstructionStep
+              key={step.id ?? `${recipeId}-${i}`}
+              step={step}
+              index={i}
+              recipeId={recipeId}
+            />
+          ))}
+        </ol>
+      )}
     </section>
   )
 }
