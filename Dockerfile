@@ -9,7 +9,12 @@ COPY package.json pnpm-lock.yaml ./
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 
-# No VITE_MEALIE_* build args — the token is injected at runtime by nginx
+# PostHog vars are baked into the JS bundle at build time by Vite
+ARG VITE_PUBLIC_POSTHOG_PROJECT_TOKEN
+ARG VITE_PUBLIC_POSTHOG_HOST
+ENV VITE_PUBLIC_POSTHOG_PROJECT_TOKEN=$VITE_PUBLIC_POSTHOG_PROJECT_TOKEN
+ENV VITE_PUBLIC_POSTHOG_HOST=$VITE_PUBLIC_POSTHOG_HOST
+
 COPY . .
 RUN pnpm build
 
