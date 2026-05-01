@@ -20,7 +20,7 @@ export const Route = createFileRoute("/recipes/")({
 
 function RecipeImage({ recipe }: { recipe: RecipeSummary }) {
   const [failed, setFailed] = useState(false)
-  const img = recipeImageUrl(recipe.id, "min-original")
+  const img = recipeImageUrl(recipe.id, "min-original", recipe.image)
   if (!img || failed) return <div className="h-48 w-full bg-gray-800" aria-hidden="true" />
   return (
     <img

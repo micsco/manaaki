@@ -42,15 +42,39 @@ describe("recipeImageUrl", () => {
     expect(recipeImageUrl("", "original")).toBeNull()
   })
 
-  it("returns correct path for original size", () => {
+  it("returns correct path for original size without cache key", () => {
     expect(recipeImageUrl("abc-123", "original")).toBe(
       "/api/media/recipes/abc-123/images/original.webp"
     )
   })
 
-  it("returns correct path for min-original size", () => {
+  it("returns correct path for min-original size without cache key", () => {
     expect(recipeImageUrl("abc-123", "min-original")).toBe(
       "/api/media/recipes/abc-123/images/min-original.webp"
+    )
+  })
+
+  it("appends ?v= cache buster when cache key is provided", () => {
+    expect(recipeImageUrl("abc-123", "original", "XeRg")).toBe(
+      "/api/media/recipes/abc-123/images/original.webp?v=XeRg"
+    )
+  })
+
+  it("appends ?v= cache buster for min-original size", () => {
+    expect(recipeImageUrl("abc-123", "min-original", "XeRg")).toBe(
+      "/api/media/recipes/abc-123/images/min-original.webp?v=XeRg"
+    )
+  })
+
+  it("omits ?v= when cache key is null", () => {
+    expect(recipeImageUrl("abc-123", "original", null)).toBe(
+      "/api/media/recipes/abc-123/images/original.webp"
+    )
+  })
+
+  it("omits ?v= when cache key is a non-string (unknown) value", () => {
+    expect(recipeImageUrl("abc-123", "original", 42)).toBe(
+      "/api/media/recipes/abc-123/images/original.webp"
     )
   })
 })

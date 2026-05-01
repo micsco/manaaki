@@ -30,7 +30,7 @@ export const Route = createFileRoute("/recipes/$slug")({
 function RecipeDetail() {
   const recipe = Route.useLoaderData()
   const { isCookMode } = useCookMode()
-  const img = recipeImageUrl(recipe.id, "original")
+  const img = recipeImageUrl(recipe.id, "original", recipe.image)
   const navigate = useNavigate()
   const { prevSlug, nextSlug } = useRecipeNav(recipe.slug ?? "")
   const posthog = usePostHog()

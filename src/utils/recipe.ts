@@ -10,10 +10,12 @@ export function mealieRecipeUrl(
 
 export function recipeImageUrl(
   id: string | null | undefined,
-  size: "original" | "min-original"
+  size: "original" | "min-original",
+  cacheKey?: string | null | unknown
 ): string | null {
   if (!id) return null
-  return `/api/media/recipes/${id}/images/${size}.webp`
+  const base = `/api/media/recipes/${id}/images/${size}.webp`
+  return cacheKey && typeof cacheKey === "string" ? `${base}?v=${cacheKey}` : base
 }
 
 // ISO 8601 duration — e.g. "PT1H30M" → "1h 30m"
