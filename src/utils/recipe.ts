@@ -34,18 +34,6 @@ const FRACTIONS: Record<number, string> = {
   0.875: "⅞",
 }
 
-export function cleanNote(note: string | null | undefined): string | null {
-  if (!note) return null
-  const cleaned = note
-    .replace(/\s*\bNote\s*\d*\s*$/i, "")
-    .replace(/^,\s*/, "")
-    .replace(/\s*,\s*,+/g, ",")
-    .replace(/\s+,/g, ",")
-    .replace(/,+\s*$/, "")
-    .trim()
-  return cleaned || null
-}
-
 export function formatQuantity(quantity: number | null | undefined): string {
   if (quantity == null) return ""
   if (quantity === 0) return ""
