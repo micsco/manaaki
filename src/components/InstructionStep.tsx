@@ -44,7 +44,7 @@ export function InstructionStep({ step, index, recipeId, className = "" }: Instr
         </span>
         <span
           className={`min-w-0 flex-1 leading-relaxed transition-colors ${
-            isChecked ? "truncate text-gray-600 line-through" : "text-gray-300"
+            isChecked ? "truncate text-gray-600" : "text-gray-300"
           }`}
         >
           {step.text}
