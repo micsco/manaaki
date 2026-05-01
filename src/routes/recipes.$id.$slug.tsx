@@ -1,7 +1,7 @@
 import { mdiChevronLeft } from "@mdi/js"
 import { usePostHog } from "@posthog/react"
 import { useHotkey } from "@tanstack/react-hotkeys"
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
 import { getOneApiRecipesSlugGet } from "../api/generated/sdk.gen"
 import type { RecipeOutput } from "../api/generated/types.gen"
@@ -11,15 +11,22 @@ import { RecipeBody } from "../components/RecipeBody"
 import { RecipeHeader } from "../components/RecipeHeader"
 import { useCookMode } from "../contexts/CookModeContext"
 import { useRecipeNav } from "../hooks/useRecipeNav"
-import { recipeImageUrl } from "../utils/recipe"
+import { decodeRecipeId, recipeImageUrl, recipeUrl } from "../utils/recipe"
 
-async function loader({ params }: { params: { slug: string } }): Promise<RecipeOutput> {
-  const r = await getOneApiRecipesSlugGet({ path: { slug: params.slug } })
+async function loader({ params }: { params: { id: string; slug: string } }): Promise<RecipeOutput> {
+  const uuid = decodeRecipeId(params.id)
+  const r = await getOneApiRecipesSlugGet({ path: { slug: uuid } })
   if (!r.data) throw new Error("Recipe not found")
-  return r.data
+
+  const recipe = r.data
+  if (recipe.id && recipe.slug && params.slug !== recipe.slug) {
+    throw redirect({ to: recipeUrl(recipe.id, recipe.slug), statusCode: 301 })
+  }
+
+  return recipe
 }
 
-export const Route = createFileRoute("/recipes/$slug")({
+export const Route = createFileRoute("/recipes/$id/$slug")({
   head: ({ loaderData }) => ({
     meta: [{ title: `${loaderData?.name ?? "Recipe"} · What's Cookin'` }],
   }),
@@ -32,41 +39,44 @@ function RecipeDetail() {
   const { isCookMode } = useCookMode()
   const img = recipeImageUrl(recipe.id, "original", recipe.image)
   const navigate = useNavigate()
-  const { prevSlug, nextSlug } = useRecipeNav(recipe.slug ?? "")
+  const { prevRecipe, nextRecipe } = useRecipeNav(recipe.id ?? "")
   const posthog = usePostHog()
 
   useEffect(() => {
     posthog.capture("recipe_viewed", {
       recipe_id: recipe.id,
-      recipe_slug: recipe.slug,
       recipe_name: recipe.name,
       recipe_rating: recipe.rating,
       recipe_total_time: recipe.totalTime,
       has_image: !!img,
     })
-  }, [recipe.id, recipe.slug, recipe.name, recipe.rating, recipe.totalTime, img, posthog])
+  }, [recipe.id, recipe.name, recipe.rating, recipe.totalTime, img, posthog])
 
   useHotkey("ArrowLeft", () => {
-    if (prevSlug) {
+    if (prevRecipe) {
       posthog.capture("recipe_navigated", {
         direction: "prev",
         method: "keyboard",
-        from_slug: recipe.slug,
-        to_slug: prevSlug,
+        from_recipe_id: recipe.id,
+        from_recipe_name: recipe.name,
+        to_recipe_id: prevRecipe.id,
+        to_recipe_name: prevRecipe.name,
       })
-      navigate({ to: "/recipes/$slug", params: { slug: prevSlug } })
+      navigate({ to: recipeUrl(prevRecipe.id, prevRecipe.slug) })
     }
   })
 
   useHotkey("ArrowRight", () => {
-    if (nextSlug) {
+    if (nextRecipe) {
       posthog.capture("recipe_navigated", {
         direction: "next",
         method: "keyboard",
-        from_slug: recipe.slug,
-        to_slug: nextSlug,
+        from_recipe_id: recipe.id,
+        from_recipe_name: recipe.name,
+        to_recipe_id: nextRecipe.id,
+        to_recipe_name: nextRecipe.name,
       })
-      navigate({ to: "/recipes/$slug", params: { slug: nextSlug } })
+      navigate({ to: recipeUrl(nextRecipe.id, nextRecipe.slug) })
     }
   })
 
@@ -83,7 +93,7 @@ function RecipeDetail() {
   return (
     <KitchenLayout title={recipe.name ?? undefined} backButton={cookModeBackButton}>
       {!isCookMode && (
-        <RecipeHeader recipe={recipe} img={img} prevSlug={prevSlug} nextSlug={nextSlug} />
+        <RecipeHeader recipe={recipe} img={img} prevRecipe={prevRecipe} nextRecipe={nextRecipe} />
       )}
       <RecipeBody recipe={recipe} />
     </KitchenLayout>

@@ -1,5 +1,19 @@
 const MEALIE_BASE_URL = "https://mealie.scottfamily.nz"
 
+export function encodeRecipeId(uuid: string): string {
+  return btoa(uuid).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")
+}
+
+export function decodeRecipeId(encoded: string): string {
+  const base64 = encoded.replace(/-/g, "+").replace(/_/g, "/")
+  const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4)
+  return atob(padded)
+}
+
+export function recipeUrl(id: string, slug: string): string {
+  return `/recipes/${encodeRecipeId(id)}/${slug}`
+}
+
 export function mealieRecipeUrl(
   slug: string | null | undefined,
   groupSlug: string | null | undefined

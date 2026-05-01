@@ -9,7 +9,8 @@ import { usePostHog } from "@posthog/react"
 import { Link } from "@tanstack/react-router"
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { useGroupSlug } from "../hooks/useGroupSlug"
-import { formatTime, mealieRecipeUrl } from "../utils/recipe"
+import type { RecipeNavItem } from "../hooks/useRecipeNav"
+import { formatTime, mealieRecipeUrl, recipeUrl } from "../utils/recipe"
 import { Icon } from "./Icon"
 import { MealieLogo } from "./MealieLogo"
 import { Badge } from "./ui"
@@ -67,13 +68,13 @@ function HeroStats({ recipe }: { recipe: RecipeOutput }) {
 export function RecipeHeader({
   recipe,
   img,
-  prevSlug,
-  nextSlug,
+  prevRecipe,
+  nextRecipe,
 }: {
   recipe: RecipeOutput
   img: string | null
-  prevSlug?: string | null
-  nextSlug?: string | null
+  prevRecipe?: RecipeNavItem | null
+  nextRecipe?: RecipeNavItem | null
 }) {
   const groupSlug = useGroupSlug()
   const mealieUrl = mealieRecipeUrl(recipe.slug, groupSlug)
@@ -102,7 +103,6 @@ export function RecipeHeader({
               onClick={() =>
                 posthog.capture("recipe_viewed_in_mealie", {
                   recipe_id: recipe.id,
-                  recipe_slug: recipe.slug,
                   recipe_name: recipe.name,
                 })
               }
@@ -114,20 +114,21 @@ export function RecipeHeader({
         </div>
 
         {/* Prev / next navigation */}
-        {(prevSlug || nextSlug) && (
+        {(prevRecipe || nextRecipe) && (
           <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-            {prevSlug ? (
+            {prevRecipe ? (
               <Link
-                to="/recipes/$slug"
-                params={{ slug: prevSlug }}
+                to={recipeUrl(prevRecipe.id, prevRecipe.slug)}
                 aria-label="Previous recipe"
                 className="inline-flex items-center justify-center rounded-full bg-black/40 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
                 onClick={() =>
                   posthog.capture("recipe_navigated", {
                     direction: "prev",
                     method: "click",
-                    from_slug: recipe.slug,
-                    to_slug: prevSlug,
+                    from_recipe_id: recipe.id,
+                    from_recipe_name: recipe.name,
+                    to_recipe_id: prevRecipe.id,
+                    to_recipe_name: prevRecipe.name,
                   })
                 }
               >
@@ -138,18 +139,19 @@ export function RecipeHeader({
                 <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
               </span>
             )}
-            {nextSlug ? (
+            {nextRecipe ? (
               <Link
-                to="/recipes/$slug"
-                params={{ slug: nextSlug }}
+                to={recipeUrl(nextRecipe.id, nextRecipe.slug)}
                 aria-label="Next recipe"
                 className="inline-flex items-center justify-center rounded-full bg-black/40 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
                 onClick={() =>
                   posthog.capture("recipe_navigated", {
                     direction: "next",
                     method: "click",
-                    from_slug: recipe.slug,
-                    to_slug: nextSlug,
+                    from_recipe_id: recipe.id,
+                    from_recipe_name: recipe.name,
+                    to_recipe_id: nextRecipe.id,
+                    to_recipe_name: nextRecipe.name,
                   })
                 }
               >

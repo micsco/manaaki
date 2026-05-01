@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest"
 import type { RecipeOutput } from "../api/generated/types.gen"
+import type { RecipeNavItem } from "../hooks/useRecipeNav"
 import { render, screen } from "../test/render"
+import { encodeRecipeId } from "../utils/recipe"
 import { RecipeHeader } from "./RecipeHeader"
 
 vi.mock("../hooks/useGroupSlug", () => ({
@@ -11,15 +13,11 @@ vi.mock("@tanstack/react-router", async importOriginal => {
   const actual = await importOriginal<typeof import("@tanstack/react-router")>()
   return {
     ...actual,
-    Link: ({ to, params, children, ...props }: any) => {
-      const slug = params?.slug
-      const href = slug ? to.replace("$slug", slug) : to
-      return (
-        <a href={href} {...props}>
-          {children}
-        </a>
-      )
-    },
+    Link: ({ to, children, ...props }: any) => (
+      <a href={to} {...props}>
+        {children}
+      </a>
+    ),
   }
 })
 
@@ -30,6 +28,9 @@ const minimalRecipe: RecipeOutput = {
   recipeIngredient: [],
   recipeInstructions: [],
 }
+
+const prevRecipe: RecipeNavItem = { id: "prev111", slug: "apple-pie", name: "Apple Pie" }
+const nextRecipe: RecipeNavItem = { id: "next222", slug: "carrot-cake", name: "Carrot Cake" }
 
 describe("RecipeHeader", () => {
   it("renders the recipe title", () => {
@@ -42,42 +43,57 @@ describe("RecipeHeader", () => {
     expect(screen.getByRole("link", { name: /all recipes/i })).toBeInTheDocument()
   })
 
-  it("does not render prev/next buttons when no slugs are provided", () => {
+  it("does not render prev/next buttons when no recipes are provided", () => {
     render(<RecipeHeader recipe={minimalRecipe} img={null} />)
     expect(screen.queryByRole("link", { name: /previous recipe/i })).not.toBeInTheDocument()
     expect(screen.queryByRole("link", { name: /next recipe/i })).not.toBeInTheDocument()
   })
 
-  it("renders both prev and next buttons when both slugs are provided", () => {
+  it("renders both prev and next buttons when both recipes are provided", () => {
     render(
-      <RecipeHeader recipe={minimalRecipe} img={null} prevSlug="apple-pie" nextSlug="carrot-cake" />
+      <RecipeHeader
+        recipe={minimalRecipe}
+        img={null}
+        prevRecipe={prevRecipe}
+        nextRecipe={nextRecipe}
+      />
     )
     expect(screen.getByRole("link", { name: /previous recipe/i })).toBeInTheDocument()
     expect(screen.getByRole("link", { name: /next recipe/i })).toBeInTheDocument()
   })
 
-  it("links prev button to the correct recipe slug", () => {
+  it("links prev button to the correct encoded recipe URL", () => {
     render(
-      <RecipeHeader recipe={minimalRecipe} img={null} prevSlug="apple-pie" nextSlug="carrot-cake" />
+      <RecipeHeader
+        recipe={minimalRecipe}
+        img={null}
+        prevRecipe={prevRecipe}
+        nextRecipe={nextRecipe}
+      />
     )
     expect(screen.getByRole("link", { name: /previous recipe/i })).toHaveAttribute(
       "href",
-      "/recipes/apple-pie"
+      `/recipes/${encodeRecipeId("prev111")}/apple-pie`
     )
   })
 
-  it("links next button to the correct recipe slug", () => {
+  it("links next button to the correct encoded recipe URL", () => {
     render(
-      <RecipeHeader recipe={minimalRecipe} img={null} prevSlug="apple-pie" nextSlug="carrot-cake" />
+      <RecipeHeader
+        recipe={minimalRecipe}
+        img={null}
+        prevRecipe={prevRecipe}
+        nextRecipe={nextRecipe}
+      />
     )
     expect(screen.getByRole("link", { name: /next recipe/i })).toHaveAttribute(
       "href",
-      "/recipes/carrot-cake"
+      `/recipes/${encodeRecipeId("next222")}/carrot-cake`
     )
   })
 
-  it("does not render nav buttons when both slugs are null", () => {
-    render(<RecipeHeader recipe={minimalRecipe} img={null} prevSlug={null} nextSlug={null} />)
+  it("does not render nav buttons when both recipes are null", () => {
+    render(<RecipeHeader recipe={minimalRecipe} img={null} prevRecipe={null} nextRecipe={null} />)
     expect(screen.queryByRole("link", { name: /previous recipe/i })).not.toBeInTheDocument()
     expect(screen.queryByRole("link", { name: /next recipe/i })).not.toBeInTheDocument()
   })

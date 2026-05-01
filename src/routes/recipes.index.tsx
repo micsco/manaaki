@@ -7,7 +7,7 @@ import type { RecipeSummary } from "../api/generated/types.gen"
 import { Icon } from "../components/Icon"
 import { Badge, Card } from "../components/ui"
 import { recipeListQueryOptions } from "../hooks/useRecipeList"
-import { recipeImageUrl } from "../utils/recipe"
+import { recipeImageUrl, recipeUrl } from "../utils/recipe"
 
 export const Route = createFileRoute("/recipes/")({
   head: () => ({
@@ -38,15 +38,13 @@ function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
 
   return (
     <Card hover className="overflow-hidden">
-      {recipe.slug ? (
+      {recipe.id && recipe.slug ? (
         <Link
-          to="/recipes/$slug"
-          params={{ slug: recipe.slug }}
+          to={recipeUrl(recipe.id, recipe.slug)}
           className="block rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950"
           onClick={() =>
             posthog.capture("recipe_card_clicked", {
               recipe_id: recipe.id,
-              recipe_slug: recipe.slug,
               recipe_name: recipe.name,
               recipe_rating: recipe.rating,
               recipe_total_time: recipe.totalTime,

@@ -1,20 +1,35 @@
 import { useRecipeList } from "./useRecipeList"
 
-export interface RecipeNav {
-  prevSlug: string | null
-  nextSlug: string | null
+export interface RecipeNavItem {
+  id: string
+  slug: string
+  name: string
 }
 
-export function useRecipeNav(currentSlug: string): RecipeNav {
+export interface RecipeNav {
+  prevRecipe: RecipeNavItem | null
+  nextRecipe: RecipeNavItem | null
+}
+
+function toNavItem(recipe: {
+  id?: string | null
+  slug?: string
+  name?: string | null
+}): RecipeNavItem | null {
+  if (!recipe.id || !recipe.slug) return null
+  return { id: recipe.id, slug: recipe.slug, name: recipe.name ?? "" }
+}
+
+export function useRecipeNav(currentId: string): RecipeNav {
   const recipes = useRecipeList()
 
-  if (recipes.length === 0) return { prevSlug: null, nextSlug: null }
+  if (recipes.length === 0) return { prevRecipe: null, nextRecipe: null }
 
-  const index = recipes.findIndex(r => r.slug === currentSlug)
-  if (index === -1) return { prevSlug: null, nextSlug: null }
+  const index = recipes.findIndex(r => r.id === currentId)
+  if (index === -1) return { prevRecipe: null, nextRecipe: null }
 
-  const prevSlug = recipes[(index - 1 + recipes.length) % recipes.length].slug ?? null
-  const nextSlug = recipes[(index + 1) % recipes.length].slug ?? null
+  const prevRecipe = toNavItem(recipes[(index - 1 + recipes.length) % recipes.length])
+  const nextRecipe = toNavItem(recipes[(index + 1) % recipes.length])
 
-  return { prevSlug, nextSlug }
+  return { prevRecipe, nextRecipe }
 }
