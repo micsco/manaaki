@@ -173,6 +173,16 @@
       "formatter": {
         "enabled": false
       }
+    },
+    {
+      "includes": ["src/**/*.test.{ts,tsx}", "src/test/**/*", "e2e/**/*.spec.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
     }
   ]
 }
