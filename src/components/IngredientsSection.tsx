@@ -23,7 +23,7 @@ export function IngredientsSection({
           if (ing.title) {
             return (
               <li
-                key={ing.title}
+                key={ing.referenceId ?? `${recipeId}-title-${i}`}
                 className="mt-6 mb-2 font-semibold text-gray-200 text-sm uppercase tracking-wide"
               >
                 {ing.title}
@@ -33,7 +33,7 @@ export function IngredientsSection({
           const text = ing.display || ing.originalText || ""
           return (
             <IngredientCheckbox
-              key={text || i}
+              key={ing.referenceId ?? `${recipeId}-${i}`}
               ingredient={text}
               recipeId={recipeId}
               ingredientIndex={i}

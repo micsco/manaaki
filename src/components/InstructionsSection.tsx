@@ -55,7 +55,8 @@ export function InstructionsSection({
       <ol className="space-y-0.5">
         {hasSections
           ? groups.map((group, gi) => (
-              <li key={group.title ?? `group-${gi}`} className="list-none space-y-0.5">
+              // biome-ignore lint/suspicious/noArrayIndexKey: group index is stable; groups are derived from recipe steps with no stable ID
+              <li key={`${recipeId}-group-${gi}`} className="list-none space-y-0.5">
                 {group.title && (
                   <InstructionSectionHeader
                     title={group.title}
@@ -65,7 +66,7 @@ export function InstructionsSection({
                 )}
                 {group.steps.map(({ step, index }) => (
                   <InstructionStep
-                    key={step.id ?? step.text ?? index}
+                    key={step.id ?? `${recipeId}-${index}`}
                     step={step}
                     index={index}
                     recipeId={recipeId}
@@ -75,7 +76,7 @@ export function InstructionsSection({
             ))
           : steps.map((step, i) => (
               <InstructionStep
-                key={step.id ?? step.text ?? i}
+                key={step.id ?? `${recipeId}-${i}`}
                 step={step}
                 index={i}
                 recipeId={recipeId}
