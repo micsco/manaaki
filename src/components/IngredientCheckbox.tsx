@@ -89,7 +89,7 @@ function StructuredIngredient({
             className={
               noteOnly
                 ? `font-normal ${isChecked ? "" : "text-gray-300 group-hover:text-gray-200"}`
-                : `${isChecked ? "" : "text-gray-500 group-hover:text-gray-400"}`
+                : `text-sm leading-none ${isChecked ? "" : "text-gray-500 group-hover:text-gray-400"}`
             }
           >
             {note}
