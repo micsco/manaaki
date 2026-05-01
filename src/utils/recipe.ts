@@ -1,3 +1,13 @@
+const MEALIE_BASE_URL = "https://mealie.scottfamily.nz"
+
+export function mealieRecipeUrl(
+  slug: string | null | undefined,
+  groupSlug: string | null | undefined
+): string | null {
+  if (!slug || !groupSlug) return null
+  return `${MEALIE_BASE_URL}/g/${groupSlug}/r/${slug}`
+}
+
 export function recipeImageUrl(
   id: string | null | undefined,
   size: "original" | "min-original"

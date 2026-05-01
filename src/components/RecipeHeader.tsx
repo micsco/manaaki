@@ -1,8 +1,16 @@
-import { mdiAccountGroup, mdiChevronLeft, mdiStarCircleOutline, mdiTimerOutline } from "@mdi/js"
+import {
+  mdiAccountGroup,
+  mdiChevronLeft,
+  mdiChevronRight,
+  mdiStarCircleOutline,
+  mdiTimerOutline,
+} from "@mdi/js"
 import { Link } from "@tanstack/react-router"
 import type { RecipeOutput } from "../api/generated/types.gen"
-import { formatTime } from "../utils/recipe"
+import { useGroupSlug } from "../hooks/useGroupSlug"
+import { formatTime, mealieRecipeUrl } from "../utils/recipe"
 import { Icon } from "./Icon"
+import { MealieLogo } from "./MealieLogo"
 import { Badge } from "./ui"
 
 function HeroRating({ rating }: { rating: number }) {
@@ -55,19 +63,80 @@ function HeroStats({ recipe }: { recipe: RecipeOutput }) {
   )
 }
 
-export function RecipeHeader({ recipe, img }: { recipe: RecipeOutput; img: string | null }) {
+export function RecipeHeader({
+  recipe,
+  img,
+  prevSlug,
+  nextSlug,
+}: {
+  recipe: RecipeOutput
+  img: string | null
+  prevSlug?: string | null
+  nextSlug?: string | null
+}) {
+  const groupSlug = useGroupSlug()
+  const mealieUrl = mealieRecipeUrl(recipe.slug, groupSlug)
+
   return (
     <div className="bg-gray-950 text-gray-100">
       {/* Hero */}
       <div className="relative h-[55vh] min-h-64 w-full overflow-hidden bg-gray-900">
-        {/* Back link */}
-        <Link
-          to="/recipes"
-          className="absolute top-4 left-4 z-20 inline-flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 font-medium text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/60"
-        >
-          <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
-          All recipes
-        </Link>
+        {/* Top-left controls */}
+        <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+          <Link
+            to="/recipes"
+            className="inline-flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 font-medium text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+          >
+            <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
+            All recipes
+          </Link>
+          {mealieUrl && (
+            <a
+              href={mealieUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="View in Mealie"
+              className="inline-flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 font-medium text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+            >
+              <MealieLogo className="h-4 w-4" />
+              View in Mealie
+            </a>
+          )}
+        </div>
+
+        {/* Prev / next navigation */}
+        {(prevSlug || nextSlug) && (
+          <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+            {prevSlug ? (
+              <Link
+                to="/recipes/$slug"
+                params={{ slug: prevSlug }}
+                aria-label="Previous recipe"
+                className="inline-flex items-center justify-center rounded-full bg-black/40 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+              >
+                <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
+              </Link>
+            ) : (
+              <span className="inline-flex items-center justify-center rounded-full bg-black/20 p-1.5 text-white/30">
+                <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
+              </span>
+            )}
+            {nextSlug ? (
+              <Link
+                to="/recipes/$slug"
+                params={{ slug: nextSlug }}
+                aria-label="Next recipe"
+                className="inline-flex items-center justify-center rounded-full bg-black/40 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+              >
+                <Icon path={mdiChevronRight} size={0.75} aria-hidden={true} />
+              </Link>
+            ) : (
+              <span className="inline-flex items-center justify-center rounded-full bg-black/20 p-1.5 text-white/30">
+                <Icon path={mdiChevronRight} size={0.75} aria-hidden={true} />
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Hero image */}
         {img ? (

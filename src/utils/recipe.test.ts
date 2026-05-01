@@ -1,5 +1,33 @@
 import { describe, expect, it } from "vitest"
-import { formatQuantity, formatTime, recipeImageUrl } from "./recipe"
+import { formatQuantity, formatTime, mealieRecipeUrl, recipeImageUrl } from "./recipe"
+
+describe("mealieRecipeUrl", () => {
+  it("returns the full Mealie recipe URL for a valid slug and group slug", () => {
+    expect(mealieRecipeUrl("banana-bread", "my-family")).toBe(
+      "https://mealie.scottfamily.nz/g/my-family/r/banana-bread"
+    )
+  })
+
+  it("returns null for null slug", () => {
+    expect(mealieRecipeUrl(null, "my-family")).toBeNull()
+  })
+
+  it("returns null for undefined slug", () => {
+    expect(mealieRecipeUrl(undefined, "my-family")).toBeNull()
+  })
+
+  it("returns null for empty string slug", () => {
+    expect(mealieRecipeUrl("", "my-family")).toBeNull()
+  })
+
+  it("returns null when groupSlug is null", () => {
+    expect(mealieRecipeUrl("banana-bread", null)).toBeNull()
+  })
+
+  it("returns null when groupSlug is undefined", () => {
+    expect(mealieRecipeUrl("banana-bread", undefined)).toBeNull()
+  })
+})
 
 describe("recipeImageUrl", () => {
   it("returns null for null id", () => {

@@ -1,10 +1,13 @@
-import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router"
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router"
 import type { ReactNode } from "react"
 import { CookModeProvider } from "../contexts/CookModeContext"
 import "../styles/globals.css"
 
-export const Route = createRootRoute({
+export const queryClient = new QueryClient()
+
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -34,11 +37,13 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
-      <NuqsAdapter>
-        <CookModeProvider>
-          <Outlet />
-        </CookModeProvider>
-      </NuqsAdapter>
+      <QueryClientProvider client={queryClient}>
+        <NuqsAdapter>
+          <CookModeProvider>
+            <Outlet />
+          </CookModeProvider>
+        </NuqsAdapter>
+      </QueryClientProvider>
     </RootDocument>
   )
 }

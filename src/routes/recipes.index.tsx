@@ -1,25 +1,19 @@
 import { mdiStarCircleOutline, mdiTimerOutline } from "@mdi/js"
+import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
-import { getAllApiRecipesGet } from "../api/generated/sdk.gen"
 import type { RecipeSummary } from "../api/generated/types.gen"
 import { Icon } from "../components/Icon"
 import { Badge, Card } from "../components/ui"
+import { recipeListQueryOptions } from "../hooks/useRecipeList"
 import { recipeImageUrl } from "../utils/recipe"
 
 export const Route = createFileRoute("/recipes/")({
   head: () => ({
     meta: [{ title: "Recipes · What's Cookin'" }],
   }),
-  loader: async () => {
-    const response = await getAllApiRecipesGet({
-      query: { perPage: 50, orderBy: "dateAdded", orderDirection: "desc" },
-    })
-    if (!response.data) {
-      throw new Error("Failed to load recipes")
-    }
-    return response.data
-  },
+  loader: ({ context: { queryClient } }) =>
+    void queryClient.ensureQueryData(recipeListQueryOptions),
   component: RecipeList,
 })
 
@@ -83,18 +77,19 @@ function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
 }
 
 function RecipeList() {
-  const data = Route.useLoaderData()
+  const { data } = useQuery(recipeListQueryOptions)
+  const recipes = data ?? []
 
   return (
     <main className="min-h-screen bg-gray-950">
       <div className="mx-auto max-w-7xl px-4 py-8">
         <div className="mb-8">
           <h1 className="mb-2 font-bold text-4xl text-gray-100">Recipes</h1>
-          <p className="text-gray-400 text-lg">{data.total ?? data.items.length} recipes</p>
+          <p className="text-gray-400 text-lg">{recipes.length} recipes</p>
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {data.items.map(recipe => (
+          {recipes.map(recipe => (
             <RecipeCard key={recipe.id ?? recipe.slug} recipe={recipe} />
           ))}
         </div>

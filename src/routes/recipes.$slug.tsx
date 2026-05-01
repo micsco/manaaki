@@ -1,5 +1,6 @@
 import { mdiChevronLeft } from "@mdi/js"
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { useHotkey } from "@tanstack/react-hotkeys"
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
 import { getOneApiRecipesSlugGet } from "../api/generated/sdk.gen"
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { Icon } from "../components/Icon"
@@ -7,6 +8,7 @@ import { KitchenLayout } from "../components/KitchenLayout"
 import { RecipeBody } from "../components/RecipeBody"
 import { RecipeHeader } from "../components/RecipeHeader"
 import { useCookMode } from "../contexts/CookModeContext"
+import { useRecipeNav } from "../hooks/useRecipeNav"
 import { recipeImageUrl } from "../utils/recipe"
 
 async function loader({ params }: { params: { slug: string } }): Promise<RecipeOutput> {
@@ -27,6 +29,16 @@ function RecipeDetail() {
   const recipe = Route.useLoaderData()
   const { isCookMode } = useCookMode()
   const img = recipeImageUrl(recipe.id, "original")
+  const navigate = useNavigate()
+  const { prevSlug, nextSlug } = useRecipeNav(recipe.slug ?? "")
+
+  useHotkey("ArrowLeft", () => {
+    if (prevSlug) navigate({ to: "/recipes/$slug", params: { slug: prevSlug } })
+  })
+
+  useHotkey("ArrowRight", () => {
+    if (nextSlug) navigate({ to: "/recipes/$slug", params: { slug: nextSlug } })
+  })
 
   const cookModeBackButton = (
     <Link
@@ -40,7 +52,9 @@ function RecipeDetail() {
 
   return (
     <KitchenLayout title={recipe.name ?? undefined} backButton={cookModeBackButton}>
-      {!isCookMode && <RecipeHeader recipe={recipe} img={img} />}
+      {!isCookMode && (
+        <RecipeHeader recipe={recipe} img={img} prevSlug={prevSlug} nextSlug={nextSlug} />
+      )}
       <RecipeBody recipe={recipe} />
     </KitchenLayout>
   )
