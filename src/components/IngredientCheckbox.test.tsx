@@ -43,7 +43,7 @@ describe("IngredientCheckbox", () => {
 
     it("renders structured ingredient: note", () => {
       render(<IngredientCheckbox {...defaultProps} food={{ name: "cream" }} note="softened" />)
-      expect(screen.getByText("softened")).toBeInTheDocument()
+      expect(screen.getByText("— softened")).toBeInTheDocument()
     })
   })
 

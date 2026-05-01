@@ -66,7 +66,6 @@ function StructuredIngredient({
     <span
       className={`flex-1 select-none transition-all duration-200 ${isChecked ? checkedClass : ""}`}
     >
-      {/* Line 1: quantity + unit (muted) + food name (prominent) */}
       <span className="flex flex-wrap items-baseline gap-x-1.5 leading-relaxed">
         {(quantity != null || unit != null) && (
           <span
@@ -83,15 +82,12 @@ function StructuredIngredient({
             {food.name}
           </span>
         )}
+        {note && (
+          <span className={`text-sm ${isChecked ? "" : "text-gray-500 group-hover:text-gray-400"}`}>
+            — {note}
+          </span>
+        )}
       </span>
-      {/* Line 2: note (smaller, more muted) */}
-      {note && (
-        <span
-          className={`mt-0.5 block text-sm leading-snug ${isChecked ? "" : "text-gray-500 group-hover:text-gray-400"}`}
-        >
-          {note}
-        </span>
-      )}
     </span>
   )
 }
