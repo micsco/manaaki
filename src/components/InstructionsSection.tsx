@@ -1,8 +1,12 @@
+import { mdiChevronDown, mdiChevronUp } from "@mdi/js"
+import { useState } from "react"
 import type { RecipeStep } from "../api/generated/types.gen"
 import { useCookMode } from "../contexts/CookModeContext"
 import { CookModeToggle } from "./CookModeToggle"
+import { Icon } from "./Icon"
 import { InstructionSectionHeader } from "./InstructionSectionHeader"
 import { InstructionStep } from "./InstructionStep"
+import { PullDownPhoto } from "./PullDownPhoto"
 
 interface StepGroup {
   title: string | null
@@ -34,23 +38,85 @@ function groupSteps(steps: RecipeStep[]): StepGroup[] {
 export function InstructionsSection({
   steps,
   recipeId,
+  img,
 }: {
   steps: RecipeStep[]
   recipeId: string
+  img?: string | null
 }) {
   const { isCookMode } = useCookMode()
+  const [photoOpen, setPhotoOpen] = useState(false)
   const groups = groupSteps(steps)
   const hasSections = groups.some(g => g.title !== null)
 
-  const className = isCookMode ? "overflow-y-auto px-4 py-6 lg:pl-10" : "pl-0 md:pl-10"
+  if (isCookMode) {
+    return (
+      <section className="overflow-y-auto px-4 py-6 lg:pl-10">
+        {img && <PullDownPhoto src={img} alt="" isOpen={photoOpen} />}
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="font-sans font-semibold text-gray-500 text-xs uppercase tracking-widest">
+            Method
+          </h2>
+          {img && (
+            <button
+              type="button"
+              aria-label={photoOpen ? "Hide photo" : "Show photo"}
+              onClick={() => setPhotoOpen(prev => !prev)}
+              className="flex select-none items-center gap-1 text-gray-400 text-xs hover:text-gray-300"
+            >
+              <Icon path={photoOpen ? mdiChevronUp : mdiChevronDown} size={0.55} aria-hidden />
+              {photoOpen ? "Hide photo" : "Photo"}
+            </button>
+          )}
+        </div>
+        {hasSections ? (
+          <div>
+            {groups.map((group, gi) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: group index is stable; groups are derived from recipe steps with no stable ID
+              <section key={`${recipeId}-group-${gi}`}>
+                {group.title && (
+                  <InstructionSectionHeader
+                    title={group.title}
+                    recipeId={recipeId}
+                    indices={group.steps.map(s => s.index)}
+                  />
+                )}
+                <ol>
+                  {group.steps.map(({ step, index }) => (
+                    <InstructionStep
+                      key={step.id ?? `${recipeId}-${index}`}
+                      step={step}
+                      index={index}
+                      recipeId={recipeId}
+                    />
+                  ))}
+                </ol>
+              </section>
+            ))}
+          </div>
+        ) : (
+          <ol>
+            {steps.map((step, i) => (
+              <InstructionStep
+                key={step.id ?? `${recipeId}-${i}`}
+                step={step}
+                index={i}
+                recipeId={recipeId}
+              />
+            ))}
+          </ol>
+        )}
+      </section>
+    )
+  }
 
   return (
-    <section className={className}>
+    <section className="pl-0 md:pl-10">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="font-sans font-semibold text-gray-500 text-xs uppercase tracking-widest">
           Method
         </h2>
-        {!isCookMode && <CookModeToggle />}
+        <CookModeToggle />
       </div>
       {hasSections ? (
         <div>

@@ -95,7 +95,7 @@ function RecipeDetail() {
       {!isCookMode && (
         <RecipeHeader recipe={recipe} img={img} prevRecipe={prevRecipe} nextRecipe={nextRecipe} />
       )}
-      <RecipeBody recipe={recipe} />
+      <RecipeBody recipe={recipe} img={img} />
     </KitchenLayout>
   )
 }

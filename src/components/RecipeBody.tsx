@@ -25,7 +25,7 @@ function RecipeFooter({ recipe }: { recipe: RecipeOutput }) {
   )
 }
 
-export function RecipeBody({ recipe }: { recipe: RecipeOutput }) {
+export function RecipeBody({ recipe, img }: { recipe: RecipeOutput; img?: string | null }) {
   const { isCookMode } = useCookMode()
   const hasIngredients = (recipe.recipeIngredient?.length ?? 0) > 0
   const hasInstructions = (recipe.recipeInstructions?.length ?? 0) > 0
@@ -50,6 +50,7 @@ export function RecipeBody({ recipe }: { recipe: RecipeOutput }) {
             <InstructionsSection
               steps={recipe.recipeInstructions ?? []}
               recipeId={recipe.id ?? ""}
+              img={img}
             />
           )}
         </div>
