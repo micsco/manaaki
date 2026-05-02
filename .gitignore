@@ -6,5 +6,4 @@ dist
 openapi-ts-error-*.log
 
 # Temporary/cache directories
-.agents/
 .tanstack/
