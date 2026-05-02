@@ -86,7 +86,7 @@ catch-all `location /api/` block:
 
 ```nginx
 location ~ ^/api/categories(/.*)?$ {
-    resolver 127.0.0.11 valid=10s ipv6=off;
+    resolver 127.0.0.11 valid=10s;
     if ($request_method != GET) {
         return 405;
     }
@@ -194,21 +194,18 @@ request that needs it and re-resolves based on the `valid=` TTL. This means:
 The `resolver` directive is set **per-location** rather than at server level to
 keep Docker-internal and public DNS separate:
 
-- **Mealie locations** (`/api/*`): `resolver 127.0.0.11 valid=10s ipv6=off`
+- **Mealie locations** (`/api/*`): `resolver 127.0.0.11 valid=10s`
   — uses only Docker's built-in DNS (`127.0.0.11`) which resolves container
   names on the Docker network. The short 10s TTL ensures nginx quickly picks up
   IP changes after container restarts.
 
-- **PostHog locations** (`/ingest/*`): `resolver 8.8.8.8 1.1.1.1 valid=60s ipv6=off`
+- **PostHog locations** (`/ingest/*`): `resolver 8.8.8.8 1.1.1.1 valid=60s`
   — uses public DNS to resolve `eu.i.posthog.com` and `eu-assets.i.posthog.com`.
 
 Mixing Docker DNS and public DNS in a single `resolver` directive caused
 intermittent "Host not found" errors: public resolvers like `8.8.8.8` would
 respond with NXDOMAIN for Docker-internal hostnames, and nginx would accept
 that response instead of waiting for the Docker resolver.
-
-`ipv6=off` prevents nginx from trying AAAA records, which Docker DNS doesn't
-reliably serve and can cause spurious failures.
 
 ---
 
