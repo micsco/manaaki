@@ -51,75 +51,53 @@ npx skills update vercel-labs/agent-skills --yes
 
 ## Commands
 
-| Task                  | Command             |
-| --------------------- | ------------------- |
-| Dev server            | `pnpm dev`          |
-| Safe dev server       | `pnpm dev:safe`     |
-| Type-check            | `pnpm tsc --noEmit` |
-| Biome check           | `pnpm check`        |
-| Biome check & fix     | `pnpm check:fix`    |
-| Biome format          | `pnpm format`       |
-| Biome format check    | `pnpm format:check` |
-| Full validation       | `pnpm validate`     |
-| Build                 | `pnpm build`        |
-| Safe build            | `pnpm build:safe`   |
-| Pre-push validation   | `pnpm pre-push`     |
-| Regenerate API client | `pnpm generate`     |
+| Task                  | Command                  |
+| --------------------- | ------------------------ |
+| Dev server            | `pnpm dev`               |
+| Type-check            | `pnpm type-check`        |
+| Biome check           | `pnpm check`             |
+| Biome check & fix     | `pnpm check:fix`         |
+| Biome format          | `pnpm format`            |
+| Full validation       | `pnpm validate`          |
+| Build                 | `pnpm build`             |
+| Run unit tests        | `pnpm test`              |
+| Run tests (watch)     | `pnpm test:watch`        |
+| Run e2e tests         | `pnpm test:e2e`          |
+| Regenerate API client | `pnpm generate`          |
 
-## Code Quality & Validation
+## Tests
 
-This project uses Biome for comprehensive validation to catch errors early:
+**Every code change must include tests.** This is non-negotiable.
 
-### **Pre-commit Hooks**
-- **Biome**: Catches TypeScript/React errors, style issues, and formats code
-- **TypeScript**: Validates type safety before commits
-- **Commitlint**: Enforces conventional commit messages
+- New utility functions → unit tests in a co-located `.test.ts` file
+- New or modified components → render/interaction tests in a co-located `.test.tsx` file
+- Bug fixes → a test that fails before the fix and passes after
+- See `.agents/skills/react-testing/AGENTS.md` for the full testing guide
 
-### **Development Scripts**
-- **`pnpm dev:safe`**: Runs full validation before starting dev server
-- **`pnpm build:safe`**: Comprehensive validation before building
-- **`pnpm validate`**: Runs type-check and Biome check
-- **`pnpm check`**: Biome linting and formatting check
-- **`pnpm check:fix`**: Biome linting and formatting with auto-fix
-- **`pnpm pre-push`**: Full validation before pushing changes
+## Before Committing
 
-### **VS Code Integration**
-- Auto-format on save with Biome
-- Auto-fix Biome issues on save
-- TypeScript import organization
-- Tailwind CSS class completion
-- Recommended extensions auto-installed
+Run these in order before staging any commit. The pre-commit hook runs them
+automatically, but running manually first saves time:
 
-### **CI/CD Pipeline**
-- **GitHub Actions**: Runs `biome ci` for optimized CI validation on every PR/push
-- **Type checking**: Ensures type safety across the entire codebase
-- **Biome validation**: Enforces code quality standards with CI-optimized reporting
-- **Build verification**: Guarantees the application builds successfully
+```bash
+pnpm check:fix    # lint + format with auto-fix (stages may change files)
+pnpm type-check   # TypeScript — must be clean
+pnpm test         # unit tests — all must pass
+```
 
-### **Validation Rules**
-- **TypeScript**: Strict mode enabled, no implicit any
-- **Biome Linter**: React 19+ rules, accessibility checks, complexity analysis, security checks
-- **Biome Formatter**: Consistent formatting with double quotes, space indentation, 100 char line width
-- **Git hooks**: Prevent broken code from being committed
-- **VCS Integration**: Automatically respects .gitignore patterns
+## Git Hooks (prek)
 
-### **Configuration Features**
-- **JSON Schema**: Full editor autocomplete and validation support
-- **File Scoping**: Processes only `src/**/*` with intelligent overrides
-- **Generated Files**: Automatically excludes API client and route tree generated files
-- **CSS Handling**: Tailwind CSS files excluded from linting due to directive parsing
-- **CI Optimization**: Uses `biome ci` command for better CI/CD integration
+Git hooks are managed by **prek** — config lives in `prek.toml`, not in any
+shell scripts. See `.agents/skills/prek/AGENTS.md` for the full reference.
 
-### **Error Prevention**
-- JSX syntax errors caught during development
-- Missing imports detected automatically  
-- Unused variables and dead code eliminated
-- Accessibility issues identified early
-- Type mismatches caught before runtime
-- Code complexity warnings for maintainability
-- Security vulnerabilities detected automatically
+| Hook | Stage | What it runs |
+|------|-------|-------------|
+| `biome-check` | pre-commit | `pnpm check:fix` |
+| `type-check` | pre-commit | `pnpm type-check` |
+| `test` | pre-push | `pnpm test` |
+| `build` | pre-push | `pnpm build` |
 
-This Biome-powered setup ensures that errors are caught immediately during development with fast, parallelized tooling, preventing them from reaching production.
+To run hooks manually: `npx prek run --stage pre-commit --all-files`
 
 <!-- intent-skills:start -->
 
@@ -153,4 +131,7 @@ skills:
 
 - when: "writing tests, setting up vitest, react testing library, playwright, unit tests, component tests, hook tests, e2e tests, mocking, userEvent, screen queries, jest-dom, or debugging act warnings"
   use: "react-testing"
+
+- when: "adding, removing, or modifying git hooks, changing hook stages, debugging hooks not running, reinstalling prek after cloning, or understanding what runs on commit or push"
+  use: "prek"
 <!-- intent-skills:end -->

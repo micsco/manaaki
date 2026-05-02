@@ -1,15 +1,12 @@
 import { mdiCheck } from "@mdi/js"
 import { useCallback, useEffect, useState } from "react"
+import { stepStorageKey } from "../utils/recipe"
 import { Icon } from "./Icon"
-
-function stepKey(recipeId: string, index: number) {
-  return `recipe-${recipeId}-step-${index}`
-}
 
 function readChecked(recipeId: string, indices: number[]): boolean[] {
   return indices.map(i => {
     try {
-      const raw = sessionStorage.getItem(stepKey(recipeId, i))
+      const raw = sessionStorage.getItem(stepStorageKey(recipeId, i))
       return raw ? JSON.parse(raw) === true : false
     } catch {
       return false
@@ -23,7 +20,7 @@ function useGroupCheckedState(recipeId: string, indices: number[]) {
   useEffect(() => {
     setChecked(readChecked(recipeId, indices))
 
-    const keys = new Set(indices.map(i => stepKey(recipeId, i)))
+    const keys = new Set(indices.map(i => stepStorageKey(recipeId, i)))
     const onSessionStorage = (e: Event) => {
       const { key } = (e as CustomEvent<{ key: string }>).detail
       if (keys.has(key)) setChecked(readChecked(recipeId, indices))
@@ -38,7 +35,7 @@ function useGroupCheckedState(recipeId: string, indices: number[]) {
     const next = !allChecked
     for (const i of indices) {
       try {
-        const key = stepKey(recipeId, i)
+        const key = stepStorageKey(recipeId, i)
         sessionStorage.setItem(key, JSON.stringify(next))
         window.dispatchEvent(new CustomEvent("session-storage", { detail: { key } }))
       } catch (_) {

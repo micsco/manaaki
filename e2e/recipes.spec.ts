@@ -1,10 +1,18 @@
 import { expect, test } from "@playwright/test"
 
+const RECIPE_1_ID = "00000000-0000-4000-8000-000000000001"
+const RECIPE_1_ENCODED = "AAAAAAAAQACAAAAAAAAAAQ"
+const RECIPE_1_SLUG = "pasta-carbonara"
+const RECIPE_1_URL = `/recipes/${RECIPE_1_ENCODED}/${RECIPE_1_SLUG}`
+
+const RECIPE_2_ID = "00000000-0000-4000-8000-000000000002"
+const RECIPE_2_SLUG = "risotto"
+
 const mockRecipeList = {
   items: [
     {
-      id: "recipe-1",
-      slug: "pasta-carbonara",
+      id: RECIPE_1_ID,
+      slug: RECIPE_1_SLUG,
       name: "Pasta Carbonara",
       description: "A classic Roman pasta dish",
       totalTime: "PT30M",
@@ -12,8 +20,8 @@ const mockRecipeList = {
       image: null,
     },
     {
-      id: "recipe-2",
-      slug: "risotto",
+      id: RECIPE_2_ID,
+      slug: RECIPE_2_SLUG,
       name: "Mushroom Risotto",
       description: null,
       totalTime: "PT45M",
@@ -27,8 +35,8 @@ const mockRecipeList = {
 }
 
 const mockRecipeDetail = {
-  id: "recipe-1",
-  slug: "pasta-carbonara",
+  id: RECIPE_1_ID,
+  slug: RECIPE_1_SLUG,
   name: "Pasta Carbonara",
   description: "A classic Roman pasta dish",
   totalTime: "PT30M",
@@ -109,20 +117,20 @@ test.describe("Recipe list", () => {
   })
 
   test("clicking a recipe navigates to its detail page", async ({ page }) => {
-    await page.route("/api/recipes/pasta-carbonara", route =>
+    await page.route(`/api/recipes/${RECIPE_1_ID}`, route =>
       route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(mockRecipeDetail) })
     )
 
     await page.goto("/recipes")
     await page.getByRole("link", { name: /pasta carbonara/i }).click()
 
-    await expect(page).toHaveURL(/\/recipes\/pasta-carbonara/)
+    await expect(page).toHaveURL(new RegExp(RECIPE_1_ENCODED))
   })
 })
 
 test.describe("Recipe detail", () => {
   test.beforeEach(async ({ page }) => {
-    await page.route("/api/recipes/pasta-carbonara", route =>
+    await page.route(`/api/recipes/${RECIPE_1_ID}`, route =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -132,28 +140,28 @@ test.describe("Recipe detail", () => {
   })
 
   test("shows the recipe name", async ({ page }) => {
-    await page.goto("/recipes/pasta-carbonara")
+    await page.goto(RECIPE_1_URL)
     await expect(page.getByRole("heading", { name: /pasta carbonara/i })).toBeVisible()
   })
 
   test("shows the Ingredients section", async ({ page }) => {
-    await page.goto("/recipes/pasta-carbonara")
+    await page.goto(RECIPE_1_URL)
     await expect(page.getByRole("heading", { name: /ingredients/i })).toBeVisible()
   })
 
   test("shows the Instructions section", async ({ page }) => {
-    await page.goto("/recipes/pasta-carbonara")
-    await expect(page.getByRole("heading", { name: /instructions/i })).toBeVisible()
+    await page.goto(RECIPE_1_URL)
+    await expect(page.getByRole("heading", { name: /method/i })).toBeVisible()
   })
 
   test("shows ingredient checkboxes", async ({ page }) => {
-    await page.goto("/recipes/pasta-carbonara")
-    const checkboxes = page.getByRole("checkbox")
-    await expect(checkboxes).toHaveCount(2)
+    await page.goto(RECIPE_1_URL)
+    const buttons = page.getByRole("button", { name: /spaghetti|egg yolks/i })
+    await expect(buttons).toHaveCount(2)
   })
 
   test("shows a back link to all recipes", async ({ page }) => {
-    await page.goto("/recipes/pasta-carbonara")
+    await page.goto(RECIPE_1_URL)
     await expect(page.getByRole("link", { name: /all recipes/i })).toBeVisible()
   })
 })

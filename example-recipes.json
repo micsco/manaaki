@@ -1,0 +1,3284 @@
+{
+    "page": 1,
+    "per_page": 50,
+    "total": 114,
+    "total_pages": 3,
+    "items": [
+        {
+            "id": "23762274-fc1b-4ff4-9710-d56b1e39a742",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Swedish Meatballs (homemade Ikea Meatballs)",
+            "slug": "swedish-meatballs-homemade-ikea-meatballs",
+            "image": "CJ2t",
+            "recipeServings": 5.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "50 minutes",
+            "prepTime": "20 minutes",
+            "cookTime": null,
+            "performTime": "30 minutes",
+            "description": "Recipe video above. Juicy meatballs smothered in a beautiful creamy gravy, with a hint of spicing that Swedish Meatballs are known for. Made extra soft and extra tasty by soaking fresh bread in grated onion - tried and tested technique used in my most of my meatball recipes, highly approved by readers! (See Italian Meatball reviews as an example)",
+            "recipeCategory": [
+                {
+                    "id": "9c2ac1fc-ef62-4d36-b312-9f67e89f373a",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Mains",
+                    "slug": "mains"
+                }
+            ],
+            "tags": [
+                {
+                    "id": "b3b6e099-ed20-49db-916a-1efc2f97cd7f",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Sauce For Swedish Meatballs",
+                    "slug": "sauce-for-swedish-meatballs"
+                },
+                {
+                    "id": "85d15e4f-245c-4848-a2e1-d3e33790be0d",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Swedish Meatballs",
+                    "slug": "swedish-meatballs"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.recipetineats.com/swedish-meatballs/",
+            "dateAdded": "2026-05-02",
+            "dateUpdated": "2026-05-02T09:34:27.016029+00:00",
+            "createdAt": "2026-05-02T09:33:34.375646+00:00",
+            "updatedAt": "2026-05-02T09:34:27.017863+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "6c436b4e-8d2e-4669-9342-ec6ec931ba73",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Baked Cod with Lemon Herb Quinoa and Steamed Broccoli",
+            "slug": "baked-cod-with-lemon-herb-quinoa-and-steamed-broccoli",
+            "image": "244",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "33 minutes",
+            "prepTime": "15 minutes",
+            "cookTime": null,
+            "performTime": "18 minutes",
+            "description": "Protein-packed cod, zesty quinoa infused with lemon and herbs, and vibrant steamed broccoli — designed to support health goals while remaining flavorful and quick to prepare.",
+            "recipeCategory": [
+                {
+                    "id": "a2524465-c2b6-465a-a21a-58717083f26d",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Main Dish",
+                    "slug": "main-dish"
+                }
+            ],
+            "tags": [
+                {
+                    "id": "58e0abf2-41c8-4c8f-8101-2d0bc33fcf8c",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Broccoli",
+                    "slug": "broccoli"
+                },
+                {
+                    "id": "4a9ad35d-f5fd-47bd-9edb-c92a1aca1b50",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Healthy",
+                    "slug": "healthy"
+                },
+                {
+                    "id": "b8d2350c-0ac0-41a5-9bcc-f36ba607fcc4",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "American",
+                    "slug": "american"
+                },
+                {
+                    "id": "6f257823-341a-4330-9c72-785f1d6e5f73",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Fish",
+                    "slug": "fish"
+                },
+                {
+                    "id": "a8b3a5e8-6157-4873-9810-55ac85c65325",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Cod",
+                    "slug": "cod"
+                },
+                {
+                    "id": "585b4099-f88e-4b99-8f48-1e1114a6cb1a",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Quinoa",
+                    "slug": "quinoa"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://healthylivingpc.com/baked-cod-with-lemon-herb-quinoa-and-steamed-broccoli/?hl=en-GB",
+            "dateAdded": "2026-05-01",
+            "dateUpdated": "2026-05-01T01:16:08.456112+00:00",
+            "createdAt": "2026-05-01T01:11:42.359901+00:00",
+            "updatedAt": "2026-05-01T01:16:08.458052+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "268ee6ec-d1eb-4022-ad44-0b603401142c",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Sticky beef with a smashed cucumber salad",
+            "slug": "sticky-beef-with-a-smashed-cucumber-salad",
+            "image": "bwPF",
+            "recipeServings": 3.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "20 minutes",
+            "prepTime": null,
+            "cookTime": null,
+            "performTime": null,
+            "description": "A high-protein meal prep of sticky Asian-style beef served with rice and a smashed cucumber salad.",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.instagram.com/reels/DMXrswxSau1/",
+            "dateAdded": "2026-05-01",
+            "dateUpdated": "2026-05-01T00:45:18.243449+00:00",
+            "createdAt": "2026-05-01T00:44:50.690528+00:00",
+            "updatedAt": "2026-05-01T00:45:18.245384+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "bd589661-c17a-4082-8f09-fc1a452b137f",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Slow cooker pork shoulder",
+            "slug": "slow-cooker-pork-shoulder",
+            "image": "XeRg",
+            "recipeServings": 8.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "8 hours 25 minutes",
+            "prepTime": "10 minutes",
+            "cookTime": null,
+            "performTime": "8 hours 15 minutes",
+            "description": "Slow cooking delivers lovely tender meat. Cook this shoulder of pork until it falls apart, shred it, then pile into baguettes or serve alongside veg or salad",
+            "recipeCategory": [
+                {
+                    "id": "a9cbfcaa-930f-42bc-94f5-af910543d8c0",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Dinner",
+                    "slug": "dinner"
+                },
+                {
+                    "id": "87e7ba3a-4331-4c4b-9510-d89526620bc2",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Main Course",
+                    "slug": "main-course"
+                }
+            ],
+            "tags": [
+                {
+                    "id": "b1928477-1a43-4ec8-b2c3-ce848506bf12",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker",
+                    "slug": "slow-cooker"
+                },
+                {
+                    "id": "a3c8455c-6a88-4306-82a3-c6a68cc3fa97",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Comfort Food",
+                    "slug": "comfort-food"
+                },
+                {
+                    "id": "7660d462-8164-489d-88bb-75eabad7672c",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Barney Desmazery",
+                    "slug": "barney-desmazery"
+                },
+                {
+                    "id": "ad50ee64-9f72-4358-98f1-70ebb7a94751",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Pork Shoulder",
+                    "slug": "pork-shoulder"
+                },
+                {
+                    "id": "3a57059c-4486-4495-a54c-ed8b7a4de8b5",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooked Pork",
+                    "slug": "slow-cooked-pork"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.bbcgoodfood.com/recipes/slow-cooker-pork-shoulder",
+            "dateAdded": "2026-04-20",
+            "dateUpdated": "2026-04-25T00:00:01.941034+00:00",
+            "createdAt": "2026-04-20T19:42:44.879355+00:00",
+            "updatedAt": "2026-04-25T00:00:01.942407+00:00",
+            "lastMade": "2026-04-25T00:00:01.852440+00:00"
+        },
+        {
+            "id": "abf9ae79-f5ab-4a39-8add-87178cfe2894",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Homemade Ramen",
+            "slug": "homemade-ramen",
+            "image": "1EHo",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "50 minutes",
+            "prepTime": "15 minutes",
+            "cookTime": null,
+            "performTime": "35 minutes",
+            "description": "This homemade Ramen recipe has savory noodles and juicy chicken in the most flavorful broth with vegetables and seasonings. Top it off with a soft boiled egg and a sprinkling of green onions!",
+            "recipeCategory": [
+                {
+                    "id": "2cd854ec-9b6d-4759-bb30-8799ad1ebedb",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Soup",
+                    "slug": "soup"
+                }
+            ],
+            "tags": [
+                {
+                    "id": "342abef4-44d3-40f4-a9dd-2ab4d32d0d39",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Noodles",
+                    "slug": "noodles"
+                },
+                {
+                    "id": "b7c66edd-135b-48df-b790-3109bebbf75d",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Easy",
+                    "slug": "easy"
+                },
+                {
+                    "id": "4a9ad35d-f5fd-47bd-9edb-c92a1aca1b50",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Healthy",
+                    "slug": "healthy"
+                },
+                {
+                    "id": "817afe99-52d6-4898-8877-181951b9d511",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Best",
+                    "slug": "best"
+                },
+                {
+                    "id": "70be7db9-e381-49d0-8202-e9db72169b4f",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Broth",
+                    "slug": "broth"
+                },
+                {
+                    "id": "0c196b26-4718-49d9-b3d8-c8637c19c82c",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Homemade Ramen",
+                    "slug": "homemade-ramen"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://thecozycook.com/homemade-ramen/",
+            "dateAdded": "2026-04-20",
+            "dateUpdated": "2026-04-21T00:00:01.048100+00:00",
+            "createdAt": "2026-04-20T19:45:54.472023+00:00",
+            "updatedAt": "2026-04-21T00:00:01.049764+00:00",
+            "lastMade": "2026-04-21T00:00:00.922926+00:00"
+        },
+        {
+            "id": "b262f1af-bdd5-49c5-b674-30f513bff654",
+            "userId": "1076b441-3c54-4b41-b81c-9efddfced2d3",
+            "householdId": "c616d8aa-2488-4afb-a7d5-178ff8ff5ea3",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Chocolate Baked Oat Cups",
+            "slug": "chocolate-baked-oat-cups",
+            "image": "LeOp",
+            "recipeServings": 12.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "40 minutes",
+            "prepTime": "15 minutes",
+            "cookTime": null,
+            "performTime": "25 minutes",
+            "description": "Take breakfast on the go with my Chocolate Baked Oat Cups. Meal prep friendly, gluten free and super delicious!",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://nourishedbynic.com/chocolate-baked-oat-cups/#recipe",
+            "dateAdded": "2026-04-17",
+            "dateUpdated": "2026-04-22T00:00:01.279916+00:00",
+            "createdAt": "2026-04-17T20:10:03.349943+00:00",
+            "updatedAt": "2026-04-22T00:00:01.281086+00:00",
+            "lastMade": "2026-04-22T00:00:01.196784+00:00"
+        },
+        {
+            "id": "4c422469-0ec3-499e-9365-a8b8cd8e7f10",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "High Protein Salmon Salad",
+            "slug": "high-protein-salmon-salad",
+            "image": "kg0g",
+            "recipeServings": 2.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": null,
+            "prepTime": null,
+            "cookTime": null,
+            "performTime": null,
+            "description": "A simple high-protein salmon salad with avocado, Greek yogurt, lemon, and cucumber.",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.youtube.com/shorts/bw1sfYDIpw4",
+            "dateAdded": "2026-04-12",
+            "dateUpdated": "2026-04-12T15:05:20.780773+00:00",
+            "createdAt": "2026-04-12T15:04:49.980696+00:00",
+            "updatedAt": "2026-04-12T15:05:20.783034+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "50eb5be8-73ec-46ed-8b10-157706764ff2",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Pancetta, pea and asparagus orzotto recipe",
+            "slug": "pancetta-pea-and-asparagus-orzotto-recipe",
+            "image": "DtLW",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "30 minutes",
+            "prepTime": null,
+            "cookTime": null,
+            "performTime": null,
+            "description": "This pancetta and asparagus orzotto recipe is an easy way to bring some lighter spring flavours your midweek cooking. It’s a reliable weeknight dinner that needs just 30 minutes and one pot, with the ingredients doing most of the work for you. Pack up any leftovers for a tasty lunch.",
+            "recipeCategory": [
+                {
+                    "id": "de89843c-0c9c-4bd0-a523-605e0da23901",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Midweek Meals",
+                    "slug": "midweek-meals"
+                },
+                {
+                    "id": "0b8422ce-f251-4580-8df4-386815d82e08",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Comfort Food",
+                    "slug": "comfort-food"
+                },
+                {
+                    "id": "0390d378-4f54-4262-9e3e-5979e0894ff7",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Quick And Easy",
+                    "slug": "quick-and-easy"
+                },
+                {
+                    "id": "fb12866b-b93c-4735-bd73-7c0edb9d9657",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Family Friendly",
+                    "slug": "family-friendly"
+                },
+                {
+                    "id": "b3874d15-6a04-4136-a2c6-30ab208d5ac6",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Mother'S Day",
+                    "slug": "mother-s-day"
+                },
+                {
+                    "id": "1efb536d-51f9-4b57-95ab-e2d157fbd717",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Spring",
+                    "slug": "spring"
+                }
+            ],
+            "tags": [
+                {
+                    "id": "d11cc453-43d6-4777-8320-371fc0b517ee",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Pork",
+                    "slug": "pork"
+                },
+                {
+                    "id": "130d9111-4f50-4320-b70c-063a41a23cfc",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Family Friendly",
+                    "slug": "family-friendly"
+                },
+                {
+                    "id": "707384e3-caf0-492a-81ff-b43e58adf653",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Midweek Meals",
+                    "slug": "midweek-meals"
+                },
+                {
+                    "id": "a3c8455c-6a88-4306-82a3-c6a68cc3fa97",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Comfort Food",
+                    "slug": "comfort-food"
+                },
+                {
+                    "id": "c08bbe10-5468-41ee-9d3c-fd2b871307a0",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Spring",
+                    "slug": "spring"
+                },
+                {
+                    "id": "65ec492b-7dd0-4cb0-bc7c-828a7311c1c4",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Cheese",
+                    "slug": "cheese"
+                },
+                {
+                    "id": "ca821f76-d1a2-48b3-a962-e32542911457",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Dinner",
+                    "slug": "dinner"
+                },
+                {
+                    "id": "1fed1d20-2dab-4d11-8333-194de6ce9e17",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Asparagus",
+                    "slug": "asparagus"
+                },
+                {
+                    "id": "0ae7dae8-20b8-4c97-b2f1-7d6070ac93a9",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Quick And Easy",
+                    "slug": "quick-and-easy"
+                },
+                {
+                    "id": "2b6d577c-172a-4947-b9ad-995d053e173a",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Mother'S Day",
+                    "slug": "mother-s-day"
+                },
+                {
+                    "id": "0e977734-f2a7-4215-a040-f41ba82321e3",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "One-Pan Dinners",
+                    "slug": "one-pan-dinners"
+                },
+                {
+                    "id": "55a1b83b-7d8d-4dd8-afab-339d94ca7bd8",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Orzo",
+                    "slug": "orzo"
+                },
+                {
+                    "id": "33a2755a-270f-4e9a-bd7f-69f229de337c",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Peas",
+                    "slug": "peas"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.marksandspencer.com/c/food-and-wine/cooking/recipes/241283/pancetta-pea-and-asparagus-orzotto-recipe/",
+            "dateAdded": "2026-04-11",
+            "dateUpdated": "2026-04-13T00:00:00.107498+00:00",
+            "createdAt": "2026-04-11T09:56:01.010055+00:00",
+            "updatedAt": "2026-04-13T00:00:00.109778+00:00",
+            "lastMade": "2026-04-13T00:00:00.006718+00:00"
+        },
+        {
+            "id": "0f98c0b1-d2fb-4f5d-ac94-2884533e23e2",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Chinese Fried Rice with Shrimp / Prawns",
+            "slug": "chinese-fried-rice-with-shrimp-prawns",
+            "image": "jhLk",
+            "recipeServings": 3.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "20 minutes",
+            "prepTime": "10 minutes",
+            "cookTime": null,
+            "performTime": "10 minutes",
+            "description": "This is a simple, traditional Chinese Fried Rice recipe by Kylie Kwong, Australia's most well known Chinese Chef. The key to an authentic tasting fried rice like you get at proper Chinese restaurants is the Sauce, using day old or cold fresh cooked rice and ensuring you don't overcrowd the wok, causing the rice to stew instead of stir fry! Feel free to add more vegetables (not too much otherwise the sauce will thin out) or substitute the prawns with other proteins.",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.recipetineats.com/chinese-fried-rice-with-shrimp-prawns/#recipe",
+            "dateAdded": "2026-04-08",
+            "dateUpdated": "2026-04-08T19:34:44.270610+00:00",
+            "createdAt": "2026-04-08T19:33:55.553050+00:00",
+            "updatedAt": "2026-04-08T19:34:44.272440+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "0aa68d48-6152-4aa9-8861-7f4f4ea7f070",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Slow Cooker Vegetable Soup",
+            "slug": "slow-cooker-vegetable-soup",
+            "image": "OGbt",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "2 hours 5 minutes",
+            "prepTime": "5 minutes",
+            "cookTime": null,
+            "performTime": "4 hours",
+            "description": "This Slow Cooker Vegetable Soup is a fantastic ‘dump recipe’ - one of those favourites where you can stick all the ingredients in together and let the slow cooker do the rest. Out comes delicious, hearty, healthy soup after just a few hours!",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "2e1e466d-864d-4f38-9fb5-3636637edaa8",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Vegetable Soup",
+                    "slug": "slow-cooker-vegetable-soup"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.tamingtwins.com/slow-cooker-vegetable-soup/",
+            "dateAdded": "2026-03-31",
+            "dateUpdated": "2026-03-31T19:30:59.973101+00:00",
+            "createdAt": "2026-03-31T19:30:20.192278+00:00",
+            "updatedAt": "2026-03-31T19:30:59.978488+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "de84c6a6-49a6-470c-b67a-e25c704a4896",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Stuffed Crust Breakfast Pizza",
+            "slug": "stuffed-crust-breakfast-pizza",
+            "image": "157",
+            "recipeServings": 1.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "20 minutes",
+            "prepTime": "5 minutes",
+            "cookTime": null,
+            "performTime": "15 minutes",
+            "description": "A high-protein, air-fryer breakfast pizza featuring a cheese-stuffed tortilla crust, fresh vegetables, and egg.",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.youtube.com/shorts/WVQrqXeiIJI",
+            "dateAdded": "2026-03-28",
+            "dateUpdated": "2026-03-28T14:56:24.653319+00:00",
+            "createdAt": "2026-03-28T14:46:27.551626+00:00",
+            "updatedAt": "2026-03-28T14:56:24.658132+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "d4871954-4746-429f-8958-a50a524bef5b",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "High Protein Sesame Chicken",
+            "slug": "high-protein-sesame-chicken",
+            "image": "",
+            "recipeServings": 2.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "30 minutes",
+            "prepTime": "15 minutes",
+            "cookTime": null,
+            "performTime": "15 minutes",
+            "description": "A lighter, high-protein take on sesame chicken that uses an air fryer for a crispy finish without deep frying.",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.youtube.com/shorts/L-6zdjKhAA8",
+            "dateAdded": "2026-03-28",
+            "dateUpdated": "2026-03-28T14:51:34.302882+00:00",
+            "createdAt": "2026-03-28T14:50:15.623142+00:00",
+            "updatedAt": "2026-03-28T14:51:34.306486+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "4626c411-7cca-446d-968f-65819a8de955",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Easy Turkish-Style Leeks Recipe in Olive Oil",
+            "slug": "easy-turkish-style-leeks-recipe-in-olive-oil",
+            "image": "h9JC",
+            "recipeServings": 6.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "35 minutes",
+            "prepTime": "10 minutes",
+            "cookTime": null,
+            "performTime": "25 minutes",
+            "description": "This easy leeks recipe is my take on a Turkish dish called zeytinyağlı pırasa, where tender leeks and carrots are braised in a flavorful olive oil sauce with garlic. All you need alongside this leeks recipe is a wedge of lemon and a few slices of crusty, rustic bread to sop up the delicious olive oil sauce. But these braised leeks are also light enough to serve with some baked fish or grilled chicken. Best served cold or at room temperature.",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.themediterraneandish.com/turkish-braised-leeks/",
+            "dateAdded": "2026-03-21",
+            "dateUpdated": "2026-04-29T00:00:00.443414+00:00",
+            "createdAt": "2026-03-21T12:00:37.828858+00:00",
+            "updatedAt": "2026-04-29T00:00:00.444832+00:00",
+            "lastMade": "2026-04-29T00:00:00.167958+00:00"
+        },
+        {
+            "id": "9cda995a-b75f-4705-8825-bdc5d2843dd4",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Air Fryer Greek Chicken",
+            "slug": "air-fryer-greek-chicken",
+            "image": "T2o5",
+            "recipeServings": 2.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "25 minutes",
+            "prepTime": "10 minutes",
+            "cookTime": null,
+            "performTime": "15 minutes",
+            "description": "This easy Air Fryer Greek Chicken recipe is packed with flavor, featuring juicy chicken, tender chickpeas, zucchini, and creamy feta. A high-protein, one-pot dinner you can make in minutes!",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.skinnytaste.com/air-fryer-greek-chicken/",
+            "dateAdded": "2026-03-21",
+            "dateUpdated": "2026-03-24T23:44:56.533400+00:00",
+            "createdAt": "2026-03-21T12:03:19.767729+00:00",
+            "updatedAt": "2026-03-24T23:44:56.536607+00:00",
+            "lastMade": "2026-03-24T23:44:56.243233+00:00"
+        },
+        {
+            "id": "b1b499e3-ad97-4438-b9e4-1bc64704aa59",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Slow Cooker Lamb Tagine",
+            "slug": "slow-cooker-lamb-tagine",
+            "image": "IEmI",
+            "recipeServings": 6.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "6 hours 30 minutes",
+            "prepTime": "30 minutes",
+            "cookTime": null,
+            "performTime": "6 hours",
+            "description": "Slow Cooker Lamb Tagine is a great Moroccan slow cooked lamb dish that is perfect for a cold winter's day!",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "ab79f430-4da7-42b6-a5b9-b5c03f49326c",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Lamb",
+                    "slug": "lamb"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.slowcookerclub.com/slow-cooker-lamb-tagine/?hl=en-GB",
+            "dateAdded": "2026-03-08",
+            "dateUpdated": "2026-03-20T23:44:36.267483+00:00",
+            "createdAt": "2026-03-08T16:33:49.287167+00:00",
+            "updatedAt": "2026-03-20T23:44:36.270451+00:00",
+            "lastMade": "2026-03-20T23:44:36.021501+00:00"
+        },
+        {
+            "id": "22aba7b6-130a-4b9d-881b-cb5628b2b3b8",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Updated Big Mac Tacos",
+            "slug": "updated-big-mac-tacos",
+            "image": "",
+            "recipeServings": 3.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "25 minutes",
+            "prepTime": null,
+            "cookTime": null,
+            "performTime": null,
+            "description": "An updated version of the Big Mac taco featuring a homemade burger sauce, sharp white cheddar, and the addition of finely diced onions for a classic flavour profile.",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [],
+            "rating": 5.0,
+            "orgURL": "",
+            "dateAdded": "2026-02-24",
+            "dateUpdated": "2026-03-28T14:57:16.289709+00:00",
+            "createdAt": "2026-02-24T08:39:45.842242+00:00",
+            "updatedAt": "2026-03-31T19:31:35.238272+00:00",
+            "lastMade": "2026-03-14T23:44:40.251749+00:00"
+        },
+        {
+            "id": "074992c2-0501-42fe-98cd-27f2ff8cd19f",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Homemade Chia Jam",
+            "slug": "homemade-chia-jam",
+            "image": "",
+            "recipeServings": 0.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": null,
+            "prepTime": null,
+            "cookTime": null,
+            "performTime": null,
+            "description": "Easy and banging! Solid 9/10!",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://youtube.com/shorts/5v976V5OyB4?si=VIzks4EycAll6JP6",
+            "dateAdded": "2026-02-15",
+            "dateUpdated": "2026-03-28T14:59:11.001036+00:00",
+            "createdAt": "2026-02-15T15:51:34.509616+00:00",
+            "updatedAt": "2026-03-28T14:59:11.004208+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "aff41c9b-4f56-4783-9dea-cade49c16162",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Bacon, Sausage, and Egg Breakfast Wraps",
+            "slug": "bacon-sausage-and-egg-breakfast-wraps",
+            "image": "",
+            "recipeServings": 16.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "1 hour",
+            "prepTime": null,
+            "cookTime": null,
+            "performTime": null,
+            "description": "A high-volume, budget-friendly breakfast wrap recipe designed for meal prepping 16 servings. Based on the 'Don't Call It Meal Prep' series.",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [],
+            "rating": null,
+            "orgURL": "",
+            "dateAdded": "2026-02-15",
+            "dateUpdated": "2026-03-28T14:58:30.274780+00:00",
+            "createdAt": "2026-02-15T16:00:56.877076+00:00",
+            "updatedAt": "2026-03-28T14:58:30.278703+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "b6f69419-d1cb-41b2-888f-ed57200c8eb9",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Slow cooker leek and potato soup",
+            "slug": "slow-cooker-leek-and-potato-soup",
+            "image": "GFnh",
+            "recipeServings": 6.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "2 hours 30 minutes",
+            "prepTime": "30 minutes",
+            "cookTime": null,
+            "performTime": "2 hours",
+            "description": "A simple and budget-friendly soup that freezes beautifully. Make it extra special by drizzling with a little cream and scattering chives or parsley on top. Serve with warm crusty bread and butter. Each serving (excluding cream and bread) provides 176 kcal, 4.4g protein, 22g carbohydrate (of which 9g sugars), 6.7g fat (of which 2.9g saturates), 5.7g fibre and 0.87g salt.",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "b1928477-1a43-4ec8-b2c3-ce848506bf12",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker",
+                    "slug": "slow-cooker"
+                },
+                {
+                    "id": "7a1dcfff-0b76-4033-96ce-76ca429b75bf",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Comfort Food",
+                    "slug": "slow-cooker-comfort-food"
+                },
+                {
+                    "id": "376e6799-f189-4870-bb00-7653eb1b80a4",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Soups",
+                    "slug": "slow-cooker-soups"
+                },
+                {
+                    "id": "488ee3b3-f310-488e-bccb-1163ad1fc315",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Egg Free",
+                    "slug": "egg-free"
+                },
+                {
+                    "id": "6d17aaad-e88b-4792-af14-04c608507475",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Nut Free",
+                    "slug": "nut-free"
+                },
+                {
+                    "id": "c4b939ad-d759-45f8-9037-269f0adcc926",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Pregnancy Friendly",
+                    "slug": "pregnancy-friendly"
+                },
+                {
+                    "id": "9ffb4c6a-a079-4cac-80f0-8617ab836d43",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "High-Fibre Meals",
+                    "slug": "high-fibre-meals"
+                },
+                {
+                    "id": "03de07e3-f78f-45cd-a1cb-b0e0a98e0d70",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Vegetarian",
+                    "slug": "vegetarian"
+                },
+                {
+                    "id": "f05b1d72-5354-46c8-af60-57b81e0a852a",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Cheap Slow Cooker And Batch Meals For One",
+                    "slug": "cheap-slow-cooker-and-batch-meals-for-one"
+                },
+                {
+                    "id": "0e7b7d80-890d-406a-af6a-ac83bcec4f6d",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Autumnal Soup",
+                    "slug": "autumnal-soup"
+                },
+                {
+                    "id": "a6abbda2-4cc5-4fd2-9d7d-f0bcf37867b1",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "High Fibre Dinners",
+                    "slug": "high-fibre-dinners"
+                },
+                {
+                    "id": "3f5baae2-91e2-4e8e-b604-541491fb088e",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "High Fibre Lunch",
+                    "slug": "high-fibre-lunch"
+                },
+                {
+                    "id": "817be68c-4de1-467c-8693-433044eedb65",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Vegetarian Slow Cooker",
+                    "slug": "vegetarian-slow-cooker"
+                },
+                {
+                    "id": "8ddecedf-bf9c-44b9-97c5-066d45451072",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Vegetable Soup",
+                    "slug": "vegetable-soup"
+                },
+                {
+                    "id": "7ad8bf9a-610e-4db9-a4ad-45161f0eadc7",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Leek",
+                    "slug": "leek"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.bbc.co.uk/food/recipes/slow_cooker_leek_and_06197",
+            "dateAdded": "2026-02-08",
+            "dateUpdated": "2026-03-22T23:44:57.928214+00:00",
+            "createdAt": "2026-02-08T12:25:20.847506+00:00",
+            "updatedAt": "2026-03-22T23:44:57.931749+00:00",
+            "lastMade": "2026-03-22T23:44:57.635699+00:00"
+        },
+        {
+            "id": "2bd2c1bc-3e5d-47a1-a887-6b4aaece3b0d",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Creamy chicken, bean & leek traybake",
+            "slug": "creamy-chicken-bean-leek-traybake",
+            "image": "y8Tf",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "55 minutes",
+            "prepTime": "5 minutes",
+            "cookTime": null,
+            "performTime": "50 minutes",
+            "description": "Throw together chicken thighs, cannellini beans and crème fraîche with a few other ingredients for this easy traybake. You can easily double it up and freeze the leftovers",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "4f51a3e8-5f74-46f8-87b2-b5815d3d649b",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Esther Clark",
+                    "slug": "esther-clark"
+                },
+                {
+                    "id": "615fd5ba-7903-45c1-8223-9adb77ca6ac9",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Chicken",
+                    "slug": "chicken"
+                },
+                {
+                    "id": "2fae4178-9e3d-46f7-bdd3-7a429c561e84",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Traybake",
+                    "slug": "traybake"
+                },
+                {
+                    "id": "b030cf12-995a-4f80-8132-cf27e57a59f9",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Cannellini Beans",
+                    "slug": "cannellini-beans"
+                },
+                {
+                    "id": "707384e3-caf0-492a-81ff-b43e58adf653",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Midweek Meals",
+                    "slug": "midweek-meals"
+                },
+                {
+                    "id": "c549dc0c-7991-4337-987d-a105f69a76e9",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Leeks",
+                    "slug": "leeks"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.bbcgoodfood.com/recipes/creamy-chicken-bean-leek-traybake",
+            "dateAdded": "2026-02-08",
+            "dateUpdated": "2026-02-08T12:28:28.155316+00:00",
+            "createdAt": "2026-02-08T12:27:07.414983+00:00",
+            "updatedAt": "2026-02-08T12:28:28.159654+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "c9b196db-dcf0-4218-8ca8-d19f505703c2",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Spiced chicken & rice traybake",
+            "slug": "spiced-chicken-rice-traybake",
+            "image": "qJxh",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "1 hour 15 minutes",
+            "prepTime": null,
+            "cookTime": null,
+            "performTime": "1 hour 15 minutes",
+            "description": "Gently spiced crispy chicken pieces, colourful veg and fluffy rice are all cooked together in one tray for a midweek family feast.",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "1c3fb888-1ff9-4ec8-925c-1b13840bdcfb",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Gluten Free",
+                    "slug": "gluten-free"
+                },
+                {
+                    "id": "578a9585-0e7f-4e49-a0f9-0b4e14cfb87e",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Chicken Thigh",
+                    "slug": "chicken-thigh"
+                },
+                {
+                    "id": "16fcddc7-b5d4-498f-a892-2a1f2a210a8d",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "One-Pan",
+                    "slug": "one-pan"
+                },
+                {
+                    "id": "80cab6c8-b747-46ab-8775-6eb404667002",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Rice",
+                    "slug": "rice"
+                },
+                {
+                    "id": "daf5045f-ef0d-4f7b-894a-103adc86526a",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Healthy Dinners",
+                    "slug": "healthy-dinners"
+                },
+                {
+                    "id": "f4750eb1-bf14-4db5-8e4a-2e6ed4188e81",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Healthy Chicken",
+                    "slug": "healthy-chicken"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.jamieoliver.com/recipes/chicken/spiced-chicken-rice-traybake/",
+            "dateAdded": "2026-02-08",
+            "dateUpdated": "2026-02-08T12:31:09.122780+00:00",
+            "createdAt": "2026-02-08T12:29:46.318544+00:00",
+            "updatedAt": "2026-02-08T12:31:09.127232+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "afcb79ea-679e-4af7-a80f-1ef9ba9c4daa",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Sweet chilli fish & chips traybake",
+            "slug": "sweet-chilli-fish-chips-traybake",
+            "image": "6Ubz",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "45 minutes",
+            "prepTime": "10 minutes",
+            "cookTime": null,
+            "performTime": "35 minutes",
+            "description": "Friday-night fish suppers have never looked – or tasted – as good. Even better, it’s all cooked in the one roasting tin, so you won’t even have to worry about the washing up.",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.weightwatchers.com/uk/recipe/_/5ff3263c75202b313e911448",
+            "dateAdded": "2026-02-08",
+            "dateUpdated": "2026-04-24T00:00:01.711952+00:00",
+            "createdAt": "2026-02-08T12:31:29.809260+00:00",
+            "updatedAt": "2026-04-24T00:00:01.712990+00:00",
+            "lastMade": "2026-04-24T00:00:01.627699+00:00"
+        },
+        {
+            "id": "00abc2a3-617a-48f1-904c-86c9b0790af8",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Lemon-herb chicken traybake",
+            "slug": "lemon-herb-chicken-traybake",
+            "image": "Z34g",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "50 minutes",
+            "prepTime": "15 minutes",
+            "cookTime": null,
+            "performTime": "35 minutes",
+            "description": "",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "2fae4178-9e3d-46f7-bdd3-7a429c561e84",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Traybake",
+                    "slug": "traybake"
+                },
+                {
+                    "id": "5d77eb9c-aed0-471e-82b7-9add840cef4e",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Weight Watchers",
+                    "slug": "weight-watchers"
+                },
+                {
+                    "id": "b7432c0c-1481-46c1-93df-e8385fb02b45",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Lemon-Herb Chicken",
+                    "slug": "lemon-herb-chicken"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.weightwatchers.com/uk/recipe/_/65a1404e81af095b42bc2444",
+            "dateAdded": "2026-02-08",
+            "dateUpdated": "2026-02-08T12:41:30.439566+00:00",
+            "createdAt": "2026-02-08T12:41:03.074740+00:00",
+            "updatedAt": "2026-02-14T18:41:40.011860+00:00",
+            "lastMade": "2026-02-14T23:59:59+00:00"
+        },
+        {
+            "id": "5aba2e21-fecf-4188-8628-85f68a671795",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "One-Pan Prawn Orzo",
+            "slug": "one-pan-prawn-orzo",
+            "image": "SKtM",
+            "recipeServings": 6.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "35 minutes",
+            "prepTime": "10 minutes",
+            "cookTime": null,
+            "performTime": "25 minutes",
+            "description": "An easy meal to prepare mid-week, this one-pan recipe minimises washing up and is packed with flavour.",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.ocado.com/recipes/one-pan-prawn-orzo/2jX5coL8sNIdYPHJR9FooS",
+            "dateAdded": "2026-01-31",
+            "dateUpdated": "2026-03-12T23:44:42.093877+00:00",
+            "createdAt": "2026-01-31T11:15:25.303662+00:00",
+            "updatedAt": "2026-03-12T23:44:42.096210+00:00",
+            "lastMade": "2026-03-12T23:44:41.830535+00:00"
+        },
+        {
+            "id": "c0eb90b0-eb3d-4b12-96da-b2144b22f6f6",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "High Protein Tortilla Quiche",
+            "slug": "high-protein-tortilla-quiche",
+            "image": "",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "25 minutes",
+            "prepTime": "5 minutes",
+            "cookTime": null,
+            "performTime": "20 minutes",
+            "description": "A quick and easy high-protein quiche using a tortilla wrap as the base, filled with eggs, cottage cheese, and fresh vegetables.",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://youtube.com/shorts/GbCJnpkWDV0?si=a4Np31oi3PX3vOWp",
+            "dateAdded": "2026-01-20",
+            "dateUpdated": "2026-03-28T15:00:30.081944+00:00",
+            "createdAt": "2026-01-20T22:32:31.038303+00:00",
+            "updatedAt": "2026-03-28T15:00:30.084297+00:00",
+            "lastMade": "2026-02-01T23:59:59+00:00"
+        },
+        {
+            "id": "14a7ab07-a0a2-4a45-8a7a-1831b2f19034",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Slow Cooker Risotto - Chicken and Mushroom",
+            "slug": "slow-cooker-risotto-chicken-and-mushroom",
+            "image": "4WKA",
+            "recipeServings": 6.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "2 hours 30 minutes",
+            "prepTime": "10 minutes",
+            "cookTime": null,
+            "performTime": "2 hours 20 minutes",
+            "description": "Make this hands-off slow cooker risotto whenever you’re after something easy, creamy and comforting! Loaded with tender chicken, smoky bacon, mushrooms and loads of fresh parmesan, it makes a delicious weeknight dinner that the whole family will love.",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "bddb914b-4081-4116-957a-5ffa470d4755",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Chicken And Mushroom Slow Cooker Risotto",
+                    "slug": "chicken-and-mushroom-slow-cooker-risotto"
+                },
+                {
+                    "id": "2a7ba7dd-9597-40ae-bc9d-ec20293ff0f1",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Creamy Chicken Risotto",
+                    "slug": "creamy-chicken-risotto"
+                },
+                {
+                    "id": "233ced6d-3736-46ee-8f8e-841c2a248907",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Chicken Risotto",
+                    "slug": "slow-cooker-chicken-risotto"
+                },
+                {
+                    "id": "f37b9014-7a0a-4f33-a0a3-f541cb5b6139",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Risotto",
+                    "slug": "slow-cooker-risotto"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://bakeplaysmile.com/slow-cooker-risotto-chicken-and-mushroom/#recipe",
+            "dateAdded": "2026-01-19",
+            "dateUpdated": "2026-01-25T23:44:35.183113+00:00",
+            "createdAt": "2026-01-19T18:48:56.700983+00:00",
+            "updatedAt": "2026-01-25T23:44:35.186314+00:00",
+            "lastMade": "2026-01-25T23:44:35.003313+00:00"
+        },
+        {
+            "id": "f8007ec9-8ee0-4d04-9a2c-8432333f2f1a",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Spicy, Creamy Weeknight Bolognese",
+            "slug": "spicy-creamy-weeknight-bolognese",
+            "image": "fkVv",
+            "recipeServings": 6.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "35 minutes",
+            "prepTime": "10 minutes",
+            "cookTime": null,
+            "performTime": "25 minutes",
+            "description": "This pasta sauce captures the soul-soothing essence of a long-simmering Bolognese even though it cooks quickly. Searing ground beef gives it a caramelized taste that mimics the depth of slow-cooked meat. Adding a few spoonfuls of red curry paste doesn’t make it taste like curry, but gives it instant nuance and depth. Some rich cream at the end rounds the sharp heat to an enveloping warmth. To save even more time, you can chop the vegetables while the meat is cooking. The sauce tastes great on any type of pasta, but it’s especially nice with varieties that can capture it in their curves.",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "65086f37-3386-4a9f-9878-d55bd34ac62d",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Winter",
+                    "slug": "winter"
+                },
+                {
+                    "id": "0595f2bb-2153-4e31-9bbe-1dd1bf325cb3",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Pasta",
+                    "slug": "pasta"
+                },
+                {
+                    "id": "e6f2f61f-62cc-4111-ab8b-e401cbc13e5d",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Ground Beef",
+                    "slug": "ground-beef"
+                },
+                {
+                    "id": "9da58008-3916-40d6-b4b0-56e630cb6e3e",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Budget",
+                    "slug": "budget"
+                },
+                {
+                    "id": "86f88ede-4fb9-4010-9660-d3ae388a6f4f",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Heavy Cream",
+                    "slug": "heavy-cream"
+                },
+                {
+                    "id": "db97e3e3-82bb-41db-970c-9c4b772a341a",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Red Curry Paste",
+                    "slug": "red-curry-paste"
+                },
+                {
+                    "id": "0c929a63-595b-430b-9ab1-6157894daff7",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Stovetop",
+                    "slug": "stovetop"
+                },
+                {
+                    "id": "1e237348-a73f-4303-9d04-ef978bc24922",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Tomato Sauce",
+                    "slug": "tomato-sauce"
+                },
+                {
+                    "id": "3601ff62-8a2c-4177-9bf1-3ac68b2f68c5",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Fall",
+                    "slug": "fall"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://cooking.nytimes.com/recipes/1026551-spicy-creamy-weeknight-bolognese",
+            "dateAdded": "2026-01-17",
+            "dateUpdated": "2026-01-17T17:53:38.518720+00:00",
+            "createdAt": "2026-01-17T17:52:05.844213+00:00",
+            "updatedAt": "2026-01-17T17:53:38.522451+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "f194d9be-52a8-42f1-812f-eeef9deb030b",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Cottage Cheese Egg Bites",
+            "slug": "cottage-cheese-egg-bites",
+            "image": "ro2Q",
+            "recipeServings": 12.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "40 minutes",
+            "prepTime": "10 minutes",
+            "cookTime": null,
+            "performTime": "30 minutes",
+            "description": "Egg bites are a perfect, protein-rich snack to have on hand for busy mornings. Blending eggs with cottage cheese and shredded cheese, dividing the mixture among muffin cups and baking in a water bath result in a soft, delicate texture. For the right consistency, use a blender to combine all the ingredients until just smooth and frothy. You can add any fillings that you like (leftover cooked vegetables are a great addition). Use any of the shredded cheeses suggested or a combination, and finish with a sprinkling of Parmesan if you like. The water bath creates steam, which ensures the eggs bake gently and remain fluffy (see Tip). For best results, use a silicone muffin pan, so the egg bites pop right out.",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "1c3fb888-1ff9-4ec8-925c-1b13840bdcfb",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Gluten Free",
+                    "slug": "gluten-free"
+                },
+                {
+                    "id": "4a9ad35d-f5fd-47bd-9edb-c92a1aca1b50",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Healthy",
+                    "slug": "healthy"
+                },
+                {
+                    "id": "03de07e3-f78f-45cd-a1cb-b0e0a98e0d70",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Vegetarian",
+                    "slug": "vegetarian"
+                },
+                {
+                    "id": "040cb8ff-21a1-4718-8e3b-dd9482503cad",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "High Protein",
+                    "slug": "high-protein"
+                },
+                {
+                    "id": "9da58008-3916-40d6-b4b0-56e630cb6e3e",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Budget",
+                    "slug": "budget"
+                },
+                {
+                    "id": "cd7e5e5c-b64d-4dd1-ba1f-15432e6a9edb",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Cheddar",
+                    "slug": "cheddar"
+                },
+                {
+                    "id": "0c0c3eca-9bf1-4bba-a98c-fb53a997dcfc",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Cottage Cheese",
+                    "slug": "cottage-cheese"
+                },
+                {
+                    "id": "2465f081-e715-49b1-91de-8f3101ce35ae",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Egg",
+                    "slug": "egg"
+                },
+                {
+                    "id": "9465f5fd-3369-458e-8210-f5d691f607ea",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Egg Dish",
+                    "slug": "egg-dish"
+                },
+                {
+                    "id": "d90f49d0-9c79-4bee-86ed-917fb66407e7",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Freezer Friendly",
+                    "slug": "freezer-friendly"
+                },
+                {
+                    "id": "30fb2278-bdef-4662-a926-11a4a0cf0e59",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Great Leftovers",
+                    "slug": "great-leftovers"
+                },
+                {
+                    "id": "3c69624f-0302-4570-abc9-f7183e729097",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Gruyère",
+                    "slug": "gruyere"
+                },
+                {
+                    "id": "482544f6-a3ed-4736-b998-7e16cc186b9d",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Make-Ahead",
+                    "slug": "make-ahead"
+                },
+                {
+                    "id": "90655688-5173-460a-8e20-1d937c52e3de",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Monterey Jack Cheese",
+                    "slug": "monterey-jack-cheese"
+                },
+                {
+                    "id": "de7da938-ce1f-418c-8aac-26b021b53b40",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Mozzarella",
+                    "slug": "mozzarella"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://cooking.nytimes.com/recipes/1026338-cottage-cheese-egg-bites",
+            "dateAdded": "2026-01-17",
+            "dateUpdated": "2026-01-17T17:56:48.916794+00:00",
+            "createdAt": "2026-01-17T17:54:40.425325+00:00",
+            "updatedAt": "2026-01-17T17:56:48.920441+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "759fe978-54a2-41fa-978f-56e92691513a",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Chicken and Chickpea Tray Bake",
+            "slug": "chicken-and-chickpea-tray-bake",
+            "image": "UAvZ",
+            "recipeServings": 8.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "1 hour 30 minutes",
+            "prepTime": "10 minutes",
+            "cookTime": null,
+            "performTime": "1 hour 20 minutes",
+            "description": "This easy chicken sheet-pan supper brings bold, warming flavors with minimal fuss. Tossed with ras el hanout, the chicken roasts alongside potatoes, sweet peppers and chickpeas, creating a richly flavored dish that practically makes its own sauce. The sheet pan may look crowded, but everything melts beautifully together as it cooks. The peppers, potatoes and chickpeas simmer gently in the oil, while the chicken sits halfway in, its skin staying crispy as the juices mingle below. Any chickpeas peeking out get delightfully crisp, while the rest confit in the oil, becoming soft and smooth. A finishing drizzle of sherry vinegar adds a bright, tangy kick, balancing the warm spices and bringing out the dish’s deep roasted flavours. Best of all, the prep is simple, and the oven does the rest, making this perfect for a cozy midweek dinner that still feels special.",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "1c3fb888-1ff9-4ec8-925c-1b13840bdcfb",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Gluten Free",
+                    "slug": "gluten-free"
+                },
+                {
+                    "id": "09dee33a-db26-4728-883f-f7c181761eec",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Dairy Free",
+                    "slug": "dairy-free"
+                },
+                {
+                    "id": "578a9585-0e7f-4e49-a0f9-0b4e14cfb87e",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Chicken Thigh",
+                    "slug": "chicken-thigh"
+                },
+                {
+                    "id": "9cfbf0a8-f7cf-46bf-9357-c82c86094314",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Chickpea",
+                    "slug": "chickpea"
+                },
+                {
+                    "id": "1f599737-e248-42c7-a5a2-bfd670b8e7a4",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Extra Virgin Olive Oil",
+                    "slug": "extra-virgin-olive-oil"
+                },
+                {
+                    "id": "786e7613-ed52-4567-a57f-8864125f3d03",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Garlic",
+                    "slug": "garlic"
+                },
+                {
+                    "id": "d2b15212-4462-4f7b-be72-2ea9b595dfe6",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Plum Tomato",
+                    "slug": "plum-tomato"
+                },
+                {
+                    "id": "702adee4-1766-48a8-9541-e7f5a5b1619e",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Sheet-Pan",
+                    "slug": "sheet-pan"
+                },
+                {
+                    "id": "d71a032c-6cc3-4cf3-99f2-b8a6dda9424e",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Yukon Gold Potato",
+                    "slug": "yukon-gold-potato"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://cooking.nytimes.com/recipes/1026583-chicken-and-chickpea-tray-bake",
+            "dateAdded": "2026-01-17",
+            "dateUpdated": "2026-01-17T18:02:08.759732+00:00",
+            "createdAt": "2026-01-17T17:59:16.811881+00:00",
+            "updatedAt": "2026-01-17T18:02:08.763354+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "f7d3cbaf-96a2-4b92-98b9-bf34a2e31395",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Skillet Gnocchi With Miso Butter and Asparagus",
+            "slug": "skillet-gnocchi-with-miso-butter-and-asparagus",
+            "image": "JzkN",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "15 minutes",
+            "prepTime": "5 minutes",
+            "cookTime": null,
+            "performTime": "10 minutes",
+            "description": "This skillet gnocchi recipe has a spring in its step: It takes just 10 minutes to cook and is loaded with sweet springtime asparagus and baby greens. But that doesn’t mean the flavor is fleeting: The combination of miso, butter and vinegar forms a silky, rich sauce that glosses the seared gnocchi and vegetables and anything else you wish to add. Perhaps that’s the crunch of sliced radishes or toasted pistachios, or the crispness of a fried egg or seared fish.",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "1e147e40-882e-4e5e-8b8a-4b0125369e57",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Gnocchi",
+                    "slug": "gnocchi"
+                },
+                {
+                    "id": "c08bbe10-5468-41ee-9d3c-fd2b871307a0",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Spring",
+                    "slug": "spring"
+                },
+                {
+                    "id": "03de07e3-f78f-45cd-a1cb-b0e0a98e0d70",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Vegetarian",
+                    "slug": "vegetarian"
+                },
+                {
+                    "id": "0c929a63-595b-430b-9ab1-6157894daff7",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Stovetop",
+                    "slug": "stovetop"
+                },
+                {
+                    "id": "5934d8e3-3383-40bd-ad16-48c820c1a3ba",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Arugula",
+                    "slug": "arugula"
+                },
+                {
+                    "id": "1fed1d20-2dab-4d11-8333-194de6ce9e17",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Asparagus",
+                    "slug": "asparagus"
+                },
+                {
+                    "id": "5c9c8453-fe69-4404-8924-5a8c123b7190",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Cast Iron",
+                    "slug": "cast-iron"
+                },
+                {
+                    "id": "b3ab7f48-260c-4477-9aed-b50413512e75",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Miso",
+                    "slug": "miso"
+                },
+                {
+                    "id": "3ffdac0d-0658-43af-ab53-b445eb84e6c3",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Skillet",
+                    "slug": "skillet"
+                },
+                {
+                    "id": "eb6c7e85-11d6-4a65-bfa8-6bf67ce87cbb",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Summer",
+                    "slug": "summer"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://cooking.nytimes.com/recipes/1026745-skillet-gnocchi-with-miso-butter-and-asparagus",
+            "dateAdded": "2026-01-17",
+            "dateUpdated": "2026-03-28T23:44:59.705694+00:00",
+            "createdAt": "2026-01-17T18:02:25.492954+00:00",
+            "updatedAt": "2026-03-28T23:44:59.708995+00:00",
+            "lastMade": "2026-03-28T23:44:59.508926+00:00"
+        },
+        {
+            "id": "a43782c8-ee9c-4707-9bd8-2a64135fbce4",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Slow cooker roast beef stew",
+            "slug": "slow-cooker-roast-beef-stew",
+            "image": "pCYf",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "2 hours 30 minutes",
+            "prepTime": "30 minutes",
+            "cookTime": null,
+            "performTime": "2 hours",
+            "description": "This simple stew has a gravy-like sauce that benefits from browning the beef first, but you can also just throw everything in the slow cooker pot and it will still taste great. The Yorkshire puddings are included in the budget but are optional as they need to be cooked in an oven or air fryer, albeit only briefly. This recipe is part of a budget slow cooker meal plan for four. In March 2023, it was costed at an average total of £6.70 when checking prices at four UK supermarkets. This recipe is designed to be made in conjunction with a low-cost store cupboard.",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "b1928477-1a43-4ec8-b2c3-ce848506bf12",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker",
+                    "slug": "slow-cooker"
+                },
+                {
+                    "id": "6e9b77ed-6308-4583-a282-fe729e726004",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Easy Slow Cooker",
+                    "slug": "easy-slow-cooker"
+                },
+                {
+                    "id": "611fa3e5-bd89-480f-8ffa-813b7dd9a6e5",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow-Cooker Meals For Four",
+                    "slug": "slow-cooker-meals-for-four"
+                },
+                {
+                    "id": "6d17aaad-e88b-4792-af14-04c608507475",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Nut Free",
+                    "slug": "nut-free"
+                },
+                {
+                    "id": "564108fe-0ca8-45bb-b525-e75231eba3fd",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Budget Slow Cooker",
+                    "slug": "budget-slow-cooker"
+                },
+                {
+                    "id": "1bf9da0f-f11b-41ad-a6aa-c0b3c31069bc",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Beef",
+                    "slug": "slow-cooker-beef"
+                },
+                {
+                    "id": "c4b939ad-d759-45f8-9037-269f0adcc926",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Pregnancy Friendly",
+                    "slug": "pregnancy-friendly"
+                },
+                {
+                    "id": "74716639-94d0-402f-a616-d3387566ebe2",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Beef",
+                    "slug": "beef"
+                },
+                {
+                    "id": "71be8a05-43ef-41b8-a3f3-01af48a70729",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow-Cooked Dishes",
+                    "slug": "slow-cooked-dishes"
+                },
+                {
+                    "id": "3ccc9236-ae31-42de-b15c-99a51323160b",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Christmas",
+                    "slug": "slow-cooker-christmas"
+                },
+                {
+                    "id": "6e754995-7dc9-4993-9d69-ea3e62b11eae",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Recipes For Batch Cooking",
+                    "slug": "slow-cooker-recipes-for-batch-cooking"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.bbc.co.uk/food/recipes/slow_cooker_roast_beef_94008",
+            "dateAdded": "2026-01-15",
+            "dateUpdated": "2026-01-15T19:50:26.911238+00:00",
+            "createdAt": "2026-01-15T19:48:21.953600+00:00",
+            "updatedAt": "2026-01-15T19:50:26.916115+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "b46a76e3-d2ed-4d32-9440-b948b6d19dad",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Shredded Chicken Recipe (Super Easy!)",
+            "slug": "shredded-chicken-recipe-super-easy",
+            "image": "GpmC",
+            "recipeServings": 6.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "20 minutes",
+            "prepTime": "5 minutes",
+            "cookTime": null,
+            "performTime": "15 minutes",
+            "description": "Learn how to make shredded chicken that's easy, fast and flavorful. This is my favorite method for making shredded chicken. Watch the video above to see how easy it is to make!",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "6de873f0-cfef-42df-94b0-56fe5a6fb4b6",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "How To Make Shredded Chicken",
+                    "slug": "how-to-make-shredded-chicken"
+                },
+                {
+                    "id": "23f43676-b363-4ecb-bdb1-c96d3c4a7294",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Shredded Chicken",
+                    "slug": "shredded-chicken"
+                }
+            ],
+            "tools": [],
+            "rating": 5.0,
+            "orgURL": "https://downshiftology.com/recipes/shredded-chicken/",
+            "dateAdded": "2025-11-20",
+            "dateUpdated": "2025-12-14T18:11:02.456722+00:00",
+            "createdAt": "2025-11-20T08:44:20.847383+00:00",
+            "updatedAt": "2025-12-14T18:11:02.460320+00:00",
+            "lastMade": "2025-11-18T23:59:59+00:00"
+        },
+        {
+            "id": "1b7e6380-5916-48df-a038-916cb349487f",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Cottage pie",
+            "slug": "cottage-pie",
+            "image": "jBI2",
+            "recipeServings": 10.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "2 hours 25 minutes",
+            "prepTime": "35 minutes",
+            "cookTime": null,
+            "performTime": "1 hour 50 minutes",
+            "description": "Make our classic meat and potato pie for a comforting dinner. This great-value family favourite freezes beautifully and is a guaranteed crowd-pleaser",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "245e817a-25cc-4156-ba12-b78f3381c744",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Potato",
+                    "slug": "potato"
+                },
+                {
+                    "id": "988d1b08-5059-4de0-8a18-3c90a960c145",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Potatoes",
+                    "slug": "potatoes"
+                },
+                {
+                    "id": "44c49259-192b-4f3f-84bc-ae022f69f481",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Good Food",
+                    "slug": "good-food"
+                },
+                {
+                    "id": "b1928477-1a43-4ec8-b2c3-ce848506bf12",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker",
+                    "slug": "slow-cooker"
+                },
+                {
+                    "id": "2e716a14-f39f-4e72-ae08-5def2630eb1b",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Beef Mince",
+                    "slug": "beef-mince"
+                },
+                {
+                    "id": "b38f03b2-b836-47c2-9ea6-116314d7b3a4",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Beef Mince Recipes",
+                    "slug": "beef-mince-recipes"
+                },
+                {
+                    "id": "9da58008-3916-40d6-b4b0-56e630cb6e3e",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Budget",
+                    "slug": "budget"
+                },
+                {
+                    "id": "34190660-6d58-490b-b178-16774d4ff4ab",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Cheap",
+                    "slug": "cheap"
+                },
+                {
+                    "id": "a64256e6-ebdc-46b8-bf50-7b75510fde86",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Comfort Food Recipes",
+                    "slug": "comfort-food-recipes"
+                },
+                {
+                    "id": "e28b798e-5b2c-4621-84fe-60ca08d0a500",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Cottage Pie Recipe",
+                    "slug": "cottage-pie-recipe"
+                },
+                {
+                    "id": "23f7ba25-483f-45b0-8698-1e8213aae6c5",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Entertaining Recipes",
+                    "slug": "entertaining-recipes"
+                },
+                {
+                    "id": "9e2f9636-add6-4e78-b7b8-072139bc0929",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Family Recipes",
+                    "slug": "family-recipes"
+                },
+                {
+                    "id": "a9808789-0b27-4cfc-aaf2-230b7d65caea",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Feed A Crowd Recipes",
+                    "slug": "feed-a-crowd-recipes"
+                },
+                {
+                    "id": "a815489d-3e22-4218-b89d-b33a2c1ee752",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Freezable Recipe",
+                    "slug": "freezable-recipe"
+                },
+                {
+                    "id": "d4e0a23d-2ea1-42ce-8b7b-2bf54bc57c76",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Sheperds Pie",
+                    "slug": "sheperds-pie"
+                },
+                {
+                    "id": "584848f6-d3b7-46e1-9439-9d04a9074783",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Shephard'S Pie",
+                    "slug": "shephard-s-pie"
+                },
+                {
+                    "id": "621018df-855c-4bf2-8bf2-f3c95db662f5",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Shepherd'S Pie",
+                    "slug": "shepherd-s-pie"
+                },
+                {
+                    "id": "6b34ea2e-60ef-461b-b4d9-33c820e76969",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooking",
+                    "slug": "slow-cooking"
+                },
+                {
+                    "id": "913499b8-c00b-4023-ba10-fccda3b20200",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Traditional British Recipes",
+                    "slug": "traditional-british-recipes"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.bbcgoodfood.com/recipes/cottage-pie",
+            "dateAdded": "2025-11-19",
+            "dateUpdated": "2025-11-19T23:04:13.081147+00:00",
+            "createdAt": "2025-11-19T23:03:42.972076+00:00",
+            "updatedAt": "2025-11-19T23:04:13.085669+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "def550b3-b7dd-4aa2-aa3d-fd09d01cdd28",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Chicken Quesadilla Recipe",
+            "slug": "chicken-quesadilla-recipe",
+            "image": "HXzf",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "30 minutes",
+            "prepTime": "10 minutes",
+            "cookTime": null,
+            "performTime": "20 minutes",
+            "description": "Crispy, cheesy inside and packed with juicy seasoned chicken and veggies, this is the best chicken quesadilla recipe! Fast and always delicious.",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "69c54b02-8de8-4111-b13e-000d5c09bd0a",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Cheese Chicken Quesadilla",
+                    "slug": "cheese-chicken-quesadilla"
+                },
+                {
+                    "id": "0acf2d8f-c94a-40c3-86e2-95f1a9125742",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Easy Chicken Quesadilla",
+                    "slug": "easy-chicken-quesadilla"
+                },
+                {
+                    "id": "884bc942-f589-44fc-a532-36676d5e1290",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Easy Quesadilla Recipe",
+                    "slug": "easy-quesadilla-recipe"
+                },
+                {
+                    "id": "37db5b10-15cc-48f7-a0ef-e58419819fb1",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "The Best Chicken Quesadilla",
+                    "slug": "the-best-chicken-quesadilla"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.wellplated.com/chicken-quesadilla/#wprm-recipe-container-103218",
+            "dateAdded": "2025-11-16",
+            "dateUpdated": "2026-01-21T23:44:39.651636+00:00",
+            "createdAt": "2025-11-16T19:38:19.858276+00:00",
+            "updatedAt": "2026-01-21T23:44:39.654637+00:00",
+            "lastMade": "2026-01-21T23:44:39.480670+00:00"
+        },
+        {
+            "id": "ba473309-6377-4df5-a72f-7a80c2a4050b",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Slow Cooker Taco Mince",
+            "slug": "slow-cooker-taco-mince",
+            "image": "E6xm",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "3 hours 10 minutes",
+            "prepTime": "10 minutes",
+            "cookTime": null,
+            "performTime": "3 hours",
+            "description": "Slow Cooker Taco Mince is an easy set and forget recipe! Perfect for busy weeknights, we need only simple ingredients!",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "a32b60a3-571a-480d-9175-38f61f3f1262",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Taco Mince",
+                    "slug": "slow-cooker-taco-mince"
+                }
+            ],
+            "tools": [
+                {
+                    "id": "b97d06b1-d183-4bb9-b3d4-a7df7005eada",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker",
+                    "slug": "slow-cooker",
+                    "householdsWithTool": [
+                        "77-brookbank",
+                        "141-woodcock-road",
+                        "canada"
+                    ]
+                }
+            ],
+            "rating": null,
+            "orgURL": "https://sweetcaramelsunday.com/slow-cooker-taco-mince/#recipe",
+            "dateAdded": "2025-11-16",
+            "dateUpdated": "2025-11-20T23:44:58.035427+00:00",
+            "createdAt": "2025-11-16T19:50:19.689138+00:00",
+            "updatedAt": "2025-11-20T23:44:58.039325+00:00",
+            "lastMade": "2025-11-20T23:44:57.861006+00:00"
+        },
+        {
+            "id": "8096f1a1-91e2-4e09-9e43-3886d311fba8",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Slow cooker sweet potato, chickpea and coconut one-pot",
+            "slug": "slow-cooker-sweet-potato-chickpea-and-coconut-one-pot",
+            "image": "zka0",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "6 hours 20 minutes",
+            "prepTime": "20 minutes",
+            "cookTime": null,
+            "performTime": "6 hours",
+            "description": "This one-pot freezes brilliantly and is great for warming you up on chilly nights – it’s creamy, spicy, zingy and warming",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [
+                {
+                    "id": "b97d06b1-d183-4bb9-b3d4-a7df7005eada",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker",
+                    "slug": "slow-cooker",
+                    "householdsWithTool": [
+                        "77-brookbank",
+                        "141-woodcock-road",
+                        "canada"
+                    ]
+                }
+            ],
+            "rating": null,
+            "orgURL": "https://www.olivemagazine.com/recipes/one-pots/slow-cooker-sweet-potato-chickpea-and-coconut-one-pot/",
+            "dateAdded": "2025-11-16",
+            "dateUpdated": "2025-11-19T23:44:59.024243+00:00",
+            "createdAt": "2025-11-16T19:52:10.119091+00:00",
+            "updatedAt": "2025-11-19T23:44:59.027339+00:00",
+            "lastMade": "2025-11-19T23:44:58.855024+00:00"
+        },
+        {
+            "id": "293c0ff9-ac46-4173-8c1f-d2190a1665a1",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Slow cooker chicken soup",
+            "slug": "slow-cooker-chicken-soup",
+            "image": "sXWS",
+            "recipeServings": 5.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "7 hours 30 minutes",
+            "prepTime": "30 minutes",
+            "cookTime": null,
+            "performTime": "7 hours",
+            "description": "A very easy classic chicken soup that freezes beautifully, this flavoursome recipe is packed with tender chicken and will go down well with all the family. Don’t skip frying the onions briefly at the beginning as they make the soup extra rich and delicious.",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "b1928477-1a43-4ec8-b2c3-ce848506bf12",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker",
+                    "slug": "slow-cooker"
+                },
+                {
+                    "id": "4dcece5d-bc02-4e9c-bf6e-fa95b5051ca7",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Chicken",
+                    "slug": "slow-cooker-chicken"
+                },
+                {
+                    "id": "6e9b77ed-6308-4583-a282-fe729e726004",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Easy Slow Cooker",
+                    "slug": "easy-slow-cooker"
+                },
+                {
+                    "id": "7a1dcfff-0b76-4033-96ce-76ca429b75bf",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Comfort Food",
+                    "slug": "slow-cooker-comfort-food"
+                },
+                {
+                    "id": "376e6799-f189-4870-bb00-7653eb1b80a4",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Soups",
+                    "slug": "slow-cooker-soups"
+                },
+                {
+                    "id": "488ee3b3-f310-488e-bccb-1163ad1fc315",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Egg Free",
+                    "slug": "egg-free"
+                },
+                {
+                    "id": "578a9585-0e7f-4e49-a0f9-0b4e14cfb87e",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Chicken Thigh",
+                    "slug": "chicken-thigh"
+                },
+                {
+                    "id": "6d17aaad-e88b-4792-af14-04c608507475",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Nut Free",
+                    "slug": "nut-free"
+                },
+                {
+                    "id": "7dab1898-ac40-4cf6-89f5-f885b166cd28",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Best Slow Cooker",
+                    "slug": "best-slow-cooker"
+                },
+                {
+                    "id": "c4b939ad-d759-45f8-9037-269f0adcc926",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Pregnancy Friendly",
+                    "slug": "pregnancy-friendly"
+                },
+                {
+                    "id": "4dffa654-b639-4320-aea0-85c0c7361d99",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Creamy Soup",
+                    "slug": "creamy-soup"
+                },
+                {
+                    "id": "2aa7379c-25ff-41a0-a522-a9ddb2990e57",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Easy Soup",
+                    "slug": "easy-soup"
+                },
+                {
+                    "id": "026060c4-3a9a-4a5a-9880-13103c007e67",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Food To Eat When You Are Sick",
+                    "slug": "food-to-eat-when-you-are-sick"
+                },
+                {
+                    "id": "e546ac3d-7e00-422c-88e5-637b39720d71",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Make Ahead Chicken Dinners",
+                    "slug": "make-ahead-chicken-dinners"
+                },
+                {
+                    "id": "3698a482-d8e5-47b9-bc32-99834ad42541",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "New Mums' Freezer Fillers",
+                    "slug": "new-mums-freezer-fillers"
+                },
+                {
+                    "id": "3973a425-f784-45df-be66-3b0316f5cf1c",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Winter Soups",
+                    "slug": "winter-soups"
+                },
+                {
+                    "id": "581d715a-aff1-48d5-b6fe-466d3ea85ffd",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Chicken Soup",
+                    "slug": "chicken-soup"
+                }
+            ],
+            "tools": [
+                {
+                    "id": "b97d06b1-d183-4bb9-b3d4-a7df7005eada",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker",
+                    "slug": "slow-cooker",
+                    "householdsWithTool": [
+                        "77-brookbank",
+                        "141-woodcock-road",
+                        "canada"
+                    ]
+                }
+            ],
+            "rating": null,
+            "orgURL": "https://www.bbc.co.uk/food/recipes/slow_cooker_chicken_soup_46213",
+            "dateAdded": "2025-11-09",
+            "dateUpdated": "2026-03-09T23:44:43.526229+00:00",
+            "createdAt": "2025-11-09T16:55:05.879333+00:00",
+            "updatedAt": "2026-03-09T23:44:43.529763+00:00",
+            "lastMade": "2026-03-09T23:44:43.287772+00:00"
+        },
+        {
+            "id": "adad3dab-59f7-4927-8c98-c28e24e08991",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Slow Cooker Bolognese",
+            "slug": "slow-cooker-bolognese",
+            "image": "gMl8",
+            "recipeServings": 20.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "6 hours 20 minutes",
+            "prepTime": "20 minutes",
+            "cookTime": null,
+            "performTime": "6 hours",
+            "description": "This slow cooker bolognese is a hearty, flavorful recipe that’s perfect for busy weekdays or cozy weekend dinners. We love it served over pasta, lasagna, or paired with roasted vegetables.",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "1c3fb888-1ff9-4ec8-925c-1b13840bdcfb",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Gluten Free",
+                    "slug": "gluten-free"
+                },
+                {
+                    "id": "e56c058c-5cc9-4357-93e7-04e6d5a68590",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Crock Pot",
+                    "slug": "crock-pot"
+                },
+                {
+                    "id": "e6f2f61f-62cc-4111-ab8b-e401cbc13e5d",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Ground Beef",
+                    "slug": "ground-beef"
+                },
+                {
+                    "id": "3da9fe28-6278-4ce6-bbbb-9b918ff86a70",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Kid Friendly",
+                    "slug": "kid-friendly"
+                },
+                {
+                    "id": "7ecc8035-ef05-4961-bca4-2612d403ab4f",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Meat Sauce",
+                    "slug": "meat-sauce"
+                },
+                {
+                    "id": "0d5787aa-d341-466e-9d6f-08a3a21ad5c0",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Bolognese Sauce",
+                    "slug": "slow-cooker-bolognese-sauce"
+                }
+            ],
+            "tools": [
+                {
+                    "id": "b97d06b1-d183-4bb9-b3d4-a7df7005eada",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker",
+                    "slug": "slow-cooker",
+                    "householdsWithTool": [
+                        "77-brookbank",
+                        "141-woodcock-road",
+                        "canada"
+                    ]
+                }
+            ],
+            "rating": null,
+            "orgURL": "https://www.skinnytaste.com/crock-pot-bolognese-sauce/",
+            "dateAdded": "2025-11-09",
+            "dateUpdated": "2026-04-12T00:00:00.503639+00:00",
+            "createdAt": "2025-11-09T16:57:05.262740+00:00",
+            "updatedAt": "2026-04-12T00:00:00.505361+00:00",
+            "lastMade": "2026-04-12T00:00:00.413732+00:00"
+        },
+        {
+            "id": "b8ca5d06-8dee-4199-8e08-3c14d0dc115b",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Slow cooker honey mustard chicken",
+            "slug": "slow-cooker-honey-mustard-chicken",
+            "image": "VM5S",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "2 hours 30 minutes",
+            "prepTime": "30 minutes",
+            "cookTime": null,
+            "performTime": "2 hours",
+            "description": "Golden chicken thighs in a creamy mustard and honey sauce makes a great family supper, especially as you prepare it in a slow cooker. It might seem like a lot of mustard but the flavour softens during cooking, leaving just a hint that complements the sweetness of the honey perfectly. Serve with green veg and potatoes or rice.",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "b1928477-1a43-4ec8-b2c3-ce848506bf12",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker",
+                    "slug": "slow-cooker"
+                },
+                {
+                    "id": "1c3fb888-1ff9-4ec8-925c-1b13840bdcfb",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Gluten Free",
+                    "slug": "gluten-free"
+                },
+                {
+                    "id": "4dcece5d-bc02-4e9c-bf6e-fa95b5051ca7",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Chicken",
+                    "slug": "slow-cooker-chicken"
+                },
+                {
+                    "id": "6e9b77ed-6308-4583-a282-fe729e726004",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Easy Slow Cooker",
+                    "slug": "easy-slow-cooker"
+                },
+                {
+                    "id": "611fa3e5-bd89-480f-8ffa-813b7dd9a6e5",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow-Cooker Meals For Four",
+                    "slug": "slow-cooker-meals-for-four"
+                },
+                {
+                    "id": "3d28d6ed-18e9-4a05-b4e1-d64093a52322",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Easy Family Dinners",
+                    "slug": "easy-family-dinners"
+                },
+                {
+                    "id": "488ee3b3-f310-488e-bccb-1163ad1fc315",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Egg Free",
+                    "slug": "egg-free"
+                },
+                {
+                    "id": "65086f37-3386-4a9f-9878-d55bd34ac62d",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Winter",
+                    "slug": "winter"
+                },
+                {
+                    "id": "578a9585-0e7f-4e49-a0f9-0b4e14cfb87e",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Chicken Thigh",
+                    "slug": "chicken-thigh"
+                },
+                {
+                    "id": "6d17aaad-e88b-4792-af14-04c608507475",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Nut Free",
+                    "slug": "nut-free"
+                },
+                {
+                    "id": "7dab1898-ac40-4cf6-89f5-f885b166cd28",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Best Slow Cooker",
+                    "slug": "best-slow-cooker"
+                },
+                {
+                    "id": "564108fe-0ca8-45bb-b525-e75231eba3fd",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Budget Slow Cooker",
+                    "slug": "budget-slow-cooker"
+                },
+                {
+                    "id": "a5522daa-9f6b-4c35-8df9-f40c350c22ff",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Energy-Efficient Budget",
+                    "slug": "energy-efficient-budget"
+                },
+                {
+                    "id": "ce82f41c-c606-48a7-88ef-d61af5317e42",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Autumn",
+                    "slug": "autumn"
+                },
+                {
+                    "id": "c4b939ad-d759-45f8-9037-269f0adcc926",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Pregnancy Friendly",
+                    "slug": "pregnancy-friendly"
+                },
+                {
+                    "id": "a1a5965f-3879-4982-afcc-fb83ec0cd42e",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Budget Dinner",
+                    "slug": "budget-dinner"
+                },
+                {
+                    "id": "42da842d-f580-441e-8b7f-fc57c7fb32b1",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Cheap Chicken Dinners",
+                    "slug": "cheap-chicken-dinners"
+                },
+                {
+                    "id": "f05b1d72-5354-46c8-af60-57b81e0a852a",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Cheap Slow Cooker And Batch Meals For One",
+                    "slug": "cheap-slow-cooker-and-batch-meals-for-one"
+                },
+                {
+                    "id": "de2968c4-4753-4b34-953d-b29e86dc5bc6",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Gluten-Free Family Favourites",
+                    "slug": "gluten-free-family-favourites"
+                },
+                {
+                    "id": "65c2e11f-cdf1-46e3-83da-99cbe4cb7944",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Feasts",
+                    "slug": "slow-cooker-feasts"
+                },
+                {
+                    "id": "71be8a05-43ef-41b8-a3f3-01af48a70729",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow-Cooked Dishes",
+                    "slug": "slow-cooked-dishes"
+                }
+            ],
+            "tools": [
+                {
+                    "id": "b97d06b1-d183-4bb9-b3d4-a7df7005eada",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker",
+                    "slug": "slow-cooker",
+                    "householdsWithTool": [
+                        "77-brookbank",
+                        "141-woodcock-road",
+                        "canada"
+                    ]
+                }
+            ],
+            "rating": null,
+            "orgURL": "https://www.bbc.co.uk/food/recipes/slow_cooker_honey_95731",
+            "dateAdded": "2025-11-09",
+            "dateUpdated": "2025-11-09T16:59:13.258535+00:00",
+            "createdAt": "2025-11-09T16:58:25.134423+00:00",
+            "updatedAt": "2025-11-09T16:59:13.262451+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "ea058e0a-2d0e-483d-adef-8119ee53f5bb",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Slow cooker sweet and sour chicken",
+            "slug": "slow-cooker-sweet-and-sour-chicken",
+            "image": "pyGU",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "2 hours 30 minutes",
+            "prepTime": "30 minutes",
+            "cookTime": null,
+            "performTime": "2 hours",
+            "description": "This is a really easy family-friendly supper. Frying the chicken and onion before adding it to the slow cooker brings a depth to the dish and it only takes a few minutes. I’ve used chicken breasts here to keep things simple but swap for thighs if preferred. Each serving provides 363 kcal, 32g protein, 44g carbohydrate (of which 38g sugars), 5.6g fat (of which 1g saturates), 4.2g fibre and 1.9g salt.",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "b1928477-1a43-4ec8-b2c3-ce848506bf12",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker",
+                    "slug": "slow-cooker"
+                },
+                {
+                    "id": "4dcece5d-bc02-4e9c-bf6e-fa95b5051ca7",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Chicken",
+                    "slug": "slow-cooker-chicken"
+                },
+                {
+                    "id": "7a1dcfff-0b76-4033-96ce-76ca429b75bf",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Comfort Food",
+                    "slug": "slow-cooker-comfort-food"
+                },
+                {
+                    "id": "09dee33a-db26-4728-883f-f7c181761eec",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Dairy Free",
+                    "slug": "dairy-free"
+                },
+                {
+                    "id": "488ee3b3-f310-488e-bccb-1163ad1fc315",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Egg Free",
+                    "slug": "egg-free"
+                },
+                {
+                    "id": "6d17aaad-e88b-4792-af14-04c608507475",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Nut Free",
+                    "slug": "nut-free"
+                },
+                {
+                    "id": "7dab1898-ac40-4cf6-89f5-f885b166cd28",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Best Slow Cooker",
+                    "slug": "best-slow-cooker"
+                },
+                {
+                    "id": "c4b939ad-d759-45f8-9037-269f0adcc926",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Pregnancy Friendly",
+                    "slug": "pregnancy-friendly"
+                },
+                {
+                    "id": "040cb8ff-21a1-4718-8e3b-dd9482503cad",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "High Protein",
+                    "slug": "high-protein"
+                },
+                {
+                    "id": "71be8a05-43ef-41b8-a3f3-01af48a70729",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow-Cooked Dishes",
+                    "slug": "slow-cooked-dishes"
+                },
+                {
+                    "id": "69d90cea-8333-47c8-9cd5-8be731788726",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "High Protein Dinners",
+                    "slug": "high-protein-dinners"
+                },
+                {
+                    "id": "c41e83df-9615-495e-a811-8a5f1b85ef2c",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker Fakeaways",
+                    "slug": "slow-cooker-fakeaways"
+                },
+                {
+                    "id": "cab199ff-ab37-467c-a745-6a18d0983ee6",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Chicken Breast",
+                    "slug": "chicken-breast"
+                }
+            ],
+            "tools": [
+                {
+                    "id": "b97d06b1-d183-4bb9-b3d4-a7df7005eada",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker",
+                    "slug": "slow-cooker",
+                    "householdsWithTool": [
+                        "77-brookbank",
+                        "141-woodcock-road",
+                        "canada"
+                    ]
+                }
+            ],
+            "rating": null,
+            "orgURL": "https://www.bbc.co.uk/food/recipes/slow_cooker_sweet_and_67375",
+            "dateAdded": "2025-11-09",
+            "dateUpdated": "2025-11-15T23:44:58.602762+00:00",
+            "createdAt": "2025-11-09T16:59:24.508485+00:00",
+            "updatedAt": "2025-11-15T23:44:58.606097+00:00",
+            "lastMade": "2025-11-15T23:44:58.420141+00:00"
+        },
+        {
+            "id": "880ab3a4-9399-46d5-8416-fce0a06f3428",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Taco Seasoning for Ground Beef",
+            "slug": "taco-seasoning-for-ground-beef",
+            "image": "YNc0",
+            "recipeServings": 3.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "2 minutes",
+            "prepTime": "2 minutes",
+            "cookTime": null,
+            "performTime": null,
+            "description": "There's nothing more satisfying than using a homemade taco mix and thankfully it couldn't be easier to create. This ground beef taco seasoning is definitely a keeper!",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "2ed4c071-8494-4686-9c00-06f17e783bf3",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Beef Taco Seasoning",
+                    "slug": "beef-taco-seasoning"
+                },
+                {
+                    "id": "2ee9d4bd-694f-43fe-bd8e-b6876f9253d1",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Ground Beef Taco Seasoning",
+                    "slug": "ground-beef-taco-seasoning"
+                },
+                {
+                    "id": "a3493ed8-6c53-447a-91f2-0bf61b202fa9",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Homemade Ground Beef Taco Seasoning",
+                    "slug": "homemade-ground-beef-taco-seasoning"
+                },
+                {
+                    "id": "56a84c84-08b1-4df7-baf9-cd7d36b31b1a",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Homemade Seasoning For Ground Beef",
+                    "slug": "homemade-seasoning-for-ground-beef"
+                },
+                {
+                    "id": "0ab4cb8f-324f-4cad-9013-7c5fa689e8f0",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Seasoning For Ground Beef Tacos",
+                    "slug": "seasoning-for-ground-beef-tacos"
+                },
+                {
+                    "id": "bf0420c3-e453-4cfd-b2cc-8b10688a692f",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Taco Seasoning For Ground Beef",
+                    "slug": "taco-seasoning-for-ground-beef"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.dontgobaconmyheart.co.uk/taco-seasoning-ground-beef/",
+            "dateAdded": "2025-11-03",
+            "dateUpdated": "2025-11-05T22:44:34.665713+00:00",
+            "createdAt": "2025-11-03T19:52:48.487505+00:00",
+            "updatedAt": "2025-11-05T22:44:34.668240+00:00",
+            "lastMade": "2025-11-05T22:44:34.521229+00:00"
+        },
+        {
+            "id": "b0a5b5cd-433b-4703-a133-4483a9a15202",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Stir-fried pork with ginger and soy",
+            "slug": "stir-fried-pork-with-ginger-and-soy",
+            "image": "hJwl",
+            "recipeServings": 2.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "1 hour",
+            "prepTime": "30 minutes",
+            "cookTime": null,
+            "performTime": "30 minutes",
+            "description": "This low-calorie, pork stir fry is quick and easy while still delivering on flavour, and helping you on your way to getting five a day. Each serving provides 359 kcal, 40.3g protein, 12.4g carbohydrate (of which 10.1g sugars), 15.4g fat (of which 4.8g saturates), 4.7g fibre and 2.41g salt. As part of an Intermittent diet plan, 1 serving provides: Your daily salty food 3 of your 5 daily vegetable portions This meal provides 359 kcal per portion.",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "d11cc453-43d6-4777-8320-371fc0b517ee",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Pork",
+                    "slug": "pork"
+                },
+                {
+                    "id": "09dee33a-db26-4728-883f-f7c181761eec",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Dairy Free",
+                    "slug": "dairy-free"
+                },
+                {
+                    "id": "488ee3b3-f310-488e-bccb-1163ad1fc315",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Egg Free",
+                    "slug": "egg-free"
+                },
+                {
+                    "id": "4a9ad35d-f5fd-47bd-9edb-c92a1aca1b50",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Healthy",
+                    "slug": "healthy"
+                },
+                {
+                    "id": "6d17aaad-e88b-4792-af14-04c608507475",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Nut Free",
+                    "slug": "nut-free"
+                },
+                {
+                    "id": "9382ff98-ce7c-45e6-b68b-8c6fae6f247c",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Perfectly Portioned Dinners",
+                    "slug": "perfectly-portioned-dinners"
+                },
+                {
+                    "id": "fc07a1c6-9e82-4090-8bb3-9fab0c80abdb",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Healthy Diet Plans",
+                    "slug": "healthy-diet-plans"
+                },
+                {
+                    "id": "170be408-e65c-407b-8f48-ee59694aac09",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Quick",
+                    "slug": "quick"
+                },
+                {
+                    "id": "1dc2e640-e541-4027-a12f-53651b728148",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "15 Minute Meals",
+                    "slug": "15-minute-meals"
+                },
+                {
+                    "id": "e56b3b92-bace-4765-8753-4afc8a158fb5",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "15-Minute Healthy Meals",
+                    "slug": "15-minute-healthy-meals"
+                },
+                {
+                    "id": "ca7b961e-4986-4031-91d1-a615913db05c",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "30 Minute Dinners",
+                    "slug": "30-minute-dinners"
+                },
+                {
+                    "id": "8dc8eb3e-b37b-40dc-9d01-4b42ff577592",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "On The Table In 20 Minutes Or Less",
+                    "slug": "on-the-table-in-20-minutes-or-less"
+                },
+                {
+                    "id": "09c13e61-089c-40b7-9ec3-ebf63c74269e",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "300-Calorie Dinners",
+                    "slug": "300-calorie-dinners"
+                },
+                {
+                    "id": "674b849d-1186-4200-9295-eb9dc66c6709",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Speedy Stir-Fries",
+                    "slug": "speedy-stir-fries"
+                },
+                {
+                    "id": "bcca6e28-29af-42c8-a10c-2bc385a605fd",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Easy Stir Fries",
+                    "slug": "easy-stir-fries"
+                },
+                {
+                    "id": "3a9c68f9-b8d0-4615-bec2-4ea176b99b89",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Really Easy Student Meals",
+                    "slug": "really-easy-student-meals"
+                },
+                {
+                    "id": "7902c2df-c567-4d8e-b241-421b8be0eb18",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Healthy Dinner",
+                    "slug": "healthy-dinner"
+                },
+                {
+                    "id": "75f7a5ec-ce47-4ab6-b311-3b7dc4a70f55",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Brighten Up January",
+                    "slug": "brighten-up-january"
+                },
+                {
+                    "id": "f76e88da-1e48-4593-bc1f-a35c4154ced7",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Healthy Takeaway",
+                    "slug": "healthy-takeaway"
+                },
+                {
+                    "id": "bf45761e-2447-4d4c-b202-fecc6fdde4c5",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "5:2 Diet",
+                    "slug": "5-2-diet"
+                },
+                {
+                    "id": "275f9097-c6e8-4e51-86ae-742f8f8b6142",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Leftover Roast",
+                    "slug": "leftover-roast"
+                },
+                {
+                    "id": "02df8bf7-82e8-4a67-837e-de9cf8bad745",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Light Supper",
+                    "slug": "light-supper"
+                },
+                {
+                    "id": "7d7aa465-a11e-49e8-8426-d995a59f8285",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Low-Carb Comfort",
+                    "slug": "low-carb-comfort"
+                },
+                {
+                    "id": "b2ba3490-78ed-401e-91fa-77abf34ee146",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Low-Effort Healthy Meals",
+                    "slug": "low-effort-healthy-meals"
+                },
+                {
+                    "id": "040cb8ff-21a1-4718-8e3b-dd9482503cad",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "High Protein",
+                    "slug": "high-protein"
+                },
+                {
+                    "id": "855ff195-75b6-49fc-90c0-5f5fa647db85",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Quick Pork",
+                    "slug": "quick-pork"
+                },
+                {
+                    "id": "1b0d76f5-6a8d-45e4-ab31-0d3721207e35",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Really Easy Stir-Fry",
+                    "slug": "really-easy-stir-fry"
+                },
+                {
+                    "id": "cc7103c9-d90a-4a33-95e0-db6794caec04",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Sleep-Friendly",
+                    "slug": "sleep-friendly"
+                },
+                {
+                    "id": "18ff1847-a825-470a-aea3-500e7e460045",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Speedy Low-Calorie Suppers",
+                    "slug": "speedy-low-calorie-suppers"
+                },
+                {
+                    "id": "6a575c54-e4cc-4355-8239-e739f428d279",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Statement Stir-Fries",
+                    "slug": "statement-stir-fries"
+                },
+                {
+                    "id": "c1db1861-9409-4d1c-9a2e-dcac5a9b2538",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Student Stir Fry",
+                    "slug": "student-stir-fry"
+                },
+                {
+                    "id": "869e3f49-b1e8-4865-95f3-60ff93e82bc1",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Stir-Fry",
+                    "slug": "stir-fry"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.bbc.co.uk/food/recipes/stir_fried_pork_with_85173",
+            "dateAdded": "2025-10-23",
+            "dateUpdated": "2025-10-27T22:44:44.395869+00:00",
+            "createdAt": "2025-10-23T07:34:00.025634+00:00",
+            "updatedAt": "2025-10-27T22:44:44.399396+00:00",
+            "lastMade": "2025-10-27T22:44:44.235253+00:00"
+        },
+        {
+            "id": "9665249d-a773-4fc8-88b4-1f01f0b5262a",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Slow Cooker Coq Au Vin",
+            "slug": "slow-cooker-coq-au-vin",
+            "image": "4PPi",
+            "recipeServings": 5.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "8 hours 20 minutes",
+            "prepTime": "20 minutes",
+            "cookTime": null,
+            "performTime": "8 hours",
+            "description": "Slow Cooker Coq Au Vin recipe is a classic French dish made easy! Crock pot chicken in wine, shallots, chicken, garlic, mushrooms and carrots.",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [
+                {
+                    "id": "b97d06b1-d183-4bb9-b3d4-a7df7005eada",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker",
+                    "slug": "slow-cooker",
+                    "householdsWithTool": [
+                        "77-brookbank",
+                        "141-woodcock-road",
+                        "canada"
+                    ]
+                }
+            ],
+            "rating": 5.0,
+            "orgURL": "https://dinnerthendessert.com/slow-cooker-coq-au-vin/#wprm-recipe-container-34077",
+            "dateAdded": "2025-10-13",
+            "dateUpdated": "2026-04-01T23:44:56.747183+00:00",
+            "createdAt": "2025-10-13T20:07:30.043170+00:00",
+            "updatedAt": "2026-04-01T23:44:56.750849+00:00",
+            "lastMade": "2026-04-01T23:44:56.443415+00:00"
+        },
+        {
+            "id": "2e11583e-ea5a-4ac3-820b-aebeb6b4f74e",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Slow Cooker Vegetable Curry",
+            "slug": "slow-cooker-vegetable-curry",
+            "image": "18eZ",
+            "recipeServings": 6.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "3 hours 5 minutes",
+            "prepTime": "5 minutes",
+            "cookTime": null,
+            "performTime": "3 hours",
+            "description": "Slow cooker vegetable curry combines sweet potato, chickpeas, cauliflower, spinach, coconut milk, and Indian-style curry powder for an easy dump-and-go, hearty crockpot meal. Makes for the perfect hearty vegetarian and meal that will have you going back for seconds!",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [
+                {
+                    "id": "b97d06b1-d183-4bb9-b3d4-a7df7005eada",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker",
+                    "slug": "slow-cooker",
+                    "householdsWithTool": [
+                        "77-brookbank",
+                        "141-woodcock-road",
+                        "canada"
+                    ]
+                }
+            ],
+            "rating": null,
+            "orgURL": "https://realfoodwholelife.com/recipes/slow-cooker-vegetable-curry/",
+            "dateAdded": "2025-10-13",
+            "dateUpdated": "2025-10-18T17:03:18.420960+00:00",
+            "createdAt": "2025-10-13T20:16:33.889736+00:00",
+            "updatedAt": "2025-10-18T17:03:18.425467+00:00",
+            "lastMade": "2025-10-17T22:44:54.122558+00:00"
+        },
+        {
+            "id": "e48905cb-ef00-4fd5-8a72-be9ea88f05ea",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Slow cooker chicken noodle soup",
+            "slug": "slow-cooker-chicken-noodle-soup",
+            "image": "HGt8",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "2 hours 30 minutes",
+            "prepTime": "30 minutes",
+            "cookTime": null,
+            "performTime": "2 hours",
+            "description": "Nourishing, aromatic and deeply flavourful, this deceptively simple chicken soup makes the perfect family supper – best of all, there’s hardly any washing up.",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [
+                {
+                    "id": "b97d06b1-d183-4bb9-b3d4-a7df7005eada",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker",
+                    "slug": "slow-cooker",
+                    "householdsWithTool": [
+                        "77-brookbank",
+                        "141-woodcock-road",
+                        "canada"
+                    ]
+                }
+            ],
+            "rating": null,
+            "orgURL": "https://www.bbc.co.uk/food/recipes/slow_cooker_chicken_34193",
+            "dateAdded": "2025-10-05",
+            "dateUpdated": "2025-10-13T20:12:47.002647+00:00",
+            "createdAt": "2025-10-05T19:22:04.167938+00:00",
+            "updatedAt": "2025-10-13T20:12:47.006140+00:00",
+            "lastMade": "2025-10-07T22:59:59+00:00"
+        },
+        {
+            "id": "e31c9c97-73fe-4733-a50f-2cb4042a9047",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Chicken & bean enchiladas",
+            "slug": "chicken-bean-enchiladas",
+            "image": "Khup",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "1 hour 5 minutes",
+            "prepTime": "10 minutes",
+            "cookTime": null,
+            "performTime": "55 minutes",
+            "description": "A family dinner that delivers four of your 5-a-day - tender chicken, red pepper and black beans, wrapped in tortilla, baked in the oven with passata and cheese",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "130d9111-4f50-4320-b70c-063a41a23cfc",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Family Friendly",
+                    "slug": "family-friendly"
+                },
+                {
+                    "id": "159c0a7f-9393-47d3-bb9a-bc595da8f3d1",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Lulu Grimes",
+                    "slug": "lulu-grimes"
+                },
+                {
+                    "id": "615fd5ba-7903-45c1-8223-9adb77ca6ac9",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Chicken",
+                    "slug": "chicken"
+                },
+                {
+                    "id": "fde5750b-8d0f-4e49-9580-7bb0e343c3e2",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Calcium",
+                    "slug": "calcium"
+                },
+                {
+                    "id": "bb8e33d5-4df2-465a-a2ee-a5a5b99f6ab0",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Low-Calorie",
+                    "slug": "low-calorie"
+                },
+                {
+                    "id": "69a72f52-796d-476e-98fc-3e300be069e8",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "5-A-Day",
+                    "slug": "5-a-day"
+                },
+                {
+                    "id": "c2b6f097-34be-4647-96cb-5e02f9a74c24",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Beans",
+                    "slug": "beans"
+                },
+                {
+                    "id": "cfd8b768-1a57-4b68-88c6-9ae9e3194c05",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Enchiladas",
+                    "slug": "enchiladas"
+                },
+                {
+                    "id": "b27432ce-c269-466c-8ca3-9ce7e6cb350a",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Family Meals",
+                    "slug": "family-meals"
+                },
+                {
+                    "id": "d0875303-5c44-418a-911e-8185b7e5529e",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Low Fat",
+                    "slug": "low-fat"
+                },
+                {
+                    "id": "ed1c0efd-2191-4680-a4b7-86d3a0261414",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Mexican",
+                    "slug": "mexican"
+                }
+            ],
+            "tools": [],
+            "rating": null,
+            "orgURL": "https://www.bbcgoodfood.com/recipes/chicken-bean-enchiladas",
+            "dateAdded": "2025-09-21",
+            "dateUpdated": "2025-09-21T22:44:38.496103+00:00",
+            "createdAt": "2025-09-21T08:29:33.853510+00:00",
+            "updatedAt": "2025-09-21T22:44:38.498702+00:00",
+            "lastMade": "2025-09-21T22:44:38.169850+00:00"
+        },
+        {
+            "id": "7eac2aa6-1405-4a41-ba67-b9102e7fa149",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Slow-Cooker Red Wine Beef Stew",
+            "slug": "slow-cooker-red-wine-beef-stew",
+            "image": "OD72",
+            "recipeServings": 8.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": "4 hours 40 minutes",
+            "prepTime": "20 minutes",
+            "cookTime": null,
+            "performTime": "none",
+            "description": "Our slow-cooker beef stew with red wine and tomatoes is easy, classic, and comforting.",
+            "recipeCategory": [],
+            "tags": [
+                {
+                    "id": "2518f695-26e5-40d7-9837-a911b8e268cb",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Stews",
+                    "slug": "stews"
+                },
+                {
+                    "id": "1c3fb888-1ff9-4ec8-925c-1b13840bdcfb",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Gluten Free",
+                    "slug": "gluten-free"
+                },
+                {
+                    "id": "09dee33a-db26-4728-883f-f7c181761eec",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Dairy Free",
+                    "slug": "dairy-free"
+                },
+                {
+                    "id": "65086f37-3386-4a9f-9878-d55bd34ac62d",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Winter",
+                    "slug": "winter"
+                },
+                {
+                    "id": "6d17aaad-e88b-4792-af14-04c608507475",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Nut Free",
+                    "slug": "nut-free"
+                },
+                {
+                    "id": "ab451c77-8097-444e-9654-bd0651684c65",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Content-Type: Recipe",
+                    "slug": "content-type-recipe"
+                },
+                {
+                    "id": "d854e4b7-4f6d-4260-a057-840c741042f6",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Locale: Us",
+                    "slug": "locale-us"
+                },
+                {
+                    "id": "3000bc65-0456-4e20-961c-58c3e6942a5c",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Displaytype: Recipe",
+                    "slug": "displaytype-recipe"
+                },
+                {
+                    "id": "2feaa86b-3105-44ca-8d24-41849682f33c",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Shorttitle: Slow-Cooker Beef Stew",
+                    "slug": "shorttitle-slow-cooker-beef-stew"
+                },
+                {
+                    "id": "2630966f-716c-464c-878f-ec1790f243a8",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Contentid: 74Fbca6D-F1F9-4788-A6Dc-43D5B1902796",
+                    "slug": "contentid-74fbca6d-f1f9-4788-a6dc-43d5b1902796"
+                },
+                {
+                    "id": "b8d2350c-0ac0-41a5-9bcc-f36ba607fcc4",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "American",
+                    "slug": "american"
+                },
+                {
+                    "id": "780e4458-8d5d-4015-809b-28918488c1eb",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Cook Insta",
+                    "slug": "cook-insta"
+                },
+                {
+                    "id": "ca821f76-d1a2-48b3-a962-e32542911457",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Dinner",
+                    "slug": "dinner"
+                },
+                {
+                    "id": "806ae01c-d5c8-491b-b5cf-bf2342a92f18",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Dinner Party",
+                    "slug": "dinner-party"
+                },
+                {
+                    "id": "c71d6cb4-5ad4-44c6-9b7d-5522218f1257",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Low Sugar",
+                    "slug": "low-sugar"
+                },
+                {
+                    "id": "1653c75f-c7f7-413d-b6a5-d2d4ee21defa",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Main Dish",
+                    "slug": "main-dish"
+                },
+                {
+                    "id": "0f057139-cd25-4d73-b822-86d6532f63aa",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Weeknight Dinners",
+                    "slug": "weeknight-dinners"
+                },
+                {
+                    "id": "30b8684b-c5dd-41ba-acf5-dea992396128",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Weeknight Meals",
+                    "slug": "weeknight-meals"
+                },
+                {
+                    "id": "78af8397-b12a-43fa-8af8-53060b023577",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Nutrition: Dairy-Free",
+                    "slug": "nutrition-dairy-free"
+                },
+                {
+                    "id": "70163a57-449d-4439-81f6-4370da0bc107",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Nutrition: Gluten-Free",
+                    "slug": "nutrition-gluten-free"
+                },
+                {
+                    "id": "71a04121-f628-46b8-86e8-fd4a1f209d68",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Nutrition: Low Sugar",
+                    "slug": "nutrition-low-sugar"
+                },
+                {
+                    "id": "0d2300c0-6546-4e35-b742-ae94de1d0370",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Nutrition: Nut-Free",
+                    "slug": "nutrition-nut-free"
+                },
+                {
+                    "id": "cc6a8a6a-e615-4e45-bb0e-f805d25eaf31",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Occasion: Dinner Party",
+                    "slug": "occasion-dinner-party"
+                },
+                {
+                    "id": "9c1fb61d-65d3-4660-8fc2-8fb5edd6bb95",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Occasion: Weeknight Meals",
+                    "slug": "occasion-weeknight-meals"
+                },
+                {
+                    "id": "4630db26-4ca4-464d-930b-497c17b66f60",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Occasion: Winter",
+                    "slug": "occasion-winter"
+                },
+                {
+                    "id": "78fe5468-daad-43e6-b1a4-2daa9b96314b",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Category: Dinner",
+                    "slug": "category-dinner"
+                },
+                {
+                    "id": "bcdaba35-cfbb-44ce-a49f-7f005861019c",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Category: Main Dish",
+                    "slug": "category-main-dish"
+                },
+                {
+                    "id": "8b679cc8-60ce-4d41-9a9f-4801ef611e85",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Category: Stews",
+                    "slug": "category-stews"
+                },
+                {
+                    "id": "1f2d6b00-df75-407c-b917-eca8da6f7d1e",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Totaltime: 04:40:00",
+                    "slug": "totaltime-04-40-00"
+                },
+                {
+                    "id": "93f0298e-80c9-4c45-aad0-cdf84b62e82b",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Filtertime: >1Hr",
+                    "slug": "filtertime-1hr"
+                }
+            ],
+            "tools": [
+                {
+                    "id": "b97d06b1-d183-4bb9-b3d4-a7df7005eada",
+                    "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+                    "name": "Slow Cooker",
+                    "slug": "slow-cooker",
+                    "householdsWithTool": [
+                        "77-brookbank",
+                        "141-woodcock-road",
+                        "canada"
+                    ]
+                }
+            ],
+            "rating": null,
+            "orgURL": "https://www.delish.com/cooking/recipe-ideas/a49563/slow-cooker-red-wine-beef-stew-recipe/",
+            "dateAdded": "2025-09-11",
+            "dateUpdated": "2025-10-26T22:44:45.326094+00:00",
+            "createdAt": "2025-09-11T07:34:38.573493+00:00",
+            "updatedAt": "2025-10-26T22:44:45.329678+00:00",
+            "lastMade": "2025-10-26T22:44:45.121732+00:00"
+        },
+        {
+            "id": "51810d3d-b59f-41bf-b0a3-1ba731307468",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Turmeric Chicken and Carrot Traybake",
+            "slug": "turmeric-chicken-and-carrot-traybake",
+            "image": "no image",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": null,
+            "prepTime": "10 mins, plus 2 hrs marinating",
+            "cookTime": null,
+            "performTime": "30 mins",
+            "description": "Full of bright, bold flavours, this easy traybake brings together golden, crispy chicken and sweet roasted carrots, plus a zesty tahini dressing.",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [],
+            "rating": null,
+            "orgURL": null,
+            "dateAdded": "2025-08-29",
+            "dateUpdated": "2025-08-29T19:29:56.811400+00:00",
+            "createdAt": "2025-08-29T19:25:05.273666+00:00",
+            "updatedAt": "2025-08-29T19:29:56.815527+00:00",
+            "lastMade": null
+        },
+        {
+            "id": "6cdb8f1b-185b-4294-8d83-10d725d1f332",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Turmeric and Coconut Curry Meatballs",
+            "slug": "turmeric-and-coconut-curry-meatballs",
+            "image": "no image",
+            "recipeServings": 4.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": null,
+            "prepTime": "15 mins, plus chilling",
+            "cookTime": null,
+            "performTime": "40 mins",
+            "description": "A flavourful dish of pork meatballs in a turmeric and coconut curry sauce.",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [],
+            "rating": null,
+            "orgURL": null,
+            "dateAdded": "2025-08-29",
+            "dateUpdated": "2025-09-12T22:44:48.487300+00:00",
+            "createdAt": "2025-08-29T19:27:12.527878+00:00",
+            "updatedAt": "2025-09-12T22:44:48.489773+00:00",
+            "lastMade": "2025-09-12T22:44:48.293143+00:00"
+        },
+        {
+            "id": "e072f75c-3a9d-4cab-99c3-9b2bd4a717c0",
+            "userId": "b3b8e9f6-ad55-4213-9200-814fcfa46b29",
+            "householdId": "aab7d8dd-cc0a-42ca-a6ea-c17e85ea23b5",
+            "groupId": "94b5ade8-db42-4446-9717-c88a9dd03d32",
+            "name": "Lemon, Cumin and Coriander Lentil Soup",
+            "slug": "lemon-cumin-and-coriander-lentil-soup",
+            "image": "no image",
+            "recipeServings": 6.0,
+            "recipeYieldQuantity": 0.0,
+            "recipeYield": "",
+            "totalTime": null,
+            "prepTime": "15 mins",
+            "cookTime": null,
+            "performTime": "35 mins",
+            "description": "Zingy and nourishing, this is a Middle Eastern staple. Our recipe is extra lemony – it should make you pucker up, but only add the second lot of juice to taste!",
+            "recipeCategory": [],
+            "tags": [],
+            "tools": [],
+            "rating": null,
+            "orgURL": null,
+            "dateAdded": "2025-08-29",
+            "dateUpdated": "2025-08-29T19:31:44.085236+00:00",
+            "createdAt": "2025-08-29T19:31:44.086642+00:00",
+            "updatedAt": "2025-08-29T19:31:44.086643+00:00",
+            "lastMade": null
+        }
+    ],
+    "next": "/recipes?orderBy=dateAdded&orderDirection=desc&page=2&perPage=50",
+    "previous": null
+}

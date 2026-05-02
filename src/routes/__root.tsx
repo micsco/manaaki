@@ -1,12 +1,11 @@
 import { PostHogProvider } from "@posthog/react"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { type QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router"
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router"
 import type { ReactNode } from "react"
 import { CookModeProvider } from "../contexts/CookModeContext"
+import { queryClient } from "../lib/queryClient"
 import "../styles/globals.css"
-
-export const queryClient = new QueryClient()
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({

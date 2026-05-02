@@ -1,8 +1,6 @@
-import { NuqsTestingAdapter } from "nuqs/adapters/testing"
 import { describe, expect, it } from "vitest"
 import type { RecipeIngredientOutput } from "../api/generated/types.gen"
-import { CookModeProvider } from "../contexts/CookModeContext"
-import { render, screen } from "../test/render"
+import { CookModeWrapper, render, screen } from "../test/render"
 import { IngredientsSection } from "./IngredientsSection"
 
 const ingredients: RecipeIngredientOutput[] = [
@@ -40,20 +38,6 @@ const ingredientsWithSection: RecipeIngredientOutput[] = [
   },
   ...ingredients,
 ]
-
-function CookModeWrapper({
-  children,
-  cookMode = false,
-}: {
-  children: React.ReactNode
-  cookMode?: boolean
-}) {
-  return (
-    <NuqsTestingAdapter searchParams={cookMode ? "cook=true" : ""}>
-      <CookModeProvider>{children}</CookModeProvider>
-    </NuqsTestingAdapter>
-  )
-}
 
 describe("IngredientsSection", () => {
   describe("normal mode", () => {

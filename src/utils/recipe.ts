@@ -1,6 +1,7 @@
 import { parse as uuidParse, stringify as uuidStringify } from "uuid"
 
-const MEALIE_BASE_URL = "https://mealie.scottfamily.nz"
+const MEALIE_BASE_URL =
+  import.meta.env.VITE_PUBLIC_MEALIE_BASE_URL ?? "https://mealie.scottfamily.nz"
 
 export function encodeRecipeId(uuid: string): string {
   return btoa(String.fromCharCode(...uuidParse(uuid)))
@@ -49,6 +50,41 @@ export function recipeImageUrl(
 export function formatTime(t: string | null | undefined): string | null {
   if (!t) return null
   return t.replace("PT", "").replace("H", "h ").replace("M", "m").trim()
+}
+
+export function stepStorageKey(recipeId: string, index: number): string {
+  return `recipe-${recipeId}-step-${index}`
+}
+
+export function ingredientStorageKey(recipeId: string, index: number): string {
+  return `recipe-${recipeId}-ingredient-${index}`
+}
+
+export interface TitleGroup<T> {
+  title: string | null
+  items: { item: T; index: number }[]
+}
+
+export function groupByTitle<T extends { title?: string | null }>(items: T[]): TitleGroup<T>[] {
+  const groups: TitleGroup<T>[] = []
+  let current: TitleGroup<T> = { title: null, items: [] }
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i]
+    if (item.title) {
+      if (current.items.length > 0 || current.title !== null) {
+        groups.push(current)
+      }
+      current = { title: item.title, items: [] }
+    } else {
+      current.items.push({ item, index: i })
+    }
+  }
+  if (current.items.length > 0 || current.title !== null) {
+    groups.push(current)
+  }
+
+  return groups
 }
 
 const FRACTIONS: Record<number, string> = {

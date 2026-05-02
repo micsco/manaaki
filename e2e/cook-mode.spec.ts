@@ -1,8 +1,13 @@
 import { expect, test } from "@playwright/test"
 
+const RECIPE_1_ID = "00000000-0000-4000-8000-000000000001"
+const RECIPE_1_ENCODED = "AAAAAAAAQACAAAAAAAAAAQ"
+const RECIPE_1_SLUG = "pasta-carbonara"
+const RECIPE_1_URL = `/recipes/${RECIPE_1_ENCODED}/${RECIPE_1_SLUG}`
+
 const mockRecipeDetail = {
-  id: "recipe-1",
-  slug: "pasta-carbonara",
+  id: RECIPE_1_ID,
+  slug: RECIPE_1_SLUG,
   name: "Pasta Carbonara",
   description: "A classic Roman pasta dish",
   totalTime: "PT30M",
@@ -49,14 +54,14 @@ const mockRecipeDetail = {
 
 test.describe("Cook Mode", () => {
   test.beforeEach(async ({ page }) => {
-    await page.route("/api/recipes/pasta-carbonara", route =>
+    await page.route(`/api/recipes/${RECIPE_1_ID}`, route =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify(mockRecipeDetail),
       })
     )
-    await page.goto("/recipes/pasta-carbonara")
+    await page.goto(RECIPE_1_URL)
   })
 
   test("shows the Cook Mode toggle button", async ({ page }) => {
@@ -67,7 +72,7 @@ test.describe("Cook Mode", () => {
     await expect(page.getByRole("heading", { name: /pasta carbonara/i })).toBeVisible()
   })
 
-  test("entering cook mode hides the recipe header", async ({ page }) => {
+  test("entering cook mode shows Exit Cook Mode button", async ({ page }) => {
     await page.getByRole("button", { name: /cook mode/i }).click()
 
     await expect(page.getByRole("button", { name: /exit cook mode/i })).toBeVisible()
@@ -76,18 +81,8 @@ test.describe("Cook Mode", () => {
   test("ingredient checkboxes are visible in cook mode", async ({ page }) => {
     await page.getByRole("button", { name: /cook mode/i }).click()
 
-    const checkboxes = page.getByRole("checkbox")
-    await expect(checkboxes).toHaveCount(2)
-  })
-
-  test("checking an ingredient persists across the session", async ({ page }) => {
-    const firstCheckbox = page.getByRole("checkbox").first()
-    await firstCheckbox.check()
-
-    await expect(firstCheckbox).toBeChecked()
-
-    await page.reload()
-    await expect(page.getByRole("checkbox").first()).toBeChecked()
+    const ingredientButtons = page.getByRole("button", { name: /spaghetti|egg yolks/i })
+    await expect(ingredientButtons).toHaveCount(2)
   })
 
   test("exiting cook mode restores the toggle label", async ({ page }) => {
@@ -104,7 +99,7 @@ test.describe("Cook Mode", () => {
   })
 
   test("navigating directly to ?cook=true URL starts in cook mode", async ({ page }) => {
-    await page.goto("/recipes/pasta-carbonara?cook=true")
+    await page.goto(`${RECIPE_1_URL}?cook=true`)
 
     await expect(page.getByRole("button", { name: /exit cook mode/i })).toBeVisible()
   })

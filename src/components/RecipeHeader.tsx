@@ -82,9 +82,7 @@ export function RecipeHeader({
 
   return (
     <div className="bg-gray-950 text-gray-100">
-      {/* Hero */}
       <div className="relative h-[55vh] min-h-64 w-full overflow-hidden bg-gray-900">
-        {/* Top-left controls */}
         <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
           <Link
             to="/recipes"
@@ -113,7 +111,6 @@ export function RecipeHeader({
           )}
         </div>
 
-        {/* Prev / next navigation */}
         {(prevRecipe || nextRecipe) && (
           <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
             {prevRecipe ? (
@@ -165,7 +162,6 @@ export function RecipeHeader({
           </div>
         )}
 
-        {/* Hero image */}
         {img ? (
           <img
             src={img}
@@ -178,10 +174,8 @@ export function RecipeHeader({
           <div className="h-full w-full bg-gray-800" />
         )}
 
-        {/* Gradient scrim */}
         <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
 
-        {/* Overlaid title + stats */}
         <div className="absolute right-0 bottom-0 left-0 px-6 pb-12 md:px-10 md:pb-16">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <h1 className="max-w-2xl font-bold font-serif text-4xl text-white leading-tight drop-shadow-lg md:text-5xl lg:text-6xl">
@@ -192,7 +186,6 @@ export function RecipeHeader({
         </div>
       </div>
 
-      {/* Sub-hero strip: description + tags */}
       {(recipe.description || recipe.recipeCategory?.length || recipe.tags?.length) && (
         <div className="mx-auto max-w-6xl px-6 py-6 md:px-10">
           {recipe.description && (

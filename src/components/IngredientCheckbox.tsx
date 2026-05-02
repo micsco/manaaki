@@ -8,7 +8,7 @@ import type {
   IngredientUnitOutput,
 } from "../api/generated/types.gen"
 import { useSessionStorage } from "../hooks/useSessionStorage"
-import { formatQuantity } from "../utils/recipe"
+import { formatQuantity, ingredientStorageKey } from "../utils/recipe"
 import { Icon } from "./Icon"
 
 interface IngredientCheckboxProps {
@@ -97,8 +97,10 @@ export function IngredientCheckbox({
   note,
   className = "",
 }: IngredientCheckboxProps) {
-  const storageKey = `recipe-${recipeId}-ingredient-${ingredientIndex}`
-  const [isChecked, setIsChecked] = useSessionStorage(storageKey, false)
+  const [isChecked, setIsChecked] = useSessionStorage(
+    ingredientStorageKey(recipeId, ingredientIndex),
+    false
+  )
   const posthog = usePostHog()
 
   const handleToggle = useCallback(() => {
@@ -120,12 +122,6 @@ export function IngredientCheckbox({
         type="button"
         className="flex w-full cursor-pointer items-baseline gap-3 py-3 text-left transition-colors hover:text-gray-200"
         onClick={handleToggle}
-        onKeyDown={e => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault()
-            handleToggle()
-          }
-        }}
         aria-label={`${ingredient}${isChecked ? ", checked" : ""}`}
       >
         <span

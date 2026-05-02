@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { formatQuantity, formatTime, mealieRecipeUrl, recipeImageUrl } from "./recipe"
+import { formatQuantity, formatTime, groupByTitle, mealieRecipeUrl, recipeImageUrl } from "./recipe"
 
 describe("mealieRecipeUrl", () => {
   it("returns the full Mealie recipe URL for a valid slug and group slug", () => {
@@ -110,6 +110,59 @@ describe("formatTime", () => {
 
   it("formats single minute", () => {
     expect(formatTime("PT1M")).toBe("1m")
+  })
+})
+
+describe("groupByTitle", () => {
+  it("returns a single group with no title when all items have no title", () => {
+    const items = [{ title: null }, { title: null }]
+    const result = groupByTitle(items)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBeNull()
+    expect(result[0].items).toHaveLength(2)
+  })
+
+  it("returns an empty array for an empty input", () => {
+    expect(groupByTitle([])).toHaveLength(0)
+  })
+
+  it("splits items into groups based on title markers", () => {
+    const items = [
+      { title: "Section A" },
+      { title: null },
+      { title: null },
+      { title: "Section B" },
+      { title: null },
+    ]
+    const result = groupByTitle(items)
+    expect(result).toHaveLength(2)
+    expect(result[0].title).toBe("Section A")
+    expect(result[0].items).toHaveLength(2)
+    expect(result[1].title).toBe("Section B")
+    expect(result[1].items).toHaveLength(1)
+  })
+
+  it("preserves the original index of each item", () => {
+    const items = [{ title: null }, { title: null }, { title: null }]
+    const result = groupByTitle(items)
+    expect(result[0].items[0].index).toBe(0)
+    expect(result[0].items[1].index).toBe(1)
+    expect(result[0].items[2].index).toBe(2)
+  })
+
+  it("does not include title-marker items in the items array", () => {
+    const items = [{ title: "Header" }, { title: null, name: "item" }]
+    const result = groupByTitle(items)
+    expect(result[0].items).toHaveLength(1)
+    expect(result[0].items[0].item).toEqual({ title: null, name: "item" })
+  })
+
+  it("handles a title with no following items", () => {
+    const items = [{ title: "Lonely section" }]
+    const result = groupByTitle(items)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe("Lonely section")
+    expect(result[0].items).toHaveLength(0)
   })
 })
 

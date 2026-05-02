@@ -3,6 +3,7 @@ import { usePostHog } from "@posthog/react"
 import { useCallback } from "react"
 import type { RecipeStep } from "../api/generated/types.gen"
 import { useSessionStorage } from "../hooks/useSessionStorage"
+import { stepStorageKey } from "../utils/recipe"
 import { Icon } from "./Icon"
 
 interface InstructionStepProps {
@@ -13,8 +14,7 @@ interface InstructionStepProps {
 }
 
 export function InstructionStep({ step, index, recipeId, className = "" }: InstructionStepProps) {
-  const storageKey = `recipe-${recipeId}-step-${index}`
-  const [isChecked, setIsChecked] = useSessionStorage(storageKey, false)
+  const [isChecked, setIsChecked] = useSessionStorage(stepStorageKey(recipeId, index), false)
   const posthog = usePostHog()
 
   const handleToggle = useCallback(() => {
@@ -34,12 +34,6 @@ export function InstructionStep({ step, index, recipeId, className = "" }: Instr
         type="button"
         className="flex w-full cursor-pointer items-baseline gap-3 py-3 text-left transition-colors hover:text-gray-200"
         onClick={handleToggle}
-        onKeyDown={e => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault()
-            handleToggle()
-          }
-        }}
         aria-label={`Step ${stepNumber}${isChecked ? ", completed" : ""}`}
       >
         <span
