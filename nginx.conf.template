@@ -7,15 +7,12 @@ server {
 
     server_tokens off;
 
-    # Using a variable for proxy_pass causes nginx to resolve the hostname at
-    # request time rather than startup, so the container starts cleanly even if
-    # Mealie is temporarily down. Docker's embedded DNS is at 127.0.0.11.
-    resolver 127.0.0.11 8.8.8.8 valid=30s ipv6=off;
     set $mealie "${MEALIE_INTERNAL_URL}";
     set $posthog_assets "https://eu-assets.i.posthog.com";
     set $posthog "https://eu.i.posthog.com";
 
     location /ingest/static {
+        resolver 8.8.8.8 1.1.1.1 valid=60s ipv6=off;
         rewrite ^/ingest(/.*)$ $1 break;
         proxy_pass $posthog_assets;
         proxy_ssl_server_name on;
@@ -23,6 +20,7 @@ server {
     }
 
     location /ingest/array {
+        resolver 8.8.8.8 1.1.1.1 valid=60s ipv6=off;
         rewrite ^/ingest(/.*)$ $1 break;
         proxy_pass $posthog_assets;
         proxy_ssl_server_name on;
@@ -30,6 +28,7 @@ server {
     }
 
     location /ingest {
+        resolver 8.8.8.8 1.1.1.1 valid=60s ipv6=off;
         rewrite ^/ingest(/.*)$ $1 break;
         proxy_pass $posthog;
         proxy_ssl_server_name on;
@@ -37,6 +36,7 @@ server {
     }
 
     location ~ ^/api/recipes(/.*)?$ {
+        resolver 127.0.0.11 valid=10s ipv6=off;
         if ($request_method != GET) {
             return 405;
         }
@@ -45,6 +45,7 @@ server {
     }
 
     location = /api/users/self {
+        resolver 127.0.0.11 valid=10s ipv6=off;
         if ($request_method != GET) {
             return 405;
         }
@@ -53,6 +54,7 @@ server {
     }
 
     location ~ ^/api/media/recipes/ {
+        resolver 127.0.0.11 valid=10s ipv6=off;
         if ($request_method != GET) {
             return 405;
         }
