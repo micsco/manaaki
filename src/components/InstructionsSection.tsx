@@ -6,7 +6,6 @@ import { CookModeToggle } from "./CookModeToggle"
 import { Icon } from "./Icon"
 import { InstructionSectionHeader } from "./InstructionSectionHeader"
 import { InstructionStep } from "./InstructionStep"
-import { PullDownPhoto } from "./PullDownPhoto"
 
 interface StepGroup {
   title: string | null
@@ -52,7 +51,15 @@ export function InstructionsSection({
   if (isCookMode) {
     return (
       <section className="overflow-y-auto px-4 py-6 lg:pl-10">
-        {img && <PullDownPhoto src={img} alt="" isOpen={photoOpen} />}
+        {img && photoOpen && (
+          <img
+            src={img}
+            alt=""
+            className="mb-4 w-full"
+            style={{ maxHeight: "90vh", objectFit: "contain" }}
+            draggable={false}
+          />
+        )}
         <div className="mb-6 flex items-center justify-between">
           <h2 className="font-sans font-semibold text-gray-500 text-xs uppercase tracking-widest">
             Method
