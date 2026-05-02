@@ -15,6 +15,14 @@ export function decodeRecipeId(encoded: string): string {
   return uuidStringify(new Uint8Array(Array.from(atob(padded), c => c.charCodeAt(0))))
 }
 
+export function tryDecodeRecipeId(encoded: string): string | null {
+  try {
+    return decodeRecipeId(encoded)
+  } catch {
+    return null
+  }
+}
+
 export function recipeUrl(id: string, slug: string): string {
   return `/recipes/${encodeRecipeId(id)}/${slug}`
 }
