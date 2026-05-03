@@ -44,6 +44,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       tsconfigPaths: true,
     },
+
     plugins: [
       tanstackStart({
         prerender: { enabled: false },

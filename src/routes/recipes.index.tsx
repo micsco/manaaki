@@ -1,11 +1,10 @@
-import { mdiStarCircleOutline, mdiTimerOutline } from "@mdi/js"
 import { usePostHog } from "@posthog/react"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
 import type { RecipeSummary } from "../api/generated/types.gen"
-import { Icon } from "../components/Icon"
-import { Badge, Card } from "../components/ui"
+import { RecipeCardMeta } from "../components/RecipeCardMeta"
+import { Card } from "../components/ui"
 import { recipeListQueryOptions } from "../hooks/useRecipeList"
 import { recipeImageUrl, recipeUrl } from "../utils/recipe"
 
@@ -53,33 +52,14 @@ function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
         >
           <RecipeImage recipe={recipe} />
           <div className="p-4">
-            <h3 className="mb-2 line-clamp-2 font-semibold text-gray-100 text-lg">{recipe.name}</h3>
-            {recipe.description && (
-              <p className="mb-3 line-clamp-2 text-gray-400 text-sm">{recipe.description}</p>
-            )}
-            <div className="flex items-center gap-3 text-gray-500 text-sm">
-              {recipe.totalTime && (
-                <Badge variant="tag" className="flex items-center gap-1">
-                  <Icon path={mdiTimerOutline} size={0.55} aria-hidden={true} />
-                  {recipe.totalTime}
-                </Badge>
-              )}
-              {recipe.rating != null && (
-                <Badge variant="rating" className="flex items-center gap-1">
-                  <Icon path={mdiStarCircleOutline} size={0.55} aria-hidden={true} />
-                  {recipe.rating.toFixed(1)}
-                </Badge>
-              )}
-            </div>
+            <h3 className="mb-3 line-clamp-2 font-semibold text-gray-100 text-lg">{recipe.name}</h3>
+            <RecipeCardMeta recipe={recipe} />
           </div>
         </Link>
       ) : (
         <div className="p-4">
-          <h3 className="mb-2 line-clamp-2 font-semibold text-gray-100 text-lg">{recipe.name}</h3>
-          {recipe.description && (
-            <p className="mb-3 line-clamp-2 text-gray-400 text-sm">{recipe.description}</p>
-          )}
-          <p className="text-gray-500 text-sm">No slug available</p>
+          <h3 className="mb-3 line-clamp-2 font-semibold text-gray-100 text-lg">{recipe.name}</h3>
+          <RecipeCardMeta recipe={recipe} />
         </div>
       )}
     </Card>

@@ -65,6 +65,13 @@ npx skills update vercel-labs/agent-skills --yes
 | Run e2e tests         | `pnpm test:e2e`          |
 | Regenerate API client | `pnpm generate`          |
 
+## Route File Constraints
+
+Route files in `src/routes/` are processed by TanStack Router's SSR module runner. Two hard rules:
+
+- **Only export `Route`** from a route file. Any other named export causes the module runner to re-evaluate the file in an SSR context, which breaks CJS-packaged dependencies (e.g. `@mdi/react`) with a misleading "Named export not found" error. Extract shared components into `src/components/` instead.
+- **Prefix test files with `-`** (e.g. `-recipes.index.test.tsx`) so the router ignores them. Files without this prefix that don't export `Route` will trigger a warning and be excluded from the route tree anyway, but the `-` prefix is explicit and avoids the warning.
+
 ## Tests
 
 **Every code change must include tests.** This is non-negotiable.

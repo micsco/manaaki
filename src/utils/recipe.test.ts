@@ -92,24 +92,48 @@ describe("formatTime", () => {
     expect(formatTime("")).toBeNull()
   })
 
-  it("formats minutes only", () => {
-    expect(formatTime("PT30M")).toBe("30m")
+  it("returns null for the literal string 'none'", () => {
+    expect(formatTime("none")).toBeNull()
   })
 
-  it("formats hours only", () => {
-    expect(formatTime("PT1H")).toBe("1h")
+  it("compacts minutes-only string", () => {
+    expect(formatTime("30 minutes")).toBe("30m")
   })
 
-  it("formats hours and minutes", () => {
-    expect(formatTime("PT1H30M")).toBe("1h 30m")
+  it("compacts abbreviated minutes", () => {
+    expect(formatTime("15 mins")).toBe("15m")
   })
 
-  it("formats multi-hour durations", () => {
-    expect(formatTime("PT2H15M")).toBe("2h 15m")
+  it("compacts single minute", () => {
+    expect(formatTime("2 minutes")).toBe("2m")
   })
 
-  it("formats single minute", () => {
-    expect(formatTime("PT1M")).toBe("1m")
+  it("compacts hours-only string", () => {
+    expect(formatTime("1 hour")).toBe("1h")
+  })
+
+  it("compacts plural hours", () => {
+    expect(formatTime("8 hours")).toBe("8h")
+  })
+
+  it("compacts hours and minutes", () => {
+    expect(formatTime("1 hour 15 minutes")).toBe("1h 15m")
+  })
+
+  it("compacts hours and abbreviated minutes", () => {
+    expect(formatTime("2 hours 5 minutes")).toBe("2h 5m")
+  })
+
+  it("compacts long durations", () => {
+    expect(formatTime("8 hours 25 minutes")).toBe("8h 25m")
+  })
+
+  it("returns freeform strings as-is when pattern is unrecognised", () => {
+    expect(formatTime("10 mins, plus 2 hrs marinating")).toBe("10 mins, plus 2 hrs marinating")
+  })
+
+  it("returns strings with extra context as-is", () => {
+    expect(formatTime("15 mins, plus chilling")).toBe("15 mins, plus chilling")
   })
 })
 

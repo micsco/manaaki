@@ -46,10 +46,15 @@ export function recipeImageUrl(
   return cacheKey && typeof cacheKey === "string" ? `${base}?v=${cacheKey}` : base
 }
 
-// ISO 8601 duration — e.g. "PT1H30M" → "1h 30m"
 export function formatTime(t: string | null | undefined): string | null {
-  if (!t) return null
-  return t.replace("PT", "").replace("H", "h ").replace("M", "m").trim()
+  if (!t || t.toLowerCase() === "none") return null
+  const hoursMinutes = t.match(/^(\d+)\s+hours?\s+(\d+)\s+mins?(?:utes?)?$/)
+  if (hoursMinutes) return `${hoursMinutes[1]}h ${hoursMinutes[2]}m`
+  const hours = t.match(/^(\d+)\s+hours?$/)
+  if (hours) return `${hours[1]}h`
+  const minutes = t.match(/^(\d+)\s+mins?(?:utes?)?$/)
+  if (minutes) return `${minutes[1]}m`
+  return t
 }
 
 export function stepStorageKey(recipeId: string, index: number): string {
