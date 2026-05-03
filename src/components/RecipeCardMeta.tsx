@@ -30,18 +30,16 @@ export function RecipeCardInfoBadges({ recipe }: { recipe: RecipeSummary }) {
   const time = formatTime(recipe.totalTime)
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      {time && (
-        <Badge variant="overlay" className="flex items-center gap-1">
-          <Icon path={mdiTimerOutline} size={0.55} aria-hidden={true} />
-          {time}
-        </Badge>
-      )}
-      {recipe.rating != null && (
-        <Badge variant="overlay" className="flex items-center">
-          <StarRating rating={recipe.rating} />
-        </Badge>
-      )}
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-1.5">
+        {time && (
+          <Badge variant="overlay" className="flex items-center gap-1">
+            <Icon path={mdiTimerOutline} size={0.55} aria-hidden={true} />
+            {time}
+          </Badge>
+        )}
+      </div>
+      {recipe.rating != null && <StarRating rating={recipe.rating} />}
     </div>
   )
 }

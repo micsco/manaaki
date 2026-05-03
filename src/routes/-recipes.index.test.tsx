@@ -55,8 +55,9 @@ describe("RecipeCardInfoBadges", () => {
   })
 
   it("renders nothing visible when all fields are absent", () => {
-    const { container } = render(<RecipeCardInfoBadges recipe={baseRecipe} />)
-    expect(container.firstElementChild?.children.length).toBe(0)
+    render(<RecipeCardInfoBadges recipe={baseRecipe} />)
+    expect(screen.queryByRole("img")).not.toBeInTheDocument()
+    expect(screen.queryByText(/m$/)).not.toBeInTheDocument()
   })
 
   it("does not render the recipe description", () => {
