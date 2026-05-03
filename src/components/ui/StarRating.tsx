@@ -18,14 +18,14 @@ function buildStars(rating: number, max: number): StarType[] {
   })
 }
 
-export function StarRating({ rating, max = 5, size = 0.6, className = "" }: StarRatingProps) {
+export function StarRating({ rating, max = 5, size = 0.75, className = "" }: StarRatingProps) {
   const stars = buildStars(rating, max)
 
   return (
     <span
       role="img"
       aria-label={`${rating} out of ${max} stars`}
-      className={`flex items-center gap-px leading-none ${className}`}
+      className={`flex items-center gap-px ${className}`}
     >
       {stars.map(star => (
         <Icon
