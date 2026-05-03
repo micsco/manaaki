@@ -14,7 +14,7 @@ Load this skill when:
 
 ## Architecture overview
 
-What's Cookin' is a pure SPA (no Node server). To avoid exposing the Mealie API
+Manaaki is a pure SPA (no Node server). To avoid exposing the Mealie API
 token in the JavaScript bundle, **nginx acts as a backend proxy** that:
 
 1. Receives `/api/*` requests from the browser
@@ -26,7 +26,7 @@ token in the JavaScript bundle, **nginx acts as a backend proxy** that:
 Browser
   │  GET /api/recipes   (no Authorization header)
   ▼
-nginx (What's Cookin' container, port 80)
+nginx (Manaaki container, port 80)
   │  GET /api/recipes
   │  Authorization: Bearer <token>   ← added by nginx, from MEALIE_API_TOKEN env var
   ▼
@@ -120,12 +120,12 @@ Vite's proxy forwards `/api/*` to `MEALIE_INTERNAL_URL` and injects the
 ### Network setup (required for internal routing)
 
 Mealie runs as an isolated compose service (`scottfamilynz-mealie-cvtizz`).
-To allow the What's Cookin' nginx container to reach it without going via the
+To allow the Manaaki nginx container to reach it without going via the
 public internet:
 
-1. In Dokploy → What's Cookin' → **Advanced → Network (Swarm)**  
+1. In Dokploy → Manaaki → **Advanced → Network (Swarm)**  
    Add network: `scottfamilynz-mealie-cvtizz_default`  
-   (This joins the What's Cookin' container to Mealie's Docker network.)
+   (This joins the Manaaki container to Mealie's Docker network.)
 
 2. Set `MEALIE_INTERNAL_URL` to the container hostname:  
    `http://scottfamilynz-mealie-cvtizz-mealie-1:9000`  
@@ -134,7 +134,7 @@ public internet:
 
 ### Environment variables in Dokploy
 
-In Dokploy → What's Cookin' → **Environment**:
+In Dokploy → Manaaki → **Environment**:
 
 ```env
 MEALIE_API_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...

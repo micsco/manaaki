@@ -1,7 +1,7 @@
 {
-  "name": "whats-cookin",
+  "name": "manaaki",
   "version": "1.0.0",
-  "description": "",
+  "description": "An alternative frontend for Mealie — the self-hosted recipe manager.",
   "main": "index.js",
   "scripts": {
     "dev": "vite dev",

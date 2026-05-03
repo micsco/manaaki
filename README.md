@@ -1,4 +1,6 @@
-# What's Cookin'
+# Manaaki
+
+*Manaaki* (mah-NAH-kee) — in te reo Māori, the act of caring for someone through hospitality. The kind of love that gets expressed by feeding people well. As a Kiwi cooking for the people I love from the other side of the world, it felt like the right name for the kitchen I keep on my phone. It's also a gentle echo of Mealie, the backend it's built on.
 
 An alternative frontend for [Mealie](https://mealie.io), the self-hosted recipe manager.
 
@@ -22,7 +24,7 @@ pnpm install
 
 # 2. Configure your environment
 cp .env.example .env
-# Edit .env — set VITE_MEALIE_BASE_URL and VITE_MEALIE_API_TOKEN
+# Edit .env — set MEALIE_INTERNAL_URL and MEALIE_API_TOKEN
 
 # 3. Start the dev server
 pnpm dev
@@ -34,31 +36,37 @@ The app runs at `http://localhost:3000`. Vite automatically proxies all `/api` r
 
 ## Environment variables
 
-| Variable                | Required | Description                                                     |
-| ----------------------- | -------- | --------------------------------------------------------------- |
-| `VITE_MEALIE_BASE_URL`  | Yes      | URL of your Mealie instance. Used by the Vite dev server proxy. |
-| `VITE_MEALIE_API_TOKEN` | Yes      | Long-lived API token from your Mealie profile.                  |
+| Variable               | Required | Description                                                     |
+| ---------------------- | -------- | --------------------------------------------------------------- |
+| `MEALIE_API_TOKEN`     | Yes      | Long-lived Mealie API token — stays server-side only            |
+| `MEALIE_INTERNAL_URL`  | Yes      | Docker-internal URL for Mealie (e.g. `http://mealie:9000`)      |
 
-Both variables are baked into the JS bundle at build time by Vite. Do not commit your `.env` file.
+The token is never included in the JS bundle. In development the Vite proxy injects it; in production nginx handles it. See [API proxy architecture](#api-proxy-architecture) below.
 
 ### Generating an API token
 
 1. Open your Mealie instance and sign in
 2. Click your avatar → **Profile**
 3. Scroll to **API Tokens** → **Generate**
-4. Copy the token into `VITE_MEALIE_API_TOKEN` in your `.env`
+4. Copy the token into `MEALIE_API_TOKEN` in your `.env`
 
 ---
 
 ## How requests work
 
-All API calls use relative `/api/...` paths. In development these are proxied by Vite to `VITE_MEALIE_BASE_URL`. In production they are handled by your reverse proxy. The API token is attached as a `Bearer` header on every request.
+All API calls use relative `/api/...` paths. In development these are proxied by Vite to `MEALIE_INTERNAL_URL` with the token injected server-side. In production nginx handles both routing and auth.
 
 ```
 Browser → /api/recipes
-  [dev]  → Vite proxy → http://your-mealie:9000/api/recipes
-  [prod] → nginx/Caddy → http://mealie:9000/api/recipes
+  [dev]  → Vite proxy → http://your-mealie:9000/api/recipes  (token injected)
+  [prod] → nginx       → http://mealie:9000/api/recipes       (token injected)
 ```
+
+---
+
+## API proxy architecture
+
+The Mealie API token lives **only on the server** — it is never in the JS bundle. nginx (inside the container) acts as a reverse proxy: it adds the `Authorization: Bearer` header to `/api/*` requests and only exposes a GET-only allowlist of Mealie endpoints.
 
 ---
 
@@ -72,7 +80,7 @@ pnpm build   # outputs to dist/
 
 The build output is a static SPA — just a `/_shell.html` and assets. You need a reverse proxy that:
 
-1. Forwards `/api/*` to your Mealie instance
+1. Forwards `/api/*` to your Mealie instance (with auth header)
 2. Falls back to `/_shell.html` for everything else
 
 **nginx**
@@ -83,6 +91,7 @@ server {
 
     location /api/ {
         proxy_pass http://mealie:9000/api/;
+        proxy_set_header Authorization "Bearer $MEALIE_API_TOKEN";
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
@@ -108,14 +117,6 @@ recipes.example.com {
         file_server
     }
 }
-```
-
-**Netlify**
-
-```
-# public/_redirects
-/api/*  https://mealie.example.com/api/:splat  200
-/*      /_shell.html                            200
 ```
 
 ---

@@ -1,7 +1,7 @@
 # React Testing
 
 **Version 1.0.0**
-What's Cookin'
+Manaaki
 May 2026
 
 > **Note:**

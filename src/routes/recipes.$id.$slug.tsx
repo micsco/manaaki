@@ -28,7 +28,7 @@ async function loader({ params }: { params: { id: string; slug: string } }): Pro
 
 export const Route = createFileRoute("/recipes/$id/$slug")({
   head: ({ loaderData }) => ({
-    meta: [{ title: `${loaderData?.name ?? "Recipe"} · What's Cookin'` }],
+    meta: [{ title: `${loaderData?.name ?? "Recipe"} · Manaaki` }],
   }),
   loader,
   component: RecipeDetail,

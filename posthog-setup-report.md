@@ -1,7 +1,7 @@
 <wizard-report>
 # PostHog post-wizard report
 
-The wizard has completed a deep integration of PostHog analytics into What's Cookin'. PostHog is now initialized via `PostHogProvider` in the root route, wrapping the entire app so all routes and components have access. A reverse proxy for EU PostHog ingestion was added to `vite.config.ts`. Environment variables are stored in `.env`. Ten custom events are now tracked across seven files, covering the full recipe browsing and cooking journey — from clicking a recipe card through to checking off ingredients and completing cooking steps.
+The wizard has completed a deep integration of PostHog analytics into Manaaki. PostHog is now initialized via `PostHogProvider` in the root route, wrapping the entire app so all routes and components have access. A reverse proxy for EU PostHog ingestion was added to `vite.config.ts`. Environment variables are stored in `.env`. Ten custom events are now tracked across seven files, covering the full recipe browsing and cooking journey — from clicking a recipe card through to checking off ingredients and completing cooking steps.
 
 | Event | Description | File |
 |-------|-------------|------|

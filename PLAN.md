@@ -1,4 +1,4 @@
-# What's Cookin' — Project Plan
+# Manaaki — Project Plan
 
 An alternative, modern frontend for [Mealie](https://mealie.io) — the self-hosted recipe manager.
 
@@ -6,7 +6,7 @@ An alternative, modern frontend for [Mealie](https://mealie.io) — the self-hos
 
 ## Vision
 
-Mealie is a great tool, but its built-in frontend can feel slow and dated. What's Cookin' aims to
+Mealie is a great tool, but its built-in frontend can feel slow and dated. Manaaki aims to
 deliver a fast, opinionated, client-side UI for Mealie instances, with a focus on:
 
 - **Speed** — near-instant navigation via TanStack Router's preloading

@@ -1,4 +1,4 @@
-# What's Cookin' — Agent Notes
+# Manaaki — Agent Notes
 
 ## Project
 

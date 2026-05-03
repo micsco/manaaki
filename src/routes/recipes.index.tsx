@@ -10,7 +10,7 @@ import { recipeImageUrl, recipeUrl } from "../utils/recipe"
 
 export const Route = createFileRoute("/recipes/")({
   head: () => ({
-    meta: [{ title: "Recipes · What's Cookin'" }],
+    meta: [{ title: "Recipes · Manaaki" }],
   }),
   loader: ({ context: { queryClient } }) =>
     void queryClient.ensureQueryData(recipeListQueryOptions),

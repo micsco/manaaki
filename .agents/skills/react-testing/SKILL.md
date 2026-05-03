@@ -3,7 +3,7 @@ name: react-testing
 description: Testing strategy for React + Vite apps using Vitest, React Testing Library, and Playwright. Use when writing unit tests, component render tests, hook tests, or E2E tests. Covers query strategy, user interaction patterns, mocking, and Playwright E2E with TypeScript. Adapted from Kent C. Dodds' RTL best practices and the official Testing Library docs.
 license: MIT
 metadata:
-  author: whats-cookin
+  author: manaaki
   version: "1.0.0"
 ---
 
