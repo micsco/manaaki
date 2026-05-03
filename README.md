@@ -1,6 +1,6 @@
 # Manaaki
 
-*Manaaki* (mah-NAH-kee) — in te reo Māori, the act of caring for someone through hospitality. The kind of love that gets expressed by feeding people well. As a Kiwi cooking for the people I love from the other side of the world, it felt like the right name for the kitchen I keep on my phone. It's also a gentle echo of Mealie, the backend it's built on.
+*Manaaki* (mah-NAH-kee) — to support, take care of, give hospitality to, protect, look out for; to show respect, generosity and care for others. It felt like the right word for an app about cooking for the people you love.
 
 An alternative frontend for [Mealie](https://mealie.io), the self-hosted recipe manager.
 
@@ -147,3 +147,11 @@ src/
 ```
 
 See [`PLAN.md`](./PLAN.md) for the full architecture notes and roadmap.
+
+---
+
+### A note on the name
+
+*Manaaki* is a word from te reo Māori, the indigenous language of Aotearoa New Zealand and a *taonga* (treasure) of the Māori people. As a Pākehā New Zealander living abroad, I've chosen this name with care and respect — not as ownership, but as a way of carrying something of home into the kitchen, and because the concept of *manaakitanga* genuinely captures what cooking for loved ones means to me.
+
+This app is open source and non-commercial, and will remain so. If you'd like to learn more about te reo Māori and the concept of manaakitanga from Māori sources, I'd recommend [Te Aka Māori Dictionary](https://maoridictionary.co.nz/word/3425) and [Te Taura Whiri i te Reo Māori](https://tetaurawhiri.govt.nz/).
