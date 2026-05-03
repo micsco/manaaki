@@ -1,8 +1,8 @@
-import { mdiPotSteam, mdiStarCircleOutline, mdiTimerOutline, mdiToasterOven } from "@mdi/js"
+import { mdiPotSteam, mdiTimerOutline, mdiToasterOven } from "@mdi/js"
 import type { RecipeSummary } from "../api/generated/types.gen"
 import { formatTime } from "../utils/recipe"
 import { Icon } from "./Icon"
-import { Badge } from "./ui"
+import { Badge, StarRating } from "./ui"
 
 type ToolBadge = {
   key: string
@@ -38,9 +38,8 @@ export function RecipeCardInfoBadges({ recipe }: { recipe: RecipeSummary }) {
         </Badge>
       )}
       {recipe.rating != null && (
-        <Badge variant="overlay" className="flex items-center gap-1">
-          <Icon path={mdiStarCircleOutline} size={0.55} aria-hidden={true} />
-          {recipe.rating.toFixed(1)}
+        <Badge variant="overlay" className="flex items-center">
+          <StarRating rating={recipe.rating} />
         </Badge>
       )}
     </div>

@@ -44,14 +44,14 @@ describe("RecipeCardInfoBadges", () => {
     expect(screen.queryByText(/serving/)).not.toBeInTheDocument()
   })
 
-  it("shows rating when present", () => {
+  it("shows star rating when present", () => {
     render(<RecipeCardInfoBadges recipe={{ ...baseRecipe, rating: 5 }} />)
-    expect(screen.getByText("5.0")).toBeInTheDocument()
+    expect(screen.getByLabelText("5 out of 5 stars")).toBeInTheDocument()
   })
 
   it("does not show rating when rating is null", () => {
     render(<RecipeCardInfoBadges recipe={{ ...baseRecipe, rating: null }} />)
-    expect(screen.queryByText(/\d\.\d/)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/out of 5 stars/)).not.toBeInTheDocument()
   })
 
   it("renders nothing visible when all fields are absent", () => {
