@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
 import type { RecipeSummary } from "../api/generated/types.gen"
-import { RecipeCardMeta } from "../components/RecipeCardMeta"
+import { RecipeCardInfoBadges, RecipeCardToolBadges } from "../components/RecipeCardMeta"
 import { Card } from "../components/ui"
 import { recipeListQueryOptions } from "../hooks/useRecipeList"
 import { recipeImageUrl, recipeUrl } from "../utils/recipe"
@@ -20,15 +20,27 @@ export const Route = createFileRoute("/recipes/")({
 function RecipeImage({ recipe }: { recipe: RecipeSummary }) {
   const [failed, setFailed] = useState(false)
   const img = recipeImageUrl(recipe.id, "min-original", recipe.image)
-  if (!img || failed) return <div className="h-48 w-full bg-gray-800" aria-hidden="true" />
+
   return (
-    <img
-      src={img}
-      alt={recipe.name ?? ""}
-      className="h-48 w-full object-cover"
-      loading="lazy"
-      onError={() => setFailed(true)}
-    />
+    <div className="relative h-48 w-full">
+      {img && !failed ? (
+        <img
+          src={img}
+          alt={recipe.name ?? ""}
+          className="h-full w-full object-cover"
+          loading="lazy"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <div className="h-full w-full bg-gray-800" aria-hidden="true" />
+      )}
+      <div className="absolute top-0 right-0 p-2">
+        <RecipeCardToolBadges recipe={recipe} />
+      </div>
+      <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/70 to-transparent px-3 pt-6 pb-2">
+        <RecipeCardInfoBadges recipe={recipe} />
+      </div>
+    </div>
   )
 }
 
@@ -52,14 +64,12 @@ function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
         >
           <RecipeImage recipe={recipe} />
           <div className="p-4">
-            <h3 className="mb-3 line-clamp-2 font-semibold text-gray-100 text-lg">{recipe.name}</h3>
-            <RecipeCardMeta recipe={recipe} />
+            <h3 className="line-clamp-2 font-semibold text-gray-100 text-lg">{recipe.name}</h3>
           </div>
         </Link>
       ) : (
         <div className="p-4">
-          <h3 className="mb-3 line-clamp-2 font-semibold text-gray-100 text-lg">{recipe.name}</h3>
-          <RecipeCardMeta recipe={recipe} />
+          <h3 className="line-clamp-2 font-semibold text-gray-100 text-lg">{recipe.name}</h3>
         </div>
       )}
     </Card>

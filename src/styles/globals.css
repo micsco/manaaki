@@ -32,7 +32,7 @@ body {
 @layer components {
 	/* Recipe card styles */
 	.recipe-card {
-		@apply block rounded-lg border border-card-border bg-card hover:bg-card-hover transition-all duration-200 hover:shadow-lg hover:shadow-orange-900/20 hover:-translate-y-1;
+		@apply block rounded-lg border border-card-border bg-card hover:bg-card-hover transition-all duration-200 hover:shadow-lg hover:-translate-y-1;
 	}
 
 	.recipe-card__placeholder {
