@@ -18,12 +18,16 @@ ENV VITE_PUBLIC_POSTHOG_HOST=$VITE_PUBLIC_POSTHOG_HOST
 COPY . .
 RUN pnpm build
 
-# Inject chunkIds + upload source maps to PostHog. Skipped automatically when
-# POSTHOG_CLI_API_KEY isn't provided (e.g. local builds), so dev still works.
-ARG POSTHOG_CLI_API_KEY
+# Inject chunkIds + upload source maps to PostHog.
+# - POSTHOG_PROJECT_ID is a non-secret build arg (Dokploy: Build Args).
+# - POSTHOG_CLI_API_KEY comes via a BuildKit secret mount (Dokploy: Build Secrets),
+#   so the value never lands in image layers or ENV. required=false lets local
+#   `docker build` succeed without the secret — the step then no-ops.
 ARG POSTHOG_PROJECT_ID
 ARG POSTHOG_HOST=https://eu.posthog.com
-RUN if [ -n "$POSTHOG_CLI_API_KEY" ] && [ -n "$POSTHOG_PROJECT_ID" ]; then \
+RUN --mount=type=secret,id=POSTHOG_CLI_API_KEY,required=false \
+    POSTHOG_CLI_API_KEY="$(cat /run/secrets/POSTHOG_CLI_API_KEY 2>/dev/null || true)"; \
+    if [ -n "$POSTHOG_CLI_API_KEY" ] && [ -n "$POSTHOG_PROJECT_ID" ]; then \
       GIT_SHA=$(git rev-parse HEAD 2>/dev/null || echo unknown); \
       echo "Uploading source maps to PostHog (release: $GIT_SHA)"; \
       POSTHOG_CLI_TOKEN="$POSTHOG_CLI_API_KEY" \
