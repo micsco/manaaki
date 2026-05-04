@@ -2,7 +2,7 @@
 
 FROM node:22-alpine AS build
 WORKDIR /app
-RUN corepack enable pnpm
+RUN corepack enable pnpm && apk add --no-cache git
 
 # Copy lockfile first so dependency layer is cached independently of source changes
 COPY package.json pnpm-lock.yaml ./
@@ -17,6 +17,28 @@ ENV VITE_PUBLIC_POSTHOG_HOST=$VITE_PUBLIC_POSTHOG_HOST
 
 COPY . .
 RUN pnpm build
+
+# Inject chunkIds + upload source maps to PostHog. Skipped automatically when
+# POSTHOG_CLI_API_KEY isn't provided (e.g. local builds), so dev still works.
+ARG POSTHOG_CLI_API_KEY
+ARG POSTHOG_PROJECT_ID
+ARG POSTHOG_HOST=https://eu.posthog.com
+RUN --mount=type=secret,id=posthog_cli_api_key,required=false \
+    if [ -n "$POSTHOG_CLI_API_KEY" ] && [ -n "$POSTHOG_PROJECT_ID" ]; then \
+      GIT_SHA=$(git rev-parse HEAD 2>/dev/null || echo unknown); \
+      echo "Uploading source maps to PostHog (release: $GIT_SHA)"; \
+      POSTHOG_CLI_TOKEN="$POSTHOG_CLI_API_KEY" \
+      pnpm dlx @posthog/cli@latest --host "$POSTHOG_HOST" \
+        sourcemap inject --directory dist/client && \
+      POSTHOG_CLI_TOKEN="$POSTHOG_CLI_API_KEY" \
+      pnpm dlx @posthog/cli@latest --host "$POSTHOG_HOST" \
+        sourcemap upload --directory dist/client \
+        --project-id "$POSTHOG_PROJECT_ID" \
+        --release-name manaaki \
+        --release-version "$GIT_SHA"; \
+    else \
+      echo "Skipping PostHog source map upload (POSTHOG_CLI_API_KEY/POSTHOG_PROJECT_ID not set)"; \
+    fi
 
 FROM nginx:stable-alpine AS serve
 

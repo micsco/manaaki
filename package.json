@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "prepare": "prek install --hook-type pre-commit --hook-type pre-push",
     "preview": "vite preview",
     "generate": "openapi-ts",
     "check": "biome check src --files-max-size=1048576",

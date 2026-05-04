@@ -45,6 +45,10 @@ export default defineConfig(({ mode }) => {
       tsconfigPaths: true,
     },
 
+    build: {
+      sourcemap: true,
+    },
+
     plugins: [
       tanstackStart({
         prerender: { enabled: false },
