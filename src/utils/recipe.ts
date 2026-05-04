@@ -57,6 +57,17 @@ export function formatTime(t: string | null | undefined): string | null {
   return t
 }
 
+export function parseTimeMinutes(t: string | null | undefined): number | null {
+  if (!t || t.toLowerCase() === "none") return null
+  const hoursMinutes = t.match(/^(\d+)\s+hours?\s+(\d+)\s+mins?(?:utes?)?$/)
+  if (hoursMinutes) return Number(hoursMinutes[1]) * 60 + Number(hoursMinutes[2])
+  const hours = t.match(/^(\d+)\s+hours?$/)
+  if (hours) return Number(hours[1]) * 60
+  const minutes = t.match(/^(\d+)\s+mins?(?:utes?)?$/)
+  if (minutes) return Number(minutes[1])
+  return null
+}
+
 export function stepStorageKey(recipeId: string, index: number): string {
   return `recipe-${recipeId}-step-${index}`
 }

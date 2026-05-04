@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { formatQuantity, formatTime, groupByTitle, mealieRecipeUrl, recipeImageUrl } from "./recipe"
+import {
+  formatQuantity,
+  formatTime,
+  groupByTitle,
+  mealieRecipeUrl,
+  parseTimeMinutes,
+  recipeImageUrl,
+} from "./recipe"
 
 describe("mealieRecipeUrl", () => {
   it("returns the full Mealie recipe URL for a valid slug and group slug", () => {
@@ -187,6 +194,52 @@ describe("groupByTitle", () => {
     expect(result).toHaveLength(1)
     expect(result[0].title).toBe("Lonely section")
     expect(result[0].items).toHaveLength(0)
+  })
+})
+
+describe("parseTimeMinutes", () => {
+  it("returns null for null input", () => {
+    expect(parseTimeMinutes(null)).toBeNull()
+  })
+
+  it("returns null for undefined input", () => {
+    expect(parseTimeMinutes(undefined)).toBeNull()
+  })
+
+  it("returns null for empty string", () => {
+    expect(parseTimeMinutes("")).toBeNull()
+  })
+
+  it("returns null for the literal string 'none'", () => {
+    expect(parseTimeMinutes("none")).toBeNull()
+  })
+
+  it("returns null for unrecognised freeform strings", () => {
+    expect(parseTimeMinutes("10 mins, plus 2 hrs marinating")).toBeNull()
+  })
+
+  it("parses minutes-only string", () => {
+    expect(parseTimeMinutes("30 minutes")).toBe(30)
+  })
+
+  it("parses abbreviated minutes", () => {
+    expect(parseTimeMinutes("15 mins")).toBe(15)
+  })
+
+  it("parses hours-only string", () => {
+    expect(parseTimeMinutes("1 hour")).toBe(60)
+  })
+
+  it("parses plural hours", () => {
+    expect(parseTimeMinutes("2 hours")).toBe(120)
+  })
+
+  it("parses hours and minutes combined", () => {
+    expect(parseTimeMinutes("1 hour 15 minutes")).toBe(75)
+  })
+
+  it("parses hours and abbreviated minutes combined", () => {
+    expect(parseTimeMinutes("2 hours 30 mins")).toBe(150)
   })
 })
 

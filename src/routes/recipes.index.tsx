@@ -4,7 +4,10 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
 import type { RecipeSummary } from "../api/generated/types.gen"
 import { RecipeCardInfoBadges, RecipeCardToolBadges } from "../components/RecipeCardMeta"
+import { RecipeFilterDrawer } from "../components/RecipeFilterDrawer"
+import { QuickFilters, SearchBar } from "../components/RecipeFilters"
 import { Card } from "../components/ui"
+import { useRecipeFilters } from "../hooks/useRecipeFilters"
 import { recipeListQueryOptions } from "../hooks/useRecipeList"
 import { recipeImageUrl, recipeUrl } from "../utils/recipe"
 
@@ -79,21 +82,82 @@ function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
 function RecipeList() {
   const { data } = useQuery(recipeListQueryOptions)
   const recipes = data ?? []
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
+  const {
+    search,
+    setSearch,
+    proteins,
+    toggleProtein,
+    tools,
+    toggleTool,
+    time,
+    setTimeBucket,
+    activeFilterCount,
+    clearAll,
+    filtered,
+  } = useRecipeFilters(recipes)
+
+  const isFiltered = activeFilterCount > 0
 
   return (
     <main className="min-h-screen bg-gray-950">
       <div className="mx-auto max-w-7xl px-4 py-8">
-        <div className="mb-8">
-          <h1 className="mb-2 font-bold text-4xl text-gray-100">Recipes</h1>
-          <p className="text-gray-400 text-lg">{recipes.length} recipes</p>
+        <div className="mb-6">
+          <h1 className="mb-1 font-bold text-4xl text-gray-100">Recipes</h1>
+          <p className="text-gray-400 text-sm">
+            {isFiltered
+              ? `${filtered.length} of ${recipes.length} recipes`
+              : `${recipes.length} recipes`}
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {recipes.map(recipe => (
-            <RecipeCard key={recipe.id ?? recipe.slug} recipe={recipe} />
-          ))}
+        <div className="mb-4 space-y-3">
+          <SearchBar value={search} onChange={setSearch} />
+          <QuickFilters
+            proteins={proteins}
+            onToggleProtein={toggleProtein}
+            tools={tools}
+            onToggleTool={toggleTool}
+            time={time}
+            onSetTime={setTimeBucket}
+            activeFilterCount={activeFilterCount}
+            onOpenDrawer={() => setDrawerOpen(true)}
+          />
         </div>
+
+        {filtered.length === 0 && isFiltered ? (
+          <div className="flex flex-col items-center gap-4 py-20 text-center">
+            <p className="text-gray-400 text-lg">No recipes match your filters.</p>
+            <button
+              type="button"
+              onClick={clearAll}
+              className="text-orange-400 text-sm hover:text-orange-300 focus:underline focus:outline-none"
+            >
+              Clear all filters
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filtered.map(recipe => (
+              <RecipeCard key={recipe.id ?? recipe.slug} recipe={recipe} />
+            ))}
+          </div>
+        )}
       </div>
+
+      <RecipeFilterDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        proteins={proteins}
+        onToggleProtein={toggleProtein}
+        tools={tools}
+        onToggleTool={toggleTool}
+        time={time}
+        onSetTime={setTimeBucket}
+        activeFilterCount={activeFilterCount}
+        onClearAll={clearAll}
+      />
     </main>
   )
 }
