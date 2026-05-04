@@ -115,15 +115,37 @@ export function FilterBar({
   onOpenDrawer,
 }: FilterBarProps) {
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1">
-        <SearchBar value={search} onChange={onSearchChange} />
+    <div className="flex items-center rounded-full border border-gray-700 bg-gray-800 transition-colors focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
+      <div className="pointer-events-none flex shrink-0 items-center pl-4">
+        <Icon path={mdiMagnify} size={0.75} aria-hidden={true} className="text-gray-400" />
       </div>
-      <Button
-        variant="secondary"
-        size="sm"
+
+      <input
+        type="search"
+        value={search}
+        onChange={e => onSearchChange(e.target.value)}
+        placeholder="Search recipes…"
+        className="min-w-0 flex-1 bg-transparent py-3 pr-2 pl-3 text-gray-100 text-sm placeholder:text-gray-500 focus:outline-none"
+        aria-label="Search recipes"
+      />
+
+      {search && (
+        <button
+          type="button"
+          onClick={() => onSearchChange("")}
+          className="flex shrink-0 items-center px-2 text-gray-400 hover:text-gray-200"
+          aria-label="Clear search"
+        >
+          <Icon path={mdiClose} size={0.6} aria-hidden={true} />
+        </button>
+      )}
+
+      <div className="mx-1 h-5 w-px shrink-0 bg-gray-600" aria-hidden="true" />
+
+      <button
+        type="button"
         onClick={onOpenDrawer}
-        className="relative shrink-0 gap-1.5 rounded-full"
+        className="relative flex shrink-0 items-center gap-1.5 rounded-full py-3 pr-4 pl-3 font-medium text-gray-300 text-sm hover:text-gray-100 focus:outline-none"
         aria-label={activeFilterCount > 0 ? `Filters, ${activeFilterCount} active` : "Filters"}
       >
         <Icon path={mdiTune} size={0.65} aria-hidden={true} />
@@ -133,7 +155,7 @@ export function FilterBar({
             {activeFilterCount}
           </span>
         )}
-      </Button>
+      </button>
     </div>
   )
 }

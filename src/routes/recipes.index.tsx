@@ -98,6 +98,35 @@ function RecipeList() {
     filtered,
   } = useRecipeFilters(recipes)
 
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: "instant" })
+  }
+
+  function handleSearchChange(value: string) {
+    setSearch(value)
+    scrollToTop()
+  }
+
+  function handleToggleProtein(value: string) {
+    toggleProtein(value)
+    scrollToTop()
+  }
+
+  function handleToggleTool(value: string) {
+    toggleTool(value)
+    scrollToTop()
+  }
+
+  function handleSetTimeBucket(value: Parameters<typeof setTimeBucket>[0]) {
+    setTimeBucket(value)
+    scrollToTop()
+  }
+
+  function handleClearAll() {
+    clearAll()
+    scrollToTop()
+  }
+
   const isFiltered = activeFilterCount > 0
 
   return (
@@ -117,7 +146,7 @@ function RecipeList() {
             <p className="text-gray-400 text-lg">No recipes match your filters.</p>
             <button
               type="button"
-              onClick={clearAll}
+              onClick={handleClearAll}
               className="text-orange-400 text-sm hover:text-orange-300 focus:underline focus:outline-none"
             >
               Clear all filters
@@ -136,9 +165,9 @@ function RecipeList() {
         <div className="mx-auto max-w-7xl">
           <FilterPills
             proteins={proteins}
-            onToggleProtein={toggleProtein}
+            onToggleProtein={handleToggleProtein}
             tools={tools}
-            onToggleTool={toggleTool}
+            onToggleTool={handleToggleTool}
           />
         </div>
       </div>
@@ -154,7 +183,7 @@ function RecipeList() {
         <div className="mx-auto max-w-7xl px-4 py-3">
           <FilterBar
             search={search}
-            onSearchChange={setSearch}
+            onSearchChange={handleSearchChange}
             activeFilterCount={activeFilterCount}
             onOpenDrawer={() => setDrawerOpen(true)}
           />
@@ -165,13 +194,13 @@ function RecipeList() {
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         proteins={proteins}
-        onToggleProtein={toggleProtein}
+        onToggleProtein={handleToggleProtein}
         tools={tools}
-        onToggleTool={toggleTool}
+        onToggleTool={handleToggleTool}
         time={time}
-        onSetTime={setTimeBucket}
+        onSetTime={handleSetTimeBucket}
         activeFilterCount={activeFilterCount}
-        onClearAll={clearAll}
+        onClearAll={handleClearAll}
       />
     </main>
   )
