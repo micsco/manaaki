@@ -19,7 +19,7 @@ function FilterChip({ icon, label, active, onToggle }: FilterChipProps) {
         "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 font-medium text-sm transition-colors",
         "focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950",
         active
-          ? "border-orange-500 bg-orange-600/20 text-orange-300"
+          ? "border-orange-500 bg-orange-900 text-orange-300"
           : "border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-600 hover:bg-gray-700",
       ].join(" ")}
       aria-pressed={active}
