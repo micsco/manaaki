@@ -7,7 +7,7 @@ export function mealPlanQueryOptions(startDate: string, endDate: string) {
     queryKey: ["mealplan", startDate, endDate],
     queryFn: async (): Promise<ReadPlanEntry[]> => {
       const response = await getAllApiHouseholdsMealplansGet({
-        query: { start_date: startDate, end_date: endDate, perPage: 100 },
+        query: { start_date: startDate, end_date: endDate, perPage: 500 },
       })
       if (!response.data) throw new Error("Failed to load meal plan")
       return response.data.items.slice().sort((a, b) => a.date.localeCompare(b.date))
@@ -36,6 +36,15 @@ export function isoWeekBounds(weekOffset: number): { startDate: string; endDate:
     startDate: toIsoDateString(monday),
     endDate: toIsoDateString(sunday),
   }
+}
+
+export function multiWeekBounds(
+  startWeekOffset: number,
+  endWeekOffset: number
+): { startDate: string; endDate: string } {
+  const { startDate } = isoWeekBounds(startWeekOffset)
+  const { endDate } = isoWeekBounds(endWeekOffset)
+  return { startDate, endDate }
 }
 
 export function toIsoDateString(date: Date): string {
