@@ -1,8 +1,10 @@
+import { mdiPotSteam } from "@mdi/js"
 import { usePostHog } from "@posthog/react"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
 import type { RecipeSummary } from "../api/generated/types.gen"
+import { Icon } from "../components/Icon"
 import {
   RecipeCardInfoBadges,
   RecipeCardTimeBadge,
@@ -87,6 +89,16 @@ function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
   )
 }
 
+function RecipeListEndMarker() {
+  return (
+    <div className="col-span-full flex h-48 flex-col items-center justify-center gap-3">
+      <Icon path={mdiPotSteam} size={1.75} className="text-gray-700" aria-hidden={true} />
+      <p className="text-gray-600 text-sm">That's all the recipes</p>
+      <p className="text-gray-700 text-xs">All out of scroll. Time to decide.</p>
+    </div>
+  )
+}
+
 function RecipeList() {
   const { data } = useQuery(recipeListQueryOptions)
   const recipes = data ?? []
@@ -165,6 +177,7 @@ function RecipeList() {
             {filtered.map(recipe => (
               <RecipeCard key={recipe.id ?? recipe.slug} recipe={recipe} />
             ))}
+            <RecipeListEndMarker />
           </div>
         )}
       </div>
