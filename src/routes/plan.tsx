@@ -94,6 +94,7 @@ function WeekRow({
   todayIso: string
   todayRef?: React.RefObject<HTMLDivElement | null>
 }) {
+  const isCurrentWeek = weekOffset === 0
   const monday = weekMonday(weekOffset)
   const cells = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday)
@@ -107,24 +108,33 @@ function WeekRow({
     return { isoDate, isToday, byType }
   })
 
+  const weekBorderClass = isCurrentWeek
+    ? "border-orange-800/60 border-t-2"
+    : "border-gray-700/50 border-t"
+
   return (
-    <div className="mb-4">
-      <div className="sticky top-[93px] z-10 overflow-x-auto border-gray-800 border-b bg-gray-950/95 backdrop-blur-sm">
+    <div className={`mb-8 overflow-hidden rounded-sm ${weekBorderClass}`}>
+      <div
+        className={[
+          "sticky top-[93px] z-10 overflow-x-auto backdrop-blur-sm",
+          isCurrentWeek ? "bg-orange-950/20" : "bg-gray-900/60",
+        ].join(" ")}
+      >
         <div className="flex" style={{ minWidth: `${7 * 140}px` }}>
           {cells.map(({ isoDate, isToday }) => (
             <div
               key={isoDate}
               ref={isToday ? todayRef : undefined}
               className={[
-                "flex flex-1 items-center justify-center border-gray-800 border-r py-1.5 last:border-r-0",
+                "flex flex-1 items-center justify-center border-gray-800/50 border-r py-1.5 last:border-r-0",
                 CELL_MIN_W,
-                isToday ? "bg-orange-950/30" : "",
+                isToday ? "bg-orange-500/10" : "",
               ].join(" ")}
             >
               <span
                 className={[
                   "font-semibold text-xs",
-                  isToday ? "text-orange-400" : "text-gray-500",
+                  isToday ? "text-orange-400" : isCurrentWeek ? "text-gray-300" : "text-gray-500",
                 ].join(" ")}
               >
                 {dayLabel(isoDate)}
@@ -135,12 +145,15 @@ function WeekRow({
       </div>
 
       <div className="overflow-x-auto">
-        <div className="flex border-gray-800 border-b" style={{ minWidth: `${7 * 140}px` }}>
+        <div
+          className={["flex", isCurrentWeek ? "bg-orange-950/5" : ""].join(" ")}
+          style={{ minWidth: `${7 * 140}px` }}
+        >
           {cells.map(({ isoDate, isToday, byType }) => (
             <div
               key={isoDate}
               className={[
-                "flex flex-1 flex-col border-gray-800 border-r last:border-r-0",
+                "flex flex-1 flex-col border-gray-800/50 border-r last:border-r-0",
                 CELL_MIN_W,
                 isToday ? "bg-orange-950/20" : "",
               ].join(" ")}
@@ -150,7 +163,9 @@ function WeekRow({
                 return (
                   <div
                     key={mealType}
-                    className={idx < SHOWN_MEAL_TYPES.length - 1 ? "border-gray-800 border-b" : ""}
+                    className={
+                      idx < SHOWN_MEAL_TYPES.length - 1 ? "border-gray-800/50 border-b" : ""
+                    }
                   >
                     {entry ? (
                       <MealSlot
