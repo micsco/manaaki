@@ -116,11 +116,23 @@ function WeekRow({
     <div className={`mb-8 ${weekBorderClass}`}>
       <div
         className={[
-          "sticky top-[92px] z-20 overflow-x-auto",
+          "sticky top-[57px] z-20 overflow-x-auto",
           isCurrentWeek ? "bg-orange-950" : "bg-gray-900",
         ].join(" ")}
       >
         <div className="flex" style={{ minWidth: `${7 * 140}px` }}>
+          {DAY_ABBREVS.map(day => (
+            <div
+              key={day}
+              className={["flex flex-1 items-center justify-center py-2", CELL_MIN_W].join(" ")}
+            >
+              <span className="font-semibold text-gray-400 text-xs uppercase tracking-wider">
+                {day}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="flex border-gray-800/50 border-t" style={{ minWidth: `${7 * 140}px` }}>
           {cells.map(({ isoDate, isToday }) => (
             <div
               key={isoDate}
@@ -276,21 +288,6 @@ function PlanPage() {
               Today
             </button>
           </div>
-        </div>
-      </div>
-
-      <div className="sticky top-[57px] z-20 overflow-x-auto border-gray-800 border-b bg-gray-950/95 backdrop-blur-sm">
-        <div className="flex" style={{ minWidth: `${7 * 140}px` }}>
-          {DAY_ABBREVS.map(day => (
-            <div
-              key={day}
-              className={["flex flex-1 items-center justify-center py-2", CELL_MIN_W].join(" ")}
-            >
-              <span className="font-semibold text-gray-400 text-xs uppercase tracking-wider">
-                {day}
-              </span>
-            </div>
-          ))}
         </div>
       </div>
 
