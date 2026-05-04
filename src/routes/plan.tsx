@@ -1,7 +1,7 @@
 import { mdiChevronLeft } from "@mdi/js"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import type { ReadPlanEntry } from "../api/generated/types.gen"
 import { Icon } from "../components/Icon"
 import { MealPlanEntryCard } from "../components/MealPlanEntryCard"
@@ -112,8 +112,23 @@ function WeekRow({
     ? "border-orange-800/60 border-t-2"
     : "border-gray-700/50 border-t"
 
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  const [isStuck, setIsStuck] = useState(false)
+
+  useLayoutEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel) return
+    const observer = new IntersectionObserver(([entry]) => setIsStuck(!entry.isIntersecting), {
+      threshold: 0,
+      rootMargin: "-58px 0px 0px 0px",
+    })
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [])
+
   return (
-    <div className={`mb-8 ${weekBorderClass}`}>
+    <div className={`pb-8 ${weekBorderClass}`}>
+      <div ref={sentinelRef} className="h-px" aria-hidden />
       <div
         className={[
           "sticky top-[57px] z-20 overflow-x-auto",
@@ -121,28 +136,25 @@ function WeekRow({
         ].join(" ")}
       >
         <div className="flex" style={{ minWidth: `${7 * 140}px` }}>
-          {DAY_ABBREVS.map(day => (
-            <div
-              key={day}
-              className={["flex flex-1 items-center justify-center py-2", CELL_MIN_W].join(" ")}
-            >
-              <span className="font-semibold text-gray-400 text-xs uppercase tracking-wider">
-                {day}
-              </span>
-            </div>
-          ))}
-        </div>
-        <div className="flex border-gray-800/50 border-t" style={{ minWidth: `${7 * 140}px` }}>
-          {cells.map(({ isoDate, isToday }) => (
+          {cells.map(({ isoDate, isToday }, i) => (
             <div
               key={isoDate}
               ref={isToday ? todayRef : undefined}
               className={[
-                "flex flex-1 items-center justify-center border-gray-800/50 border-r py-1.5 last:border-r-0",
+                "flex flex-1 flex-col items-center justify-center border-gray-800/50 border-r py-1.5 last:border-r-0",
                 CELL_MIN_W,
                 isToday ? "bg-orange-500/10" : "",
               ].join(" ")}
             >
+              <span
+                className={[
+                  "font-semibold text-[10px] uppercase tracking-wider transition-all duration-150",
+                  isStuck ? "mb-0.5 max-h-4 opacity-100" : "max-h-0 overflow-hidden opacity-0",
+                  isToday ? "text-orange-400/70" : "text-gray-600",
+                ].join(" ")}
+              >
+                {DAY_ABBREVS[i]}
+              </span>
               <span
                 className={[
                   "font-semibold text-xs",
