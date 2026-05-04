@@ -132,6 +132,17 @@ function RecipeList() {
         )}
       </div>
 
+      <div className="fixed right-0 bottom-[68px] left-0 z-30 px-4 pb-2">
+        <div className="mx-auto max-w-7xl">
+          <FilterPills
+            proteins={proteins}
+            onToggleProtein={toggleProtein}
+            tools={tools}
+            onToggleTool={toggleTool}
+          />
+        </div>
+      </div>
+
       <div
         className={[
           "fixed right-0 bottom-0 left-0 z-30",
@@ -140,21 +151,13 @@ function RecipeList() {
         ].join(" ")}
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        <div className="mx-auto max-w-7xl px-4 pt-2 pb-3">
-          <FilterPills
-            proteins={proteins}
-            onToggleProtein={toggleProtein}
-            tools={tools}
-            onToggleTool={toggleTool}
+        <div className="mx-auto max-w-7xl px-4 py-3">
+          <FilterBar
+            search={search}
+            onSearchChange={setSearch}
+            activeFilterCount={activeFilterCount}
+            onOpenDrawer={() => setDrawerOpen(true)}
           />
-          <div className="mt-2">
-            <FilterBar
-              search={search}
-              onSearchChange={setSearch}
-              activeFilterCount={activeFilterCount}
-              onOpenDrawer={() => setDrawerOpen(true)}
-            />
-          </div>
         </div>
       </div>
 
