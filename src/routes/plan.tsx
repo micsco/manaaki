@@ -116,8 +116,8 @@ function WeekRow({
     <div className={`mb-8 ${weekBorderClass}`}>
       <div
         className={[
-          "sticky top-[93px] z-10 overflow-x-auto backdrop-blur-sm",
-          isCurrentWeek ? "bg-orange-950/20" : "bg-gray-900/60",
+          "sticky top-[92px] z-10 overflow-x-auto",
+          isCurrentWeek ? "bg-orange-950" : "bg-gray-900",
         ].join(" ")}
       >
         <div className="flex" style={{ minWidth: `${7 * 140}px` }}>
