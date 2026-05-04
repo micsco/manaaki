@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router"
 import type { PlanEntryType, ReadPlanEntry } from "../api/generated/types.gen"
 import { formatTime, recipeImageUrl, recipeUrl } from "../utils/recipe"
 import { Icon } from "./Icon"
+import { Badge } from "./ui"
 
 const ENTRY_TYPE_LABEL: Record<PlanEntryType, string> = {
   breakfast: "Breakfast",
@@ -51,26 +52,36 @@ function CardInner({ entry, dayLabel, compact = false }: MealPlanEntryCardProps)
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
 
-      <div className={`absolute right-0 bottom-0 left-0 ${padClass}`}>
-        {eyebrow && (
-          <p className={`font-semibold text-white/70 uppercase tracking-widest ${eyebrowClass}`}>
-            {eyebrow}
-          </p>
-        )}
-        <p className={`font-bold text-white ${titleClass}`}>{title}</p>
-        {cookTime && !compact && (
-          <p className="mt-2 flex items-center gap-1.5 text-white/60 text-xs">
-            <Icon path={mdiTimerOutline} size={0.55} aria-hidden={true} />
-            {cookTime}
-          </p>
-        )}
-        {cookTime && compact && (
-          <p className="mt-1 flex items-center gap-1 text-[10px] text-white/50">
-            <Icon path={mdiTimerOutline} size={0.45} aria-hidden={true} />
-            {cookTime}
-          </p>
-        )}
-      </div>
+      {compact ? (
+        <>
+          {cookTime && (
+            <div className="absolute top-2 right-0 left-0 flex justify-center">
+              <Badge variant="overlay" className="flex items-center gap-1 text-xs">
+                <Icon path={mdiTimerOutline} size={0.5} aria-hidden={true} />
+                {cookTime}
+              </Badge>
+            </div>
+          )}
+          <div className={`absolute right-0 bottom-0 left-0 ${padClass}`}>
+            <p className={`font-bold text-white ${titleClass}`}>{title}</p>
+          </div>
+        </>
+      ) : (
+        <div className={`absolute right-0 bottom-0 left-0 ${padClass}`}>
+          {eyebrow && (
+            <p className={`font-semibold text-white/70 uppercase tracking-widest ${eyebrowClass}`}>
+              {eyebrow}
+            </p>
+          )}
+          <p className={`font-bold text-white ${titleClass}`}>{title}</p>
+          {cookTime && (
+            <p className="mt-2 flex items-center gap-1.5 text-white/60 text-xs">
+              <Icon path={mdiTimerOutline} size={0.55} aria-hidden={true} />
+              {cookTime}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   )
 }
