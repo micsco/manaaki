@@ -176,6 +176,17 @@ body {
 	}
 }
 
+/* Meal plan week date row: hide border-t when stuck using CSS scroll-state */
+.week-date-row {
+	container-type: scroll-state;
+}
+
+@container scroll-state(stuck: top) {
+	.week-date-row__border {
+		border-top-width: 0;
+	}
+}
+
 /* Custom utilities */
 @layer utilities {
 	.line-clamp-2 {

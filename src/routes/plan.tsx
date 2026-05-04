@@ -113,14 +113,17 @@ function WeekRow({
     : "border-gray-700/50 border-t"
 
   return (
-    <div className={weekBorderClass}>
+    <div>
       <div
         className={[
-          "sticky top-[89px] z-10 overflow-x-auto",
+          "week-date-row sticky top-[89px] z-10 overflow-x-auto",
           isCurrentWeek ? "bg-orange-950" : "bg-gray-900",
         ].join(" ")}
       >
-        <div className="flex" style={{ minWidth: `${7 * 140}px` }}>
+        <div
+          className={["week-date-row__border flex", weekBorderClass].join(" ")}
+          style={{ minWidth: `${7 * 140}px` }}
+        >
           {cells.map(({ isoDate, isToday }) => (
             <div
               key={isoDate}
@@ -284,7 +287,7 @@ function PlanPage() {
           {DAY_ABBREVS.map(day => (
             <div
               key={day}
-              className={["flex flex-1 items-center justify-center py-2", CELL_MIN_W].join(" ")}
+              className={["flex flex-1 items-center justify-center pt-2", CELL_MIN_W].join(" ")}
             >
               <span className="font-semibold text-gray-500 text-xs uppercase tracking-wider">
                 {day}
