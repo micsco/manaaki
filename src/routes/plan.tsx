@@ -116,7 +116,7 @@ function WeekRow({
     <div>
       <div
         className={[
-          "week-date-row sticky top-[89px] z-10 overflow-x-auto",
+          "week-date-row sticky top-[81px] z-10 overflow-x-auto",
           isCurrentWeek ? "bg-orange-950" : "bg-gray-900",
         ].join(" ")}
       >
@@ -129,7 +129,7 @@ function WeekRow({
               key={isoDate}
               ref={isToday ? todayRef : undefined}
               className={[
-                "flex flex-1 items-center justify-center border-gray-800/50 border-r py-1.5 last:border-r-0",
+                "week-date-row__cell flex flex-1 items-center justify-center border-gray-800/50 border-r py-1.5 last:border-r-0",
                 CELL_MIN_W,
                 isToday ? "bg-orange-500/10" : "",
               ].join(" ")}

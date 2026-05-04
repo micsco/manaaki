@@ -176,14 +176,23 @@ body {
 	}
 }
 
-/* Meal plan week date row: hide border-t when stuck using CSS scroll-state */
+/* Meal plan week date row: scroll-state driven styles when stuck */
 .week-date-row {
 	container-type: scroll-state;
+}
+
+.week-date-row__cell {
+	transition: padding 120ms ease-out;
 }
 
 @container scroll-state(stuck: top) {
 	.week-date-row__border {
 		border-top-width: 0;
+	}
+
+	.week-date-row__cell {
+		padding-top: 0;
+		padding-bottom: 0;
 	}
 }
 
