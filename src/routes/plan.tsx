@@ -57,15 +57,10 @@ const CELL_MIN_W = "min-w-[140px]"
 function EmptyMealSlot({ mealType }: { mealType: ShownMealType }) {
   return (
     <div className="relative aspect-[16/9] w-full bg-gray-900/30">
-      <div className="absolute inset-0 flex flex-col">
-        <div className="border-gray-800/60 border-b px-2 py-1">
-          <span className="font-semibold text-[10px] text-gray-700 uppercase tracking-widest">
-            {mealType}
-          </span>
-        </div>
-        <div className="flex flex-1 items-center justify-center">
-          <span className="text-gray-700 text-xs">—</span>
-        </div>
+      <div className="absolute bottom-0 left-0 px-2 py-1.5">
+        <span className="font-semibold text-[10px] text-gray-700 uppercase tracking-widest">
+          {mealType}
+        </span>
       </div>
     </div>
   )
@@ -173,9 +168,10 @@ function PlanPage() {
   const today = todayIsoDateString()
 
   const [startOffset, setStartOffset] = useState(-1)
-  const [endOffset, setEndOffset] = useState(1)
+  const [endOffset, setEndOffset] = useState(0)
 
-  const { startDate, endDate } = multiWeekBounds(startOffset, endOffset)
+  const fetchEnd = Math.max(endOffset, 1)
+  const { startDate, endDate } = multiWeekBounds(startOffset, fetchEnd)
   const {
     data: entries = [],
     isLoading,
@@ -184,6 +180,10 @@ function PlanPage() {
     ...mealPlanQueryOptions(startDate, endDate),
     placeholderData: keepPreviousData,
   })
+
+  const { startDate: nextWeekStart, endDate: nextWeekEnd } = multiWeekBounds(1, 1)
+  const nextWeekHasEntries = entries.some(e => e.date >= nextWeekStart && e.date <= nextWeekEnd)
+  const effectiveEndOffset = endOffset === 0 && nextWeekHasEntries ? 1 : endOffset
 
   const todayRef = useRef<HTMLDivElement | null>(null)
   const bottomSentinelRef = useRef<HTMLDivElement | null>(null)
@@ -213,7 +213,10 @@ function PlanPage() {
     return () => observer.disconnect()
   }, [loadPast])
 
-  const weekOffsets = Array.from({ length: endOffset - startOffset + 1 }, (_, i) => endOffset - i)
+  const weekOffsets = Array.from(
+    { length: effectiveEndOffset - startOffset + 1 },
+    (_, i) => effectiveEndOffset - i
+  )
 
   return (
     <main className="min-h-screen bg-gray-950 text-gray-100">
@@ -232,7 +235,7 @@ function PlanPage() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setEndOffset(prev => prev + 1)}
+              onClick={() => setEndOffset(effectiveEndOffset + 1)}
               disabled={isFetching}
               className="rounded-full bg-gray-800 px-3 py-1.5 font-medium text-gray-300 text-sm transition-colors hover:bg-gray-700 disabled:opacity-50"
             >
