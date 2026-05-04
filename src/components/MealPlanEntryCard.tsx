@@ -34,7 +34,7 @@ function CardInner({ entry, dayLabel, compact = false }: MealPlanEntryCardProps)
 
   const eyebrow = [dayLabel, typeLabel].filter(Boolean).join(" · ")
 
-  const aspectClass = compact ? "aspect-[9/16]" : "aspect-[16/7] sm:aspect-[16/6]"
+  const aspectClass = compact ? "aspect-[16/9]" : "aspect-[16/7] sm:aspect-[16/6]"
   const padClass = compact ? "px-2 py-2" : "px-5 py-4 sm:px-8 sm:py-6"
   const titleClass = compact
     ? "text-sm leading-tight"

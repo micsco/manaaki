@@ -1,7 +1,7 @@
 import { mdiChevronLeft } from "@mdi/js"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import type { ReadPlanEntry } from "../api/generated/types.gen"
 import { Icon } from "../components/Icon"
 import { MealPlanEntryCard } from "../components/MealPlanEntryCard"
@@ -175,7 +175,7 @@ function PlanPage() {
   const today = todayIsoDateString()
 
   const [startOffset, setStartOffset] = useState(-1)
-  const [endOffset] = useState(1)
+  const [endOffset, setEndOffset] = useState(1)
 
   const { startDate, endDate } = multiWeekBounds(startOffset, endOffset)
   const {
@@ -188,6 +188,7 @@ function PlanPage() {
   })
 
   const todayRef = useRef<HTMLDivElement | null>(null)
+  const bottomSentinelRef = useRef<HTMLDivElement | null>(null)
   const hasScrolledToToday = useRef(false)
 
   useEffect(() => {
@@ -196,6 +197,23 @@ function PlanPage() {
       hasScrolledToToday.current = true
     }
   }, [isLoading])
+
+  const loadPast = useCallback(() => {
+    setStartOffset(prev => prev - 1)
+  }, [])
+
+  useEffect(() => {
+    const sentinel = bottomSentinelRef.current
+    if (!sentinel) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) loadPast()
+      },
+      { threshold: 0.1 }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [loadPast])
 
   const weekOffsets = Array.from({ length: endOffset - startOffset + 1 }, (_, i) => endOffset - i)
 
@@ -213,15 +231,25 @@ function PlanPage() {
             </Link>
             <h1 className="font-bold text-gray-100 text-lg">Meal Plan</h1>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              todayRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" })
-            }}
-            className="rounded-full bg-orange-600 px-3 py-1.5 font-medium text-sm text-white transition-colors hover:bg-orange-500"
-          >
-            Today
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setEndOffset(prev => prev + 1)}
+              disabled={isFetching}
+              className="rounded-full bg-gray-800 px-3 py-1.5 font-medium text-gray-300 text-sm transition-colors hover:bg-gray-700 disabled:opacity-50"
+            >
+              Load future week
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                todayRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" })
+              }}
+              className="rounded-full bg-orange-600 px-3 py-1.5 font-medium text-sm text-white transition-colors hover:bg-orange-500"
+            >
+              Today
+            </button>
+          </div>
         </div>
       </div>
 
@@ -255,15 +283,8 @@ function PlanPage() {
                 />
               ))}
 
-              <div className="flex justify-center border-gray-800 border-t py-3">
-                <button
-                  type="button"
-                  onClick={() => setStartOffset(prev => prev - 1)}
-                  disabled={isFetching}
-                  className="rounded-full bg-gray-800 px-4 py-1.5 font-medium text-gray-300 text-xs transition-colors hover:bg-gray-700 disabled:opacity-50"
-                >
-                  {isFetching ? "Loading…" : "Load earlier week"}
-                </button>
+              <div ref={bottomSentinelRef} className="flex justify-center py-4">
+                {isFetching && <span className="text-gray-500 text-xs">Loading…</span>}
               </div>
             </>
           )}
@@ -285,8 +306,8 @@ function LoadingSkeleton() {
                 " "
               )}
             >
-              <div className="aspect-[1/1] w-full animate-pulse rounded bg-gray-900" />
-              <div className="mt-px aspect-[1/1] w-full animate-pulse rounded bg-gray-900" />
+              <div className="aspect-[16/9] w-full animate-pulse rounded bg-gray-900" />
+              <div className="mt-px aspect-[16/9] w-full animate-pulse rounded bg-gray-900" />
             </div>
           ))}
         </div>
