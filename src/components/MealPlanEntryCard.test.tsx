@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import type { ReadPlanEntry } from "../api/generated/types.gen"
 import { render, screen } from "../test/render"
-import { MealPlanEntryCard } from "./MealPlanEntryCard"
+import { entryTitle, MealPlanEntryCard } from "./MealPlanEntryCard"
 
 vi.mock("@tanstack/react-router", async importOriginal => {
   const actual = await importOriginal<typeof import("@tanstack/react-router")>()
@@ -25,6 +25,24 @@ function makeEntry(overrides: Partial<ReadPlanEntry> = {}): ReadPlanEntry {
     ...overrides,
   }
 }
+
+describe("entryTitle", () => {
+  it("returns recipe name when recipe is present", () => {
+    expect(entryTitle(makeEntry({ recipe: { name: "Pasta" } as any }))).toBe("Pasta")
+  })
+
+  it("falls back to title when no recipe", () => {
+    expect(entryTitle(makeEntry({ title: "Leftovers" }))).toBe("Leftovers")
+  })
+
+  it("falls back to text when no title or recipe", () => {
+    expect(entryTitle(makeEntry({ text: "Something quick" }))).toBe("Something quick")
+  })
+
+  it("falls back to 'Meal' when nothing is set", () => {
+    expect(entryTitle(makeEntry())).toBe("Meal")
+  })
+})
 
 describe("MealPlanEntryCard", () => {
   it("renders the recipe name when a recipe is attached", () => {
@@ -56,19 +74,42 @@ describe("MealPlanEntryCard", () => {
     expect(screen.getByText("Meal")).toBeInTheDocument()
   })
 
-  it("renders entry type badge when entryType is set", () => {
+  it("renders entry type label in eyebrow when entryType is set", () => {
     const entry = makeEntry({ entryType: "dinner" })
     render(<MealPlanEntryCard entry={entry} />)
-    expect(screen.getByText("dinner")).toBeInTheDocument()
+    expect(screen.getByText(/Dinner/)).toBeInTheDocument()
+  })
+
+  it("renders dayLabel in eyebrow when provided", () => {
+    const entry = makeEntry({ entryType: "dinner" })
+    render(<MealPlanEntryCard entry={entry} dayLabel="Tomorrow" />)
+    expect(screen.getByText(/Tomorrow/)).toBeInTheDocument()
+    expect(screen.getByText(/Dinner/)).toBeInTheDocument()
+  })
+
+  it("renders cook time when recipe has totalTime", () => {
+    const entry = makeEntry({
+      recipe: {
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        slug: "pasta",
+        name: "Pasta",
+        totalTime: "35 minutes",
+      } as any,
+    })
+    render(<MealPlanEntryCard entry={entry} />)
+    expect(screen.getByText("35m")).toBeInTheDocument()
   })
 
   it("renders a link when the entry has a recipe with id and slug", () => {
     const entry = makeEntry({
-      recipe: { id: "550e8400-e29b-41d4-a716-446655440000", slug: "pasta", name: "Pasta" } as any,
+      recipe: {
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        slug: "pasta",
+        name: "Pasta",
+      } as any,
     })
     render(<MealPlanEntryCard entry={entry} />)
-    const link = screen.getByRole("link")
-    expect(link).toBeInTheDocument()
+    expect(screen.getByRole("link")).toBeInTheDocument()
   })
 
   it("does not render a link when there is no recipe", () => {
