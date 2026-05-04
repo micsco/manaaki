@@ -10,7 +10,8 @@ export function BuildInfo() {
 
   if (!shortSha) return null
 
-  const formattedDate = buildTime ? buildTime.slice(0, 10) : null
+  // ISO8601 in -> "YYYY-MM-DD HH:MM UTC" out (drop seconds, swap T for space).
+  const formattedDate = buildTime ? `${buildTime.slice(0, 16).replace("T", " ")} UTC` : null
   const commitUrl = fullSha ? `https://github.com/micsco/manaaki/commit/${fullSha}` : null
 
   return (
