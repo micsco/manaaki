@@ -187,13 +187,20 @@ body {
 
 @container scroll-state(stuck: top) {
 	.week-date-row__border {
-		border-top-width: 0;
+		border-bottom-width: 0;
 	}
 
 	.week-date-row__cell {
 		padding-top: 0;
-		padding-bottom: 0;
 	}
+}
+
+.week-date-row--first .week-date-row__border {
+	border-bottom-width: 0;
+}
+
+.week-date-row--first .week-date-row__cell {
+	padding-top: 0;
 }
 
 /* Custom utilities */

@@ -88,11 +88,13 @@ function WeekRow({
   entries,
   todayIso,
   todayRef,
+  isFirst,
 }: {
   weekOffset: number
   entries: ReadPlanEntry[]
   todayIso: string
   todayRef?: React.RefObject<HTMLDivElement | null>
+  isFirst?: boolean
 }) {
   const isCurrentWeek = weekOffset === 0
   const monday = weekMonday(weekOffset)
@@ -109,14 +111,15 @@ function WeekRow({
   })
 
   const weekBorderClass = isCurrentWeek
-    ? "border-orange-800/60 border-t-2"
-    : "border-gray-700/50 border-t"
+    ? "border-orange-800/60 border-b-2"
+    : "border-gray-700/50 border-b"
 
   return (
     <div>
       <div
         className={[
           "week-date-row sticky top-[81px] z-10 overflow-x-auto",
+          isFirst ? "week-date-row--first" : "",
           isCurrentWeek ? "bg-orange-950" : "bg-gray-900",
         ].join(" ")}
       >
@@ -302,13 +305,14 @@ function PlanPage() {
           <LoadingSkeleton />
         ) : (
           <>
-            {weekOffsets.map(offset => (
+            {weekOffsets.map((offset, i) => (
               <WeekRow
                 key={offset}
                 weekOffset={offset}
                 entries={entries}
                 todayIso={today}
                 todayRef={offset === 0 ? todayRef : undefined}
+                isFirst={i === 0}
               />
             ))}
 
