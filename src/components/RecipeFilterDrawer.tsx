@@ -1,13 +1,9 @@
 import { Drawer } from "@base-ui/react/drawer"
 import { mdiClose } from "@mdi/js"
 import type { ReactNode } from "react"
-import {
-  PROTEIN_OPTIONS,
-  TIME_BUCKETS,
-  type TimeBucket,
-  TOOL_OPTIONS,
-} from "../hooks/useRecipeFilters"
+import { PROTEIN_OPTIONS, type TimeBucket, TOOL_OPTIONS } from "../hooks/useRecipeFilters"
 import { Icon } from "./Icon"
+import { TimeBucketSegment } from "./TimeBucketSegment"
 import { Button } from "./ui"
 
 interface SectionProps {
@@ -102,14 +98,14 @@ export function RecipeFilterDrawer({
           </div>
 
           <div className="flex-1 space-y-6 overflow-y-auto px-5 pb-4">
-            <FilterSection label="Total time">
-              {TIME_BUCKETS.map(bucket => (
+            <FilterSection label="Equipment">
+              {TOOL_OPTIONS.map(opt => (
                 <ToggleChip
-                  key={bucket.value}
-                  icon={bucket.icon}
-                  label={bucket.label}
-                  active={time === bucket.value}
-                  onToggle={() => onSetTime(time === bucket.value ? null : bucket.value)}
+                  key={opt.value}
+                  icon={opt.icon}
+                  label={opt.label}
+                  active={tools.includes(opt.value)}
+                  onToggle={() => onToggleTool(opt.value)}
                 />
               ))}
             </FilterSection>
@@ -126,16 +122,8 @@ export function RecipeFilterDrawer({
               ))}
             </FilterSection>
 
-            <FilterSection label="Equipment">
-              {TOOL_OPTIONS.map(opt => (
-                <ToggleChip
-                  key={opt.value}
-                  icon={opt.icon}
-                  label={opt.label}
-                  active={tools.includes(opt.value)}
-                  onToggle={() => onToggleTool(opt.value)}
-                />
-              ))}
+            <FilterSection label="Total time">
+              <TimeBucketSegment value={time} onChange={onSetTime} />
             </FilterSection>
           </div>
 
