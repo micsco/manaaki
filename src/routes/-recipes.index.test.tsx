@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest"
 import type { RecipeSummary } from "../api/generated/types.gen"
-import { RecipeCardInfoBadges, RecipeCardToolBadges } from "../components/RecipeCardMeta"
+import {
+  RecipeCardInfoBadges,
+  RecipeCardTimeBadge,
+  RecipeCardToolBadges,
+} from "../components/RecipeCardMeta"
 import { render, screen } from "../test/render"
 
 const baseRecipe: RecipeSummary = {
@@ -9,20 +13,20 @@ const baseRecipe: RecipeSummary = {
   name: "Banana Bread",
 }
 
-describe("RecipeCardInfoBadges", () => {
+describe("RecipeCardTimeBadge", () => {
   it("shows formatted time when totalTime is present", () => {
-    render(<RecipeCardInfoBadges recipe={{ ...baseRecipe, totalTime: "30 minutes" }} />)
+    render(<RecipeCardTimeBadge recipe={{ ...baseRecipe, totalTime: "30 minutes" }} />)
     expect(screen.getByText("30m")).toBeInTheDocument()
   })
 
   it("shows hours and minutes formatted compactly", () => {
-    render(<RecipeCardInfoBadges recipe={{ ...baseRecipe, totalTime: "1 hour 15 minutes" }} />)
+    render(<RecipeCardTimeBadge recipe={{ ...baseRecipe, totalTime: "1 hour 15 minutes" }} />)
     expect(screen.getByText("1h 15m")).toBeInTheDocument()
   })
 
   it("shows freeform time strings as-is", () => {
     render(
-      <RecipeCardInfoBadges
+      <RecipeCardTimeBadge
         recipe={{ ...baseRecipe, totalTime: "10 mins, plus 2 hrs marinating" }}
       />
     )
@@ -30,15 +34,21 @@ describe("RecipeCardInfoBadges", () => {
   })
 
   it("does not show time when totalTime is null", () => {
-    render(<RecipeCardInfoBadges recipe={{ ...baseRecipe, totalTime: null }} />)
-    expect(screen.queryByText(/h$|m$/)).not.toBeInTheDocument()
+    const { container } = render(
+      <RecipeCardTimeBadge recipe={{ ...baseRecipe, totalTime: null }} />
+    )
+    expect(container.firstChild).toBeNull()
   })
 
   it("does not show time when totalTime is 'none'", () => {
-    render(<RecipeCardInfoBadges recipe={{ ...baseRecipe, totalTime: "none" }} />)
-    expect(screen.queryByRole("time")).not.toBeInTheDocument()
+    const { container } = render(
+      <RecipeCardTimeBadge recipe={{ ...baseRecipe, totalTime: "none" }} />
+    )
+    expect(container.firstChild).toBeNull()
   })
+})
 
+describe("RecipeCardInfoBadges", () => {
   it("does not show servings", () => {
     render(<RecipeCardInfoBadges recipe={{ ...baseRecipe, recipeServings: 4 }} />)
     expect(screen.queryByText(/serving/)).not.toBeInTheDocument()
@@ -50,14 +60,8 @@ describe("RecipeCardInfoBadges", () => {
   })
 
   it("does not show rating when rating is null", () => {
-    render(<RecipeCardInfoBadges recipe={{ ...baseRecipe, rating: null }} />)
-    expect(screen.queryByLabelText(/out of 5 stars/)).not.toBeInTheDocument()
-  })
-
-  it("renders nothing visible when all fields are absent", () => {
-    render(<RecipeCardInfoBadges recipe={baseRecipe} />)
-    expect(screen.queryByRole("img")).not.toBeInTheDocument()
-    expect(screen.queryByText(/m$/)).not.toBeInTheDocument()
+    const { container } = render(<RecipeCardInfoBadges recipe={{ ...baseRecipe, rating: null }} />)
+    expect(container.firstChild).toBeNull()
   })
 
   it("does not render the recipe description", () => {

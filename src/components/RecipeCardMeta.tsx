@@ -9,11 +9,24 @@ type ToolBadge = {
   label: string
   icon: string
   match: string
+  className: string
 }
 
 const TOOL_BADGES: ToolBadge[] = [
-  { key: "slow-cooker", label: "Slow cooker", icon: mdiPotSteam, match: "slow cooker" },
-  { key: "air-fryer", label: "Air fryer", icon: mdiToasterOven, match: "air fryer" },
+  {
+    key: "slow-cooker",
+    label: "Slow cooker",
+    icon: mdiPotSteam,
+    match: "slow cooker",
+    className: "bg-amber-800/80 border-amber-600/50 text-amber-100 backdrop-blur-sm",
+  },
+  {
+    key: "air-fryer",
+    label: "Air fryer",
+    icon: mdiToasterOven,
+    match: "air fryer",
+    className: "bg-sky-700/80 border-sky-500/50 text-sky-100 backdrop-blur-sm",
+  },
 ]
 
 function detectedTools(recipe: RecipeSummary): ToolBadge[] {
@@ -26,20 +39,24 @@ function detectedTools(recipe: RecipeSummary): ToolBadge[] {
   return TOOL_BADGES.filter(tb => names.some(n => n.includes(tb.match)))
 }
 
-export function RecipeCardInfoBadges({ recipe }: { recipe: RecipeSummary }) {
+export function RecipeCardTimeBadge({ recipe }: { recipe: RecipeSummary }) {
   const time = formatTime(recipe.totalTime)
+  if (!time) return null
 
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-1.5">
-        {time && (
-          <Badge variant="overlay" className="flex items-center gap-1">
-            <Icon path={mdiTimerOutline} size={0.55} aria-hidden={true} />
-            {time}
-          </Badge>
-        )}
-      </div>
-      {recipe.rating != null && <StarRating rating={recipe.rating} />}
+    <Badge variant="overlay" className="flex items-center gap-1">
+      <Icon path={mdiTimerOutline} size={0.55} aria-hidden={true} />
+      {time}
+    </Badge>
+  )
+}
+
+export function RecipeCardInfoBadges({ recipe }: { recipe: RecipeSummary }) {
+  if (recipe.rating == null) return null
+
+  return (
+    <div className="flex items-center justify-end">
+      <StarRating rating={recipe.rating} />
     </div>
   )
 }
@@ -51,7 +68,11 @@ export function RecipeCardToolBadges({ recipe }: { recipe: RecipeSummary }) {
   return (
     <div className="flex flex-wrap justify-end gap-1.5">
       {tools.map(tool => (
-        <Badge key={tool.key} variant="overlay-highlight" className="flex items-center gap-1">
+        <Badge
+          key={tool.key}
+          variant="tag"
+          className={`flex items-center gap-1 border ${tool.className}`}
+        >
           <Icon path={tool.icon} size={0.55} aria-hidden={true} />
           {tool.label}
         </Badge>

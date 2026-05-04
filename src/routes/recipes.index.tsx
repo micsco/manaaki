@@ -3,7 +3,11 @@ import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
 import type { RecipeSummary } from "../api/generated/types.gen"
-import { RecipeCardInfoBadges, RecipeCardToolBadges } from "../components/RecipeCardMeta"
+import {
+  RecipeCardInfoBadges,
+  RecipeCardTimeBadge,
+  RecipeCardToolBadges,
+} from "../components/RecipeCardMeta"
 import { RecipeFilterDrawer } from "../components/RecipeFilterDrawer"
 import { FilterBar, FilterPills } from "../components/RecipeFilters"
 import { Card } from "../components/ui"
@@ -37,11 +41,20 @@ function RecipeImage({ recipe }: { recipe: RecipeSummary }) {
       ) : (
         <div className="h-full w-full bg-gray-800" aria-hidden="true" />
       )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+      <div className="absolute top-0 left-0 p-2">
+        <RecipeCardTimeBadge recipe={recipe} />
+      </div>
       <div className="absolute top-0 right-0 p-2">
         <RecipeCardToolBadges recipe={recipe} />
       </div>
-      <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/70 to-transparent px-3 pt-6 pb-2">
-        <RecipeCardInfoBadges recipe={recipe} />
+      <div className="absolute right-0 bottom-0 left-0 px-3 pb-2.5">
+        <div className="flex items-end justify-between gap-2">
+          <h3 className="line-clamp-2 text-balance font-bold text-base text-white leading-tight drop-shadow">
+            {recipe.name}
+          </h3>
+          <RecipeCardInfoBadges recipe={recipe} />
+        </div>
       </div>
     </div>
   )
@@ -66,14 +79,9 @@ function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
           }
         >
           <RecipeImage recipe={recipe} />
-          <div className="p-4">
-            <h3 className="line-clamp-2 font-semibold text-gray-100 text-lg">{recipe.name}</h3>
-          </div>
         </Link>
       ) : (
-        <div className="p-4">
-          <h3 className="line-clamp-2 font-semibold text-gray-100 text-lg">{recipe.name}</h3>
-        </div>
+        <RecipeImage recipe={recipe} />
       )}
     </Card>
   )
@@ -161,7 +169,7 @@ function RecipeList() {
         )}
       </div>
 
-      <div className="fixed right-0 bottom-[68px] left-0 z-30 px-4 pb-2">
+      <div className="fixed right-0 bottom-[68px] left-0 z-30 px-4 pb-1">
         <div className="mx-auto max-w-7xl">
           <FilterPills
             proteins={proteins}

@@ -89,13 +89,26 @@ function WeekRow({
   todayIso,
   todayRef,
   isFirst,
+  sentinelMapRef,
 }: {
   weekOffset: number
   entries: ReadPlanEntry[]
   todayIso: string
   todayRef?: React.RefObject<HTMLDivElement | null>
   isFirst?: boolean
+  sentinelMapRef?: React.RefObject<Map<number, HTMLDivElement>>
 }) {
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el || !sentinelMapRef) return
+    sentinelMapRef.current.set(weekOffset, el)
+    return () => {
+      sentinelMapRef.current.delete(weekOffset)
+    }
+  }, [weekOffset, sentinelMapRef])
+
   const isCurrentWeek = weekOffset === 0
   const monday = weekMonday(weekOffset)
   const cells = Array.from({ length: 7 }, (_, i) => {
@@ -116,6 +129,7 @@ function WeekRow({
 
   return (
     <div>
+      <div ref={sentinelRef} />
       <div
         className={[
           "week-date-row sticky top-[81px] z-10 overflow-x-auto",
@@ -150,7 +164,7 @@ function WeekRow({
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="relative z-[1] overflow-x-auto bg-gray-950">
         <div
           className={["flex", isCurrentWeek ? "bg-orange-950/5" : ""].join(" ")}
           style={{ minWidth: `${7 * 140}px` }}
@@ -195,8 +209,14 @@ function WeekRow({
   )
 }
 
+function todayDayIndex(): number {
+  const jsDay = new Date().getDay()
+  return (jsDay + 6) % 7
+}
+
 function PlanPage() {
   const today = todayIsoDateString()
+  const todayColIndex = todayDayIndex()
 
   const [startOffset, setStartOffset] = useState(-1)
   const [endOffset, setEndOffset] = useState(0)
@@ -215,6 +235,38 @@ function PlanPage() {
   const { startDate: nextWeekStart, endDate: nextWeekEnd } = multiWeekBounds(1, 1)
   const nextWeekHasEntries = entries.some(e => e.date >= nextWeekStart && e.date <= nextWeekEnd)
   const effectiveEndOffset = endOffset === 0 && nextWeekHasEntries ? 1 : endOffset
+
+  const sentinelMapRef = useRef<Map<number, HTMLDivElement>>(new Map())
+  const [stuckWeekOffset, setStuckWeekOffset] = useState<number>(0)
+
+  useEffect(() => {
+    const STICKY_TOP = 81
+    let rafId: number | null = null
+
+    function onScroll() {
+      if (rafId !== null) return
+      rafId = requestAnimationFrame(() => {
+        rafId = null
+        const threshold = window.scrollY + STICKY_TOP
+        let bestOffset = 0
+        let bestTop = -Infinity
+        for (const [offset, el] of sentinelMapRef.current) {
+          const top = el.getBoundingClientRect().top + window.scrollY
+          if (top <= threshold && top > bestTop) {
+            bestTop = top
+            bestOffset = offset
+          }
+        }
+        setStuckWeekOffset(bestOffset)
+      })
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => {
+      window.removeEventListener("scroll", onScroll)
+      if (rafId !== null) cancelAnimationFrame(rafId)
+    }
+  }, [])
 
   const todayRef = useRef<HTMLDivElement | null>(null)
   const bottomSentinelRef = useRef<HTMLDivElement | null>(null)
@@ -244,14 +296,27 @@ function PlanPage() {
     return () => observer.disconnect()
   }, [loadPast])
 
-  const weekOffsets = Array.from(
-    { length: effectiveEndOffset - startOffset + 1 },
-    (_, i) => effectiveEndOffset - i
-  )
+  const weekCount = effectiveEndOffset - startOffset + 1
+  const weekOffsets = Array.from({ length: weekCount }, (_, i) => effectiveEndOffset - i)
+
+  useEffect(() => {
+    if (isFetching || weekCount < 1) return
+
+    function ensureOverflow() {
+      if (document.documentElement.scrollHeight <= window.innerHeight) {
+        loadPast()
+      }
+    }
+
+    ensureOverflow()
+
+    window.addEventListener("resize", ensureOverflow)
+    return () => window.removeEventListener("resize", ensureOverflow)
+  }, [weekCount, isFetching, loadPast])
 
   return (
     <main className="min-h-screen bg-gray-950 text-gray-100">
-      <div className="sticky top-0 z-30 border-gray-800 border-b bg-gray-950/95 backdrop-blur-sm">
+      <div className="fixed top-0 right-0 left-0 z-30 border-gray-800 border-b bg-gray-950/95 backdrop-blur-sm">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             <Link
@@ -285,22 +350,57 @@ function PlanPage() {
         </div>
       </div>
 
-      <div className="sticky top-[57px] z-20 overflow-x-auto bg-gray-950/95 backdrop-blur-sm">
+      <div
+        aria-hidden="true"
+        className={[
+          "fixed top-[81px] right-0 bottom-0 left-0 z-0",
+          stuckWeekOffset === 0 ? "bg-orange-950" : "bg-gray-900",
+        ].join(" ")}
+      />
+      {stuckWeekOffset === 0 && (
+        <div
+          aria-hidden="true"
+          className="fixed top-[81px] bottom-0 z-0 bg-orange-500/10"
+          style={{
+            left: `calc(100% / 7 * ${todayColIndex})`,
+            width: "calc(100% / 7)",
+          }}
+        />
+      )}
+
+      <div
+        className={[
+          "fixed top-[57px] right-0 left-0 z-20 overflow-x-auto",
+          stuckWeekOffset === 0 ? "bg-orange-950" : "bg-gray-900",
+        ].join(" ")}
+      >
         <div className="flex" style={{ minWidth: `${7 * 140}px` }}>
-          {DAY_ABBREVS.map(day => (
-            <div
-              key={day}
-              className={["flex flex-1 items-center justify-center pt-2", CELL_MIN_W].join(" ")}
-            >
-              <span className="font-semibold text-gray-500 text-xs uppercase tracking-wider">
-                {day}
-              </span>
-            </div>
-          ))}
+          {DAY_ABBREVS.map((day, i) => {
+            const isToday = stuckWeekOffset === 0 && i === todayColIndex
+            return (
+              <div
+                key={day}
+                className={[
+                  "flex flex-1 items-center justify-center border-gray-800/50 border-r pt-2 last:border-r-0",
+                  CELL_MIN_W,
+                  isToday ? "bg-orange-500/10" : "",
+                ].join(" ")}
+              >
+                <span
+                  className={[
+                    "font-semibold text-xs uppercase tracking-wider",
+                    isToday ? "text-orange-400" : "text-gray-500",
+                  ].join(" ")}
+                >
+                  {day}
+                </span>
+              </div>
+            )
+          })}
         </div>
       </div>
 
-      <div>
+      <div className="pt-[81px]">
         {isLoading ? (
           <LoadingSkeleton />
         ) : (
@@ -313,6 +413,7 @@ function PlanPage() {
                 todayIso={today}
                 todayRef={offset === 0 ? todayRef : undefined}
                 isFirst={i === 0}
+                sentinelMapRef={sentinelMapRef}
               />
             ))}
 
