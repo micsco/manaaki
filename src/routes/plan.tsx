@@ -238,39 +238,41 @@ function PlanPage() {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <div style={{ minWidth: `${7 * 140}px` }}>
-          <div className="sticky top-[57px] z-20 flex border-gray-800 border-b bg-gray-950/95 backdrop-blur-sm">
-            {DAY_ABBREVS.map((day, i) => {
-              const d = new Date(weekMonday(effectiveEndOffset))
-              d.setDate(d.getDate() + i)
-              const isoDate = toIsoDateString(d)
-              const isToday = isoDate === today
-              return (
-                <div
-                  key={day}
+      <div className="sticky top-[57px] z-20 overflow-x-auto border-gray-800 border-b bg-gray-950/95 backdrop-blur-sm">
+        <div className="flex" style={{ minWidth: `${7 * 140}px` }}>
+          {DAY_ABBREVS.map((day, i) => {
+            const d = new Date(weekMonday(effectiveEndOffset))
+            d.setDate(d.getDate() + i)
+            const isoDate = toIsoDateString(d)
+            const isToday = isoDate === today
+            return (
+              <div
+                key={day}
+                className={[
+                  "flex flex-1 flex-col items-center justify-center py-1.5",
+                  CELL_MIN_W,
+                  isToday ? "bg-orange-950/30" : "",
+                ].join(" ")}
+              >
+                <span className="font-semibold text-[10px] text-gray-500 uppercase tracking-wider">
+                  {day}
+                </span>
+                <span
                   className={[
-                    "flex flex-1 flex-col items-center justify-center py-1.5",
-                    CELL_MIN_W,
-                    isToday ? "bg-orange-950/30" : "",
+                    "font-semibold text-xs",
+                    isToday ? "text-orange-400" : "text-gray-400",
                   ].join(" ")}
                 >
-                  <span className="font-semibold text-[10px] text-gray-500 uppercase tracking-wider">
-                    {day}
-                  </span>
-                  <span
-                    className={[
-                      "font-semibold text-xs",
-                      isToday ? "text-orange-400" : "text-gray-400",
-                    ].join(" ")}
-                  >
-                    {dayLabel(isoDate)}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
+                  {dayLabel(isoDate)}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
 
+      <div className="overflow-x-auto">
+        <div style={{ minWidth: `${7 * 140}px` }}>
           {isLoading ? (
             <LoadingSkeleton />
           ) : (
