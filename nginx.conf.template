@@ -44,6 +44,15 @@ server {
         include /etc/nginx/conf.d/mealie-proxy-headers.conf;
     }
 
+    location ~ ^/api/households/mealplans(/.*)?$ {
+        resolver 127.0.0.11 valid=10s;
+        if ($request_method != GET) {
+            return 405;
+        }
+        proxy_pass $mealie;
+        include /etc/nginx/conf.d/mealie-proxy-headers.conf;
+    }
+
     location = /api/users/self {
         resolver 127.0.0.11 valid=10s;
         if ($request_method != GET) {
