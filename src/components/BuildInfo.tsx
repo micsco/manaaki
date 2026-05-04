@@ -34,18 +34,6 @@ export function BuildInfo() {
           <span>deployed {formattedDate}</span>
         </>
       )}
-      <span className="mx-2">·</span>
-      <span>
-        via{" "}
-        <a
-          href="https://dokploy.com"
-          target="_blank"
-          rel="noreferrer noopener"
-          className="transition-colors hover:text-gray-300"
-        >
-          Dokploy
-        </a>
-      </span>
     </footer>
   )
 }
