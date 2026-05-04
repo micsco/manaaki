@@ -127,11 +127,12 @@ function WeekRow({
   }, [])
 
   return (
-    <div className={`pb-8 ${weekBorderClass}`}>
+    <div className={weekBorderClass}>
       <div ref={sentinelRef} className="h-px" aria-hidden />
       <div
         className={[
-          "sticky top-[57px] z-20 overflow-x-auto",
+          "sticky top-[57px] overflow-x-auto transition-[z-index]",
+          isStuck ? "z-20" : "z-10",
           isCurrentWeek ? "bg-orange-950" : "bg-gray-900",
         ].join(" ")}
       >
@@ -148,7 +149,7 @@ function WeekRow({
             >
               <span
                 className={[
-                  "font-semibold text-[10px] uppercase tracking-wider transition-all duration-150",
+                  "font-semibold text-[10px] uppercase tracking-wider",
                   isStuck ? "mb-0.5 max-h-4 opacity-100" : "max-h-0 overflow-hidden opacity-0",
                   isToday ? "text-orange-400/70" : "text-gray-600",
                 ].join(" ")}
