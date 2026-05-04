@@ -23,8 +23,7 @@ RUN pnpm build
 ARG POSTHOG_CLI_API_KEY
 ARG POSTHOG_PROJECT_ID
 ARG POSTHOG_HOST=https://eu.posthog.com
-RUN --mount=type=secret,id=posthog_cli_api_key,required=false \
-    if [ -n "$POSTHOG_CLI_API_KEY" ] && [ -n "$POSTHOG_PROJECT_ID" ]; then \
+RUN if [ -n "$POSTHOG_CLI_API_KEY" ] && [ -n "$POSTHOG_PROJECT_ID" ]; then \
       GIT_SHA=$(git rev-parse HEAD 2>/dev/null || echo unknown); \
       echo "Uploading source maps to PostHog (release: $GIT_SHA)"; \
       POSTHOG_CLI_TOKEN="$POSTHOG_CLI_API_KEY" \
