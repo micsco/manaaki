@@ -3,6 +3,7 @@ import { type QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router"
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router"
 import type { ReactNode } from "react"
+import { BuildInfo } from "../components/BuildInfo"
 import { CookModeProvider } from "../contexts/CookModeContext"
 import { queryClient } from "../lib/queryClient"
 import "../styles/globals.css"
@@ -78,6 +79,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
       </head>
       <body>
         <div className="root">{children}</div>
+        <BuildInfo />
         <Scripts />
       </body>
     </html>

@@ -16,7 +16,16 @@ ENV VITE_PUBLIC_POSTHOG_PROJECT_TOKEN=$VITE_PUBLIC_POSTHOG_PROJECT_TOKEN
 ENV VITE_PUBLIC_POSTHOG_HOST=$VITE_PUBLIC_POSTHOG_HOST
 
 COPY . .
-RUN pnpm build
+
+# Capture build/version metadata and bake it into the JS bundle via VITE_* vars,
+# so the footer can show "deployed e6f6060 · 2026-05-04".
+RUN GIT_SHA=$(git rev-parse HEAD 2>/dev/null || echo unknown) && \
+    GIT_SHORT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo unknown) && \
+    BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ) && \
+    VITE_BUILD_GIT_SHA="$GIT_SHA" \
+    VITE_BUILD_GIT_SHORT_SHA="$GIT_SHORT_SHA" \
+    VITE_BUILD_TIME="$BUILD_TIME" \
+    pnpm build
 
 # Inject chunkIds + upload source maps to PostHog.
 # - POSTHOG_PROJECT_ID is a non-secret build arg (Dokploy: Build Args).
