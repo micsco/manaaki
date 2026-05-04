@@ -116,7 +116,7 @@ function WeekRow({
     <div className={`mb-8 ${weekBorderClass}`}>
       <div
         className={[
-          "sticky top-[92px] z-10 overflow-x-auto",
+          "sticky top-[92px] z-20 overflow-x-auto",
           isCurrentWeek ? "bg-orange-950" : "bg-gray-900",
         ].join(" ")}
       >
