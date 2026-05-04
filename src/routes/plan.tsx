@@ -108,42 +108,68 @@ function WeekRow({
   })
 
   return (
-    <div className="flex border-gray-800 border-b">
-      {cells.map(({ isoDate, isToday, byType }) => (
-        <div
-          key={isoDate}
-          ref={isToday ? todayRef : undefined}
-          className={[
-            "flex flex-1 flex-col border-gray-800 border-r last:border-r-0",
-            CELL_MIN_W,
-            isToday ? "bg-orange-950/20" : "",
-          ].join(" ")}
-        >
-          <div>
-            {SHOWN_MEAL_TYPES.map((mealType, idx) => {
-              const entry = byType[mealType]
-              return (
-                <div
-                  key={mealType}
-                  className={idx < SHOWN_MEAL_TYPES.length - 1 ? "border-gray-800 border-b" : ""}
-                >
-                  {entry ? (
-                    <MealSlot
-                      entry={entry}
-                      mealType={mealType}
-                      dateLabel={dayLabel(isoDate)}
-                      todayIso={todayIso}
-                      isoDate={isoDate}
-                    />
-                  ) : (
-                    <EmptyMealSlot mealType={mealType} />
-                  )}
-                </div>
-              )
-            })}
-          </div>
+    <div className="mb-4">
+      <div className="sticky top-[93px] z-10 overflow-x-auto border-gray-800 border-b bg-gray-950/95 backdrop-blur-sm">
+        <div className="flex" style={{ minWidth: `${7 * 140}px` }}>
+          {cells.map(({ isoDate, isToday }) => (
+            <div
+              key={isoDate}
+              ref={isToday ? todayRef : undefined}
+              className={[
+                "flex flex-1 items-center justify-center border-gray-800 border-r py-1.5 last:border-r-0",
+                CELL_MIN_W,
+                isToday ? "bg-orange-950/30" : "",
+              ].join(" ")}
+            >
+              <span
+                className={[
+                  "font-semibold text-xs",
+                  isToday ? "text-orange-400" : "text-gray-500",
+                ].join(" ")}
+              >
+                {dayLabel(isoDate)}
+              </span>
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
+
+      <div className="overflow-x-auto">
+        <div className="flex border-gray-800 border-b" style={{ minWidth: `${7 * 140}px` }}>
+          {cells.map(({ isoDate, isToday, byType }) => (
+            <div
+              key={isoDate}
+              className={[
+                "flex flex-1 flex-col border-gray-800 border-r last:border-r-0",
+                CELL_MIN_W,
+                isToday ? "bg-orange-950/20" : "",
+              ].join(" ")}
+            >
+              {SHOWN_MEAL_TYPES.map((mealType, idx) => {
+                const entry = byType[mealType]
+                return (
+                  <div
+                    key={mealType}
+                    className={idx < SHOWN_MEAL_TYPES.length - 1 ? "border-gray-800 border-b" : ""}
+                  >
+                    {entry ? (
+                      <MealSlot
+                        entry={entry}
+                        mealType={mealType}
+                        dateLabel={dayLabel(isoDate)}
+                        todayIso={todayIso}
+                        isoDate={isoDate}
+                      />
+                    ) : (
+                      <EmptyMealSlot mealType={mealType} />
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
@@ -240,59 +266,39 @@ function PlanPage() {
 
       <div className="sticky top-[57px] z-20 overflow-x-auto border-gray-800 border-b bg-gray-950/95 backdrop-blur-sm">
         <div className="flex" style={{ minWidth: `${7 * 140}px` }}>
-          {DAY_ABBREVS.map((day, i) => {
-            const d = new Date(weekMonday(effectiveEndOffset))
-            d.setDate(d.getDate() + i)
-            const isoDate = toIsoDateString(d)
-            const isToday = isoDate === today
-            return (
-              <div
-                key={day}
-                className={[
-                  "flex flex-1 flex-col items-center justify-center py-1.5",
-                  CELL_MIN_W,
-                  isToday ? "bg-orange-950/30" : "",
-                ].join(" ")}
-              >
-                <span className="font-semibold text-[10px] text-gray-500 uppercase tracking-wider">
-                  {day}
-                </span>
-                <span
-                  className={[
-                    "font-semibold text-xs",
-                    isToday ? "text-orange-400" : "text-gray-400",
-                  ].join(" ")}
-                >
-                  {dayLabel(isoDate)}
-                </span>
-              </div>
-            )
-          })}
+          {DAY_ABBREVS.map(day => (
+            <div
+              key={day}
+              className={["flex flex-1 items-center justify-center py-2", CELL_MIN_W].join(" ")}
+            >
+              <span className="font-semibold text-gray-400 text-xs uppercase tracking-wider">
+                {day}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <div style={{ minWidth: `${7 * 140}px` }}>
-          {isLoading ? (
-            <LoadingSkeleton />
-          ) : (
-            <>
-              {weekOffsets.map(offset => (
-                <WeekRow
-                  key={offset}
-                  weekOffset={offset}
-                  entries={entries}
-                  todayIso={today}
-                  todayRef={offset === 0 ? todayRef : undefined}
-                />
-              ))}
+      <div>
+        {isLoading ? (
+          <LoadingSkeleton />
+        ) : (
+          <>
+            {weekOffsets.map(offset => (
+              <WeekRow
+                key={offset}
+                weekOffset={offset}
+                entries={entries}
+                todayIso={today}
+                todayRef={offset === 0 ? todayRef : undefined}
+              />
+            ))}
 
-              <div ref={bottomSentinelRef} className="flex justify-center py-4">
-                {isFetching && <span className="text-gray-500 text-xs">Loading…</span>}
-              </div>
-            </>
-          )}
-        </div>
+            <div ref={bottomSentinelRef} className="flex justify-center py-4">
+              {isFetching && <span className="text-gray-500 text-xs">Loading…</span>}
+            </div>
+          </>
+        )}
       </div>
     </main>
   )
