@@ -113,7 +113,7 @@ function WeekRow({
     : "border-gray-700/50 border-t"
 
   return (
-    <div className={`mb-8 overflow-hidden rounded-sm ${weekBorderClass}`}>
+    <div className={`mb-8 ${weekBorderClass}`}>
       <div
         className={[
           "sticky top-[93px] z-10 overflow-x-auto backdrop-blur-sm",
