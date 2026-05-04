@@ -23,20 +23,21 @@ RUN pnpm build
 # - POSTHOG_CLI_API_KEY comes via a BuildKit secret mount (Dokploy: Build Secrets),
 #   so the value never lands in image layers or ENV. required=false lets local
 #   `docker build` succeed without the secret — the step then no-ops.
+# The CLI reads credentials from POSTHOG_CLI_TOKEN/POSTHOG_CLI_PROJECT_ID/POSTHOG_CLI_HOST
+# env vars; we export them so both `inject` and `upload` invocations inherit them
+# (the CLI runs a credentials precheck before subcommand processing, so per-command
+# `--project-id` flags don't satisfy it).
 ARG POSTHOG_PROJECT_ID
 ARG POSTHOG_HOST=https://eu.posthog.com
 RUN --mount=type=secret,id=POSTHOG_CLI_API_KEY,required=false \
-    POSTHOG_CLI_API_KEY="$(cat /run/secrets/POSTHOG_CLI_API_KEY 2>/dev/null || true)"; \
-    if [ -n "$POSTHOG_CLI_API_KEY" ] && [ -n "$POSTHOG_PROJECT_ID" ]; then \
+    if [ -s /run/secrets/POSTHOG_CLI_API_KEY ] && [ -n "$POSTHOG_PROJECT_ID" ]; then \
+      export POSTHOG_CLI_TOKEN="$(cat /run/secrets/POSTHOG_CLI_API_KEY)"; \
+      export POSTHOG_CLI_PROJECT_ID="$POSTHOG_PROJECT_ID"; \
+      export POSTHOG_CLI_HOST="$POSTHOG_HOST"; \
       GIT_SHA=$(git rev-parse HEAD 2>/dev/null || echo unknown); \
       echo "Uploading source maps to PostHog (release: $GIT_SHA)"; \
-      POSTHOG_CLI_TOKEN="$POSTHOG_CLI_API_KEY" \
-      pnpm dlx @posthog/cli@latest --host "$POSTHOG_HOST" \
-        sourcemap inject --directory dist/client && \
-      POSTHOG_CLI_TOKEN="$POSTHOG_CLI_API_KEY" \
-      pnpm dlx @posthog/cli@latest --host "$POSTHOG_HOST" \
-        sourcemap upload --directory dist/client \
-        --project-id "$POSTHOG_PROJECT_ID" \
+      pnpm dlx @posthog/cli@latest sourcemap inject --directory dist/client && \
+      pnpm dlx @posthog/cli@latest sourcemap upload --directory dist/client \
         --release-name manaaki \
         --release-version "$GIT_SHA"; \
     else \
