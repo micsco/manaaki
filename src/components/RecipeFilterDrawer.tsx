@@ -148,7 +148,6 @@ export function RecipeFilterDrawer({
                   onClearAll()
                   onOpenChange(false)
                 }}
-                className="flex-1"
               >
                 Clear all
               </Button>
@@ -157,7 +156,7 @@ export function RecipeFilterDrawer({
               variant="primary"
               size="lg"
               onClick={() => onOpenChange(false)}
-              className="flex-1"
+              className="flex-1 whitespace-nowrap"
             >
               {activeFilterCount > 0
                 ? `Show results (${activeFilterCount} filter${activeFilterCount === 1 ? "" : "s"})`
