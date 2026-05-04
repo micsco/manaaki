@@ -68,6 +68,76 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
   )
 }
 
+interface FilterPillsProps {
+  proteins: string[]
+  onToggleProtein: (value: string) => void
+  tools: string[]
+  onToggleTool: (value: string) => void
+}
+
+export function FilterPills({ proteins, onToggleProtein, tools, onToggleTool }: FilterPillsProps) {
+  return (
+    <div className="-mx-4 flex gap-2.5 overflow-x-auto px-4 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {PROTEIN_OPTIONS.map(opt => (
+        <FilterChip
+          key={opt.value}
+          icon={opt.icon}
+          label={opt.label}
+          active={proteins.includes(opt.value)}
+          onToggle={() => onToggleProtein(opt.value)}
+        />
+      ))}
+
+      {TOOL_OPTIONS.map(opt => (
+        <FilterChip
+          key={opt.value}
+          icon={opt.icon}
+          label={opt.label}
+          active={tools.includes(opt.value)}
+          onToggle={() => onToggleTool(opt.value)}
+        />
+      ))}
+    </div>
+  )
+}
+
+interface FilterBarProps {
+  search: string
+  onSearchChange: (value: string) => void
+  activeFilterCount: number
+  onOpenDrawer: () => void
+}
+
+export function FilterBar({
+  search,
+  onSearchChange,
+  activeFilterCount,
+  onOpenDrawer,
+}: FilterBarProps) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1">
+        <SearchBar value={search} onChange={onSearchChange} />
+      </div>
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={onOpenDrawer}
+        className="relative shrink-0 gap-1.5 rounded-full"
+        aria-label={activeFilterCount > 0 ? `Filters, ${activeFilterCount} active` : "Filters"}
+      >
+        <Icon path={mdiTune} size={0.65} aria-hidden={true} />
+        Filters
+        {activeFilterCount > 0 && (
+          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 font-bold text-[10px] text-white">
+            {activeFilterCount}
+          </span>
+        )}
+      </Button>
+    </div>
+  )
+}
+
 interface QuickFiltersProps {
   proteins: string[]
   onToggleProtein: (value: string) => void

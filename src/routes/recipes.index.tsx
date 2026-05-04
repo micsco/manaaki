@@ -5,7 +5,7 @@ import { useState } from "react"
 import type { RecipeSummary } from "../api/generated/types.gen"
 import { RecipeCardInfoBadges, RecipeCardToolBadges } from "../components/RecipeCardMeta"
 import { RecipeFilterDrawer } from "../components/RecipeFilterDrawer"
-import { QuickFilters, SearchBar } from "../components/RecipeFilters"
+import { FilterBar, FilterPills } from "../components/RecipeFilters"
 import { Card } from "../components/ui"
 import { useRecipeFilters } from "../hooks/useRecipeFilters"
 import { recipeListQueryOptions } from "../hooks/useRecipeList"
@@ -102,7 +102,7 @@ function RecipeList() {
 
   return (
     <main className="min-h-screen bg-gray-950">
-      <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 pb-44">
         <div className="mb-6">
           <h1 className="mb-1 font-bold text-4xl text-gray-100">Recipes</h1>
           <p className="text-gray-400 text-sm">
@@ -110,20 +110,6 @@ function RecipeList() {
               ? `${filtered.length} of ${recipes.length} recipes`
               : `${recipes.length} recipes`}
           </p>
-        </div>
-
-        <div className="mb-4 space-y-3">
-          <SearchBar value={search} onChange={setSearch} />
-          <QuickFilters
-            proteins={proteins}
-            onToggleProtein={toggleProtein}
-            tools={tools}
-            onToggleTool={toggleTool}
-            time={time}
-            onSetTime={setTimeBucket}
-            activeFilterCount={activeFilterCount}
-            onOpenDrawer={() => setDrawerOpen(true)}
-          />
         </div>
 
         {filtered.length === 0 && isFiltered ? (
@@ -144,6 +130,32 @@ function RecipeList() {
             ))}
           </div>
         )}
+      </div>
+
+      <div
+        className={[
+          "fixed right-0 bottom-0 left-0 z-30",
+          "border-gray-800 border-t",
+          "bg-gray-950/90 backdrop-blur-md supports-[not_(backdrop-filter:blur(1px))]:bg-gray-950",
+        ].join(" ")}
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        <div className="mx-auto max-w-7xl px-4 pt-2 pb-3">
+          <FilterPills
+            proteins={proteins}
+            onToggleProtein={toggleProtein}
+            tools={tools}
+            onToggleTool={toggleTool}
+          />
+          <div className="mt-2">
+            <FilterBar
+              search={search}
+              onSearchChange={setSearch}
+              activeFilterCount={activeFilterCount}
+              onOpenDrawer={() => setDrawerOpen(true)}
+            />
+          </div>
+        </div>
       </div>
 
       <RecipeFilterDrawer
