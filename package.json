@@ -24,7 +24,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/micsco/whats-cookin.git"
+    "url": "git+https://github.com/micsco/manaaki.git"
   },
   "keywords": [],
   "author": "",
@@ -32,9 +32,9 @@
   "type": "module",
   "packageManager": "pnpm@10.33.0",
   "bugs": {
-    "url": "https://github.com/micsco/whats-cookin/issues"
+    "url": "https://github.com/micsco/manaaki/issues"
   },
-  "homepage": "https://github.com/micsco/whats-cookin#readme",
+  "homepage": "https://github.com/micsco/manaaki#readme",
   "dependencies": {
     "@base-ui/react": "^1.0.0",
     "@mdi/js": "^7.4.47",
