@@ -56,14 +56,16 @@ const CELL_MIN_W = "min-w-[140px]"
 
 function EmptyMealSlot({ mealType }: { mealType: ShownMealType }) {
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="border-gray-800/60 border-b px-2 py-1">
-        <span className="font-semibold text-[10px] text-gray-700 uppercase tracking-widest">
-          {mealType}
-        </span>
-      </div>
-      <div className="flex flex-1 items-center justify-center bg-gray-900/30">
-        <span className="text-gray-700 text-xs">—</span>
+    <div className="relative aspect-[16/9] w-full bg-gray-900/30">
+      <div className="absolute inset-0 flex flex-col">
+        <div className="border-gray-800/60 border-b px-2 py-1">
+          <span className="font-semibold text-[10px] text-gray-700 uppercase tracking-widest">
+            {mealType}
+          </span>
+        </div>
+        <div className="flex flex-1 items-center justify-center">
+          <span className="text-gray-700 text-xs">—</span>
+        </div>
       </div>
     </div>
   )
@@ -83,11 +85,7 @@ function MealSlot({
   isoDate: string
 }) {
   const eyebrow = `${isoDate === todayIso ? "Today" : dateLabel} · ${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`
-  return (
-    <div className="flex flex-1 flex-col">
-      <MealPlanEntryCard entry={entry} dayLabel={eyebrow} compact />
-    </div>
-  )
+  return <MealPlanEntryCard entry={entry} dayLabel={eyebrow} compact />
 }
 
 function WeekRow({
@@ -142,7 +140,7 @@ function WeekRow({
             </span>
           </div>
 
-          <div className="flex flex-1 flex-col">
+          <div>
             {SHOWN_MEAL_TYPES.map((mealType, idx) => {
               const entry = byType[mealType]
               return (
