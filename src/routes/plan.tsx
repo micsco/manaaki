@@ -119,22 +119,6 @@ function WeekRow({
             isToday ? "bg-orange-950/20" : "",
           ].join(" ")}
         >
-          <div
-            className={[
-              "border-b px-2 py-1 text-center",
-              isToday ? "border-orange-800/40 bg-orange-950/30" : "border-gray-800 bg-gray-900/50",
-            ].join(" ")}
-          >
-            <span
-              className={[
-                "font-semibold text-xs",
-                isToday ? "text-orange-400" : "text-gray-500",
-              ].join(" ")}
-            >
-              {dayLabel(isoDate)}
-            </span>
-          </div>
-
           <div>
             {SHOWN_MEAL_TYPES.map((mealType, idx) => {
               const entry = byType[mealType]
@@ -257,17 +241,34 @@ function PlanPage() {
       <div className="overflow-x-auto">
         <div style={{ minWidth: `${7 * 140}px` }}>
           <div className="sticky top-[57px] z-20 flex border-gray-800 border-b bg-gray-950/95 backdrop-blur-sm">
-            {DAY_ABBREVS.map(day => (
-              <div
-                key={day}
-                className={[
-                  "flex flex-1 items-center justify-center py-2 font-semibold text-gray-400 text-xs uppercase tracking-wider",
-                  CELL_MIN_W,
-                ].join(" ")}
-              >
-                {day}
-              </div>
-            ))}
+            {DAY_ABBREVS.map((day, i) => {
+              const d = new Date(weekMonday(effectiveEndOffset))
+              d.setDate(d.getDate() + i)
+              const isoDate = toIsoDateString(d)
+              const isToday = isoDate === today
+              return (
+                <div
+                  key={day}
+                  className={[
+                    "flex flex-1 flex-col items-center justify-center py-1.5",
+                    CELL_MIN_W,
+                    isToday ? "bg-orange-950/30" : "",
+                  ].join(" ")}
+                >
+                  <span className="font-semibold text-[10px] text-gray-500 uppercase tracking-wider">
+                    {day}
+                  </span>
+                  <span
+                    className={[
+                      "font-semibold text-xs",
+                      isToday ? "text-orange-400" : "text-gray-400",
+                    ].join(" ")}
+                  >
+                    {dayLabel(isoDate)}
+                  </span>
+                </div>
+              )
+            })}
           </div>
 
           {isLoading ? (
