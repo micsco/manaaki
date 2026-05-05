@@ -56,10 +56,14 @@ export function ServingsSelect({ value, onChange, defaultServings }: ServingsSel
                   <Select.ItemIndicator className="w-3 shrink-0 text-orange-500">
                     <Icon path={mdiCheck} size={0.5} aria-hidden />
                   </Select.ItemIndicator>
-                  {n === defaultServings && <span className="text-gray-600 text-xs">original</span>}
-                  <Select.ItemText>
-                    <span className="ml-auto tabular-nums">{n}</span>
-                  </Select.ItemText>
+                  <span className="flex flex-1 items-baseline justify-end gap-2">
+                    {n === defaultServings && (
+                      <span className="text-gray-600 text-xs">original</span>
+                    )}
+                    <Select.ItemText>
+                      <span className="tabular-nums">{n}</span>
+                    </Select.ItemText>
+                  </span>
                 </Select.Item>
               ))}
             </Select.List>
