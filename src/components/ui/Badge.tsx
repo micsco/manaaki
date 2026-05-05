@@ -7,7 +7,7 @@ interface BadgeProps {
 }
 
 export function Badge({ children, variant = "tag", className = "" }: BadgeProps) {
-  const baseClasses = "px-3 py-1 rounded-full text-sm font-medium"
+  const baseClasses = "px-2 py-0.5 rounded-full text-xs font-medium"
 
   const variantClasses = {
     category: "bg-orange-900/30 text-orange-300 border border-orange-800/50",
