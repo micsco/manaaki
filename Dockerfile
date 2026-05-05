@@ -65,7 +65,7 @@ COPY mealie-proxy-headers.conf.template /etc/nginx/conf-templates/mealie-proxy-h
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
-COPY --from=build /app/dist/client /usr/share/nginx/html
+COPY --from=build /app/dist/client /app/html
 
 EXPOSE 80
 
