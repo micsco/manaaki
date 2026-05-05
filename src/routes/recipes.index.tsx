@@ -23,7 +23,8 @@ export const Route = createFileRoute("/recipes/")({
     meta: [{ title: "Recipes · Manaaki" }],
   }),
   loader: ({ context: { queryClient } }) =>
-    void queryClient.ensureQueryData(recipeListQueryOptions),
+    // biome-ignore lint/suspicious/noEmptyBlockStatements: swallow fetch errors during SSR prerender (no base URL in Node)
+    void queryClient.ensureQueryData(recipeListQueryOptions).catch(_e => {}),
   component: RecipeList,
   pendingComponent: RecipeListSkeleton,
 })

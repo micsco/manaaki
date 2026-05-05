@@ -54,6 +54,17 @@ export default defineConfig(({ mode }) => {
       svgr(),
       tanstackStart({
         spa: { enabled: true },
+        prerender: {
+          enabled: true,
+          autoStaticPathsDiscovery: false,
+          crawlLinks: false,
+        },
+        pages: [
+          {
+            path: '/recipes/',
+            prerender: { enabled: true },
+          },
+        ],
       }),
       // viteReact must come after tanstackStart
       viteReact(),

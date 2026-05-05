@@ -81,7 +81,7 @@ server {
     }
 
     location / {
-        try_files $uri $uri/ /_shell.html;
+        try_files $uri $uri/index.html /_shell.html;
     }
 
     gzip on;
