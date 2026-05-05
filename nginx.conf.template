@@ -1,6 +1,6 @@
 server {
     listen 80;
-    root /usr/share/nginx/html;
+    root /app/html;
 
     # TanStack Start SPA builds to _shell.html, not index.html
     index _shell.html;
