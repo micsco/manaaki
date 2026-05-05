@@ -58,7 +58,7 @@ function DescriptionRow({ recipe }: { recipe: RecipeOutput }) {
         )}
       </div>
       {hasNutrition && (
-        <div className="w-72 shrink-0">
+        <div className="w-96 shrink-0">
           <NutritionPanel nutrition={recipe.nutrition} settings={recipe.settings} />
         </div>
       )}
@@ -113,6 +113,11 @@ export function RecipeBody({ recipe, img }: { recipe: RecipeOutput; img?: string
   return (
     <div className={isCookMode ? "h-full" : "bg-gray-950"}>
       {!isCookMode && <DescriptionRow recipe={recipe} />}
+      {!isCookMode && (
+        <div className="md:hidden">
+          <NutritionPanel nutrition={recipe.nutrition} settings={recipe.settings} />
+        </div>
+      )}
       {hasIngredients || hasInstructions ? (
         <>
           {!isCookMode && (

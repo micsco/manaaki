@@ -85,7 +85,7 @@ export function NutritionPanel({
   if (primary.length === 0 && secondary.length === 0) return null
 
   return (
-    <section aria-label="Nutrition information" className="mx-auto max-w-6xl px-6 pb-6 md:px-10">
+    <section aria-label="Nutrition information" className="mx-auto max-w-6xl px-6 pb-6 md:ps-10">
       <div className="rounded-xl border border-gray-800 bg-gray-900 px-5 py-4">
         <p className="mb-3 font-sans font-semibold text-gray-400 text-xs uppercase tracking-widest">
           Per serving

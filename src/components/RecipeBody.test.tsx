@@ -142,7 +142,9 @@ describe("RecipeBody", () => {
         settings: { showNutrition: true },
       }
       render(<RecipeBody recipe={recipeWithNutrition} />)
-      expect(screen.getByRole("region", { name: /nutrition information/i })).toBeInTheDocument()
+      expect(
+        screen.getAllByRole("region", { name: /nutrition information/i }).length
+      ).toBeGreaterThan(0)
     })
 
     it("does not render the nutrition panel when showNutrition is false", () => {
