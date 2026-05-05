@@ -50,10 +50,6 @@ export default defineConfig(({ mode }) => {
       sourcemap: true,
     },
 
-    ssr: {
-      noExternal: ['@mdi/react'],
-    },
-
     plugins: [
       svgr(),
       tanstackStart({

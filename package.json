@@ -39,7 +39,6 @@
   "dependencies": {
     "@base-ui/react": "^1.0.0",
     "@mdi/js": "^7.4.47",
-    "@mdi/react": "^1.6.1",
     "@posthog/react": "^1.9.0",
     "@tanstack/intent": "^0.0.36",
     "@tanstack/react-hotkeys": "^0.10.0",
