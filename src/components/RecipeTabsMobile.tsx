@@ -1,7 +1,13 @@
 import { useState } from "react"
-import type { RecipeIngredientOutput, RecipeStep } from "../api/generated/types.gen"
+import type {
+  RecipeCategory,
+  RecipeIngredientOutput,
+  RecipeStep,
+  RecipeTag,
+} from "../api/generated/types.gen"
 import { IngredientsSection } from "./IngredientsSection"
 import { InstructionsSection } from "./InstructionsSection"
+import { Badge } from "./ui"
 
 type Tab = "ingredients" | "method" | "description"
 
@@ -15,6 +21,8 @@ export function RecipeTabsMobile({
   ingredients,
   instructions,
   description,
+  categories,
+  tags,
   recipeId,
   defaultServings,
   img,
@@ -22,11 +30,13 @@ export function RecipeTabsMobile({
   ingredients: RecipeIngredientOutput[]
   instructions: RecipeStep[]
   description?: string | null
+  categories?: RecipeCategory[] | null
+  tags?: RecipeTag[] | null
   recipeId: string
   defaultServings?: number | null
   img?: string | null
 }) {
-  const hasDescription = !!description
+  const hasDescription = !!(description || categories?.length || tags?.length)
   const availableTabs: Tab[] = [
     "ingredients",
     "method",
@@ -91,7 +101,21 @@ export function RecipeTabsMobile({
           hidden={activeTab !== "description"}
           className="px-6 py-6"
         >
-          <p className="text-base text-gray-300 leading-relaxed">{description}</p>
+          {description && <p className="text-base text-gray-300 leading-relaxed">{description}</p>}
+          {categories?.length || tags?.length ? (
+            <div className={`flex flex-wrap gap-2 ${description ? "mt-4" : ""}`}>
+              {categories?.map(c => (
+                <Badge key={c.id ?? c.slug} variant="category">
+                  {c.name}
+                </Badge>
+              ))}
+              {tags?.map(t => (
+                <Badge key={t.id ?? t.slug} variant="tag">
+                  {t.name}
+                </Badge>
+              ))}
+            </div>
+          ) : null}
         </div>
       )}
     </div>

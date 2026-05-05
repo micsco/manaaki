@@ -13,7 +13,6 @@ import type { RecipeNavItem } from "../hooks/useRecipeNav"
 import { formatTime, mealieRecipeUrl, recipeUrl } from "../utils/recipe"
 import { Icon } from "./Icon"
 import { MealieLogo } from "./MealieLogo"
-import { Badge } from "./ui"
 
 function HeroRating({ rating }: { rating: number }) {
   return (
@@ -81,134 +80,108 @@ export function RecipeHeader({
   const posthog = usePostHog()
 
   return (
-    <div className="bg-gray-950 text-gray-100">
-      <div className="relative h-[55vh] min-h-64 w-full overflow-hidden bg-gray-900">
-        <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
-          <Link
-            to="/recipes"
+    <div className="relative h-[55vh] min-h-64 w-full overflow-hidden bg-gray-900">
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+        <Link
+          to="/recipes"
+          className="inline-flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 font-medium text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+        >
+          <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
+          All recipes
+        </Link>
+        {mealieUrl && (
+          <a
+            href={mealieUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="View in Mealie"
             className="inline-flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 font-medium text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+            onClick={() =>
+              posthog.capture("recipe_viewed_in_mealie", {
+                recipe_id: recipe.id,
+                recipe_name: recipe.name,
+              })
+            }
           >
-            <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
-            All recipes
-          </Link>
-          {mealieUrl && (
-            <a
-              href={mealieUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="View in Mealie"
-              className="inline-flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 font-medium text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+            <MealieLogo className="h-4 w-4" />
+            View in Mealie
+          </a>
+        )}
+      </div>
+
+      {(prevRecipe || nextRecipe) && (
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+          {prevRecipe ? (
+            <Link
+              to={recipeUrl(prevRecipe.id, prevRecipe.slug)}
+              aria-label="Previous recipe"
+              className="inline-flex items-center justify-center rounded-full bg-black/40 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
               onClick={() =>
-                posthog.capture("recipe_viewed_in_mealie", {
-                  recipe_id: recipe.id,
-                  recipe_name: recipe.name,
+                posthog.capture("recipe_navigated", {
+                  direction: "prev",
+                  method: "click",
+                  from_recipe_id: recipe.id,
+                  from_recipe_name: recipe.name,
+                  to_recipe_id: prevRecipe.id,
+                  to_recipe_name: prevRecipe.name,
                 })
               }
             >
-              <MealieLogo className="h-4 w-4" />
-              View in Mealie
-            </a>
+              <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
+            </Link>
+          ) : (
+            <span className="inline-flex items-center justify-center rounded-full bg-black/20 p-1.5 text-white/30">
+              <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
+            </span>
           )}
-        </div>
-
-        {(prevRecipe || nextRecipe) && (
-          <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-            {prevRecipe ? (
-              <Link
-                to={recipeUrl(prevRecipe.id, prevRecipe.slug)}
-                aria-label="Previous recipe"
-                className="inline-flex items-center justify-center rounded-full bg-black/40 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
-                onClick={() =>
-                  posthog.capture("recipe_navigated", {
-                    direction: "prev",
-                    method: "click",
-                    from_recipe_id: recipe.id,
-                    from_recipe_name: recipe.name,
-                    to_recipe_id: prevRecipe.id,
-                    to_recipe_name: prevRecipe.name,
-                  })
-                }
-              >
-                <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
-              </Link>
-            ) : (
-              <span className="inline-flex items-center justify-center rounded-full bg-black/20 p-1.5 text-white/30">
-                <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
-              </span>
-            )}
-            {nextRecipe ? (
-              <Link
-                to={recipeUrl(nextRecipe.id, nextRecipe.slug)}
-                aria-label="Next recipe"
-                className="inline-flex items-center justify-center rounded-full bg-black/40 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
-                onClick={() =>
-                  posthog.capture("recipe_navigated", {
-                    direction: "next",
-                    method: "click",
-                    from_recipe_id: recipe.id,
-                    from_recipe_name: recipe.name,
-                    to_recipe_id: nextRecipe.id,
-                    to_recipe_name: nextRecipe.name,
-                  })
-                }
-              >
-                <Icon path={mdiChevronRight} size={0.75} aria-hidden={true} />
-              </Link>
-            ) : (
-              <span className="inline-flex items-center justify-center rounded-full bg-black/20 p-1.5 text-white/30">
-                <Icon path={mdiChevronRight} size={0.75} aria-hidden={true} />
-              </span>
-            )}
-          </div>
-        )}
-
-        {img ? (
-          <img
-            src={img}
-            alt={recipe.name ?? ""}
-            className="h-full w-full object-cover"
-            width={1600}
-            height={900}
-          />
-        ) : (
-          <div className="h-full w-full bg-gray-800" />
-        )}
-
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
-
-        <div className="absolute right-0 bottom-0 left-0 px-6 pb-12 md:px-10 md:pb-16">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <h1 className="max-w-2xl font-bold font-serif text-4xl text-white leading-tight drop-shadow-lg md:text-5xl lg:text-6xl">
-              {recipe.name}
-            </h1>
-            <HeroStats recipe={recipe} />
-          </div>
-        </div>
-      </div>
-
-      {(recipe.description || recipe.recipeCategory?.length || recipe.tags?.length) && (
-        <div className="mx-auto max-w-6xl px-6 py-6 md:px-10">
-          {recipe.description && (
-            <p className="mb-4 hidden max-w-3xl text-gray-300 text-lg leading-relaxed md:block">
-              {recipe.description}
-            </p>
+          {nextRecipe ? (
+            <Link
+              to={recipeUrl(nextRecipe.id, nextRecipe.slug)}
+              aria-label="Next recipe"
+              className="inline-flex items-center justify-center rounded-full bg-black/40 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+              onClick={() =>
+                posthog.capture("recipe_navigated", {
+                  direction: "next",
+                  method: "click",
+                  from_recipe_id: recipe.id,
+                  from_recipe_name: recipe.name,
+                  to_recipe_id: nextRecipe.id,
+                  to_recipe_name: nextRecipe.name,
+                })
+              }
+            >
+              <Icon path={mdiChevronRight} size={0.75} aria-hidden={true} />
+            </Link>
+          ) : (
+            <span className="inline-flex items-center justify-center rounded-full bg-black/20 p-1.5 text-white/30">
+              <Icon path={mdiChevronRight} size={0.75} aria-hidden={true} />
+            </span>
           )}
-          {recipe.recipeCategory?.length || recipe.tags?.length ? (
-            <div className="flex flex-wrap gap-2">
-              {recipe.recipeCategory?.map(c => (
-                <Badge key={c.id ?? c.slug} variant="category">
-                  {c.name}
-                </Badge>
-              ))}
-              {recipe.tags?.map(t => (
-                <Badge key={t.id ?? t.slug} variant="tag">
-                  {t.name}
-                </Badge>
-              ))}
-            </div>
-          ) : null}
         </div>
       )}
+
+      {img ? (
+        <img
+          src={img}
+          alt={recipe.name ?? ""}
+          className="h-full w-full object-cover"
+          width={1600}
+          height={900}
+        />
+      ) : (
+        <div className="h-full w-full bg-gray-800" />
+      )}
+
+      <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
+
+      <div className="absolute right-0 bottom-0 left-0 px-6 pb-12 md:px-10 md:pb-16">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <h1 className="max-w-2xl font-bold font-serif text-4xl text-white leading-tight drop-shadow-lg md:text-5xl lg:text-6xl">
+            {recipe.name}
+          </h1>
+          <HeroStats recipe={recipe} />
+        </div>
+      </div>
     </div>
   )
 }

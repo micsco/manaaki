@@ -103,9 +103,31 @@ describe("RecipeBody", () => {
       expect(screen.getByRole("tab", { name: /description/i })).toBeInTheDocument()
     })
 
-    it("does not render the Description tab when there is no description", () => {
+    it("renders a Description tab when the recipe has categories", () => {
+      const recipeWithCats: RecipeOutput = {
+        ...minimalRecipe,
+        recipeCategory: [{ id: "c1", slug: "dinner", name: "Dinner", groupId: "g1" }],
+      }
+      render(<RecipeBody recipe={recipeWithCats} />)
+      expect(screen.getByRole("tab", { name: /description/i })).toBeInTheDocument()
+    })
+
+    it("does not render the Description tab when there is no description, categories or tags", () => {
       render(<RecipeBody recipe={minimalRecipe} />)
       expect(screen.queryByRole("tab", { name: /description/i })).not.toBeInTheDocument()
+    })
+
+    it("renders description and tags in the desktop description row", () => {
+      const recipeWithAll: RecipeOutput = {
+        ...minimalRecipe,
+        description: "A rich pasta.",
+        recipeCategory: [{ id: "c1", slug: "dinner", name: "Dinner", groupId: "g1" }],
+        tags: [{ id: "t1", slug: "italian", name: "Italian", groupId: "g1" }],
+      }
+      render(<RecipeBody recipe={recipeWithAll} />)
+      expect(screen.getAllByText("A rich pasta.").length).toBeGreaterThan(0)
+      expect(screen.getAllByText("Dinner").length).toBeGreaterThan(0)
+      expect(screen.getAllByText("Italian").length).toBeGreaterThan(0)
     })
 
     it("renders the nutrition panel when showNutrition is true and data is present", () => {

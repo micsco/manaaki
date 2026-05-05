@@ -5,6 +5,7 @@ import { InstructionsSection } from "./InstructionsSection"
 import { NutritionPanel } from "./NutritionPanel"
 import { RecipeNotes } from "./RecipeNotes"
 import { RecipeTabsMobile } from "./RecipeTabsMobile"
+import { Badge } from "./ui"
 
 function RecipeFooter({ recipe }: { recipe: RecipeOutput }) {
   return (
@@ -22,6 +23,44 @@ function RecipeFooter({ recipe }: { recipe: RecipeOutput }) {
             {recipe.orgURL}
           </a>
         </p>
+      )}
+    </div>
+  )
+}
+
+function DescriptionRow({ recipe }: { recipe: RecipeOutput }) {
+  const hasDescription = !!recipe.description
+  const hasCategories = (recipe.recipeCategory?.length ?? 0) > 0
+  const hasTags = (recipe.tags?.length ?? 0) > 0
+  const hasNutrition = !!recipe.settings?.showNutrition && !!recipe.nutrition
+
+  if (!hasDescription && !hasCategories && !hasTags && !hasNutrition) return null
+
+  return (
+    <div className="mx-auto hidden max-w-6xl items-start gap-10 px-6 pt-8 pb-2 md:flex md:px-10">
+      <div className="min-w-0 flex-1">
+        {hasDescription && (
+          <p className="mb-4 text-gray-300 text-lg leading-relaxed">{recipe.description}</p>
+        )}
+        {(hasCategories || hasTags) && (
+          <div className="flex flex-wrap gap-2">
+            {recipe.recipeCategory?.map(c => (
+              <Badge key={c.id ?? c.slug} variant="category">
+                {c.name}
+              </Badge>
+            ))}
+            {recipe.tags?.map(t => (
+              <Badge key={t.id ?? t.slug} variant="tag">
+                {t.name}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+      {hasNutrition && (
+        <div className="w-72 shrink-0">
+          <NutritionPanel nutrition={recipe.nutrition} settings={recipe.settings} />
+        </div>
       )}
     </div>
   )
@@ -73,7 +112,7 @@ export function RecipeBody({ recipe, img }: { recipe: RecipeOutput; img?: string
 
   return (
     <div className={isCookMode ? "h-full" : "bg-gray-950"}>
-      {!isCookMode && <NutritionPanel nutrition={recipe.nutrition} settings={recipe.settings} />}
+      {!isCookMode && <DescriptionRow recipe={recipe} />}
       {hasIngredients || hasInstructions ? (
         <>
           {!isCookMode && (
@@ -81,6 +120,8 @@ export function RecipeBody({ recipe, img }: { recipe: RecipeOutput; img?: string
               ingredients={recipe.recipeIngredient ?? []}
               instructions={recipe.recipeInstructions ?? []}
               description={recipe.description}
+              categories={recipe.recipeCategory}
+              tags={recipe.tags}
               recipeId={recipe.id ?? ""}
               defaultServings={recipe.recipeServings}
               img={img}
