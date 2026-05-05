@@ -25,6 +25,7 @@ export const Route = createFileRoute("/recipes/")({
   loader: ({ context: { queryClient } }) =>
     void queryClient.ensureQueryData(recipeListQueryOptions),
   component: RecipeList,
+  pendingComponent: RecipeListSkeleton,
 })
 
 function RecipeImage({ recipe }: { recipe: RecipeSummary }) {
@@ -115,6 +116,58 @@ function RecipeCardSkeleton() {
         </div>
       </div>
     </Card>
+  )
+}
+
+function RecipeListSkeleton() {
+  return (
+    <main className="min-h-screen bg-gray-950">
+      <div className="mx-auto max-w-7xl px-4 pt-5 pb-44">
+        <div className="mb-6 flex items-center gap-2.5 text-gray-400">
+          <ManaakiLogo className="size-8 shrink-0" />
+          <h1 className="font-bold text-4xl leading-none">Manaaki</h1>
+        </div>
+
+        <div
+          role="status"
+          aria-label="Loading recipes"
+          className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        >
+          {Array.from({ length: SKELETON_CARD_COUNT }, (_, i) => (
+            <RecipeCardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+
+      <div className="fixed right-0 bottom-[68px] left-0 z-30 px-4 pb-1">
+        <div className="mx-auto max-w-7xl">
+          <FilterPills
+            proteins={[]}
+            onToggleProtein={() => undefined}
+            tools={[]}
+            onToggleTool={() => undefined}
+          />
+        </div>
+      </div>
+
+      <div
+        className={[
+          "fixed right-0 bottom-0 left-0 z-30",
+          "border-gray-800 border-t",
+          "bg-gray-950/90 backdrop-blur-md supports-[not_(backdrop-filter:blur(1px))]:bg-gray-950",
+        ].join(" ")}
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        <div className="mx-auto max-w-7xl px-4 py-3">
+          <FilterBar
+            search=""
+            onSearchChange={() => undefined}
+            activeFilterCount={0}
+            onOpenDrawer={() => undefined}
+          />
+        </div>
+      </div>
+    </main>
   )
 }
 

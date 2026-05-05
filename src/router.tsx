@@ -7,6 +7,7 @@ export function getRouter() {
     routeTree,
     scrollRestoration: true,
     context: { queryClient },
+    defaultPendingMs: 0,
   })
   return router
 }
