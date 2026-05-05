@@ -25,20 +25,7 @@ export const Route = createFileRoute("/plan")({
 })
 
 const DAY_ABBREVS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-const MONTH_SHORT = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-]
+const monthFormatter = new Intl.DateTimeFormat("en", { month: "short" })
 
 const SHOWN_MEAL_TYPES = ["lunch", "dinner"] as const
 type ShownMealType = (typeof SHOWN_MEAL_TYPES)[number]
@@ -49,7 +36,7 @@ function weekMonday(weekOffset: number): Date {
 
 function dayLabel(isoDate: string): string {
   const d = new Date(`${isoDate}T00:00:00`)
-  return `${d.getDate()} ${MONTH_SHORT[d.getMonth()]}`
+  return `${d.getDate()} ${monthFormatter.format(d)}`
 }
 
 const CELL_MIN_W = "min-w-[140px]"
