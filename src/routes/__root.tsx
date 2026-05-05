@@ -13,9 +13,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "theme-color", content: "#1f2937" },
       { title: "Manaaki" },
     ],
     links: [
+      {
+        rel: "icon",
+        href: "/manaaki.svg",
+        type: "image/svg+xml",
+      },
+      {
+        rel: "apple-touch-icon",
+        href: "/manaaki.svg",
+      },
+      {
+        rel: "manifest",
+        href: "/manifest.webmanifest",
+      },
       {
         rel: "preconnect",
         href: "https://fonts.googleapis.com",

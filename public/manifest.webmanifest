@@ -1,0 +1,23 @@
+{
+  "name": "Manaaki",
+  "short_name": "Manaaki",
+  "description": "An alternative frontend for Mealie — the self-hosted recipe manager.",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#1f2937",
+  "background_color": "#1f2937",
+  "icons": [
+    {
+      "src": "/manaaki.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/manaaki.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
