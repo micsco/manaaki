@@ -50,10 +50,13 @@ export default defineConfig(({ mode }) => {
       sourcemap: true,
     },
 
+    ssr: {
+      noExternal: ['@mdi/react'],
+    },
+
     plugins: [
       svgr(),
       tanstackStart({
-        prerender: { enabled: false },
         spa: { enabled: true },
       }),
       // viteReact must come after tanstackStart
