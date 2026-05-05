@@ -84,4 +84,50 @@ describe("IngredientsSection", () => {
       expect(screen.getByText("Dry ingredients")).toBeInTheDocument()
     })
   })
+
+  describe("servings selector", () => {
+    it("does not render the servings selector when defaultServings is not provided", () => {
+      render(<IngredientsSection ingredients={ingredients} recipeId="test-recipe" />)
+      expect(screen.queryByRole("combobox")).not.toBeInTheDocument()
+    })
+
+    it("does not render the servings selector when defaultServings is null", () => {
+      render(
+        <IngredientsSection
+          ingredients={ingredients}
+          recipeId="test-recipe"
+          defaultServings={null}
+        />
+      )
+      expect(screen.queryByRole("combobox")).not.toBeInTheDocument()
+    })
+
+    it("does not render the servings selector when defaultServings is 0", () => {
+      render(
+        <IngredientsSection ingredients={ingredients} recipeId="test-recipe" defaultServings={0} />
+      )
+      expect(screen.queryByRole("combobox")).not.toBeInTheDocument()
+    })
+
+    it("renders the servings selector when defaultServings is a positive number", () => {
+      render(
+        <IngredientsSection ingredients={ingredients} recipeId="test-recipe" defaultServings={4} />
+      )
+      expect(screen.getByRole("combobox", { name: /servings/i })).toBeInTheDocument()
+    })
+
+    it("initialises the selector to the defaultServings value", () => {
+      render(
+        <IngredientsSection ingredients={ingredients} recipeId="test-recipe" defaultServings={4} />
+      )
+      expect(screen.getByText("4")).toBeInTheDocument()
+    })
+
+    it("trigger aria-label reflects the current servings count", () => {
+      render(
+        <IngredientsSection ingredients={ingredients} recipeId="test-recipe" defaultServings={4} />
+      )
+      expect(screen.getByRole("combobox", { name: /servings: 4/i })).toBeInTheDocument()
+    })
+  })
 })

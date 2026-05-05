@@ -44,6 +44,7 @@ export function RecipeBody({ recipe, img }: { recipe: RecipeOutput; img?: string
             <IngredientsSection
               ingredients={recipe.recipeIngredient ?? []}
               recipeId={recipe.id ?? ""}
+              defaultServings={recipe.recipeServings}
             />
           )}
           {hasInstructions && (

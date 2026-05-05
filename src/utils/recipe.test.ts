@@ -6,6 +6,7 @@ import {
   mealieRecipeUrl,
   parseTimeMinutes,
   recipeImageUrl,
+  scaleQuantity,
 } from "./recipe"
 
 describe("mealieRecipeUrl", () => {
@@ -302,5 +303,39 @@ describe("formatQuantity", () => {
   it("formats eighth fractions", () => {
     expect(formatQuantity(0.125)).toBe("⅛")
     expect(formatQuantity(0.875)).toBe("⅞")
+  })
+})
+
+describe("scaleQuantity", () => {
+  it("returns null for null quantity", () => {
+    expect(scaleQuantity(null, 2)).toBeNull()
+  })
+
+  it("returns undefined for undefined quantity", () => {
+    expect(scaleQuantity(undefined, 2)).toBeUndefined()
+  })
+
+  it("returns 0 for zero quantity", () => {
+    expect(scaleQuantity(0, 2)).toBe(0)
+  })
+
+  it("doubles a whole number quantity", () => {
+    expect(scaleQuantity(2, 2)).toBe(4)
+  })
+
+  it("halves a whole number quantity", () => {
+    expect(scaleQuantity(4, 0.5)).toBe(2)
+  })
+
+  it("scales by a fractional ratio", () => {
+    expect(scaleQuantity(3, 2 / 3)).toBeCloseTo(2)
+  })
+
+  it("scales a decimal quantity", () => {
+    expect(scaleQuantity(0.5, 3)).toBeCloseTo(1.5)
+  })
+
+  it("scales by 1 returns the original value", () => {
+    expect(scaleQuantity(5, 1)).toBe(5)
   })
 })

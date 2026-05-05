@@ -76,6 +76,18 @@ export function ingredientStorageKey(recipeId: string, index: number): string {
   return `recipe-${recipeId}-ingredient-${index}`
 }
 
+export function servingsStorageKey(recipeId: string): string {
+  return `recipe-${recipeId}-servings`
+}
+
+export function scaleQuantity(
+  quantity: number | null | undefined,
+  scale: number
+): number | null | undefined {
+  if (quantity == null || quantity === 0) return quantity
+  return quantity * scale
+}
+
 export interface TitleGroup<T> {
   title: string | null
   items: { item: T; index: number }[]
