@@ -189,7 +189,7 @@ export function RecipeHeader({
       {(recipe.description || recipe.recipeCategory?.length || recipe.tags?.length) && (
         <div className="mx-auto max-w-6xl px-6 py-6 md:px-10">
           {recipe.description && (
-            <p className="mb-4 max-w-3xl text-gray-300 text-lg leading-relaxed">
+            <p className="mb-4 hidden max-w-3xl text-gray-300 text-lg leading-relaxed md:block">
               {recipe.description}
             </p>
           )}

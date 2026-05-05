@@ -42,12 +42,14 @@ describe("RecipeBody", () => {
   describe("normal mode", () => {
     it("renders the Ingredients section", () => {
       render(<RecipeBody recipe={minimalRecipe} />)
-      expect(screen.getByRole("heading", { name: /ingredients/i })).toBeInTheDocument()
+      const headings = screen.getAllByRole("heading", { name: /ingredients/i })
+      expect(headings.length).toBeGreaterThan(0)
     })
 
     it("renders the Method section", () => {
       render(<RecipeBody recipe={minimalRecipe} />)
-      expect(screen.getByRole("heading", { name: /method/i })).toBeInTheDocument()
+      const headings = screen.getAllByRole("heading", { name: /method/i })
+      expect(headings.length).toBeGreaterThan(0)
     })
 
     it("renders the source URL when provided", () => {
@@ -75,14 +77,65 @@ describe("RecipeBody", () => {
       expect(screen.getByText("Use fresh pasta.")).toBeInTheDocument()
     })
 
-    it("renders nothing when there are no ingredients or instructions", () => {
+    it("renders no ingredient or method sections when there are none", () => {
       const emptyRecipe: RecipeOutput = {
         ...minimalRecipe,
         recipeIngredient: [],
         recipeInstructions: [],
       }
-      const { container } = render(<RecipeBody recipe={emptyRecipe} />)
-      expect(container.querySelector("section")).not.toBeInTheDocument()
+      render(<RecipeBody recipe={emptyRecipe} />)
+      expect(screen.queryByRole("heading", { name: /ingredients/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole("heading", { name: /method/i })).not.toBeInTheDocument()
+    })
+
+    it("renders the mobile tab bar with Ingredients and Method tabs", () => {
+      render(<RecipeBody recipe={minimalRecipe} />)
+      expect(screen.getByRole("tab", { name: /ingredients/i })).toBeInTheDocument()
+      expect(screen.getByRole("tab", { name: /method/i })).toBeInTheDocument()
+    })
+
+    it("renders a Description tab when the recipe has a description", () => {
+      const recipeWithDesc: RecipeOutput = {
+        ...minimalRecipe,
+        description: "A simple pasta recipe.",
+      }
+      render(<RecipeBody recipe={recipeWithDesc} />)
+      expect(screen.getByRole("tab", { name: /description/i })).toBeInTheDocument()
+    })
+
+    it("does not render the Description tab when there is no description", () => {
+      render(<RecipeBody recipe={minimalRecipe} />)
+      expect(screen.queryByRole("tab", { name: /description/i })).not.toBeInTheDocument()
+    })
+
+    it("renders the nutrition panel when showNutrition is true and data is present", () => {
+      const recipeWithNutrition: RecipeOutput = {
+        ...minimalRecipe,
+        nutrition: {
+          calories: "400",
+          proteinContent: "30",
+          carbohydrateContent: "50",
+          fatContent: "10",
+        },
+        settings: { showNutrition: true },
+      }
+      render(<RecipeBody recipe={recipeWithNutrition} />)
+      expect(screen.getByRole("region", { name: /nutrition information/i })).toBeInTheDocument()
+    })
+
+    it("does not render the nutrition panel when showNutrition is false", () => {
+      const recipeWithNutrition: RecipeOutput = {
+        ...minimalRecipe,
+        nutrition: {
+          calories: "400",
+          proteinContent: "30",
+        },
+        settings: { showNutrition: false },
+      }
+      render(<RecipeBody recipe={recipeWithNutrition} />)
+      expect(
+        screen.queryByRole("region", { name: /nutrition information/i })
+      ).not.toBeInTheDocument()
     })
   })
 
@@ -96,6 +149,27 @@ describe("RecipeBody", () => {
         wrapper: ({ children }) => <CookModeWrapper cookMode>{children}</CookModeWrapper>,
       })
       expect(screen.queryByText(/source/i)).not.toBeInTheDocument()
+    })
+
+    it("does not render mobile tabs in cook mode", () => {
+      render(<RecipeBody recipe={minimalRecipe} />, {
+        wrapper: ({ children }) => <CookModeWrapper cookMode>{children}</CookModeWrapper>,
+      })
+      expect(screen.queryByRole("tablist")).not.toBeInTheDocument()
+    })
+
+    it("does not render the nutrition panel in cook mode", () => {
+      const recipeWithNutrition: RecipeOutput = {
+        ...minimalRecipe,
+        nutrition: { calories: "400", proteinContent: "30" },
+        settings: { showNutrition: true },
+      }
+      render(<RecipeBody recipe={recipeWithNutrition} />, {
+        wrapper: ({ children }) => <CookModeWrapper cookMode>{children}</CookModeWrapper>,
+      })
+      expect(
+        screen.queryByRole("region", { name: /nutrition information/i })
+      ).not.toBeInTheDocument()
     })
   })
 })
