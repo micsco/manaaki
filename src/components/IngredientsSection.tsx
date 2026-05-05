@@ -61,6 +61,7 @@ export function IngredientsSection({
         {hasServings && (
           <ServingsSelect
             value={servings}
+            defaultServings={defaultServings as number}
             onChange={v => {
               if (v != null) setServings(v)
             }}
