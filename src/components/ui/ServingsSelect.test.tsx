@@ -35,14 +35,14 @@ describe("ServingsSelect", () => {
     expect(options).toHaveLength(10)
   })
 
-  it("shows 'default' label next to the recipe default serving count", async () => {
+  it("shows 'original' label next to the recipe default serving count", async () => {
     const user = userEvent.setup()
     render(<ServingsSelect value={1} defaultServings={4} onChange={vi.fn()} />)
 
     await user.click(screen.getByRole("combobox", { name: /servings/i }))
     await screen.findByRole("listbox")
 
-    expect(screen.getByText("default")).toBeInTheDocument()
+    expect(screen.getByText("original")).toBeInTheDocument()
   })
 
   it("calls onChange with the selected number when an option is clicked", async () => {

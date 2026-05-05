@@ -33,7 +33,7 @@ export function ServingsSelect({ value, onChange, defaultServings }: ServingsSel
         <Select.Positioner align="end" sideOffset={8}>
           <Select.Popup
             className={[
-              "min-w-[7rem] rounded-xl border border-gray-700 bg-gray-900 py-1 shadow-black/40 shadow-xl",
+              "min-w-[9rem] rounded-xl border border-gray-700 bg-gray-900 py-1 shadow-black/40 shadow-xl",
               "origin-[var(--transform-origin)] transition-[transform,scale,opacity]",
               "data-[ending-style]:scale-95 data-[ending-style]:opacity-0",
               "data-[starting-style]:scale-95 data-[starting-style]:opacity-0",
@@ -56,14 +56,10 @@ export function ServingsSelect({ value, onChange, defaultServings }: ServingsSel
                   <Select.ItemIndicator className="w-3 shrink-0 text-orange-500">
                     <Icon path={mdiCheck} size={0.5} aria-hidden />
                   </Select.ItemIndicator>
-                  <span className="flex flex-1 items-baseline justify-between gap-3">
-                    <Select.ItemText>
-                      <span className="tabular-nums">{n}</span>
-                    </Select.ItemText>
-                    {n === defaultServings && (
-                      <span className="text-gray-600 text-xs">default</span>
-                    )}
-                  </span>
+                  {n === defaultServings && <span className="text-gray-600 text-xs">original</span>}
+                  <Select.ItemText>
+                    <span className="ml-auto tabular-nums">{n}</span>
+                  </Select.ItemText>
                 </Select.Item>
               ))}
             </Select.List>
