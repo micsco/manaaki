@@ -1,4 +1,7 @@
-import { describe, expect, it } from "vitest"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import React from "react"
+import { describe, expect, it, vi } from "vitest"
+import * as sdk from "../api/generated/sdk.gen"
 import type { RecipeSummary } from "../api/generated/types.gen"
 import {
   RecipeCardInfoBadges,
@@ -6,6 +9,15 @@ import {
   RecipeCardToolBadges,
 } from "../components/RecipeCardMeta"
 import { render, screen } from "../test/render"
+import { Route } from "./recipes.index"
+
+vi.mock("../api/generated/sdk.gen", () => ({
+  getAllApiRecipesGet: vi.fn(),
+}))
+
+vi.mock("../manaaki.svg?react", () => ({
+  default: () => null,
+}))
 
 const baseRecipe: RecipeSummary = {
   id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
@@ -170,5 +182,43 @@ describe("RecipeCardToolBadges", () => {
       <RecipeCardToolBadges recipe={{ ...baseRecipe, tools: [], tags: [], recipeCategory: [] }} />
     )
     expect(container.firstChild).toBeNull()
+  })
+})
+
+const mockGetAll = vi.mocked(sdk.getAllApiRecipesGet)
+
+function RecipeListWrapper() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const RecipeList = Route.options.component as React.ComponentType
+  return React.createElement(
+    QueryClientProvider,
+    { client: queryClient },
+    React.createElement(RecipeList)
+  )
+}
+
+describe("RecipeList loading state", () => {
+  it("shows a loading status region while data is pending", () => {
+    mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
+    render(<RecipeListWrapper />)
+    expect(screen.getByRole("status", { name: /loading recipes/i })).toBeInTheDocument()
+  })
+
+  it("shows the Manaaki heading while loading", () => {
+    mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
+    render(<RecipeListWrapper />)
+    expect(screen.getByRole("heading", { name: /manaaki/i })).toBeInTheDocument()
+  })
+
+  it("shows the search bar while loading", () => {
+    mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
+    render(<RecipeListWrapper />)
+    expect(screen.getByRole("searchbox", { name: /search recipes/i })).toBeInTheDocument()
+  })
+
+  it("does not show recipe count while loading", () => {
+    mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
+    render(<RecipeListWrapper />)
+    expect(screen.queryByText(/\d+ recipes/i)).not.toBeInTheDocument()
   })
 })

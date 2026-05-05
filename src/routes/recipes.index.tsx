@@ -100,8 +100,26 @@ function RecipeListEndMarker() {
   )
 }
 
+const SKELETON_CARD_COUNT = 12
+
+function RecipeCardSkeleton() {
+  return (
+    <Card className="overflow-hidden">
+      <div className="relative h-48 w-full animate-pulse bg-gray-800" aria-hidden="true">
+        <div className="absolute top-0 left-0 p-2">
+          <div className="h-5 w-10 rounded-full bg-gray-700" />
+        </div>
+        <div className="absolute right-0 bottom-0 left-0 px-3 pb-2.5">
+          <div className="h-4 w-3/4 rounded bg-gray-700" />
+          <div className="mt-1.5 h-4 w-1/2 rounded bg-gray-700" />
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 function RecipeList() {
-  const { data } = useQuery(recipeListQueryOptions)
+  const { data, isLoading } = useQuery(recipeListQueryOptions)
   const recipes = data ?? []
   const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -158,12 +176,24 @@ function RecipeList() {
             <ManaakiLogo className="size-8 shrink-0" />
             <h1 className="font-bold text-4xl leading-none">Manaaki</h1>
           </div>
-          <p className="shrink-0 text-gray-500 text-sm">
-            {isFiltered ? `${filtered.length} of ${recipes.length}` : `${recipes.length} recipes`}
-          </p>
+          {!isLoading && (
+            <p className="shrink-0 text-gray-500 text-sm">
+              {isFiltered ? `${filtered.length} of ${recipes.length}` : `${recipes.length} recipes`}
+            </p>
+          )}
         </div>
 
-        {filtered.length === 0 && isFiltered ? (
+        {isLoading ? (
+          <div
+            role="status"
+            aria-label="Loading recipes"
+            className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          >
+            {Array.from({ length: SKELETON_CARD_COUNT }, (_, i) => (
+              <RecipeCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : filtered.length === 0 && isFiltered ? (
           <div className="flex flex-col items-center gap-4 py-20 text-center">
             <p className="text-gray-400 text-lg">No recipes match your filters.</p>
             <button
