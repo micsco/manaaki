@@ -25,7 +25,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       {
         rel: "apple-touch-icon",
-        href: manaakiLogoUrl,
+        href: "/apple-touch-icon.png",
       },
       {
         rel: "manifest",
