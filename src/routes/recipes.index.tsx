@@ -15,6 +15,7 @@ import { FilterBar, FilterPills } from "../components/RecipeFilters"
 import { Card } from "../components/ui"
 import { useRecipeFilters } from "../hooks/useRecipeFilters"
 import { recipeListQueryOptions } from "../hooks/useRecipeList"
+import ManaakiLogo from "../manaaki.svg?react"
 import { recipeImageUrl, recipeUrl } from "../utils/recipe"
 
 export const Route = createFileRoute("/recipes/")({
@@ -151,13 +152,14 @@ function RecipeList() {
 
   return (
     <main className="min-h-screen bg-gray-950">
-      <div className="mx-auto max-w-7xl px-4 py-8 pb-44">
-        <div className="mb-6">
-          <h1 className="mb-1 font-bold text-4xl text-gray-100">Recipes</h1>
-          <p className="text-gray-400 text-sm">
-            {isFiltered
-              ? `${filtered.length} of ${recipes.length} recipes`
-              : `${recipes.length} recipes`}
+      <div className="mx-auto max-w-7xl px-4 pt-5 pb-44">
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 text-gray-400">
+            <ManaakiLogo className="size-8 shrink-0" />
+            <h1 className="font-bold text-4xl leading-none">Manaaki</h1>
+          </div>
+          <p className="shrink-0 text-gray-500 text-sm">
+            {isFiltered ? `${filtered.length} of ${recipes.length}` : `${recipes.length} recipes`}
           </p>
         </div>
 

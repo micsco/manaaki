@@ -6,6 +6,7 @@ import type { ReactNode } from "react"
 import { BuildInfo } from "../components/BuildInfo"
 import { CookModeProvider } from "../contexts/CookModeContext"
 import { queryClient } from "../lib/queryClient"
+import manaakiLogoUrl from "../manaaki.svg?url"
 import "../styles/globals.css"
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -19,12 +20,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       {
         rel: "icon",
-        href: "/manaaki.svg",
+        href: manaakiLogoUrl,
         type: "image/svg+xml",
       },
       {
         rel: "apple-touch-icon",
-        href: "/manaaki.svg",
+        href: manaakiLogoUrl,
       },
       {
         rel: "manifest",
