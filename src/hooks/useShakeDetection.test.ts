@@ -10,6 +10,9 @@ function makeMotionEvent(x: number, y: number, z: number): DeviceMotionEvent {
   } as unknown as DeviceMotionEvent
 }
 
+const HIGH = makeMotionEvent(0, 0, 20)
+const LOW = makeMotionEvent(0, 0, 5)
+
 describe("useShakeDetection", () => {
   let addEventListenerSpy: ReturnType<typeof vi.spyOn>
   let removeEventListenerSpy: ReturnType<typeof vi.spyOn>
@@ -17,6 +20,7 @@ describe("useShakeDetection", () => {
 
   beforeEach(() => {
     capturedHandler = null
+    vi.useFakeTimers()
     addEventListenerSpy = vi
       .spyOn(window, "addEventListener")
       .mockImplementation((type: string, handler: EventListenerOrEventListenerObject) => {
@@ -29,6 +33,7 @@ describe("useShakeDetection", () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.useRealTimers()
   })
 
   it("registers a devicemotion listener when enabled", () => {
@@ -46,47 +51,91 @@ describe("useShakeDetection", () => {
     expect(calledWithMotion).toBe(false)
   })
 
-  it("calls onShake when acceleration exceeds the threshold", () => {
+  it("does not fire on a single high-magnitude spike", () => {
     const onShake = vi.fn()
     renderHook(() => useShakeDetection({ onShake }))
-    capturedHandler?.(makeMotionEvent(0, 0, 20))
-    expect(onShake).toHaveBeenCalledTimes(1)
-  })
-
-  it("does not call onShake when acceleration is below the threshold", () => {
-    const onShake = vi.fn()
-    renderHook(() => useShakeDetection({ onShake }))
-    capturedHandler?.(makeMotionEvent(0, 0, 5))
+    capturedHandler?.(HIGH)
     expect(onShake).not.toHaveBeenCalled()
   })
 
-  it("debounces rapid shakes — only calls onShake once within the cooldown window", () => {
-    vi.useFakeTimers()
+  it("does not fire on two high-magnitude spikes", () => {
     const onShake = vi.fn()
     renderHook(() => useShakeDetection({ onShake }))
-
-    capturedHandler?.(makeMotionEvent(0, 0, 20))
-    capturedHandler?.(makeMotionEvent(0, 0, 20))
-    capturedHandler?.(makeMotionEvent(0, 0, 20))
-
-    expect(onShake).toHaveBeenCalledTimes(1)
-    vi.useRealTimers()
+    capturedHandler?.(HIGH)
+    vi.advanceTimersByTime(100)
+    capturedHandler?.(HIGH)
+    expect(onShake).not.toHaveBeenCalled()
   })
 
-  it("allows a second shake after the cooldown window has passed", () => {
-    vi.useFakeTimers()
+  it("fires after three high-magnitude spikes within the window", () => {
+    const onShake = vi.fn()
+    renderHook(() => useShakeDetection({ onShake }))
+    capturedHandler?.(HIGH)
+    vi.advanceTimersByTime(100)
+    capturedHandler?.(HIGH)
+    vi.advanceTimersByTime(100)
+    capturedHandler?.(HIGH)
+    expect(onShake).toHaveBeenCalledTimes(1)
+  })
+
+  it("does not fire when spikes are spread beyond the peak window", () => {
+    const onShake = vi.fn()
+    renderHook(() => useShakeDetection({ onShake }))
+    capturedHandler?.(HIGH)
+    vi.advanceTimersByTime(400)
+    capturedHandler?.(HIGH)
+    vi.advanceTimersByTime(400)
+    capturedHandler?.(HIGH)
+    expect(onShake).not.toHaveBeenCalled()
+  })
+
+  it("does not fire for low-magnitude motion regardless of count", () => {
+    const onShake = vi.fn()
+    renderHook(() => useShakeDetection({ onShake }))
+    capturedHandler?.(LOW)
+    capturedHandler?.(LOW)
+    capturedHandler?.(LOW)
+    expect(onShake).not.toHaveBeenCalled()
+  })
+
+  it("does not re-fire within the cooldown window after a shake", () => {
     const onShake = vi.fn()
     renderHook(() => useShakeDetection({ onShake }))
 
-    capturedHandler?.(makeMotionEvent(0, 0, 20))
+    capturedHandler?.(HIGH)
+    vi.advanceTimersByTime(100)
+    capturedHandler?.(HIGH)
+    vi.advanceTimersByTime(100)
+    capturedHandler?.(HIGH)
     expect(onShake).toHaveBeenCalledTimes(1)
 
-    vi.advanceTimersByTime(1100)
+    capturedHandler?.(HIGH)
+    vi.advanceTimersByTime(100)
+    capturedHandler?.(HIGH)
+    vi.advanceTimersByTime(100)
+    capturedHandler?.(HIGH)
+    expect(onShake).toHaveBeenCalledTimes(1)
+  })
 
-    capturedHandler?.(makeMotionEvent(0, 0, 20))
+  it("allows a second shake after the cooldown has passed", () => {
+    const onShake = vi.fn()
+    renderHook(() => useShakeDetection({ onShake }))
+
+    capturedHandler?.(HIGH)
+    vi.advanceTimersByTime(100)
+    capturedHandler?.(HIGH)
+    vi.advanceTimersByTime(100)
+    capturedHandler?.(HIGH)
+    expect(onShake).toHaveBeenCalledTimes(1)
+
+    vi.advanceTimersByTime(1600)
+
+    capturedHandler?.(HIGH)
+    vi.advanceTimersByTime(100)
+    capturedHandler?.(HIGH)
+    vi.advanceTimersByTime(100)
+    capturedHandler?.(HIGH)
     expect(onShake).toHaveBeenCalledTimes(2)
-
-    vi.useRealTimers()
   })
 
   it("removes the devicemotion listener on unmount", () => {
@@ -96,7 +145,7 @@ describe("useShakeDetection", () => {
     expect(removeEventListenerSpy).toHaveBeenCalledWith("devicemotion", expect.any(Function))
   })
 
-  it("does not call onShake when accelerationIncludingGravity is null", () => {
+  it("does not fire when accelerationIncludingGravity is null", () => {
     const onShake = vi.fn()
     renderHook(() => useShakeDetection({ onShake }))
     capturedHandler?.({ accelerationIncludingGravity: null } as unknown as DeviceMotionEvent)
