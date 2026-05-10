@@ -1,7 +1,20 @@
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
 import svgr from 'vite-plugin-svgr'
+
+function emitVersionJson(sha: string): Plugin {
+  return {
+    name: 'emit-version-json',
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'version.json',
+        source: JSON.stringify({ sha }),
+      })
+    },
+  }
+}
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -9,6 +22,7 @@ export default defineConfig(({ mode }) => {
   const mealieBaseUrl =
     env.MEALIE_INTERNAL_URL ?? env.VITE_MEALIE_BASE_URL ?? 'http://localhost:9000'
   const mealieToken = env.MEALIE_API_TOKEN ?? ''
+  const buildSha = env.VITE_BUILD_GIT_SHORT_SHA ?? 'dev'
 
   return {
     server: {
@@ -51,6 +65,7 @@ export default defineConfig(({ mode }) => {
     },
 
     plugins: [
+      emitVersionJson(buildSha),
       svgr(),
       tanstackStart({
         spa: { enabled: true },

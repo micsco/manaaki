@@ -1,10 +1,18 @@
 import { PostHogProvider } from "@posthog/react"
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router"
+import {
+  createRootRouteWithContext,
+  HeadContent,
+  Outlet,
+  Scripts,
+  useRouter,
+} from "@tanstack/react-router"
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router"
 import type { ReactNode } from "react"
+import { AppToasts } from "../components/AppToasts"
 import { BuildInfo } from "../components/BuildInfo"
 import { CookModeProvider } from "../contexts/CookModeContext"
+import { useVersionCheck } from "../hooks/useVersionCheck"
 import { queryClient } from "../lib/queryClient"
 import manaakiLogoUrl from "../manaaki.svg?url"
 import "../styles/globals.css"
@@ -51,6 +59,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 })
 
 function RootComponent() {
+  const router = useRouter()
+  useVersionCheck(router)
+
   return (
     <RootDocument>
       <PostHogProvider
@@ -95,6 +106,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
       <body>
         <div className="root">{children}</div>
         <BuildInfo />
+        <AppToasts />
         <Scripts />
       </body>
     </html>
