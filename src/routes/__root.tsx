@@ -13,6 +13,7 @@ import { AppToasts } from "../components/AppToasts"
 import { BuildInfo } from "../components/BuildInfo"
 import { ShakeToRandomRecipe } from "../components/ShakeToRandomRecipe"
 import { CookModeProvider } from "../contexts/CookModeContext"
+import { MotionPermissionProvider } from "../contexts/MotionPermissionContext"
 import { useVersionCheck } from "../hooks/useVersionCheck"
 import { queryClient } from "../lib/queryClient"
 import manaakiLogoUrl from "../manaaki.svg?url"
@@ -76,12 +77,14 @@ function RootComponent() {
         }}
       >
         <QueryClientProvider client={queryClient}>
-          <NuqsAdapter>
-            <CookModeProvider>
-              <Outlet />
-            </CookModeProvider>
-          </NuqsAdapter>
-          <ShakeToRandomRecipe />
+          <MotionPermissionProvider>
+            <NuqsAdapter>
+              <CookModeProvider>
+                <Outlet />
+              </CookModeProvider>
+            </NuqsAdapter>
+            <ShakeToRandomRecipe />
+          </MotionPermissionProvider>
         </QueryClientProvider>
       </PostHogProvider>
     </RootDocument>

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
 import type { RecipeSummary } from "../api/generated/types.gen"
+import { AboutModal } from "../components/AboutModal"
 import { Icon } from "../components/Icon"
 import {
   RecipeCardInfoBadges,
@@ -177,6 +178,7 @@ function RecipeList() {
   const { data, isLoading } = useQuery(recipeListQueryOptions)
   const recipes = data ?? []
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [aboutOpen, setAboutOpen] = useState(false)
 
   const {
     search,
@@ -227,10 +229,15 @@ function RecipeList() {
     <main className="min-h-screen bg-gray-950">
       <div className="mx-auto max-w-7xl px-4 pt-5 pb-56">
         <div className="mb-6 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5 text-gray-400">
+          <button
+            type="button"
+            onClick={() => setAboutOpen(true)}
+            aria-label="About Manaaki"
+            className="flex items-center gap-2.5 rounded-lg text-gray-400 transition-colors hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+          >
             <ManaakiLogo className="size-8 shrink-0" />
             <h1 className="font-bold text-4xl leading-none">Manaaki</h1>
-          </div>
+          </button>
           {!isLoading && (
             <p className="shrink-0 text-gray-500 text-sm">
               {isFiltered ? `${filtered.length} of ${recipes.length}` : `${recipes.length} recipes`}
@@ -311,6 +318,8 @@ function RecipeList() {
         activeFilterCount={activeFilterCount}
         onClearAll={handleClearAll}
       />
+
+      <AboutModal open={aboutOpen} onOpenChange={setAboutOpen} />
     </main>
   )
 }

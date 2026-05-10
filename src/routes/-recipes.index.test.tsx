@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import userEvent from "@testing-library/user-event"
 import React from "react"
 import { describe, expect, it, vi } from "vitest"
 import * as sdk from "../api/generated/sdk.gen"
@@ -10,6 +11,11 @@ import {
 } from "../components/RecipeCardMeta"
 import { render, screen } from "../test/render"
 import { Route } from "./recipes.index"
+
+vi.mock("../contexts/MotionPermissionContext", () => ({
+  useMotionPermissionContext: vi.fn(() => ({ state: "granted", request: vi.fn() })),
+  MotionPermissionProvider: ({ children }: { children: React.ReactNode }) => children,
+}))
 
 vi.mock("../api/generated/sdk.gen", () => ({
   getAllApiRecipesGet: vi.fn(),
@@ -208,6 +214,21 @@ describe("RecipeList loading state", () => {
     mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
     render(<RecipeListWrapper />)
     expect(screen.getByRole("heading", { name: /manaaki/i })).toBeInTheDocument()
+  })
+
+  it("shows an About Manaaki button", () => {
+    mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
+    render(<RecipeListWrapper />)
+    expect(screen.getByRole("button", { name: /about manaaki/i })).toBeInTheDocument()
+  })
+
+  it("opens the About modal when the Manaaki button is clicked", async () => {
+    const user = userEvent.setup()
+    mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
+    render(<RecipeListWrapper />)
+    await user.click(screen.getByRole("button", { name: /about manaaki/i }))
+    expect(screen.getByRole("dialog")).toBeInTheDocument()
+    expect(screen.getByText("About Manaaki")).toBeInTheDocument()
   })
 
   it("shows the search bar while loading", () => {

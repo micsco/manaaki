@@ -2,7 +2,7 @@ import { mdiShuffle } from "@mdi/js"
 import { usePostHog } from "@posthog/react"
 import { useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useMotionPermission } from "../hooks/useMotionPermission"
+import { useMotionPermissionContext } from "../contexts/MotionPermissionContext"
 import { useRecipeList } from "../hooks/useRecipeList"
 import { useShakeDetection } from "../hooks/useShakeDetection"
 import { recipeUrl } from "../utils/recipe"
@@ -11,7 +11,7 @@ import { Icon } from "./Icon"
 const COUNTDOWN_MS = 5000
 
 export function ShakeToRandomRecipe() {
-  const { state: permissionState, request: requestPermission } = useMotionPermission()
+  const { state: permissionState } = useMotionPermissionContext()
   const [active, setActive] = useState(false)
   const recipes = useRecipeList()
   const navigate = useNavigate()
@@ -71,27 +71,7 @@ export function ShakeToRandomRecipe() {
 
   useShakeDetection({ onShake: handleShake, enabled: permissionState === "granted" })
 
-  if (permissionState === "unavailable") return null
-
-  if (permissionState === "prompt") {
-    return (
-      <div
-        className="fixed right-0 bottom-20 left-0 z-40 flex justify-center px-4 pb-2"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)" }}
-      >
-        <button
-          type="button"
-          onClick={requestPermission}
-          className="flex items-center gap-2.5 rounded-full bg-gray-900/90 px-4 py-2.5 text-gray-400 text-sm backdrop-blur-sm transition-colors hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950"
-        >
-          <Icon path={mdiShuffle} size={0.75} aria-hidden={true} />
-          Shake for a random recipe · Enable
-        </button>
-      </div>
-    )
-  }
-
-  if (!active) return null
+  if (permissionState !== "granted" || !active) return null
 
   return (
     <div

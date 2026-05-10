@@ -32,8 +32,8 @@ vi.mock("../hooks/useShakeDetection", () => ({
   }),
 }))
 
-vi.mock("../hooks/useMotionPermission", () => ({
-  useMotionPermission: vi.fn(() => ({
+vi.mock("../contexts/MotionPermissionContext", () => ({
+  useMotionPermissionContext: vi.fn(() => ({
     state: permissionState,
     request: mockRequestPermission,
   })),
@@ -68,25 +68,11 @@ describe("ShakeToRandomRecipe", () => {
   })
 
   describe("when permission is prompt (iOS, not yet asked)", () => {
-    beforeEach(() => {
+    it("renders nothing — permission is requested via the About modal instead", () => {
       permissionState = "prompt"
-    })
-
-    it("shows the enable prompt button", () => {
-      render(<ShakeToRandomRecipe />)
-      expect(screen.getByRole("button", { name: /shake for a random recipe/i })).toBeInTheDocument()
-    })
-
-    it("does not show the countdown overlay", () => {
       render(<ShakeToRandomRecipe />)
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
-    })
-
-    it("calls requestPermission when the prompt button is tapped", async () => {
-      const user = userEvent.setup()
-      render(<ShakeToRandomRecipe />)
-      await user.click(screen.getByRole("button", { name: /shake for a random recipe/i }))
-      expect(mockRequestPermission).toHaveBeenCalledTimes(1)
+      expect(screen.queryByRole("button")).not.toBeInTheDocument()
     })
   })
 
