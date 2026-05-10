@@ -1,19 +1,34 @@
 import { mdiClose, mdiMagnify, mdiTune } from "@mdi/js"
+import { usePostHog } from "@posthog/react"
 import { PROTEIN_OPTIONS, TOOL_OPTIONS } from "../hooks/useRecipeFilters"
 import { Icon } from "./Icon"
 
 interface FilterChipProps {
   icon: string
   label: string
+  value: string
+  type: "protein" | "tool"
   active: boolean
   onToggle: () => void
 }
 
-function FilterChip({ icon, label, active, onToggle }: FilterChipProps) {
+function FilterChip({ icon, label, value, type, active, onToggle }: FilterChipProps) {
+  const posthog = usePostHog()
+
+  const handleClick = () => {
+    posthog.capture("filter_toggled", {
+      filter_type: type,
+      filter_value: value,
+      filter_label: label,
+      action: active ? "removed" : "added",
+    })
+    onToggle()
+  }
+
   return (
     <button
       type="button"
-      onClick={onToggle}
+      onClick={handleClick}
       className={[
         "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 font-medium text-sm transition-colors",
         "focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950",
@@ -44,6 +59,8 @@ export function FilterPills({ proteins, onToggleProtein, tools, onToggleTool }: 
           key={opt.value}
           icon={opt.icon}
           label={opt.label}
+          value={opt.value}
+          type="protein"
           active={proteins.includes(opt.value)}
           onToggle={() => onToggleProtein(opt.value)}
         />
@@ -54,6 +71,8 @@ export function FilterPills({ proteins, onToggleProtein, tools, onToggleTool }: 
           key={opt.value}
           icon={opt.icon}
           label={opt.label}
+          value={opt.value}
+          type="tool"
           active={tools.includes(opt.value)}
           onToggle={() => onToggleTool(opt.value)}
         />
@@ -75,6 +94,39 @@ export function FilterBar({
   activeFilterCount,
   onOpenDrawer,
 }: FilterBarProps) {
+  const posthog = usePostHog()
+
+  const handleSearchChange = (value: string) => {
+    onSearchChange(value)
+
+    if (value.trim()) {
+      posthog.capture("search_performed", {
+        search_query: value.trim(),
+        search_length: value.trim().length,
+      })
+    } else if (search.trim()) {
+      posthog.capture("search_cleared", {
+        previous_query: search.trim(),
+      })
+    }
+  }
+
+  const handleClearSearch = () => {
+    if (search.trim()) {
+      posthog.capture("search_cleared", {
+        previous_query: search.trim(),
+      })
+    }
+    onSearchChange("")
+  }
+
+  const handleOpenDrawer = () => {
+    posthog.capture("filter_drawer_opened", {
+      active_filter_count: activeFilterCount,
+    })
+    onOpenDrawer()
+  }
+
   return (
     <div className="flex items-center rounded-full border border-gray-700 bg-gray-800 transition-colors focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
       <div className="pointer-events-none flex shrink-0 items-center pl-4">
@@ -84,7 +136,7 @@ export function FilterBar({
       <input
         type="search"
         value={search}
-        onChange={e => onSearchChange(e.target.value)}
+        onChange={e => handleSearchChange(e.target.value)}
         placeholder="Search recipes…"
         className="min-w-0 flex-1 bg-transparent py-3 pr-2 pl-3 text-gray-100 text-sm placeholder:text-gray-500 focus:outline-none"
         aria-label="Search recipes"
@@ -93,7 +145,7 @@ export function FilterBar({
       {search && (
         <button
           type="button"
-          onClick={() => onSearchChange("")}
+          onClick={handleClearSearch}
           className="flex shrink-0 items-center px-2 text-gray-400 hover:text-gray-200"
           aria-label="Clear search"
         >
@@ -105,7 +157,7 @@ export function FilterBar({
 
       <button
         type="button"
-        onClick={onOpenDrawer}
+        onClick={handleOpenDrawer}
         className="relative flex shrink-0 items-center gap-1.5 rounded-full py-3 pr-4 pl-3 font-medium text-gray-300 text-sm hover:text-gray-100 focus:outline-none"
         aria-label={activeFilterCount > 0 ? `Filters, ${activeFilterCount} active` : "Filters"}
       >

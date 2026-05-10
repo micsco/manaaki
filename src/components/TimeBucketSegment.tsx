@@ -1,3 +1,4 @@
+import { usePostHog } from "@posthog/react"
 import { TIME_BUCKETS, type TimeBucket } from "../hooks/useRecipeFilters"
 
 interface TimeBucketSegmentProps {
@@ -16,13 +17,25 @@ function TimeBucketOption({
   hasBorderLeft: boolean
   onChange: (value: TimeBucket | null) => void
 }) {
+  const posthog = usePostHog()
+
+  const handleClick = () => {
+    const newValue = active ? null : bucket.value
+    posthog.capture("time_filter_changed", {
+      time_bucket: newValue,
+      time_bucket_label: bucket.label,
+      action: active ? "removed" : "added",
+    })
+    onChange(newValue)
+  }
+
   return (
     // biome-ignore lint/a11y/useSemanticElements: segmented control with deselect needs button+role="radio", not <input type="radio">
     <button
       type="button"
       role="radio"
       aria-checked={active}
-      onClick={() => onChange(active ? null : bucket.value)}
+      onClick={handleClick}
       className={[
         "flex flex-1 items-center justify-center py-2.5 font-medium text-sm transition-colors",
         "focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset",
