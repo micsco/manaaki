@@ -123,7 +123,7 @@ function RecipeCardSkeleton() {
 function RecipeListSkeleton() {
   return (
     <main className="min-h-screen bg-gray-950">
-      <div className="mx-auto max-w-7xl px-4 pt-5 pb-44">
+      <div className="mx-auto max-w-7xl px-4 pt-5 pb-56">
         <div className="mb-6 flex items-center gap-2.5 text-gray-400">
           <ManaakiLogo className="size-8 shrink-0" />
           <h1 className="font-bold text-4xl leading-none">Manaaki</h1>
@@ -225,7 +225,7 @@ function RecipeList() {
 
   return (
     <main className="min-h-screen bg-gray-950">
-      <div className="mx-auto max-w-7xl px-4 pt-5 pb-44">
+      <div className="mx-auto max-w-7xl px-4 pt-5 pb-56">
         <div className="mb-6 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5 text-gray-400">
             <ManaakiLogo className="size-8 shrink-0" />
