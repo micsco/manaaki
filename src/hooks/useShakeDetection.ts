@@ -1,22 +1,56 @@
 import { useEffect, useRef } from "react"
 
-const SHAKE_THRESHOLD = 15
-const REQUIRED_PEAKS = 3
-const PEAK_WINDOW_MS = 600
-const COOLDOWN_MS = 1500
+const THRESHOLD = 13
+const JERK_COUNT = 3
+const WINDOW_MS = 500
+const DEBOUNCE_MS = 1000
 
 interface UseShakeDetectionOptions {
   onShake: () => void
   enabled?: boolean
 }
 
-function magnitude(acc: DeviceMotionEventAcceleration): number {
-  return Math.sqrt((acc.x ?? 0) ** 2 + (acc.y ?? 0) ** 2 + (acc.z ?? 0) ** 2)
+function dominantAxis(x: number, y: number, z: number): { axis: "x" | "y" | "z"; sign: number } {
+  const ax = Math.abs(x)
+  const ay = Math.abs(y)
+  const az = Math.abs(z)
+  if (ax >= ay && ax >= az) return { axis: "x", sign: Math.sign(x) }
+  if (ay >= az) return { axis: "y", sign: Math.sign(y) }
+  return { axis: "z", sign: Math.sign(z) }
+}
+
+function pickAcceleration(event: DeviceMotionEvent): DeviceMotionEventAcceleration | null {
+  const raw = event.acceleration
+  if (raw?.x != null && raw?.y != null && raw?.z != null) return raw
+  return event.accelerationIncludingGravity
+}
+
+interface ShakeState {
+  jerks: number[]
+  lastAxis: "x" | "y" | "z" | null
+  lastSign: number
+  lastFire: number
+}
+
+function processJerk(state: ShakeState, now: number, axis: "x" | "y" | "z", sign: number): boolean {
+  const isReversal = axis !== state.lastAxis || sign !== state.lastSign
+  state.lastAxis = axis
+  state.lastSign = sign
+  if (!isReversal) return false
+
+  state.jerks.push(now)
+  state.jerks = state.jerks.filter(t => now - t <= WINDOW_MS)
+  if (state.jerks.length < JERK_COUNT) return false
+
+  state.jerks = []
+  state.lastAxis = null
+  state.lastSign = 0
+  state.lastFire = now
+  return true
 }
 
 export function useShakeDetection({ onShake, enabled = true }: UseShakeDetectionOptions): void {
-  const peakTimestampsRef = useRef<number[]>([])
-  const lastShakeRef = useRef<number>(0)
+  const stateRef = useRef<ShakeState>({ jerks: [], lastAxis: null, lastSign: 0, lastFire: 0 })
   const onShakeRef = useRef(onShake)
   onShakeRef.current = onShake
 
@@ -25,23 +59,21 @@ export function useShakeDetection({ onShake, enabled = true }: UseShakeDetection
     if (typeof window === "undefined") return
     if (!window.DeviceMotionEvent) return
 
-    function recordPeak(now: number): boolean {
-      if (now - lastShakeRef.current < COOLDOWN_MS) return false
-      peakTimestampsRef.current.push(now)
-      peakTimestampsRef.current = peakTimestampsRef.current.filter(t => t >= now - PEAK_WINDOW_MS)
-      return peakTimestampsRef.current.length >= REQUIRED_PEAKS
-    }
-
     function handleMotion(event: DeviceMotionEvent) {
-      const acc = event.accelerationIncludingGravity
-      if (!acc || magnitude(acc) <= SHAKE_THRESHOLD) return
-
       const now = Date.now()
-      if (!recordPeak(now)) return
+      const state = stateRef.current
+      if (now - state.lastFire < DEBOUNCE_MS) return
 
-      peakTimestampsRef.current = []
-      lastShakeRef.current = now
-      onShakeRef.current()
+      const accel = pickAcceleration(event)
+      if (!accel) return
+
+      const x = accel.x ?? 0
+      const y = accel.y ?? 0
+      const z = accel.z ?? 0
+      if (Math.sqrt(x * x + y * y + z * z) < THRESHOLD) return
+
+      const { axis, sign } = dominantAxis(x, y, z)
+      if (processJerk(state, now, axis, sign)) onShakeRef.current()
     }
 
     window.addEventListener("devicemotion", handleMotion)
