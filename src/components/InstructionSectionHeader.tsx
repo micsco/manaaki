@@ -4,6 +4,7 @@ import { stepStorageKey } from "../utils/recipe"
 import { Icon } from "./Icon"
 
 function readChecked(recipeId: string, indices: number[]): boolean[] {
+  if (typeof window === "undefined") return indices.map(() => false)
   return indices.map(i => {
     try {
       const raw = sessionStorage.getItem(stepStorageKey(recipeId, i))
@@ -15,7 +16,7 @@ function readChecked(recipeId: string, indices: number[]): boolean[] {
 }
 
 function useGroupCheckedState(recipeId: string, indices: number[]) {
-  const [checked, setChecked] = useState(() => readChecked(recipeId, indices))
+  const [checked, setChecked] = useState<boolean[]>(() => indices.map(() => false))
 
   useEffect(() => {
     setChecked(readChecked(recipeId, indices))

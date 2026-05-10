@@ -1,6 +1,6 @@
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it } from "vitest"
-import { render, screen } from "../test/render"
+import { render, screen, waitFor } from "../test/render"
 import { InstructionSectionHeader } from "./InstructionSectionHeader"
 
 describe("InstructionSectionHeader", () => {
@@ -19,13 +19,15 @@ describe("InstructionSectionHeader", () => {
     expect(screen.queryByRole("img", { hidden: true })).not.toBeInTheDocument()
   })
 
-  it("shows check icon when all steps are completed", () => {
+  it("shows check icon after mount when all steps are completed in sessionStorage", async () => {
     sessionStorage.setItem("recipe-recipe-1-step-0", "true")
     sessionStorage.setItem("recipe-recipe-1-step-1", "true")
 
     render(<InstructionSectionHeader title="Prep" recipeId="recipe-1" indices={[0, 1]} />)
 
-    expect(document.querySelector("svg")).toBeInTheDocument()
+    await waitFor(() => {
+      expect(document.querySelector("svg")).toBeInTheDocument()
+    })
   })
 
   it("toggles all steps to complete on click when none are checked", async () => {
@@ -43,6 +45,10 @@ describe("InstructionSectionHeader", () => {
     sessionStorage.setItem("recipe-recipe-1-step-1", "true")
     const user = userEvent.setup()
     render(<InstructionSectionHeader title="Prep" recipeId="recipe-1" indices={[0, 1]} />)
+
+    await waitFor(() => {
+      expect(document.querySelector("svg")).toBeInTheDocument()
+    })
 
     await user.click(screen.getByRole("button"))
 

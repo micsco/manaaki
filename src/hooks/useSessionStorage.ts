@@ -12,7 +12,7 @@ function readFromStorage<T>(key: string, initialValue: T): T {
 }
 
 export function useSessionStorage<T>(key: string, initialValue: T) {
-  const [storedValue, setStoredValue] = useState<T>(() => readFromStorage(key, initialValue))
+  const [storedValue, setStoredValue] = useState<T>(initialValue)
 
   const setValue = useCallback(
     (value: T | ((val: T) => T)) => {

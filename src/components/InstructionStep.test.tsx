@@ -1,7 +1,7 @@
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it } from "vitest"
 import type { RecipeStep } from "../api/generated/types.gen"
-import { render, screen } from "../test/render"
+import { render, screen, waitFor } from "../test/render"
 import { InstructionStep } from "./InstructionStep"
 
 const step: RecipeStep = { id: "step-1", text: "Boil the water.", title: null }
@@ -66,12 +66,14 @@ describe("InstructionStep", () => {
       expect(sessionStorage.getItem("recipe-recipe-1-step-0")).toBe("true")
     })
 
-    it("restores checked state from sessionStorage on mount", () => {
+    it("restores checked state from sessionStorage after mount", async () => {
       sessionStorage.setItem("recipe-recipe-1-step-0", "true")
 
       render(<InstructionStep step={step} index={0} recipeId="recipe-1" />)
 
-      expect(screen.getByRole("button")).toHaveAttribute("aria-label", "Step 1, completed")
+      await waitFor(() => {
+        expect(screen.getByRole("button")).toHaveAttribute("aria-label", "Step 1, completed")
+      })
     })
   })
 

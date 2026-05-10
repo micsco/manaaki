@@ -39,6 +39,11 @@ function dayLabel(isoDate: string): string {
   return `${d.getDate()} ${monthFormatter.format(d)}`
 }
 
+function todayDayIndex(): number {
+  const jsDay = new Date().getDay()
+  return (jsDay + 6) % 7
+}
+
 const CELL_MIN_W = "min-w-[140px]"
 
 function EmptyMealSlot({ mealType }: { mealType: ShownMealType }) {
@@ -63,7 +68,7 @@ function MealSlot({
   entry: ReadPlanEntry
   mealType: ShownMealType
   dateLabel: string
-  todayIso: string
+  todayIso: string | null
   isoDate: string
 }) {
   const eyebrow = `${isoDate === todayIso ? "Today" : dateLabel} · ${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`
@@ -80,7 +85,7 @@ function WeekRow({
 }: {
   weekOffset: number
   entries: ReadPlanEntry[]
-  todayIso: string
+  todayIso: string | null
   todayRef?: React.RefObject<HTMLDivElement | null>
   isFirst?: boolean
   sentinelMapRef?: React.RefObject<Map<number, HTMLDivElement>>
@@ -102,7 +107,7 @@ function WeekRow({
     const d = new Date(monday)
     d.setDate(monday.getDate() + i)
     const isoDate = toIsoDateString(d)
-    const isToday = isoDate === todayIso
+    const isToday = todayIso !== null && isoDate === todayIso
     const dayEntries = entries.filter(e => e.date === isoDate)
     const byType = Object.fromEntries(
       SHOWN_MEAL_TYPES.map(t => [t, dayEntries.find(e => e.entryType === t) ?? null])
@@ -196,14 +201,14 @@ function WeekRow({
   )
 }
 
-function todayDayIndex(): number {
-  const jsDay = new Date().getDay()
-  return (jsDay + 6) % 7
-}
-
 function PlanPage() {
-  const today = todayIsoDateString()
-  const todayColIndex = todayDayIndex()
+  const [today, setToday] = useState<string | null>(null)
+  const [todayColIndex, setTodayColIndex] = useState<number | null>(null)
+
+  useEffect(() => {
+    setToday(todayIsoDateString())
+    setTodayColIndex(todayDayIndex())
+  }, [])
 
   const [startOffset, setStartOffset] = useState(-1)
   const [endOffset, setEndOffset] = useState(0)
@@ -344,7 +349,7 @@ function PlanPage() {
           stuckWeekOffset === 0 ? "bg-orange-950" : "bg-gray-900",
         ].join(" ")}
       />
-      {stuckWeekOffset === 0 && (
+      {stuckWeekOffset === 0 && todayColIndex !== null && (
         <div
           aria-hidden="true"
           className="fixed top-[81px] bottom-0 z-0 bg-orange-500/10"
@@ -363,7 +368,7 @@ function PlanPage() {
       >
         <div className="flex" style={{ minWidth: `${7 * 140}px` }}>
           {DAY_ABBREVS.map((day, i) => {
-            const isToday = stuckWeekOffset === 0 && i === todayColIndex
+            const isToday = stuckWeekOffset === 0 && todayColIndex !== null && i === todayColIndex
             return (
               <div
                 key={day}
