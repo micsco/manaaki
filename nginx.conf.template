@@ -42,6 +42,7 @@ server {
         }
         proxy_pass $mealie;
         include /etc/nginx/conf.d/mealie-proxy-headers.conf;
+        add_header Cache-Control "no-cache";
     }
 
     location ~ ^/api/households/mealplans(/.*)?$ {
@@ -51,6 +52,7 @@ server {
         }
         proxy_pass $mealie;
         include /etc/nginx/conf.d/mealie-proxy-headers.conf;
+        add_header Cache-Control "no-cache";
     }
 
     location = /api/users/self {
@@ -60,6 +62,7 @@ server {
         }
         proxy_pass $mealie;
         include /etc/nginx/conf.d/mealie-proxy-headers.conf;
+        add_header Cache-Control "no-cache";
     }
 
     location ~ ^/api/media/recipes/ {
@@ -69,6 +72,7 @@ server {
         }
         proxy_pass $mealie;
         include /etc/nginx/conf.d/mealie-proxy-headers.conf;
+        add_header Cache-Control "public, max-age=3600, stale-while-revalidate=86400";
     }
 
     location /api/ {
@@ -80,7 +84,23 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
+    location = /version.json {
+        add_header Cache-Control "no-store";
+        try_files $uri =404;
+    }
+
+    location = /manifest.webmanifest {
+        add_header Cache-Control "no-cache";
+        try_files $uri =404;
+    }
+
+    location ~* ^/(manaaki\.svg|manaaki-192\.png|manaaki-512\.png|apple-touch-icon\.png)$ {
+        add_header Cache-Control "no-cache";
+        try_files $uri =404;
+    }
+
     location / {
+        add_header Cache-Control "no-cache";
         try_files $uri $uri/index.html /_shell.html;
     }
 
