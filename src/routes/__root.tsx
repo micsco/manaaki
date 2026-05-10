@@ -11,6 +11,7 @@ import { NuqsAdapter } from "nuqs/adapters/tanstack-router"
 import type { ReactNode } from "react"
 import { AppToasts } from "../components/AppToasts"
 import { BuildInfo } from "../components/BuildInfo"
+import { ShakeToRandomRecipe } from "../components/ShakeToRandomRecipe"
 import { CookModeProvider } from "../contexts/CookModeContext"
 import { useVersionCheck } from "../hooks/useVersionCheck"
 import { queryClient } from "../lib/queryClient"
@@ -80,6 +81,7 @@ function RootComponent() {
               <Outlet />
             </CookModeProvider>
           </NuqsAdapter>
+          <ShakeToRandomRecipe />
         </QueryClientProvider>
       </PostHogProvider>
     </RootDocument>
