@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest"
+import type { RecipeIngredientOutput, RecipeStep } from "../api/generated/types.gen"
 import {
   formatQuantity,
   formatTime,
   groupByTitle,
+  groupIngredients,
   mealieRecipeUrl,
   parseTimeMinutes,
   recipeImageUrl,
@@ -337,5 +339,129 @@ describe("scaleQuantity", () => {
 
   it("scales by 1 returns the original value", () => {
     expect(scaleQuantity(5, 1)).toBe(5)
+  })
+})
+
+const ing = (referenceId: string, title?: string): RecipeIngredientOutput => ({
+  referenceId,
+  title: title ?? null,
+  display: `ing-${referenceId}`,
+  quantity: null,
+  unit: null,
+  food: null,
+  note: null,
+})
+
+const step = (summary: string | null, ...refIds: string[]): RecipeStep => ({
+  text: "do something",
+  title: null,
+  summary,
+  ingredientReferences: refIds.map(id => ({ referenceId: id })),
+})
+
+describe("groupIngredients", () => {
+  it("falls back to title-based grouping when no steps provided", () => {
+    const result = groupIngredients([ing("a"), ing("b")])
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBeNull()
+    expect(result[0].items).toHaveLength(2)
+  })
+
+  it("falls back to title-based grouping when steps have no references", () => {
+    const steps: RecipeStep[] = [{ text: "cook", title: null, ingredientReferences: [] }]
+    const result = groupIngredients([ing("a"), ing("b")], steps)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBeNull()
+  })
+
+  it("groups referenced ingredients under the step summary", () => {
+    const steps = [step("Sauce", "ref-1", "ref-2")]
+    const result = groupIngredients([ing("ref-1"), ing("ref-2")], steps)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe("Sauce")
+    expect(result[0].items).toHaveLength(2)
+  })
+
+  it("falls back to 'Step N' when summary is absent", () => {
+    const steps = [step(null, "ref-1")]
+    const result = groupIngredients([ing("ref-1")], steps)
+    expect(result[0].title).toBe("Step 1")
+  })
+
+  it("falls back to 'Step N' when summary is whitespace only", () => {
+    const steps = [step("   ", "ref-1")]
+    const result = groupIngredients([ing("ref-1")], steps)
+    expect(result[0].title).toBe("Step 1")
+  })
+
+  it("uses 1-indexed step number matching original array position", () => {
+    const steps = [step(null), step(null, "ref-1")]
+    const result = groupIngredients([ing("ref-1")], steps)
+    expect(result[0].title).toBe("Step 2")
+  })
+
+  it("preserves unreferenced ingredients at their original position", () => {
+    const steps = [step("Cook", "ref-2")]
+    const result = groupIngredients([ing("ref-1"), ing("ref-2"), ing("ref-3")], steps)
+    const titles = result.map(g => g.title)
+    expect(titles).toContain(null)
+    expect(titles).toContain("Cook")
+    const allUngroupedRefIds = result
+      .filter(g => g.title === null)
+      .flatMap(g => g.items.map(i => i.item.referenceId))
+    expect(allUngroupedRefIds).toContain("ref-1")
+    expect(allUngroupedRefIds).toContain("ref-3")
+  })
+
+  it("duplicates an ingredient into every step that references it", () => {
+    const steps = [step("Step A", "ref-1"), step("Step B", "ref-1")]
+    const result = groupIngredients([ing("ref-1")], steps)
+    const allRefIds = result.flatMap(g => g.items.map(i => i.item.referenceId))
+    expect(allRefIds.filter(id => id === "ref-1")).toHaveLength(2)
+  })
+
+  it("preserves original ingredient index for duplicated items", () => {
+    const steps = [step("Step A", "ref-1"), step("Step B", "ref-1")]
+    const result = groupIngredients([ing("ref-1")], steps)
+    for (const group of result) {
+      for (const { index } of group.items) {
+        expect(index).toBe(0)
+      }
+    }
+  })
+
+  it("handles ingredient.title sections alongside step-reference groups", () => {
+    const steps = [step("Sauce", "ref-2")]
+    const ings = [ing("ref-1", "Marinade"), ing("ref-2"), ing("ref-3")]
+    const result = groupIngredients(ings, steps)
+    const titles = result.map(g => g.title)
+    expect(titles).toContain("Marinade")
+    expect(titles).toContain("Sauce")
+  })
+
+  it("leaves trailing unreferenced items ungrouped after a step group", () => {
+    const steps = [step("Cook", "ref-1")]
+    const result = groupIngredients([ing("ref-1"), ing("ref-2")], steps)
+    const lastGroup = result[result.length - 1]
+    expect(lastGroup.title).toBeNull()
+    expect(lastGroup.items[0].item.referenceId).toBe("ref-2")
+  })
+
+  it("groups non-contiguous references to the same step together", () => {
+    const steps = [step("Sauce", "ref-1", "ref-3")]
+    const result = groupIngredients([ing("ref-1"), ing("ref-2"), ing("ref-3")], steps)
+    const sauceGroup = result.find(g => g.title === "Sauce")
+    expect(sauceGroup?.items.map(i => i.item.referenceId)).toEqual(["ref-1", "ref-3"])
+  })
+
+  it("ignores step references where the referenceId does not match any ingredient", () => {
+    const steps = [step("Ghost step", "no-such-id")]
+    const result = groupIngredients([ing("ref-1")], steps)
+    expect(result.find(g => g.title === "Ghost step")).toBeUndefined()
+  })
+
+  it("returns empty array for empty ingredient list", () => {
+    const steps = [step("Cook", "ref-1")]
+    expect(groupIngredients([], steps)).toHaveLength(0)
   })
 })

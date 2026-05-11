@@ -92,6 +92,7 @@ function RecipeColumns({
           ingredients={recipe.recipeIngredient ?? []}
           recipeId={recipe.id ?? ""}
           defaultServings={recipe.recipeServings}
+          steps={recipe.recipeInstructions ?? []}
         />
       )}
       {hasInstructions && (

@@ -1,4 +1,5 @@
 import { parse as uuidParse, stringify as uuidStringify } from "uuid"
+import type { RecipeIngredientOutput, RecipeStep } from "../api/generated/types.gen"
 
 const MEALIE_BASE_URL =
   import.meta.env.VITE_PUBLIC_MEALIE_BASE_URL ?? "https://mealie.scottfamily.nz"
@@ -111,6 +112,98 @@ export function groupByTitle<T extends { title?: string | null }>(items: T[]): T
   if (current.items.length > 0 || current.title !== null) {
     groups.push(current)
   }
+
+  return groups
+}
+
+function buildReferenceIndex(steps: RecipeStep[]): Map<string, number[]> {
+  const map = new Map<string, number[]>()
+  for (let si = 0; si < steps.length; si++) {
+    for (const ref of steps[si].ingredientReferences ?? []) {
+      if (!ref.referenceId) continue
+      const existing = map.get(ref.referenceId)
+      if (existing) {
+        existing.push(si)
+      } else {
+        map.set(ref.referenceId, [si])
+      }
+    }
+  }
+  return map
+}
+
+function stepGroupLabel(steps: RecipeStep[], si: number): string {
+  const summary = steps[si].summary?.trim()
+  return summary || `Step ${si + 1}`
+}
+
+function flushGroup(
+  groups: TitleGroup<RecipeIngredientOutput>[],
+  current: TitleGroup<RecipeIngredientOutput>
+): TitleGroup<RecipeIngredientOutput> {
+  if (current.items.length > 0 || current.title !== null) {
+    groups.push(current)
+  }
+  return { title: null, items: [] }
+}
+
+function addToStepGroup(
+  groups: TitleGroup<RecipeIngredientOutput>[],
+  openedStepGroups: Map<number, TitleGroup<RecipeIngredientOutput>>,
+  steps: RecipeStep[],
+  si: number,
+  ing: RecipeIngredientOutput,
+  index: number
+): void {
+  let group = openedStepGroups.get(si)
+  if (!group) {
+    group = { title: stepGroupLabel(steps, si), items: [] }
+    openedStepGroups.set(si, group)
+    groups.push(group)
+  }
+  group.items.push({ item: ing, index })
+}
+
+export function groupIngredients(
+  ingredients: RecipeIngredientOutput[],
+  steps?: RecipeStep[]
+): TitleGroup<RecipeIngredientOutput>[] {
+  const hasStepRefs = steps?.some(s => (s.ingredientReferences?.length ?? 0) > 0) ?? false
+
+  if (!hasStepRefs) {
+    return groupByTitle(ingredients)
+  }
+
+  const resolvedSteps = steps ?? []
+  const refIndex = buildReferenceIndex(resolvedSteps)
+  const groups: TitleGroup<RecipeIngredientOutput>[] = []
+  let current: TitleGroup<RecipeIngredientOutput> = { title: null, items: [] }
+  const openedStepGroups = new Map<number, TitleGroup<RecipeIngredientOutput>>()
+
+  for (let i = 0; i < ingredients.length; i++) {
+    const ing = ingredients[i]
+
+    if (ing.title?.trim()) {
+      current = flushGroup(groups, current)
+      current = { title: ing.title.trim(), items: [] }
+      continue
+    }
+
+    const stepIndices = ing.referenceId ? refIndex.get(ing.referenceId) : undefined
+
+    if (!stepIndices || stepIndices.length === 0) {
+      current.items.push({ item: ing, index: i })
+      continue
+    }
+
+    current = flushGroup(groups, current)
+
+    for (const si of stepIndices) {
+      addToStepGroup(groups, openedStepGroups, resolvedSteps, si, ing, i)
+    }
+  }
+
+  flushGroup(groups, current)
 
   return groups
 }

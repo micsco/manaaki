@@ -27,6 +27,11 @@ export function InstructionStep({ step, index, recipeId, className = "" }: Instr
   }, [isChecked, posthog, recipeId, index, setIsChecked])
 
   const stepNumber = index + 1
+  const summary = step.summary?.trim() || null
+
+  const ariaLabel = summary
+    ? `Step ${stepNumber}: ${summary}${isChecked ? ", completed" : ""}`
+    : `Step ${stepNumber}${isChecked ? ", completed" : ""}`
 
   return (
     <li className={`group border-gray-800 border-t last:border-b ${className}`}>
@@ -34,7 +39,7 @@ export function InstructionStep({ step, index, recipeId, className = "" }: Instr
         type="button"
         className="flex w-full cursor-pointer items-baseline gap-3 py-3 text-left transition-colors hover:text-gray-200"
         onClick={handleToggle}
-        aria-label={`Step ${stepNumber}${isChecked ? ", completed" : ""}`}
+        aria-label={ariaLabel}
       >
         <span
           className={`shrink-0 font-semibold tabular-nums transition-colors ${
@@ -48,6 +53,12 @@ export function InstructionStep({ step, index, recipeId, className = "" }: Instr
             isChecked ? "truncate text-gray-600" : "text-gray-300"
           }`}
         >
+          {summary && (
+            <>
+              <strong>{summary}</strong>
+              {" \u2014 "}
+            </>
+          )}
           {step.text}
         </span>
         {isChecked && (

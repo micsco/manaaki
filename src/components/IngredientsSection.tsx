@@ -1,7 +1,7 @@
-import type { RecipeIngredientOutput } from "../api/generated/types.gen"
+import type { RecipeIngredientOutput, RecipeStep } from "../api/generated/types.gen"
 import { useCookMode } from "../contexts/CookModeContext"
 import { useSessionStorage } from "../hooks/useSessionStorage"
-import { groupByTitle, scaleQuantity, servingsStorageKey } from "../utils/recipe"
+import { groupIngredients, scaleQuantity, servingsStorageKey } from "../utils/recipe"
 import { IngredientCheckbox } from "./IngredientCheckbox"
 import { ServingsSelect } from "./ui/ServingsSelect"
 
@@ -34,13 +34,15 @@ export function IngredientsSection({
   ingredients,
   recipeId,
   defaultServings,
+  steps,
 }: {
   ingredients: RecipeIngredientOutput[]
   recipeId: string
   defaultServings?: number | null
+  steps?: RecipeStep[]
 }) {
   const { isCookMode } = useCookMode()
-  const groups = groupByTitle(ingredients)
+  const groups = groupIngredients(ingredients, steps)
   const hasSections = groups.some(g => g.title !== null)
 
   const hasServings = defaultServings != null && defaultServings > 0
@@ -79,9 +81,13 @@ export function IngredientsSection({
                 </h3>
               )}
               <ul>
-                {group.items.map(({ item: ing, index }) => (
+                {group.items.map(({ item: ing, index }, itemIdx) => (
                   <IngredientItem
-                    key={ing.referenceId ?? `${recipeId}-${index}`}
+                    key={
+                      ing.referenceId
+                        ? `${recipeId}-g${gi}-${ing.referenceId}`
+                        : `${recipeId}-g${gi}-i${itemIdx}`
+                    }
                     ing={ing}
                     index={index}
                     recipeId={recipeId}

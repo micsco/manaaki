@@ -80,6 +80,7 @@ export function RecipeTabsMobile({
           ingredients={ingredients}
           recipeId={recipeId}
           defaultServings={defaultServings}
+          steps={instructions}
         />
       </div>
 
