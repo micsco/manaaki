@@ -9,6 +9,7 @@ import {
   parseTimeMinutes,
   recipeImageUrl,
   scaleQuantity,
+  UNGROUPED_INGREDIENTS_TITLE,
 } from "./recipe"
 
 describe("mealieRecipeUrl", () => {
@@ -400,17 +401,15 @@ describe("groupIngredients", () => {
     expect(result[0].title).toBe("Step 2")
   })
 
-  it("preserves unreferenced ingredients at their original position", () => {
+  it("places unreferenced ingredients in a trailing 'Recipe ingredients' group", () => {
     const steps = [step("Cook", "ref-2")]
     const result = groupIngredients([ing("ref-1"), ing("ref-2"), ing("ref-3")], steps)
     const titles = result.map(g => g.title)
-    expect(titles).toContain(null)
     expect(titles).toContain("Cook")
-    const allUngroupedRefIds = result
-      .filter(g => g.title === null)
-      .flatMap(g => g.items.map(i => i.item.referenceId))
-    expect(allUngroupedRefIds).toContain("ref-1")
-    expect(allUngroupedRefIds).toContain("ref-3")
+    expect(titles).toContain(UNGROUPED_INGREDIENTS_TITLE)
+    const ungrouped = result.find(g => g.title === UNGROUPED_INGREDIENTS_TITLE)
+    expect(ungrouped?.items.map(i => i.item.referenceId)).toContain("ref-1")
+    expect(ungrouped?.items.map(i => i.item.referenceId)).toContain("ref-3")
   })
 
   it("duplicates an ingredient into every step that references it", () => {
@@ -430,20 +429,23 @@ describe("groupIngredients", () => {
     }
   })
 
-  it("handles ingredient.title sections alongside step-reference groups", () => {
+  it("places ingredient.title ingredients in the ungrouped trailing section", () => {
     const steps = [step("Sauce", "ref-2")]
     const ings = [ing("ref-1", "Marinade"), ing("ref-2"), ing("ref-3")]
     const result = groupIngredients(ings, steps)
     const titles = result.map(g => g.title)
-    expect(titles).toContain("Marinade")
     expect(titles).toContain("Sauce")
+    expect(titles).toContain(UNGROUPED_INGREDIENTS_TITLE)
+    const ungrouped = result.find(g => g.title === UNGROUPED_INGREDIENTS_TITLE)
+    expect(ungrouped?.items.map(i => i.item.referenceId)).toContain("ref-1")
+    expect(ungrouped?.items.map(i => i.item.referenceId)).toContain("ref-3")
   })
 
-  it("leaves trailing unreferenced items ungrouped after a step group", () => {
+  it("puts unreferenced trailing items in the Recipe ingredients group", () => {
     const steps = [step("Cook", "ref-1")]
     const result = groupIngredients([ing("ref-1"), ing("ref-2")], steps)
     const lastGroup = result[result.length - 1]
-    expect(lastGroup.title).toBeNull()
+    expect(lastGroup.title).toBe(UNGROUPED_INGREDIENTS_TITLE)
     expect(lastGroup.items[0].item.referenceId).toBe("ref-2")
   })
 

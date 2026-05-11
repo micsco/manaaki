@@ -3,6 +3,7 @@ import { useCookMode } from "../contexts/CookModeContext"
 import { useSessionStorage } from "../hooks/useSessionStorage"
 import { groupIngredients, scaleQuantity, servingsStorageKey } from "../utils/recipe"
 import { IngredientCheckbox } from "./IngredientCheckbox"
+import { IngredientSectionHeader } from "./IngredientSectionHeader"
 import { ServingsSelect } from "./ui/ServingsSelect"
 
 function IngredientItem({
@@ -76,9 +77,11 @@ export function IngredientsSection({
             // biome-ignore lint/suspicious/noArrayIndexKey: group index is stable; groups are derived from ingredient list with no stable section ID
             <section key={`${recipeId}-ing-group-${gi}`}>
               {group.title && (
-                <h3 className="mt-8 pb-2 font-semibold text-gray-200 text-sm uppercase tracking-wide first:mt-0">
-                  {group.title}
-                </h3>
+                <IngredientSectionHeader
+                  title={group.title}
+                  recipeId={recipeId}
+                  indices={group.items.map(i => i.index)}
+                />
               )}
               <ul>
                 {group.items.map(({ item: ing, index }, itemIdx) => (

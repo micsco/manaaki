@@ -56,9 +56,9 @@ describe("IngredientsSection", () => {
       expect(screen.getByText("Dry ingredients")).toBeInTheDocument()
     })
 
-    it("does not render a button for section title items", () => {
+    it("renders a check-all button for the section title and one per ingredient", () => {
       render(<IngredientsSection ingredients={ingredientsWithSection} recipeId="test-recipe" />)
-      expect(screen.getAllByRole("button")).toHaveLength(2)
+      expect(screen.getAllByRole("button")).toHaveLength(3)
     })
   })
 
@@ -194,17 +194,32 @@ describe("IngredientsSection", () => {
       expect(screen.getByText("Wet mix")).toBeInTheDocument()
     })
 
-    it("renders all ingredient buttons regardless of grouping", () => {
+    it("renders section headers as check-all buttons", () => {
       render(
         <IngredientsSection ingredients={linkedIngredients} recipeId="test-recipe" steps={steps} />
       )
-      expect(screen.getAllByRole("button")).toHaveLength(3)
+      expect(screen.getByRole("button", { name: /dry mix/i })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /wet mix/i })).toBeInTheDocument()
     })
 
-    it("renders unreferenced ingredients without a group header", () => {
+    it("renders all ingredient buttons plus section check-all buttons", () => {
       render(
         <IngredientsSection ingredients={linkedIngredients} recipeId="test-recipe" steps={steps} />
       )
+      const ingredientButtons = screen
+        .getAllByRole("button")
+        .filter(
+          btn =>
+            !["Dry mix", "Wet mix", "Recipe ingredients"].includes(btn.textContent?.trim() ?? "")
+        )
+      expect(ingredientButtons).toHaveLength(3)
+    })
+
+    it("places unreferenced ingredients under a 'Recipe ingredients' section", () => {
+      render(
+        <IngredientsSection ingredients={linkedIngredients} recipeId="test-recipe" steps={steps} />
+      )
+      expect(screen.getByRole("button", { name: /recipe ingredients/i })).toBeInTheDocument()
       expect(screen.getByRole("button", { name: /100g butter/i })).toBeInTheDocument()
       const headings = screen.getAllByRole("heading", { level: 3 }).map(h => h.textContent)
       expect(headings).not.toContain("Step 3")

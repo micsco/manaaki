@@ -137,16 +137,6 @@ function stepGroupLabel(steps: RecipeStep[], si: number): string {
   return summary || `Step ${si + 1}`
 }
 
-function flushGroup(
-  groups: TitleGroup<RecipeIngredientOutput>[],
-  current: TitleGroup<RecipeIngredientOutput>
-): TitleGroup<RecipeIngredientOutput> {
-  if (current.items.length > 0 || current.title !== null) {
-    groups.push(current)
-  }
-  return { title: null, items: [] }
-}
-
 function addToStepGroup(
   groups: TitleGroup<RecipeIngredientOutput>[],
   openedStepGroups: Map<number, TitleGroup<RecipeIngredientOutput>>,
@@ -164,6 +154,8 @@ function addToStepGroup(
   group.items.push({ item: ing, index })
 }
 
+export const UNGROUPED_INGREDIENTS_TITLE = "Recipe ingredients"
+
 export function groupIngredients(
   ingredients: RecipeIngredientOutput[],
   steps?: RecipeStep[]
@@ -176,36 +168,29 @@ export function groupIngredients(
 
   const resolvedSteps = steps ?? []
   const refIndex = buildReferenceIndex(resolvedSteps)
-  const groups: TitleGroup<RecipeIngredientOutput>[] = []
-  let current: TitleGroup<RecipeIngredientOutput> = { title: null, items: [] }
+  const stepGroups: TitleGroup<RecipeIngredientOutput>[] = []
   const openedStepGroups = new Map<number, TitleGroup<RecipeIngredientOutput>>()
+  const ungrouped: { item: RecipeIngredientOutput; index: number }[] = []
 
   for (let i = 0; i < ingredients.length; i++) {
     const ing = ingredients[i]
-
-    if (ing.title?.trim()) {
-      current = flushGroup(groups, current)
-      current = { title: ing.title.trim(), items: [] }
-      continue
-    }
-
     const stepIndices = ing.referenceId ? refIndex.get(ing.referenceId) : undefined
 
     if (!stepIndices || stepIndices.length === 0) {
-      current.items.push({ item: ing, index: i })
+      ungrouped.push({ item: ing, index: i })
       continue
     }
 
-    current = flushGroup(groups, current)
-
     for (const si of stepIndices) {
-      addToStepGroup(groups, openedStepGroups, resolvedSteps, si, ing, i)
+      addToStepGroup(stepGroups, openedStepGroups, resolvedSteps, si, ing, i)
     }
   }
 
-  flushGroup(groups, current)
-
-  return groups
+  const result = [...stepGroups]
+  if (ungrouped.length > 0) {
+    result.push({ title: UNGROUPED_INGREDIENTS_TITLE, items: ungrouped })
+  }
+  return result
 }
 
 const FRACTIONS: Record<number, string> = {
