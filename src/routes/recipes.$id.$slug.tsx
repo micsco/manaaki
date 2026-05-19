@@ -41,7 +41,9 @@ export const Route = createFileRoute("/recipes/$id/$slug")({
       return `${host}${path}`
     }
 
-    const imagePath = loaderData ? recipeImageUrl(loaderData.id, "original", loaderData.image) : ""
+    const imagePath = loaderData
+      ? recipeImageUrl(loaderData.id, "min-original", loaderData.image)
+      : ""
     const ogImage = resolveAbsoluteUrl(imagePath)
 
     const recipePath =
