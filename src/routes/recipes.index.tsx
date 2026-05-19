@@ -20,9 +20,38 @@ import ManaakiLogo from "../manaaki.svg?react"
 import { recipeImageUrl, recipeUrl } from "../utils/recipe"
 
 export const Route = createFileRoute("/recipes/")({
-  head: () => ({
-    meta: [{ title: "Recipes · Manaaki" }],
-  }),
+  head: () => {
+    const title = "Recipes · Manaaki"
+    const description = "Manaaki - An alternative, high-performance web frontend for Mealie."
+
+    const resolveAbsoluteUrl = (path: string | null | undefined): string => {
+      if (!path) return ""
+      if (path.startsWith("http://") || path.startsWith("https://")) return path
+      const host =
+        typeof window !== "undefined"
+          ? window.location.origin
+          : process.env.VITE_PUBLIC_APP_URL || "https://manaaki.scottfamily.nz"
+      return `${host}${path}`
+    }
+
+    const ogImage = resolveAbsoluteUrl("/manaaki-512.png")
+    const ogUrl = resolveAbsoluteUrl("/recipes")
+
+    return {
+      meta: [
+        { title },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:image", content: ogImage },
+        { property: "og:url", content: ogUrl },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+        { name: "twitter:image", content: ogImage },
+      ],
+    }
+  },
   loader: ({ context: { queryClient } }) =>
     // biome-ignore lint/suspicious/noEmptyBlockStatements: swallow fetch errors during SSR prerender (no base URL in Node)
     void queryClient.ensureQueryData(recipeListQueryOptions).catch(_e => {}),

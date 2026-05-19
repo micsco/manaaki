@@ -2,12 +2,10 @@ server {
     listen 80;
     root /app/html;
 
-    # TanStack Start SPA builds to _shell.html, not index.html
-    index _shell.html;
-
     server_tokens off;
 
     set $mealie "${MEALIE_INTERNAL_URL}";
+    set $ssr_server "http://127.0.0.1:3000";
     set $posthog_assets "https://eu-assets.i.posthog.com";
     set $posthog "https://eu.i.posthog.com";
 
@@ -101,7 +99,16 @@ server {
 
     location / {
         add_header Cache-Control "no-cache";
-        try_files $uri $uri/index.html /_shell.html;
+        try_files $uri @ssr;
+    }
+
+    location @ssr {
+        resolver 127.0.0.11 valid=10s;
+        proxy_pass $ssr_server;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     gzip on;

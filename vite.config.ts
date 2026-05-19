@@ -67,20 +67,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       emitVersionJson(buildSha),
       svgr(),
-      tanstackStart({
-        spa: { enabled: true },
-        prerender: {
-          enabled: true,
-          autoStaticPathsDiscovery: false,
-          crawlLinks: false,
-        },
-        pages: [
-          {
-            path: '/recipes/',
-            prerender: { enabled: true },
-          },
-        ],
-      }),
+      tanstackStart(),
       // viteReact must come after tanstackStart
       viteReact(),
     ],

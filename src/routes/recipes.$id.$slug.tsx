@@ -27,9 +27,42 @@ async function loader({ params }: { params: { id: string; slug: string } }): Pro
 }
 
 export const Route = createFileRoute("/recipes/$id/$slug")({
-  head: ({ loaderData }) => ({
-    meta: [{ title: `${loaderData?.name ?? "Recipe"} · Manaaki` }],
-  }),
+  head: ({ loaderData }) => {
+    const title = `${loaderData?.name ?? "Recipe"} · Manaaki`
+    const description = loaderData?.description || "Check out this recipe on Manaaki!"
+
+    const resolveAbsoluteUrl = (path: string | null | undefined): string => {
+      if (!path) return ""
+      if (path.startsWith("http://") || path.startsWith("https://")) return path
+      const host =
+        typeof window !== "undefined"
+          ? window.location.origin
+          : process.env.VITE_PUBLIC_APP_URL || "https://manaaki.scottfamily.nz"
+      return `${host}${path}`
+    }
+
+    const imagePath = loaderData ? recipeImageUrl(loaderData.id, "original", loaderData.image) : ""
+    const ogImage = resolveAbsoluteUrl(imagePath)
+
+    const recipePath =
+      loaderData?.id && loaderData.slug ? recipeUrl(loaderData.id, loaderData.slug) : ""
+    const ogUrl = resolveAbsoluteUrl(recipePath)
+
+    return {
+      meta: [
+        { title },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:image", content: ogImage },
+        { property: "og:url", content: ogUrl },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+        { name: "twitter:image", content: ogImage },
+      ],
+    }
+  },
   loader,
   component: RecipeDetail,
 })

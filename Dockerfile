@@ -55,6 +55,8 @@ RUN --mount=type=secret,id=POSTHOG_CLI_API_KEY,required=false \
 
 FROM nginx:stable-alpine AS serve
 
+RUN apk add --no-cache nodejs
+
 # Templates go in conf-templates/, not /etc/nginx/templates/, to prevent the
 # nginx image's built-in entrypoint from running envsubst and clobbering nginx
 # variables like $host and $uri. docker-entrypoint.sh handles substitution with
@@ -65,6 +67,7 @@ COPY mealie-proxy-headers.conf.template /etc/nginx/conf-templates/mealie-proxy-h
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
+COPY --from=build /app/dist /app/dist
 COPY --from=build /app/dist/client /app/html
 
 EXPOSE 80
