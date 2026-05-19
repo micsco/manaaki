@@ -106,12 +106,12 @@ export function RecipeTabsMobile({
           {categories?.length || tags?.length ? (
             <div className={`flex flex-wrap gap-2 ${description ? "mt-4" : ""}`}>
               {categories?.map(c => (
-                <Badge key={c.id ?? c.slug} variant="category">
+                <Badge key={c.id ?? c.slug ?? c.name} variant="category">
                   {c.name}
                 </Badge>
               ))}
               {tags?.map(t => (
-                <Badge key={t.id ?? t.slug} variant="tag">
+                <Badge key={t.id ?? t.slug ?? t.name} variant="tag">
                   {t.name}
                 </Badge>
               ))}

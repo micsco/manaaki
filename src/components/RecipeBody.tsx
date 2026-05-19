@@ -45,12 +45,12 @@ function DescriptionRow({ recipe }: { recipe: RecipeOutput }) {
         {(hasCategories || hasTags) && (
           <div className="flex flex-wrap gap-2">
             {recipe.recipeCategory?.map(c => (
-              <Badge key={c.id ?? c.slug} variant="category">
+              <Badge key={c.id ?? c.slug ?? c.name} variant="category">
                 {c.name}
               </Badge>
             ))}
             {recipe.tags?.map(t => (
-              <Badge key={t.id ?? t.slug} variant="tag">
+              <Badge key={t.id ?? t.slug ?? t.name} variant="tag">
                 {t.name}
               </Badge>
             ))}

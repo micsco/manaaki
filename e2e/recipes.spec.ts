@@ -102,7 +102,7 @@ test.describe("Recipe list", () => {
 
   test("shows the page heading", async ({ page }) => {
     await page.goto("/recipes")
-    await expect(page.getByRole("heading", { name: /^recipes$/i })).toBeVisible()
+    await expect(page.getByRole("heading", { name: /^manaaki$/i })).toBeVisible()
   })
 
   test("shows recipe names from the API", async ({ page }) => {
