@@ -3,6 +3,7 @@ import { usePostHog } from "@posthog/react"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
+import { configureApiClient } from "../api/client"
 import type { RecipeSummary } from "../api/generated/types.gen"
 import { AboutModal } from "../components/AboutModal"
 import { Icon } from "../components/Icon"
@@ -30,7 +31,7 @@ export const Route = createFileRoute("/recipes/")({
       const host =
         typeof window !== "undefined"
           ? window.location.origin
-          : process.env.VITE_PUBLIC_APP_URL || "https://manaaki.micsco.nz"
+          : globalThis.process?.env?.VITE_PUBLIC_APP_URL || "https://manaaki.micsco.nz"
       return `${host}${path}`
     }
 
@@ -52,9 +53,11 @@ export const Route = createFileRoute("/recipes/")({
       ],
     }
   },
-  loader: ({ context: { queryClient } }) =>
+  loader: ({ context: { queryClient } }) => {
+    configureApiClient()
     // biome-ignore lint/suspicious/noEmptyBlockStatements: swallow fetch errors during SSR prerender (no base URL in Node)
-    void queryClient.ensureQueryData(recipeListQueryOptions).catch(_e => {}),
+    return void queryClient.ensureQueryData(recipeListQueryOptions).catch(_e => {})
+  },
   component: RecipeList,
   pendingComponent: RecipeListSkeleton,
 })

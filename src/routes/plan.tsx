@@ -2,6 +2,7 @@ import { mdiChevronLeft } from "@mdi/js"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { configureApiClient } from "../api/client"
 import type { ReadPlanEntry } from "../api/generated/types.gen"
 import { Icon } from "../components/Icon"
 import { MealPlanEntryCard } from "../components/MealPlanEntryCard"
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/plan")({
     meta: [{ title: "Meal Plan · Manaaki" }],
   }),
   loader: ({ context: { queryClient } }) => {
+    configureApiClient()
     const { startDate, endDate } = multiWeekBounds(-1, 1)
     return void queryClient.ensureQueryData(mealPlanQueryOptions(startDate, endDate))
   },

@@ -3,6 +3,7 @@ import { usePostHog } from "@posthog/react"
 import { useHotkey } from "@tanstack/react-hotkeys"
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
+import { configureApiClient } from "../api/client"
 import { getOneApiRecipesSlugGet } from "../api/generated/sdk.gen"
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { Icon } from "../components/Icon"
@@ -14,6 +15,7 @@ import { useRecipeNav } from "../hooks/useRecipeNav"
 import { decodeRecipeId, recipeImageUrl, recipeUrl } from "../utils/recipe"
 
 async function loader({ params }: { params: { id: string; slug: string } }): Promise<RecipeOutput> {
+  configureApiClient()
   const uuid = decodeRecipeId(params.id)
   const r = await getOneApiRecipesSlugGet({ path: { slug: uuid } })
   if (!r.data) throw new Error("Recipe not found")
@@ -37,7 +39,7 @@ export const Route = createFileRoute("/recipes/$id/$slug")({
       const host =
         typeof window !== "undefined"
           ? window.location.origin
-          : process.env.VITE_PUBLIC_APP_URL || "https://manaaki.micsco.nz"
+          : globalThis.process?.env?.VITE_PUBLIC_APP_URL || "https://manaaki.micsco.nz"
       return `${host}${path}`
     }
 
