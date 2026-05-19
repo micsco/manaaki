@@ -10,7 +10,7 @@ server {
     set $posthog "https://eu.i.posthog.com";
 
     location /ingest/static {
-        resolver 8.8.8.8 1.1.1.1 valid=60s;
+        resolver 8.8.8.8 1.1.1.1 valid=60s ipv6=off;
         rewrite ^/ingest(/.*)$ $1 break;
         proxy_pass $posthog_assets;
         proxy_ssl_server_name on;
@@ -18,7 +18,7 @@ server {
     }
 
     location /ingest/array {
-        resolver 8.8.8.8 1.1.1.1 valid=60s;
+        resolver 8.8.8.8 1.1.1.1 valid=60s ipv6=off;
         rewrite ^/ingest(/.*)$ $1 break;
         proxy_pass $posthog_assets;
         proxy_ssl_server_name on;
@@ -26,7 +26,7 @@ server {
     }
 
     location /ingest {
-        resolver 8.8.8.8 1.1.1.1 valid=60s;
+        resolver 8.8.8.8 1.1.1.1 valid=60s ipv6=off;
         rewrite ^/ingest(/.*)$ $1 break;
         proxy_pass $posthog;
         proxy_ssl_server_name on;
