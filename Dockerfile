@@ -53,6 +53,8 @@ RUN --mount=type=secret,id=POSTHOG_CLI_API_KEY,required=false \
       echo "Skipping PostHog source map upload (POSTHOG_CLI_API_KEY/POSTHOG_PROJECT_ID not set)"; \
     fi
 
+RUN pnpm prune --prod
+
 FROM nginx:stable-alpine AS serve
 
 RUN apk add --no-cache nodejs
@@ -67,8 +69,11 @@ COPY mealie-proxy-headers.conf.template /etc/nginx/conf-templates/mealie-proxy-h
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
+COPY --from=build /app/node_modules /app/node_modules
 COPY --from=build /app/dist /app/dist
 COPY --from=build /app/dist/client /app/html
+COPY --from=build /app/server.js /app/server.js
+
 
 EXPOSE 80
 

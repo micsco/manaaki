@@ -11,6 +11,6 @@ envsubst '${MEALIE_INTERNAL_URL} ${MEALIE_API_TOKEN}' \
   < /etc/nginx/conf-templates/mealie-proxy-headers.conf.template \
   > /etc/nginx/conf.d/mealie-proxy-headers.conf
 
-node /app/dist/server/server.js &
+node /app/server.js &
 
 exec nginx -g 'daemon off;'
