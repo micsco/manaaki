@@ -2,7 +2,7 @@ import { mdiPotSteam } from "@mdi/js"
 import { usePostHog } from "@posthog/react"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { RecipeSummary } from "../api/generated/types.gen"
 import { AboutModal } from "../components/AboutModal"
 import { Icon } from "../components/Icon"
@@ -179,6 +179,13 @@ function RecipeList() {
   const recipes = data ?? []
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  const showSkeleton = isLoading || !isMounted
 
   const {
     search,
@@ -238,14 +245,14 @@ function RecipeList() {
             <ManaakiLogo className="size-8 shrink-0" />
             <h1 className="font-bold text-4xl leading-none">Manaaki</h1>
           </button>
-          {!isLoading && (
+          {!showSkeleton && (
             <p className="shrink-0 text-gray-500 text-sm">
               {isFiltered ? `${filtered.length} of ${recipes.length}` : `${recipes.length} recipes`}
             </p>
           )}
         </div>
 
-        {isLoading ? (
+        {showSkeleton ? (
           <div
             role="status"
             aria-label="Loading recipes"
