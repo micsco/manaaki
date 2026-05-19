@@ -37,7 +37,7 @@ export const Route = createFileRoute("/recipes/$id/$slug")({
       const host =
         typeof window !== "undefined"
           ? window.location.origin
-          : process.env.VITE_PUBLIC_APP_URL || "https://manaaki.scottfamily.nz"
+          : process.env.VITE_PUBLIC_APP_URL || "https://manaaki.micsco.nz"
       return `${host}${path}`
     }
 
