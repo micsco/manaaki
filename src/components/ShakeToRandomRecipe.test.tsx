@@ -15,11 +15,13 @@ const RECIPE_A = {
   id: "550e8400-e29b-41d4-a716-446655440000",
   slug: "pasta-bake",
   name: "Pasta Bake",
+  image: "abc123",
 }
 const RECIPE_B = {
   id: "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
   slug: "chicken-soup",
   name: "Chicken Soup",
+  image: "def456",
 }
 
 vi.mock("../hooks/useRecipeList", () => ({
@@ -88,14 +90,14 @@ describe("ShakeToRandomRecipe", () => {
       act(() => shakeCallback?.())
       expect(screen.getByRole("dialog")).toBeInTheDocument()
       expect(screen.getByText("Random Recipe")).toBeInTheDocument()
-      expect(screen.getByRole("button", { name: /tap to cancel/i })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument()
     })
 
-    it("dismisses the overlay when 'Tap to cancel' is clicked", async () => {
+    it("dismisses the overlay when 'Cancel' is clicked", async () => {
       const user = userEvent.setup()
       render(<ShakeToRandomRecipe />)
       act(() => shakeCallback?.())
-      await user.click(screen.getByRole("button", { name: /tap to cancel/i }))
+      await user.click(screen.getByRole("button", { name: /cancel/i }))
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
     })
 
@@ -112,7 +114,7 @@ describe("ShakeToRandomRecipe", () => {
       const user = userEvent.setup()
       render(<ShakeToRandomRecipe />)
       act(() => shakeCallback?.())
-      await user.click(screen.getByRole("button", { name: /tap to cancel/i }))
+      await user.click(screen.getByRole("button", { name: /cancel/i }))
       expect(mockCapture).toHaveBeenCalledWith(
         "shake_random_recipe_cancelled",
         expect.objectContaining({ recipe_id: expect.any(String) })
@@ -136,7 +138,7 @@ describe("ShakeToRandomRecipe", () => {
       vi.useFakeTimers()
       render(<ShakeToRandomRecipe />)
       act(() => shakeCallback?.())
-      fireEvent.click(screen.getByRole("button", { name: /tap to cancel/i }))
+      fireEvent.click(screen.getByRole("button", { name: /cancel/i }))
       act(() => vi.advanceTimersByTime(5000))
       expect(mockNavigate).not.toHaveBeenCalled()
     })
@@ -145,6 +147,49 @@ describe("ShakeToRandomRecipe", () => {
       render(<ShakeToRandomRecipe />)
       act(() => shakeCallback?.())
       expect(screen.getByText(/Pasta Bake|Chicken Soup/)).toBeInTheDocument()
+    })
+
+    it("shows the recipe image in the overlay", () => {
+      const { container } = render(<ShakeToRandomRecipe />)
+      act(() => shakeCallback?.())
+      const img = container.querySelector("img")
+      expect(img).toBeInTheDocument()
+      expect(img).toHaveAttribute("src", expect.stringContaining("/api/media/recipes/"))
+    })
+
+    it("re-shaking while overlay is active picks a new recipe and resets the countdown", () => {
+      vi.useFakeTimers()
+      render(<ShakeToRandomRecipe />)
+
+      act(() => shakeCallback?.())
+      expect(screen.getByRole("dialog")).toBeInTheDocument()
+
+      act(() => vi.advanceTimersByTime(3000))
+      expect(mockNavigate).not.toHaveBeenCalled()
+
+      act(() => shakeCallback?.())
+      expect(mockCapture).toHaveBeenCalledWith(
+        "shake_random_recipe_triggered",
+        expect.objectContaining({ total_recipes: 2 })
+      )
+
+      act(() => vi.advanceTimersByTime(3000))
+      expect(mockNavigate).not.toHaveBeenCalled()
+
+      act(() => vi.advanceTimersByTime(2000))
+      expect(mockNavigate).toHaveBeenCalledTimes(1)
+    })
+
+    it("navigates exactly once when re-shaking then letting the second countdown finish", () => {
+      vi.useFakeTimers()
+      render(<ShakeToRandomRecipe />)
+
+      act(() => shakeCallback?.())
+      act(() => vi.advanceTimersByTime(2000))
+      act(() => shakeCallback?.())
+      act(() => vi.advanceTimersByTime(5000))
+
+      expect(mockNavigate).toHaveBeenCalledTimes(1)
     })
   })
 })
