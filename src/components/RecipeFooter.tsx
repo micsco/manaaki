@@ -15,9 +15,9 @@ export function RecipeFooter({ recipe }: { recipe: RecipeOutput }) {
     <div className="mx-auto max-w-6xl px-6 pb-12 md:px-10">
       <RecipeNotes notes={recipe.notes ?? []} />
       {(sourceDomain || mealieUrl) && (
-        <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 border-gray-800 border-t pt-6">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-gray-800 border-t pt-6 text-sm">
           {sourceDomain && (
-            <span className="text-gray-500 text-sm">
+            <span className="text-gray-500">
               Source:{" "}
               <a
                 href={recipe.orgURL ?? undefined}
@@ -34,7 +34,7 @@ export function RecipeFooter({ recipe }: { recipe: RecipeOutput }) {
               href={mealieUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-gray-700 px-4 py-2 font-medium text-gray-200 text-sm transition-colors hover:bg-gray-800 hover:text-white"
+              className="ml-auto inline-flex items-center gap-1.5 font-medium text-orange-400 transition-colors hover:text-orange-300"
               onClick={() =>
                 posthog.capture("recipe_viewed_in_mealie", {
                   recipe_id: recipe.id,
