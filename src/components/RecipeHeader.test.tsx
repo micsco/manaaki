@@ -128,4 +128,19 @@ describe("RecipeHeader", () => {
     render(<RecipeHeader recipe={{ ...minimalRecipe, slug: undefined }} img={null} />)
     expect(screen.queryByRole("link", { name: /view in mealie/i })).not.toBeInTheDocument()
   })
+
+  it("renders the share button when the Web Share API is available", async () => {
+    Object.defineProperty(navigator, "share", {
+      value: vi.fn().mockResolvedValue(undefined),
+      configurable: true,
+      writable: true,
+    })
+    render(<RecipeHeader recipe={minimalRecipe} img={null} />)
+    expect(await screen.findByRole("button", { name: /share recipe/i })).toBeInTheDocument()
+    Object.defineProperty(navigator, "share", {
+      value: undefined,
+      configurable: true,
+      writable: true,
+    })
+  })
 })

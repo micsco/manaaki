@@ -13,6 +13,7 @@ import type { RecipeNavItem } from "../hooks/useRecipeNav"
 import { formatTime, mealieRecipeUrl, recipeUrl } from "../utils/recipe"
 import { Icon } from "./Icon"
 import { MealieLogo } from "./MealieLogo"
+import { ShareRecipeButton } from "./ShareRecipeButton"
 
 function HeroRating({ rating }: { rating: number }) {
   return (
@@ -109,56 +110,59 @@ export function RecipeHeader({
         )}
       </div>
 
-      {(prevRecipe || nextRecipe) && (
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-          {prevRecipe ? (
-            <Link
-              to={recipeUrl(prevRecipe.id, prevRecipe.slug)}
-              aria-label="Previous recipe"
-              className="inline-flex items-center justify-center rounded-full bg-black/40 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
-              onClick={() =>
-                posthog.capture("recipe_navigated", {
-                  direction: "prev",
-                  method: "click",
-                  from_recipe_id: recipe.id,
-                  from_recipe_name: recipe.name,
-                  to_recipe_id: prevRecipe.id,
-                  to_recipe_name: prevRecipe.name,
-                })
-              }
-            >
-              <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
-            </Link>
-          ) : (
-            <span className="inline-flex items-center justify-center rounded-full bg-black/20 p-1.5 text-white/30">
-              <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
-            </span>
-          )}
-          {nextRecipe ? (
-            <Link
-              to={recipeUrl(nextRecipe.id, nextRecipe.slug)}
-              aria-label="Next recipe"
-              className="inline-flex items-center justify-center rounded-full bg-black/40 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
-              onClick={() =>
-                posthog.capture("recipe_navigated", {
-                  direction: "next",
-                  method: "click",
-                  from_recipe_id: recipe.id,
-                  from_recipe_name: recipe.name,
-                  to_recipe_id: nextRecipe.id,
-                  to_recipe_name: nextRecipe.name,
-                })
-              }
-            >
-              <Icon path={mdiChevronRight} size={0.75} aria-hidden={true} />
-            </Link>
-          ) : (
-            <span className="inline-flex items-center justify-center rounded-full bg-black/20 p-1.5 text-white/30">
-              <Icon path={mdiChevronRight} size={0.75} aria-hidden={true} />
-            </span>
-          )}
-        </div>
-      )}
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        <ShareRecipeButton recipe={recipe} />
+        {(prevRecipe || nextRecipe) && (
+          <>
+            {prevRecipe ? (
+              <Link
+                to={recipeUrl(prevRecipe.id, prevRecipe.slug)}
+                aria-label="Previous recipe"
+                className="inline-flex items-center justify-center rounded-full bg-black/40 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                onClick={() =>
+                  posthog.capture("recipe_navigated", {
+                    direction: "prev",
+                    method: "click",
+                    from_recipe_id: recipe.id,
+                    from_recipe_name: recipe.name,
+                    to_recipe_id: prevRecipe.id,
+                    to_recipe_name: prevRecipe.name,
+                  })
+                }
+              >
+                <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
+              </Link>
+            ) : (
+              <span className="inline-flex items-center justify-center rounded-full bg-black/20 p-1.5 text-white/30">
+                <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
+              </span>
+            )}
+            {nextRecipe ? (
+              <Link
+                to={recipeUrl(nextRecipe.id, nextRecipe.slug)}
+                aria-label="Next recipe"
+                className="inline-flex items-center justify-center rounded-full bg-black/40 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                onClick={() =>
+                  posthog.capture("recipe_navigated", {
+                    direction: "next",
+                    method: "click",
+                    from_recipe_id: recipe.id,
+                    from_recipe_name: recipe.name,
+                    to_recipe_id: nextRecipe.id,
+                    to_recipe_name: nextRecipe.name,
+                  })
+                }
+              >
+                <Icon path={mdiChevronRight} size={0.75} aria-hidden={true} />
+              </Link>
+            ) : (
+              <span className="inline-flex items-center justify-center rounded-full bg-black/20 p-1.5 text-white/30">
+                <Icon path={mdiChevronRight} size={0.75} aria-hidden={true} />
+              </span>
+            )}
+          </>
+        )}
+      </div>
 
       {img ? (
         <img
