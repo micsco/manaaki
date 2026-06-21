@@ -85,7 +85,7 @@ export function RecipeHeader({
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
         <Link
           to="/recipes"
-          className="inline-flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 font-medium text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-black/40 px-4 py-2 font-medium text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/60"
         >
           <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
           All recipes
@@ -96,7 +96,7 @@ export function RecipeHeader({
             target="_blank"
             rel="noopener noreferrer"
             aria-label="View in Mealie"
-            className="inline-flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 font-medium text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-black/40 px-4 py-2 font-medium text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/60"
             onClick={() =>
               posthog.capture("recipe_viewed_in_mealie", {
                 recipe_id: recipe.id,
@@ -118,7 +118,7 @@ export function RecipeHeader({
               <Link
                 to={recipeUrl(prevRecipe.id, prevRecipe.slug)}
                 aria-label="Previous recipe"
-                className="inline-flex items-center justify-center rounded-full bg-black/40 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-black/40 p-2.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
                 onClick={() =>
                   posthog.capture("recipe_navigated", {
                     direction: "prev",
@@ -133,7 +133,7 @@ export function RecipeHeader({
                 <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
               </Link>
             ) : (
-              <span className="inline-flex items-center justify-center rounded-full bg-black/20 p-1.5 text-white/30">
+              <span className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-black/20 p-2.5 text-white/30">
                 <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
               </span>
             )}
@@ -141,7 +141,7 @@ export function RecipeHeader({
               <Link
                 to={recipeUrl(nextRecipe.id, nextRecipe.slug)}
                 aria-label="Next recipe"
-                className="inline-flex items-center justify-center rounded-full bg-black/40 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-black/40 p-2.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
                 onClick={() =>
                   posthog.capture("recipe_navigated", {
                     direction: "next",
@@ -156,7 +156,7 @@ export function RecipeHeader({
                 <Icon path={mdiChevronRight} size={0.75} aria-hidden={true} />
               </Link>
             ) : (
-              <span className="inline-flex items-center justify-center rounded-full bg-black/20 p-1.5 text-white/30">
+              <span className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-black/20 p-2.5 text-white/30">
                 <Icon path={mdiChevronRight} size={0.75} aria-hidden={true} />
               </span>
             )}

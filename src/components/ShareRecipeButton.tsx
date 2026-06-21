@@ -36,7 +36,7 @@ export function ShareRecipeButton({ recipe }: { recipe: RecipeOutput }) {
       type="button"
       onClick={handleShare}
       aria-label="Share recipe"
-      className="inline-flex items-center justify-center rounded-full bg-black/40 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-black/40 p-2.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
     >
       <Icon path={mdiShareVariant} size={0.75} aria-hidden={true} />
     </button>
