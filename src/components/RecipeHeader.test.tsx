@@ -5,10 +5,6 @@ import { render, screen } from "../test/render"
 import { encodeRecipeId } from "../utils/recipe"
 import { RecipeHeader } from "./RecipeHeader"
 
-vi.mock("../hooks/useGroupSlug", () => ({
-  useGroupSlug: () => "scottfamily",
-}))
-
 vi.mock("@tanstack/react-router", async importOriginal => {
   const actual = await importOriginal<typeof import("@tanstack/react-router")>()
   return {
@@ -106,26 +102,8 @@ describe("RecipeHeader", () => {
     expect(screen.queryByRole("link", { name: /next recipe/i })).not.toBeInTheDocument()
   })
 
-  it("renders a 'View in Mealie' link with the correct URL", () => {
+  it("does not render a 'View in Mealie' link (it now lives in the footer)", () => {
     render(<RecipeHeader recipe={minimalRecipe} img={null} />)
-    const link = screen.getByRole("link", { name: /view in mealie/i })
-    expect(link).toBeInTheDocument()
-    expect(link).toHaveAttribute(
-      "href",
-      "https://mealie.scottfamily.nz/g/scottfamily/r/banana-bread"
-    )
-  })
-
-  it("opens the Mealie link in a new tab", () => {
-    render(<RecipeHeader recipe={minimalRecipe} img={null} />)
-    expect(screen.getByRole("link", { name: /view in mealie/i })).toHaveAttribute(
-      "target",
-      "_blank"
-    )
-  })
-
-  it("does not render the Mealie link when the recipe has no slug", () => {
-    render(<RecipeHeader recipe={{ ...minimalRecipe, slug: undefined }} img={null} />)
     expect(screen.queryByRole("link", { name: /view in mealie/i })).not.toBeInTheDocument()
   })
 

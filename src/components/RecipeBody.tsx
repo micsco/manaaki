@@ -3,30 +3,9 @@ import { useCookMode } from "../contexts/CookModeContext"
 import { IngredientsSection } from "./IngredientsSection"
 import { InstructionsSection } from "./InstructionsSection"
 import { NutritionPanel } from "./NutritionPanel"
-import { RecipeNotes } from "./RecipeNotes"
+import { RecipeFooter } from "./RecipeFooter"
 import { RecipeTabsMobile } from "./RecipeTabsMobile"
 import { Badge } from "./ui"
-
-function RecipeFooter({ recipe }: { recipe: RecipeOutput }) {
-  return (
-    <div className="mx-auto max-w-6xl px-6 pb-12 md:px-10">
-      <RecipeNotes notes={recipe.notes ?? []} />
-      {recipe.orgURL && (
-        <p className="mt-6 text-gray-500 text-sm">
-          Source:{" "}
-          <a
-            href={recipe.orgURL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-orange-400 underline hover:text-orange-300"
-          >
-            {recipe.orgURL}
-          </a>
-        </p>
-      )}
-    </div>
-  )
-}
 
 function DescriptionRow({ recipe }: { recipe: RecipeOutput }) {
   const hasDescription = !!recipe.description

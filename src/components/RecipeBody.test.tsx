@@ -1,9 +1,15 @@
 import { NuqsTestingAdapter } from "nuqs/adapters/testing"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { CookModeProvider } from "../contexts/CookModeContext"
 import { render, screen } from "../test/render"
 import { RecipeBody } from "./RecipeBody"
+
+// RecipeFooter reads the group slug via react-query; this test tree has no
+// QueryClientProvider, so stub the hook (mirrors RecipeHeader's test setup).
+vi.mock("../hooks/useGroupSlug", () => ({
+  useGroupSlug: () => "scottfamily",
+}))
 
 const minimalRecipe: RecipeOutput = {
   id: "recipe-1",
@@ -52,15 +58,14 @@ describe("RecipeBody", () => {
       expect(headings.length).toBeGreaterThan(0)
     })
 
-    it("renders the source URL when provided", () => {
+    it("renders the source as the cleaned domain linking to the full URL", () => {
       const recipeWithSource: RecipeOutput = {
         ...minimalRecipe,
-        orgURL: "https://example.com/pasta",
+        orgURL: "https://www.example.com/pasta",
       }
       render(<RecipeBody recipe={recipeWithSource} />)
-      expect(
-        screen.getByRole("link", { name: /https:\/\/example.com\/pasta/i })
-      ).toBeInTheDocument()
+      const link = screen.getByRole("link", { name: "example.com" })
+      expect(link).toHaveAttribute("href", "https://www.example.com/pasta")
     })
 
     it("does not render source link when orgURL is absent", () => {

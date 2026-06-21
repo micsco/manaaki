@@ -8,11 +8,9 @@ import {
 import { usePostHog } from "@posthog/react"
 import { Link } from "@tanstack/react-router"
 import type { RecipeOutput } from "../api/generated/types.gen"
-import { useGroupSlug } from "../hooks/useGroupSlug"
 import type { RecipeNavItem } from "../hooks/useRecipeNav"
-import { formatTime, mealieRecipeUrl, recipeUrl } from "../utils/recipe"
+import { formatTime, recipeUrl } from "../utils/recipe"
 import { Icon } from "./Icon"
-import { MealieLogo } from "./MealieLogo"
 import { ShareRecipeButton } from "./ShareRecipeButton"
 
 function HeroRating({ rating }: { rating: number }) {
@@ -76,8 +74,6 @@ export function RecipeHeader({
   prevRecipe?: RecipeNavItem | null
   nextRecipe?: RecipeNavItem | null
 }) {
-  const groupSlug = useGroupSlug()
-  const mealieUrl = mealieRecipeUrl(recipe.slug, groupSlug)
   const posthog = usePostHog()
 
   return (
@@ -90,24 +86,6 @@ export function RecipeHeader({
           <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
           All recipes
         </Link>
-        {mealieUrl && (
-          <a
-            href={mealieUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="View in Mealie"
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-black/40 px-4 py-2 font-medium text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/60"
-            onClick={() =>
-              posthog.capture("recipe_viewed_in_mealie", {
-                recipe_id: recipe.id,
-                recipe_name: recipe.name,
-              })
-            }
-          >
-            <MealieLogo className="h-4 w-4" />
-            View in Mealie
-          </a>
-        )}
       </div>
 
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2">

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { RecipeIngredientOutput, RecipeStep } from "../api/generated/types.gen"
 import {
+  displayDomain,
   formatQuantity,
   formatTime,
   groupByTitle,
@@ -11,6 +12,32 @@ import {
   scaleQuantity,
   UNGROUPED_INGREDIENTS_TITLE,
 } from "./recipe"
+
+describe("displayDomain", () => {
+  it("returns the hostname without the path", () => {
+    expect(displayDomain("https://cooking.nytimes.com/recipes/123-banana-bread")).toBe(
+      "cooking.nytimes.com"
+    )
+  })
+
+  it("strips a leading www.", () => {
+    expect(displayDomain("https://www.bbcgoodfood.com/recipes/pasta")).toBe("bbcgoodfood.com")
+  })
+
+  it("keeps a meaningful subdomain", () => {
+    expect(displayDomain("https://food.example.co.uk/r/1")).toBe("food.example.co.uk")
+  })
+
+  it("returns null for empty input", () => {
+    expect(displayDomain(null)).toBeNull()
+    expect(displayDomain(undefined)).toBeNull()
+    expect(displayDomain("")).toBeNull()
+  })
+
+  it("falls back to the raw string when it is not a valid URL", () => {
+    expect(displayDomain("not a url")).toBe("not a url")
+  })
+})
 
 describe("mealieRecipeUrl", () => {
   it("returns the full Mealie recipe URL for a valid slug and group slug", () => {

@@ -37,6 +37,15 @@ export function mealieRecipeUrl(
   return `${MEALIE_BASE_URL}/g/${groupSlug}/r/${slug}`
 }
 
+export function displayDomain(url: string | null | undefined): string | null {
+  if (!url) return null
+  try {
+    return new URL(url).hostname.replace(/^www\./, "")
+  } catch {
+    return url
+  }
+}
+
 export function recipeImageUrl(
   id: string | null | undefined,
   size: "original" | "min-original",
