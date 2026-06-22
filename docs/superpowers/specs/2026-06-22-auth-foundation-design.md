@@ -1,13 +1,15 @@
 # Auth foundation + public/private split — design
 
 Date: 2026-06-22
+Revised: 2026-06-22 (incorporating external review)
 
 ## Problem
 
 manaaki is currently a single-tier app: every visitor acts as the *same* Mealie
-user via one shared, server-side API token (injected by the Vite proxy in dev
-and nginx in prod). There is no concept of "who is using the app." This blocks
-the product direction:
+user via one shared API token. Today that token is injected by nginx for a
+GET-only allowlist of browser `/api` calls, and by the SSR server for
+server-side data fetches. There is no concept of "who is using the app." This
+blocks the product direction:
 
 - manaaki should become the **primary front door** to Mealie for multiple
   households, because Mealie's own UI is the adoption blocker.
@@ -26,6 +28,28 @@ becomes its own spec once this boundary exists. The existing (navigation-only)
 `/plan` view is in scope insofar as it gets gated and surfaced; its features are
 not expanded here.
 
+## Current architecture (verified)
+
+The app is **already a TanStack Start full-stack app**, not an SPA. The container
+(`Dockerfile`, `docker-entrypoint.sh`) runs **two processes**:
+
+1. **node SSR server** (`server.js` → `srvx` serving `dist/server/server.js`) on
+   `127.0.0.1:3000`.
+2. **nginx** on `:80`, which: serves static assets from `dist/client`; proxies
+   PostHog `/ingest*`; proxies a **GET-only Mealie allowlist**
+   (`/api/recipes`, `/api/households/mealplans`, `=/api/users/self`,
+   `/api/media/recipes/`) to Mealie with the token injected via
+   `mealie-proxy-headers.conf`; returns **403 for any other `/api/*`**; and
+   forwards everything else to the SSR server (`@ssr`).
+
+So the Mealie token is used in **two** places today: nginx (browser `/api`
+calls) and `src/api/client.ts` (SSR data fetches via the global SDK client).
+Traefik (Dokploy) terminates TLS in front of the container.
+
+**The real migration** is therefore *not* "SPA → full-stack" — it is **moving
+Mealie API proxying out of nginx and into the node BFF**, and making token
+handling per-user.
+
 ## Goals
 
 - Introduce a real auth boundary: **anonymous** vs **authenticated** access.
@@ -33,11 +57,10 @@ not expanded here.
   the identity provider). manaaki never stores passwords or implements auth
   logic of its own.
 - A logged-in user's Mealie token is **never exposed to browser JavaScript**
-  (defends against the recipe-content XSS surface — recipe instructions/notes
-  are user-authored HTML/markdown rendered in the app).
+  (kept in an encrypted httpOnly cookie) — preventing token *theft* via XSS.
 - Per-user data scoping "just works" — each Google identity resolves to its own
   Mealie user, hence the correct household.
-- Deployable as a single container on Dokploy behind Traefik.
+- Deployable as the same single container on Dokploy behind Traefik.
 
 ## Non-goals (deferred)
 
@@ -46,187 +69,218 @@ not expanded here.
 - Per-feature role gating beyond authenticated/anonymous (Mealie's `canManage`
   etc. ride along via `/api/users/self` and can be used later).
 - Public browsing spanning multiple Mealie *groups* (today: one group, `Home`).
-- Email-invitation links (the user does not use them; see "Mealie config").
+- Email-invitation links (the user does not use them).
 - Proxying Mealie's native **admin** UI through manaaki (fallback, deferred).
+- Recipe-content output sanitization — a pre-existing rendering concern, related
+  but separate from auth (see Security). Verify usage before any action.
 - README / PLAN.md doc updates happen during *implementation*, not now.
 
 ## Relevant Mealie facts (from source review of `mealie-recipes/mealie`)
 
-These constraints shaped the design; recording them so future readers
-understand the "why".
-
-- **OIDC-only login.** This instance has `ALLOW_PASSWORD_LOGIN=false`,
-  `OIDC_AUTH_ENABLED=true` (Google). There is no username/password endpoint to
-  call — auth is exclusively the Google OIDC flow.
-- **Login initiation** `GET /api/auth/oauth` uses Authlib; it stores OAuth
-  `state` + PKCE verifier in a Starlette **`session` cookie** and 302-redirects
-  to Google.
+- **OIDC-only login.** `ALLOW_PASSWORD_LOGIN=false`, `OIDC_AUTH_ENABLED=true`
+  (Google). No username/password endpoint to call.
+- **Login initiation** `GET /api/auth/oauth` uses Authlib; stores OAuth `state`
+  + PKCE verifier in a Starlette **`session` cookie** (default name `session`)
+  and 302-redirects to Google.
 - **Return address (`redirect_uri`) is global**, path hard-coded to `/login`.
   Computed from `BASE_URL` *if set*; if `BASE_URL` is left at its default,
-  Mealie derives it from `request.base_url` (which honors the incoming `Host`
-  header + `X-Forwarded-Proto`, since `forwarded_allow_ips="*"`).
-- **Callback** `GET /api/auth/oauth/callback` returns the Mealie JWT as **plain
-  JSON** (`{access_token, token_type}`) — it does *not* set a cookie or redirect.
-  (Mealie's own SPA sets a non-httpOnly cookie client-side afterward.) This is
-  what lets our BFF capture the token cleanly.
+  Mealie derives it from `request.base_url` (honors incoming `Host` +
+  `X-Forwarded-Proto`, since `forwarded_allow_ips="*"`).
+- **Callback** `GET /api/auth/oauth/callback` returns the JWT as **plain JSON**
+  (`{access_token, token_type}`) — no cookie, no redirect. This lets the BFF
+  capture the token cleanly.
 - **State/PKCE require one origin.** Both initiation and callback must round-trip
-  through the same origin so the Starlette `session` cookie is present on the
-  callback. Since manaaki proxies `/api/*`, that origin is manaaki's.
-- **Token** is an HS256 JWT, default **48h** (`remember_me` → 14d+). Refresh via
-  `GET /api/auth/refresh`. No server-side revocation of login tokens
-  (stateless-until-expiry); logout just deletes the cookie.
-- **Roles** (`admin`, `canManage`, …) come from `GET /api/users/self`, resolved
-  per-request — not baked into the token.
-- **No production CORS** in Mealie — irrelevant to us because the BFF talks to
-  Mealie **server-to-server** over the internal network.
-- **Public/anonymous recipe reads** exist but via a different path
-  (`/api/explore/...`) gated by privacy flags. We do **not** use those; instead
-  the anonymous tier uses a **shared read-only token** (today's model).
+  through the same origin carrying the `session` cookie. That origin is
+  manaaki's.
+- **Token** is an HS256 JWT, default **48h**. Refresh via `GET /api/auth/refresh`
+  (needs a still-valid token). No server-side revocation of login tokens
+  (stateless-until-expiry); logout just deletes the cookie. **`remember_me` is a
+  field of the password-login form, NOT part of the OIDC flow** — session length
+  for OIDC is governed by Mealie's `TOKEN_TIME` and `OIDC_REMEMBER_ME` settings.
+- **Roles** (`admin`, `canManage`, …) come from `GET /api/users/self`.
+- **No production CORS** — irrelevant; the BFF talks to Mealie
+  **server-to-server**.
 
 ## Architecture decision
 
-**B1 — thin BFF with an encrypted, httpOnly cookie, built as a TanStack Start
-full-stack app.** Considered and rejected: client-side bearer token (exposes the
-token to JS / XSS); a separate BFF sidecar (two deployables for no benefit here);
-a server-side session store (extra infra for revocation Mealie barely supports).
-
-For acquiring the per-user token we use **Mechanism 1 — manaaki fronts Mealie's
+**B1 — thin BFF with an encrypted, httpOnly cookie, hosted by the existing
+TanStack Start node server.** The BFF takes over all `/api/*` handling. For
+acquiring the per-user token we use **Mechanism 1 — manaaki fronts Mealie's
 Google OIDC flow** (rejected alternative: an independent OIDC client that forges
-Mealie JWTs with the shared `SECRET`, which couples manaaki to Mealie's internal
-signing format).
+Mealie JWTs with the shared `SECRET`, which couples manaaki to Mealie internals).
 
 ## Components
 
-### 1. The app shape
+### 1. Routing model (Option A — BFF owns `/api/*`)
 
-manaaki migrates from SPA-only to **TanStack Start full-stack (Nitro server)** —
-one build, one container. The server layer is the **BFF**: it serves the SPA and
-owns all `/api/*` proxying plus auth. The current `src/api/client.ts` already has
-the server/client split (server → `MEALIE_INTERNAL_URL` + injected token;
-browser → relative `/api`), so the scaffolding partly exists.
+nginx stops proxying Mealie. It forwards **all `/api/*` to the node SSR/BFF
+server** (`@ssr`), keeps serving static assets + PostHog `/ingest*`, and keeps
+the SPA fallback. Consequently:
 
-nginx's token-injection job moves into BFF code. Traefik terminates TLS and
-routes to the single container. manaaki and Mealie share a Docker network; the
-BFF reaches Mealie at `MEALIE_INTERNAL_URL`.
+- Remove the per-endpoint Mealie `location` blocks and the `return 403`
+  catch-all from `nginx.conf.template`.
+- Remove `MEALIE_API_TOKEN` and `mealie-proxy-headers.conf` from
+  `nginx.conf.template`, `Dockerfile`, and `docker-entrypoint.sh`.
+- The BFF becomes the single place that holds Mealie tokens and enforces tiers.
 
-### 2. Three access tiers (enforced server-side)
+### 2. Per-request API client (no global token)
 
-| Tier | How identified | Token attached by BFF | Allowed |
-|------|----------------|------------------------|---------|
-| Anonymous | no valid session cookie | **shared browsing token** (env) | recipe **GET** allowlist only |
-| Authenticated | valid sealed session cookie | the **user's** Mealie JWT (from cookie) | reads + writes for planner/history/shopping |
+`src/api/client.ts` currently calls `client.setConfig({...Authorization...})`
+once per process — safe only because there is a single shared token. With
+per-user tokens this races across concurrent SSR requests (last-writer-wins →
+cross-user data leak).
 
-Note: Mealie API tokens are **not** intrinsically read-only (they inherit their
-user's permissions). The anonymous tier's read-only-ness is enforced by the
-**BFF's GET allowlist**, not by the token — exactly as today's nginx config
-does. The shared browsing token is just the identity used for public reads.
+- The **global** client keeps **no** `Authorization` header (browser uses it for
+  relative `/api`, where the BFF attaches the token).
+- Server-side calls that need a specific identity build a **per-request** client:
+  `createClient(createConfig({ baseUrl: MEALIE_INTERNAL_URL, headers: {
+  Authorization: 'Bearer ' + token } }))` and pass it via the SDK `client`
+  option. (`createClient`/`createConfig` are exported by the generated client.)
+- `getCurrentUser` (`src/api/auth.ts`) is replaced by the "who am I" server
+  function (§5); `useGroupSlug` and any mocking tests are updated.
 
-Authorization is enforced **at the BFF**, not just hidden in the UI: an
-authed-only API path called without a session is rejected. The anonymous
-allowlist must also permit the OIDC initiation endpoint
-(`GET /api/auth/oauth`), since the user is not yet logged in when starting
-login.
+### 3. Three access tiers (enforced at the BFF)
 
-The **public tier shows the `Home` group's recipes** (confirmed scope) — recipes
-are group-scoped in Mealie, so the shared read-only token naturally exposes them.
+| Tier | Identified by | Token attached | Authorization |
+|------|---------------|----------------|----------------|
+| Anonymous | no/invalid session cookie | **shared browsing token** (env) | **strict GET allowlist** (recipes, mealplans read, users/self, media) + `GET /api/auth/oauth` |
+| Authenticated | valid sealed session cookie | the **user's** Mealie JWT | **pass-through** — Mealie enforces per-user authz |
 
-### 3. Login flow (fronting Mealie OIDC — Mechanism 1 + Host-header refinement)
+Rationale for the asymmetry: the anonymous tier rides the *shared* token (broad
+permissions), so its allowlist is **security-critical** and stays GET-only —
+this preserves today's nginx safety property. An authenticated user *is* their
+real Mealie identity and can do nothing through manaaki they couldn't do logged
+into Mealie directly, so a manaaki-side allowlist for authed traffic adds
+maintenance for no security gain; the BFF forwards with their token and lets
+Mealie authorize. (Anonymous reads expose the **`Home` group's** recipes —
+recipes are group-scoped.)
+
+### 4. The proxy passthrough (raw, not the SDK)
+
+The catch-all `/api/*` handler builds a fresh `Request` to Mealie and returns
+Mealie's `Response` directly (it does **not** route through the typed SDK
+client). It must:
+
+- **Strip** any client-supplied `Authorization` header; set the correct token
+  (shared or user) itself.
+- Set upstream **`Host`** to manaaki's public host and **`X-Forwarded-Proto:
+  https`** (needed for Mealie's OIDC `redirect_uri` derivation).
+- Forward the Mealie **`session`** cookie where required (OIDC), and **never**
+  forward manaaki's session cookie to Mealie.
+- Stream request/response bodies; not cache authed responses as public.
+
+### 5. Login flow (fronting Mealie OIDC — Mechanism 1 + Host-header refinement)
 
 Config prerequisites:
-- Mealie `BASE_URL` is **left at its default** (so Mealie derives `redirect_uri`
-  from the request host).
-- manaaki's proxy sets upstream **`Host: <manaaki-public-host>`** and
-  **`X-Forwarded-Proto: https`** on requests to Mealie.
-- The Google OAuth client registers **both** `https://<manaaki-host>/login` and
-  `https://<mealie-host>/login` as authorized redirect URIs, so native Mealie
-  admin login keeps working independently (the "(ii)" refinement).
+- Mealie `BASE_URL` **left at default** (so `redirect_uri` follows the request
+  host).
+- The proxy sets upstream `Host: <manaaki-host>` + `X-Forwarded-Proto: https`.
+- Google OAuth client registers **both** `https://<manaaki-host>/login` and
+  `https://<mealie-host>/login` so native Mealie admin login keeps working.
 
 Flow:
-1. User clicks **Sign in** → browser hits manaaki `GET /api/auth/oauth`
-   (transparently proxied to Mealie). Mealie sets the `session` cookie (on
-   manaaki's origin) and 302s to Google with `redirect_uri =
-   https://<manaaki-host>/login`.
-2. User authenticates with Google → browser returns to manaaki
-   `/login?code=…&state=…`.
-3. manaaki's `/login` hands the `code`/`state` to a **BFF endpoint**, which
-   calls Mealie `GET /api/auth/oauth/callback` server-side, **forwarding the
-   browser's `session` cookie** (carrying state/PKCE). Mealie returns the JWT as
-   **JSON**.
-4. The BFF **seals that JWT into manaaki's encrypted httpOnly cookie** and
-   redirects the browser into the app. The browser never holds a Mealie token.
+1. **Sign in** → browser hits manaaki `GET /api/auth/oauth` (proxied to Mealie).
+   Mealie sets the `session` cookie (manaaki's origin) and 302s to Google with
+   `redirect_uri = https://<manaaki-host>/login`.
+2. Google → browser returns to manaaki **`/login?code=…&state=…`**.
+3. The **`/login` route loader** runs server-side: reads the Mealie `session`
+   cookie from the request, calls Mealie `GET /api/auth/oauth/callback`
+   forwarding that cookie, and receives the JWT as **JSON**. On success it
+   **seals the JWT into the manaaki cookie** and `throw redirect(...)` to the
+   post-login target. With no `code`/`state`, it renders the sign-in page. (The
+   existing "Unable to connect" content moves elsewhere or becomes a distinct
+   error state.)
 
-Each Google identity resolves to its own Mealie user → correct household. New
-households/users are managed in Mealie as today; nothing manaaki-side to add.
+Each Google identity resolves to its own Mealie user → correct household.
 
-### 4. Session lifecycle
+### 6. Session cookie & lifecycle
 
-- **Cookie:** name e.g. `manaaki_session`; **encrypted** (authenticated
-  encryption, e.g. AES-GCM via a sealed-cookie library) + **httpOnly** +
-  **secure** + **`sameSite=lax`**. Payload: the Mealie JWT and its expiry.
-- **Refresh:** before expiry the BFF calls Mealie `GET /api/auth/refresh`
-  server-side with the current token and re-seals the cookie. `remember_me` used
-  for longer sessions.
-- **Logout:** BFF clears `manaaki_session` (and best-effort Mealie logout). Since
-  Mealie can't revoke login JWTs, clearing the cookie is the effective logout.
+- **Cookie:** `__Host-manaaki_session` in production (implies `Secure`, no
+  `Domain`, `Path=/`); **httpOnly**; `sameSite=lax`. Dev caveat: `__Host-` /
+  `Secure` is awkward over plain http, so dev may use a non-prefixed name.
+  Payload: the Mealie JWT **and its expiry**, sealed with authenticated
+  encryption (e.g. AES-GCM via a sealed-cookie helper) keyed by `SESSION_SECRET`.
+- **Refresh policy (explicit):** on each authed request, if the token is within a
+  threshold of expiry (e.g. < ~25% of lifetime / < 1h remaining), the BFF calls
+  Mealie `GET /api/auth/refresh` and re-seals the cookie. If the token is
+  expired: treat the request as **anonymous** for public paths, return **401**
+  for authed-only paths. Overall session length is tuned via Mealie's
+  `TOKEN_TIME` / `OIDC_REMEMBER_ME` — not a per-login flag manaaki sends.
+- **Logout:** `POST` clears `__Host-manaaki_session` (CSRF-safe shape);
+  best-effort Mealie logout. Clearing the cookie is the effective logout.
 
-### 5. BFF endpoints (server routes)
+### 7. "Who am I" + frontend gating
 
-- `GET /api/auth/oauth` — transparent proxy to Mealie (initiation).
-- BFF login-completion route (consumes `code`/`state`, calls Mealie callback,
-  seals cookie, redirects). Lives under a manaaki-owned namespace to avoid
-  colliding with Mealie's `/api/auth/*`.
-- `POST` logout — clears the session cookie.
-- "Who am I" loader — returns the current user (`GET /api/users/self` via the
-  session token) or `null`. Drives UI gating.
-- Catch-all `/api/*` proxy — attaches the correct token per tier (§2), enforces
-  the anonymous GET allowlist, forwards `Host`/`X-Forwarded-Proto`.
-
-### 6. Frontend gating
-
-- Nav renders authed features (**Planner**, **History**, **Shopping**) only when
-  the "who am I" loader returns a user; otherwise a **Sign in** affordance.
+- A **"who am I" server function** returns a lightweight user for **both** tiers:
+  for authed, from the session token; for anonymous, from `/api/users/self` via
+  the shared browsing token — including **`groupSlug`** (so public "View in
+  Mealie" links keep working) and an **`isAnonymous`** flag.
+- Nav shows authed features (**Planner**, **History**, **Shopping**) and a
+  profile/logout only when `!isAnonymous`; otherwise a **Sign in** affordance.
 - Route guards on `/plan` (and future `/history`, `/shopping`) redirect anonymous
-  users to sign in. This is **UX only** — real enforcement is server-side (§2).
-- `/plan` gets surfaced in nav (for authed users) — it exists already and is
-  navigation-only; no feature expansion here.
+  users to sign in. **UX only** — real enforcement is the BFF (§3). Post-login
+  redirect preserves the originally requested target (default `/recipes`).
+- `/plan` is surfaced in nav for authed users; no feature expansion here.
 
 ## Configuration / deployment (Dokploy)
 
-Single container behind Traefik. Environment:
+Same single container; nginx + node as today, but nginx no longer touches Mealie.
 
 | Variable | Purpose |
 |----------|---------|
 | `MEALIE_INTERNAL_URL` | server-to-server base URL for Mealie (existing) |
-| `MEALIE_READONLY_TOKEN` | shared read-only token for the anonymous tier |
-| `SESSION_SECRET` (manaaki) | key for sealing the encrypted session cookie |
-| Google/OIDC | handled by Mealie; manaaki only needs the redirect URIs registered |
+| `MEALIE_READONLY_TOKEN` | shared browsing token for the anonymous tier |
+| `SESSION_SECRET` | key for sealing the encrypted manaaki session cookie |
 
-Mealie-side: `BASE_URL` left default; Google OAuth client gains both `/login`
-redirect URIs. manaaki's proxy sets `Host` + `X-Forwarded-Proto` upstream.
+- **Dev:** remove the `/api` proxy from `vite.config.ts` so `/api/*` hits the
+  BFF; ensure the dev server can read `MEALIE_INTERNAL_URL`,
+  `MEALIE_READONLY_TOKEN`, `SESSION_SECRET` from `.env` at runtime (Vite does not
+  auto-load `.env` into `process.env` for server code).
+- **Mealie-side:** `BASE_URL` left default; Google OAuth client gains both
+  `/login` redirect URIs.
 
 ## Security considerations
 
 - Per-user token lives only in an encrypted httpOnly cookie → unreadable by JS,
-  so the recipe-content XSS surface can't exfiltrate it.
-- Anonymous tier remains GET-allowlist-restricted; writes require a session.
-- BFF↔Mealie is server-to-server on the internal network; secrets
-  (`MEALIE_READONLY_TOKEN`, `SESSION_SECRET`) never reach the browser.
+  so XSS cannot **exfiltrate** it. (It does not by itself prevent action-forgery
+  via the user's own cookies — that is true of any cookie session; output
+  sanitization of recipe content is the complementary defense and is tracked
+  separately.)
+- Anonymous tier is GET-allowlist-restricted on the *shared* token; all writes
+  require an authenticated session.
+- BFF↔Mealie is server-to-server on the internal network; `MEALIE_READONLY_TOKEN`
+  and `SESSION_SECRET` never reach the browser.
 - Authorization enforced server-side, not merely via hidden UI.
 
 ## Testing approach
 
-- BFF tier logic: anonymous request gets read-only token + allowlist; authed
-  request gets the session token; authed-only path without a session is rejected.
-- Login completion: given a Mealie callback JSON response, the BFF seals a valid
-  session cookie and never returns the raw token to the browser.
-- Session refresh + logout behavior.
-- Frontend: nav + route guards render correctly for authed vs anonymous "who am
-  I" states.
+- BFF tiers: anonymous request → read-only token + allowlist enforced (non-GET /
+  off-list → blocked); authed request → user token pass-through; authed-only path
+  without a session → 401.
+- Concurrency: two simultaneous authed requests with different tokens do not bleed
+  (validates the per-request client, §2).
+- Login completion: given a Mealie callback JSON response, the `/login` loader
+  seals a valid session cookie and never returns the raw token to the browser.
+- Refresh near-expiry; expired-token handling (anonymous vs 401); logout.
+- Frontend: nav + route guards for authed vs anonymous `isAnonymous` states;
+  public "View in Mealie" link still resolves a `groupSlug`.
 
-## Open questions / follow-ups
+## Open questions — resolved
 
-- If `BASE_URL`-default ever breaks something relied upon (not email invites —
-  unused), fall back to proxying Mealie's native admin UI through manaaki with
-  injected token. Deferred.
-- Multi-*group* public browsing, per-feature roles, meal history, shopping list
-  builder — each a later spec.
+1. **Routing model** → Option A: nginx forwards all `/api/*` to the BFF.
+2. **Cookie prefix** → `__Host-manaaki_session` in prod (dev caveat noted).
+3. **Post-login redirect** → preserve the requested target; default `/recipes`.
+4. **Refresh threshold** → refresh when < ~25% lifetime / < 1h remains.
+5. **Authed allowlist** → none; pass-through with the user token, Mealie
+   authorizes (only the anonymous tier is allowlisted).
+6. **Dev env loading** → ensure the dev server reads `.env` into `process.env`
+   for server code.
+7. **Admin UI fallback** → deferred; only if `BASE_URL`-default breaks a
+   relied-upon Mealie feature.
+
+## Follow-ups
+
+- Post-deploy: verify no relied-upon Mealie feature (notifications, share links)
+  breaks due to `BASE_URL` being unset.
+- Later specs: meal history, shopping list builder, multi-group public browsing,
+  per-feature role gating.
