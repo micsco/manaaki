@@ -143,7 +143,7 @@ cross-user data leak).
 
 | Tier | Identified by | Token attached | Authorization |
 |------|---------------|----------------|----------------|
-| Anonymous | no/invalid session cookie | **shared browsing token** (env) | **strict GET allowlist** (recipes, mealplans read, users/self, media) + `GET /api/auth/oauth` |
+| Anonymous | no/invalid session cookie | **shared browsing token** (env) | **strict GET allowlist** (recipes, users/self, media) + `GET /api/auth/oauth` — **no** meal plans (those are authed-only, since `/plan` is gated) |
 | Authenticated | valid sealed session cookie | the **user's** Mealie JWT | **pass-through** — Mealie enforces per-user authz |
 
 Rationale for the asymmetry: the anonymous tier rides the *shared* token (broad
