@@ -17,7 +17,10 @@ function sessionCookieHeader(jwt: string): string {
 describe("meHandler", () => {
   it("anonymous: uses read-only token, returns isAnonymous true with groupSlug", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ groupSlug: "home", username: "shared" }), { status: 200 })
+      new Response(JSON.stringify({ groupSlug: "home", username: "shared" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })
     )
     const res = await meHandler(new Request("https://app/api/auth/me"))
     const body = await res.json()
@@ -30,7 +33,10 @@ describe("meHandler", () => {
     const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url")
     const jwt = `${b64({})}.${b64({ sub: "u1", exp: 4102444800 })}.sig`
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ groupSlug: "smith", username: "alice" }), { status: 200 })
+      new Response(JSON.stringify({ groupSlug: "smith", username: "alice" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })
     )
     const res = await meHandler(
       new Request("https://app/api/auth/me", { headers: { cookie: sessionCookieHeader(jwt) } })
