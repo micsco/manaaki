@@ -19,4 +19,8 @@ describe("isAnonymousAllowed", () => {
   it("denies unlisted paths", () => {
     expect(isAnonymousAllowed("GET", "/api/admin/users")).toBe(false)
   })
+  it("denies paths with no segment boundary", () => {
+    expect(isAnonymousAllowed("GET", "/api/recipesX")).toBe(false)
+    expect(isAnonymousAllowed("GET", "/api/auth/oauthcallback")).toBe(false)
+  })
 })
