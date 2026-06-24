@@ -15,9 +15,9 @@ function farFutureJwt(): string {
 }
 
 function sessionCookieHeader(jwt: string): string {
-  const setCookie = buildSessionSetCookie(jwt, false)
+  const setCookie = buildSessionSetCookie(jwt, true)
   const value = setCookie.split(";")[0].split("=").slice(1).join("=")
-  return `manaaki_session=${value}`
+  return `__Host-manaaki_session=${value}`
 }
 
 describe("handleApiProxy — anonymous", () => {

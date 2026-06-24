@@ -1,15 +1,7 @@
 // src/server/proxy.ts
 import { isAnonymousAllowed } from "./allowlist"
-import { parseCookie } from "./cookies"
 import { mealieInternalUrl, readonlyToken } from "./env"
-import {
-  buildSessionSetCookie,
-  decodeJwtExp,
-  isSecureRequest,
-  readSessionToken,
-  SESSION_COOKIE_NAME,
-  unsealSession,
-} from "./session"
+import { buildSessionSetCookie, decodeJwtExp, isSecureRequest, readSessionToken } from "./session"
 
 const REFRESH_WINDOW_SECONDS = 60 * 60 // refresh if < 1h to expiry
 const STRIP_REQUEST_HEADERS = new Set([
@@ -19,22 +11,6 @@ const STRIP_REQUEST_HEADERS = new Set([
   "connection",
   "content-length",
 ])
-
-/**
- * Read the session token, trying both secure and insecure cookie names.
- * This handles edge cases where the cookie was set in a different security context
- * (e.g., in tests or local dev where x-forwarded-proto may not match the cookie that was set).
- */
-function readSessionTokenFallback(request: Request): string | null {
-  const token = readSessionToken(request)
-  if (token !== null) return token
-  // Try the other security level's cookie name as a fallback
-  const secure = isSecureRequest(request)
-  const otherName = SESSION_COOKIE_NAME(!secure)
-  const cookieHeader = request.headers.get("cookie")
-  const sealed = parseCookie(cookieHeader, otherName)
-  return sealed ? unsealSession(sealed) : null
-}
 
 function upstreamHeaders(request: Request, token: string): Headers {
   const headers = new Headers()
@@ -80,7 +56,7 @@ async function maybeRefresh(request: Request, token: string): Promise<string | n
 export async function handleApiProxy(request: Request): Promise<Response> {
   const url = new URL(request.url)
   const pathWithQuery = url.pathname + url.search
-  const userToken = readSessionTokenFallback(request)
+  const userToken = readSessionToken(request)
 
   if (userToken) {
     const refreshed = await maybeRefresh(request, userToken)
