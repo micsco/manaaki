@@ -1,8 +1,8 @@
 import { mdiChevronLeft } from "@mdi/js"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { createFileRoute, Link, redirect } from "@tanstack/react-router"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { configureApiClient } from "../api/client"
+import { fetchCurrentUser } from "../api/auth"
 import type { ReadPlanEntry } from "../api/generated/types.gen"
 import { Icon } from "../components/Icon"
 import { MealPlanEntryCard } from "../components/MealPlanEntryCard"
@@ -15,13 +15,12 @@ import {
 } from "../hooks/useMealPlan"
 
 export const Route = createFileRoute("/plan")({
-  head: () => ({
-    meta: [{ title: "Meal Plan · Manaaki" }],
-  }),
-  loader: ({ context: { queryClient } }) => {
-    configureApiClient()
-    const { startDate, endDate } = multiWeekBounds(-1, 1)
-    return void queryClient.ensureQueryData(mealPlanQueryOptions(startDate, endDate))
+  head: () => ({ meta: [{ title: "Meal Plan · Manaaki" }] }),
+  beforeLoad: async () => {
+    const { isAnonymous } = await fetchCurrentUser()
+    if (isAnonymous) {
+      throw redirect({ href: "/api/auth/oauth" })
+    }
   },
   component: PlanPage,
 })
