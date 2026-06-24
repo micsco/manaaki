@@ -7,3 +7,6 @@ openapi-ts-error-*.log
 
 # Temporary/cache directories
 .tanstack/
+
+# Subagent-driven-development scratch (briefs, reports, ledger, diffs)
+.superpowers/
