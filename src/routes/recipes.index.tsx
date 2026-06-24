@@ -14,6 +14,7 @@ import {
 } from "../components/RecipeCardMeta"
 import { RecipeFilterDrawer } from "../components/RecipeFilterDrawer"
 import { FilterBar, FilterPills } from "../components/RecipeFilters"
+import { UserMenu } from "../components/UserMenu"
 import { Card } from "../components/ui"
 import { useRecipeFilters } from "../hooks/useRecipeFilters"
 import { recipeListQueryOptions } from "../hooks/useRecipeList"
@@ -277,11 +278,16 @@ function RecipeList() {
             <ManaakiLogo className="size-8 shrink-0" />
             <h1 className="font-bold text-4xl leading-none">Manaaki</h1>
           </button>
-          {!showSkeleton && (
-            <p className="shrink-0 text-gray-500 text-sm">
-              {isFiltered ? `${filtered.length} of ${recipes.length}` : `${recipes.length} recipes`}
-            </p>
-          )}
+          <div className="flex shrink-0 items-center gap-3">
+            {!showSkeleton && (
+              <p className="text-gray-500 text-sm">
+                {isFiltered
+                  ? `${filtered.length} of ${recipes.length}`
+                  : `${recipes.length} recipes`}
+              </p>
+            )}
+            <UserMenu />
+          </div>
         </div>
 
         {showSkeleton ? (

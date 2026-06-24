@@ -1,16 +1,6 @@
-import { queryOptions, useQuery } from "@tanstack/react-query"
-import { getCurrentUser } from "../api/auth"
-
-export const groupSlugQueryOptions = queryOptions({
-  queryKey: ["groupSlug"],
-  queryFn: async () => {
-    const user = await getCurrentUser()
-    return user.groupSlug
-  },
-  staleTime: Number.POSITIVE_INFINITY,
-})
+import { useCurrentUser } from "./useCurrentUser"
 
 export function useGroupSlug(): string | undefined {
-  const { data } = useQuery(groupSlugQueryOptions)
-  return data
+  const current = useCurrentUser()
+  return current?.user?.groupSlug ?? undefined
 }

@@ -64,7 +64,7 @@ RUN apk add --no-cache nodejs
 # variables like $host and $uri. docker-entrypoint.sh handles substitution with
 # an explicit variable allowlist.
 COPY nginx.conf.template /etc/nginx/conf-templates/nginx.conf.template
-COPY mealie-proxy-headers.conf.template /etc/nginx/conf-templates/mealie-proxy-headers.conf.template
+# (mealie-proxy-headers template removed — the node BFF owns Mealie auth)
 
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
@@ -77,5 +77,5 @@ COPY --from=build /app/server.js /app/server.js
 
 EXPOSE 80
 
-# Required: MEALIE_INTERNAL_URL, MEALIE_API_TOKEN
+# Required at runtime: MEALIE_INTERNAL_URL, MEALIE_READONLY_TOKEN, SESSION_SECRET
 ENTRYPOINT ["/docker-entrypoint.sh"]

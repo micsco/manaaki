@@ -4,7 +4,6 @@ server {
 
     server_tokens off;
 
-    set $mealie "${MEALIE_INTERNAL_URL}";
     set $ssr_server "http://127.0.0.1:3000";
     set $posthog_assets "https://eu-assets.i.posthog.com";
     set $posthog "https://eu.i.posthog.com";
@@ -33,48 +32,14 @@ server {
         proxy_set_header Host eu.i.posthog.com;
     }
 
-    location ~ ^/api/recipes(/.*)?$ {
-        resolver 127.0.0.11 valid=10s;
-        if ($request_method != GET) {
-            return 405;
-        }
-        proxy_pass $mealie;
-        include /etc/nginx/conf.d/mealie-proxy-headers.conf;
-        add_header Cache-Control "no-cache";
-    }
-
-    location ~ ^/api/households/mealplans(/.*)?$ {
-        resolver 127.0.0.11 valid=10s;
-        if ($request_method != GET) {
-            return 405;
-        }
-        proxy_pass $mealie;
-        include /etc/nginx/conf.d/mealie-proxy-headers.conf;
-        add_header Cache-Control "no-cache";
-    }
-
-    location = /api/users/self {
-        resolver 127.0.0.11 valid=10s;
-        if ($request_method != GET) {
-            return 405;
-        }
-        proxy_pass $mealie;
-        include /etc/nginx/conf.d/mealie-proxy-headers.conf;
-        add_header Cache-Control "no-cache";
-    }
-
-    location ~ ^/api/media/recipes/ {
-        resolver 127.0.0.11 valid=10s;
-        if ($request_method != GET) {
-            return 405;
-        }
-        proxy_pass $mealie;
-        include /etc/nginx/conf.d/mealie-proxy-headers.conf;
-        add_header Cache-Control "public, max-age=3600, stale-while-revalidate=86400";
-    }
-
     location /api/ {
-        return 403;
+        resolver 127.0.0.11 valid=10s;
+        proxy_pass $ssr_server;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering off;
     }
 
     location /assets/ {

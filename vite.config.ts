@@ -19,26 +19,17 @@ function emitVersionJson(sha: string): Plugin {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
-  const mealieBaseUrl =
-    env.MEALIE_INTERNAL_URL ?? env.VITE_MEALIE_BASE_URL ?? 'http://localhost:9000'
-  const mealieToken = env.MEALIE_API_TOKEN ?? ''
+  // Make server-only vars available to BFF server routes during `vite dev`.
+  for (const key of ['MEALIE_INTERNAL_URL', 'MEALIE_READONLY_TOKEN', 'SESSION_SECRET']) {
+    if (env[key]) process.env[key] = env[key]
+  }
+
   const buildSha = env.VITE_BUILD_GIT_SHORT_SHA ?? 'dev'
 
   return {
     server: {
       port: Number(process.env.PORT) || 3000,
       proxy: {
-        '/api': {
-          target: mealieBaseUrl,
-          changeOrigin: true,
-          configure: (proxy) => {
-            proxy.on('proxyReq', (proxyReq: any) => {
-              if (mealieToken) {
-                proxyReq.setHeader('Authorization', `Bearer ${mealieToken}`)
-              }
-            })
-          },
-        },
         '/ingest/static': {
           target: 'https://eu-assets.i.posthog.com',
           changeOrigin: true,
