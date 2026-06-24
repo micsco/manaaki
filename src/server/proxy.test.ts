@@ -1,7 +1,7 @@
 // src/server/proxy.test.ts
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { handleApiProxy } from "./proxy"
-import { buildSessionSetCookie } from "./session"
+import { buildSessionSetCookie, unsealSession } from "./session"
 
 beforeEach(() => {
   process.env.MEALIE_INTERNAL_URL = "http://mealie:9000"
@@ -66,6 +66,59 @@ describe("handleApiProxy — authed", () => {
     )
     expect(res.status).toBe(200)
     const [, init] = fetchMock.mock.calls[0]
+    expect(new Headers(init?.headers).get("Authorization")).toBe(`Bearer ${jwt}`)
+    fetchMock.mockRestore()
+  })
+
+  it("refreshes a near-expiry token and sets a fresh session cookie", async () => {
+    const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url")
+    const nearExpireJwt = `${b64({ alg: "HS256" })}.${b64({ sub: "u1", exp: Math.floor(Date.now() / 1000) + 60 })}.sig`
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(input => {
+      const urlStr = String(input)
+      if (urlStr.includes("/api/auth/refresh")) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ access_token: "refreshed-jwt" }), { status: 200 })
+        )
+      }
+      return Promise.resolve(new Response("{}", { status: 200 }))
+    })
+    const res = await handleApiProxy(
+      new Request("https://app/api/households/mealplans", {
+        headers: {
+          "x-forwarded-proto": "https",
+          cookie: sessionCookieHeader(nearExpireJwt),
+        },
+      })
+    )
+    expect(res.status).toBe(200)
+    const setCookieHeader = res.headers.get("set-cookie")
+    expect(setCookieHeader).toBeTruthy()
+    expect(setCookieHeader).toContain("__Host-manaaki_session")
+    const cookieValue = setCookieHeader!.split(";")[0].split("=").slice(1).join("=")
+    const unsealed = unsealSession(cookieValue)
+    expect(unsealed).toBe("refreshed-jwt")
+    const [, refreshInit] = fetchMock.mock.calls[0]
+    expect(new Headers(refreshInit?.headers).get("Authorization")).toBe(`Bearer ${nearExpireJwt}`)
+    const [, forwardInit] = fetchMock.mock.calls[1]
+    expect(new Headers(forwardInit?.headers).get("Authorization")).toBe("Bearer refreshed-jwt")
+    fetchMock.mockRestore()
+  })
+
+  it("does not forward the manaaki session cookie to Mealie", async () => {
+    const jwt = farFutureJwt()
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response("{}", { status: 200 }))
+    await handleApiProxy(
+      new Request("https://app/api/households/mealplans", {
+        headers: {
+          "x-forwarded-proto": "https",
+          cookie: sessionCookieHeader(jwt),
+        },
+      })
+    )
+    const [, init] = fetchMock.mock.calls[0]
+    expect(new Headers(init?.headers).get("cookie")).toBeNull()
     expect(new Headers(init?.headers).get("Authorization")).toBe(`Bearer ${jwt}`)
     fetchMock.mockRestore()
   })
