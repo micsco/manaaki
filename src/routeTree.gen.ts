@@ -15,7 +15,11 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RecipesIndexRouteImport } from './routes/recipes.index'
 import { Route as RecipesSlugRouteImport } from './routes/recipes.$slug'
+import { Route as ApiSplatRouteImport } from './routes/api.$'
 import { Route as RecipesIdSlugRouteImport } from './routes/recipes.$id.$slug'
+import { Route as ApiAuthMeRouteImport } from './routes/api.auth.me'
+import { Route as ApiAuthLogoutRouteImport } from './routes/api.auth.logout'
+import { Route as ApiAuthCompleteRouteImport } from './routes/api.auth.complete'
 
 const RecipesRoute = RecipesRouteImport.update({
   id: '/recipes',
@@ -47,10 +51,30 @@ const RecipesSlugRoute = RecipesSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => RecipesRoute,
 } as any)
+const ApiSplatRoute = ApiSplatRouteImport.update({
+  id: '/api/$',
+  path: '/api/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecipesIdSlugRoute = RecipesIdSlugRouteImport.update({
   id: '/$id/$slug',
   path: '/$id/$slug',
   getParentRoute: () => RecipesRoute,
+} as any)
+const ApiAuthMeRoute = ApiAuthMeRouteImport.update({
+  id: '/api/auth/me',
+  path: '/api/auth/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthLogoutRoute = ApiAuthLogoutRouteImport.update({
+  id: '/api/auth/logout',
+  path: '/api/auth/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthCompleteRoute = ApiAuthCompleteRouteImport.update({
+  id: '/api/auth/complete',
+  path: '/api/auth/complete',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -58,16 +82,24 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/plan': typeof PlanRoute
   '/recipes': typeof RecipesRouteWithChildren
+  '/api/$': typeof ApiSplatRoute
   '/recipes/$slug': typeof RecipesSlugRoute
   '/recipes/': typeof RecipesIndexRoute
+  '/api/auth/complete': typeof ApiAuthCompleteRoute
+  '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/auth/me': typeof ApiAuthMeRoute
   '/recipes/$id/$slug': typeof RecipesIdSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/plan': typeof PlanRoute
+  '/api/$': typeof ApiSplatRoute
   '/recipes/$slug': typeof RecipesSlugRoute
   '/recipes': typeof RecipesIndexRoute
+  '/api/auth/complete': typeof ApiAuthCompleteRoute
+  '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/auth/me': typeof ApiAuthMeRoute
   '/recipes/$id/$slug': typeof RecipesIdSlugRoute
 }
 export interface FileRoutesById {
@@ -76,8 +108,12 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/plan': typeof PlanRoute
   '/recipes': typeof RecipesRouteWithChildren
+  '/api/$': typeof ApiSplatRoute
   '/recipes/$slug': typeof RecipesSlugRoute
   '/recipes/': typeof RecipesIndexRoute
+  '/api/auth/complete': typeof ApiAuthCompleteRoute
+  '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/auth/me': typeof ApiAuthMeRoute
   '/recipes/$id/$slug': typeof RecipesIdSlugRoute
 }
 export interface FileRouteTypes {
@@ -87,16 +123,24 @@ export interface FileRouteTypes {
     | '/login'
     | '/plan'
     | '/recipes'
+    | '/api/$'
     | '/recipes/$slug'
     | '/recipes/'
+    | '/api/auth/complete'
+    | '/api/auth/logout'
+    | '/api/auth/me'
     | '/recipes/$id/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/plan'
+    | '/api/$'
     | '/recipes/$slug'
     | '/recipes'
+    | '/api/auth/complete'
+    | '/api/auth/logout'
+    | '/api/auth/me'
     | '/recipes/$id/$slug'
   id:
     | '__root__'
@@ -104,8 +148,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/plan'
     | '/recipes'
+    | '/api/$'
     | '/recipes/$slug'
     | '/recipes/'
+    | '/api/auth/complete'
+    | '/api/auth/logout'
+    | '/api/auth/me'
     | '/recipes/$id/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -114,6 +162,10 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PlanRoute: typeof PlanRoute
   RecipesRoute: typeof RecipesRouteWithChildren
+  ApiSplatRoute: typeof ApiSplatRoute
+  ApiAuthCompleteRoute: typeof ApiAuthCompleteRoute
+  ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
+  ApiAuthMeRoute: typeof ApiAuthMeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -160,12 +212,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecipesSlugRouteImport
       parentRoute: typeof RecipesRoute
     }
+    '/api/$': {
+      id: '/api/$'
+      path: '/api/$'
+      fullPath: '/api/$'
+      preLoaderRoute: typeof ApiSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recipes/$id/$slug': {
       id: '/recipes/$id/$slug'
       path: '/$id/$slug'
       fullPath: '/recipes/$id/$slug'
       preLoaderRoute: typeof RecipesIdSlugRouteImport
       parentRoute: typeof RecipesRoute
+    }
+    '/api/auth/me': {
+      id: '/api/auth/me'
+      path: '/api/auth/me'
+      fullPath: '/api/auth/me'
+      preLoaderRoute: typeof ApiAuthMeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/logout': {
+      id: '/api/auth/logout'
+      path: '/api/auth/logout'
+      fullPath: '/api/auth/logout'
+      preLoaderRoute: typeof ApiAuthLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/complete': {
+      id: '/api/auth/complete'
+      path: '/api/auth/complete'
+      fullPath: '/api/auth/complete'
+      preLoaderRoute: typeof ApiAuthCompleteRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -190,6 +270,10 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PlanRoute: PlanRoute,
   RecipesRoute: RecipesRouteWithChildren,
+  ApiSplatRoute: ApiSplatRoute,
+  ApiAuthCompleteRoute: ApiAuthCompleteRoute,
+  ApiAuthLogoutRoute: ApiAuthLogoutRoute,
+  ApiAuthMeRoute: ApiAuthMeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
