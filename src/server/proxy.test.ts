@@ -94,7 +94,7 @@ describe("handleApiProxy — authed", () => {
     const setCookieHeader = res.headers.get("set-cookie")
     expect(setCookieHeader).toBeTruthy()
     expect(setCookieHeader).toContain("__Host-manaaki_session")
-    const cookieValue = setCookieHeader!.split(";")[0].split("=").slice(1).join("=")
+    const cookieValue = (setCookieHeader ?? "").split(";")[0].split("=").slice(1).join("=")
     const unsealed = unsealSession(cookieValue)
     expect(unsealed).toBe("refreshed-jwt")
     const [, refreshInit] = fetchMock.mock.calls[0]

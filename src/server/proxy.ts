@@ -36,7 +36,7 @@ async function forward(request: Request, token: string, pathWithQuery: string): 
   })
 }
 
-async function maybeRefresh(request: Request, token: string): Promise<string | null> {
+async function maybeRefresh(token: string): Promise<string | null> {
   const exp = decodeJwtExp(token)
   if (exp === null) return null
   const secondsLeft = exp - Math.floor(Date.now() / 1000)
@@ -59,7 +59,7 @@ export async function handleApiProxy(request: Request): Promise<Response> {
   const userToken = readSessionToken(request)
 
   if (userToken) {
-    const refreshed = await maybeRefresh(request, userToken)
+    const refreshed = await maybeRefresh(userToken)
     const effective = refreshed ?? userToken
     const res = await forward(request, effective, pathWithQuery)
     if (refreshed) {
