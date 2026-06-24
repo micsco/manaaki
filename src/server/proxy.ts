@@ -31,6 +31,7 @@ async function forward(request: Request, token: string, pathWithQuery: string): 
     method: request.method,
     headers: upstreamHeaders(request, token),
     body: hasBody ? request.body : undefined,
+    redirect: "manual",
     // @ts-expect-error Node fetch requires duplex for streamed bodies
     duplex: "half",
   })
@@ -62,12 +63,12 @@ export async function handleApiProxy(request: Request): Promise<Response> {
     const refreshed = await maybeRefresh(userToken)
     const effective = refreshed ?? userToken
     const res = await forward(request, effective, pathWithQuery)
+    const out = new Response(res.body, res)
+    out.headers.set("Cache-Control", "private, no-store")
     if (refreshed) {
-      const out = new Response(res.body, res)
       out.headers.append("Set-Cookie", buildSessionSetCookie(refreshed, isSecureRequest(request)))
-      return out
     }
-    return res
+    return out
   }
 
   if (!isAnonymousAllowed(request.method, url.pathname)) {

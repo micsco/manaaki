@@ -46,4 +46,16 @@ describe("meHandler", () => {
     expect(body.user.username).toBe("alice")
     vi.restoreAllMocks()
   })
+
+  it("returns Cache-Control: private, no-store", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ groupSlug: "home", username: "shared" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })
+    )
+    const res = await meHandler(new Request("https://app/api/auth/me"))
+    expect(res.headers.get("Cache-Control")).toBe("private, no-store")
+    vi.restoreAllMocks()
+  })
 })

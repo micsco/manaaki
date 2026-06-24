@@ -9,7 +9,10 @@ export async function meHandler(request: Request): Promise<Response> {
   const token = userToken ?? readonlyToken()
   const client = createMealieClient(token)
   const { data } = await getLoggedInUserApiUsersSelfGet({ client, throwOnError: false })
-  return Response.json({ user: data ?? null, isAnonymous: userToken === null })
+  return Response.json(
+    { user: data ?? null, isAnonymous: userToken === null },
+    { headers: { "Cache-Control": "private, no-store" } }
+  )
 }
 
 export const Route = createFileRoute("/api/auth/me")({

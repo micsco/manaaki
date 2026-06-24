@@ -122,4 +122,51 @@ describe("handleApiProxy — authed", () => {
     expect(new Headers(init?.headers).get("Authorization")).toBe(`Bearer ${jwt}`)
     fetchMock.mockRestore()
   })
+
+  it("marks authed responses private, no-store", async () => {
+    const jwt = farFutureJwt()
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response("{}", { status: 200 }))
+    const res = await handleApiProxy(
+      new Request("https://app/api/households/mealplans", {
+        headers: {
+          "x-forwarded-proto": "https",
+          cookie: sessionCookieHeader(jwt),
+        },
+      })
+    )
+    expect(res.headers.get("Cache-Control")).toBe("private, no-store")
+    fetchMock.mockRestore()
+  })
+})
+
+describe("handleApiProxy — redirect passthrough", () => {
+  it("passes upstream redirects through to the browser", async () => {
+    const googleUrl = "https://accounts.google.com/o/oauth2/v2/auth?x=1"
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(null, { status: 302, headers: { Location: googleUrl } }))
+    const res = await handleApiProxy(
+      new Request("https://app/api/auth/oauth", { headers: { "x-forwarded-proto": "https" } })
+    )
+    expect(res.status).toBe(302)
+    expect(res.headers.get("Location")).toBe(googleUrl)
+    const [, init] = fetchMock.mock.calls[0]
+    expect((init as RequestInit & { redirect?: string }).redirect).toBe("manual")
+    fetchMock.mockRestore()
+  })
+})
+
+describe("handleApiProxy — anonymous cache headers", () => {
+  it("does not set Cache-Control: private, no-store on anonymous allowed GET", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response("[]", { status: 200 }))
+    const res = await handleApiProxy(
+      new Request("https://app/api/recipes", { headers: { "x-forwarded-proto": "https" } })
+    )
+    expect(res.headers.get("Cache-Control")).not.toBe("private, no-store")
+    fetchMock.mockRestore()
+  })
 })
