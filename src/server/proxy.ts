@@ -12,6 +12,30 @@ const STRIP_REQUEST_HEADERS = new Set([
   "content-length",
 ])
 
+// Node's fetch (undici) transparently decompresses the upstream body, so the
+// upstream content-encoding/content-length describe the *compressed* bytes and
+// no longer match what we stream downstream. Passing them through makes nginx
+// log "upstream sent more data than specified in Content-Length" and can
+// truncate the body. Drop them (plus hop-by-hop headers) and let the runtime
+// re-derive the framing for the decoded body.
+const STRIP_RESPONSE_HEADERS = new Set([
+  "content-encoding",
+  "content-length",
+  "transfer-encoding",
+  "connection",
+])
+
+// Re-emit an upstream response with framing headers that match the decoded body.
+function passthroughResponse(upstream: Response): Response {
+  const headers = new Headers(upstream.headers)
+  for (const name of STRIP_RESPONSE_HEADERS) headers.delete(name)
+  return new Response(upstream.body, {
+    status: upstream.status,
+    statusText: upstream.statusText,
+    headers,
+  })
+}
+
 function upstreamHeaders(request: Request, token: string): Headers {
   const headers = new Headers()
   for (const [k, v] of request.headers) {
@@ -63,7 +87,7 @@ export async function handleApiProxy(request: Request): Promise<Response> {
     const refreshed = await maybeRefresh(userToken)
     const effective = refreshed ?? userToken
     const res = await forward(request, effective, pathWithQuery)
-    const out = new Response(res.body, res)
+    const out = passthroughResponse(res)
     out.headers.set("Cache-Control", "private, no-store")
     if (refreshed) {
       out.headers.append("Set-Cookie", buildSessionSetCookie(refreshed, isSecureRequest(request)))
@@ -74,5 +98,5 @@ export async function handleApiProxy(request: Request): Promise<Response> {
   if (!isAnonymousAllowed(request.method, url.pathname)) {
     return new Response("Forbidden", { status: 403 })
   }
-  return forward(request, readonlyToken(), pathWithQuery)
+  return passthroughResponse(await forward(request, readonlyToken(), pathWithQuery))
 }

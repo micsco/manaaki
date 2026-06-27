@@ -158,6 +158,47 @@ describe("handleApiProxy — redirect passthrough", () => {
   })
 })
 
+describe("handleApiProxy — decoded-body framing headers", () => {
+  // undici decompresses the upstream body, so passing the upstream
+  // content-encoding/content-length through makes nginx see more bytes than
+  // declared. The proxy must strip them and let the runtime re-frame.
+  it("drops stale content-encoding/content-length on anonymous responses", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response("[1,2,3]", {
+        status: 200,
+        headers: { "content-encoding": "gzip", "content-length": "9" },
+      })
+    )
+    const res = await handleApiProxy(
+      new Request("https://app/api/recipes", { headers: { "x-forwarded-proto": "https" } })
+    )
+    expect(res.status).toBe(200)
+    expect(res.headers.get("content-encoding")).toBeNull()
+    expect(res.headers.get("content-length")).toBeNull()
+    await expect(res.text()).resolves.toBe("[1,2,3]")
+    fetchMock.mockRestore()
+  })
+
+  it("drops stale content-encoding/content-length on authed responses", async () => {
+    const jwt = farFutureJwt()
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response("{}", {
+        status: 200,
+        headers: { "content-encoding": "br", "content-length": "4" },
+      })
+    )
+    const res = await handleApiProxy(
+      new Request("https://app/api/households/mealplans", {
+        headers: { "x-forwarded-proto": "https", cookie: sessionCookieHeader(jwt) },
+      })
+    )
+    expect(res.status).toBe(200)
+    expect(res.headers.get("content-encoding")).toBeNull()
+    expect(res.headers.get("content-length")).toBeNull()
+    fetchMock.mockRestore()
+  })
+})
+
 describe("handleApiProxy — anonymous cache headers", () => {
   it("does not set Cache-Control: private, no-store on anonymous allowed GET", async () => {
     const fetchMock = vi
