@@ -5,6 +5,186 @@ export type ClientOptions = {
 };
 
 /**
+ * AIProviderCreate
+ */
+export type AiProviderCreate = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Baseurl
+     */
+    baseUrl?: string | null;
+    /**
+     * Apikey
+     */
+    apiKey?: string;
+    /**
+     * Model
+     */
+    model: string;
+    /**
+     * Timeout
+     */
+    timeout?: number;
+    /**
+     * Requestheaders
+     */
+    requestHeaders?: {
+        [key: string]: string;
+    };
+    /**
+     * Requestparams
+     */
+    requestParams?: {
+        [key: string]: string;
+    };
+};
+
+/**
+ * AIProviderOut
+ */
+export type AiProviderOut = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Baseurl
+     */
+    baseUrl?: string | null;
+    /**
+     * Model
+     */
+    model: string;
+    /**
+     * Timeout
+     */
+    timeout?: number;
+    /**
+     * Requestheaders
+     */
+    requestHeaders?: {
+        [key: string]: string;
+    };
+    /**
+     * Requestparams
+     */
+    requestParams?: {
+        [key: string]: string;
+    };
+    /**
+     * Id
+     */
+    id: string;
+};
+
+/**
+ * AIProviderSettingsOut
+ */
+export type AiProviderSettingsOut = {
+    /**
+     * Defaultproviderid
+     */
+    defaultProviderId: string | null;
+    /**
+     * Audioproviderid
+     */
+    audioProviderId: string | null;
+    /**
+     * Imageproviderid
+     */
+    imageProviderId: string | null;
+    /**
+     * Providers
+     */
+    providers: Array<AiProviderSummary>;
+    /**
+     * Aienabled
+     */
+    readonly aiEnabled: boolean;
+    /**
+     * Audioproviderenabled
+     */
+    readonly audioProviderEnabled: boolean;
+    /**
+     * Imageproviderenabled
+     */
+    readonly imageProviderEnabled: boolean;
+};
+
+/**
+ * AIProviderSettingsUpdate
+ */
+export type AiProviderSettingsUpdate = {
+    /**
+     * Defaultproviderid
+     */
+    defaultProviderId: string | null;
+    /**
+     * Audioproviderid
+     */
+    audioProviderId: string | null;
+    /**
+     * Imageproviderid
+     */
+    imageProviderId: string | null;
+};
+
+/**
+ * AIProviderSummary
+ */
+export type AiProviderSummary = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+};
+
+/**
+ * AIProviderUpdate
+ */
+export type AiProviderUpdate = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Baseurl
+     */
+    baseUrl?: string | null;
+    /**
+     * Apikey
+     */
+    apiKey?: string;
+    /**
+     * Model
+     */
+    model: string;
+    /**
+     * Timeout
+     */
+    timeout?: number;
+    /**
+     * Requestheaders
+     */
+    requestHeaders?: {
+        [key: string]: string;
+    };
+    /**
+     * Requestparams
+     */
+    requestParams?: {
+        [key: string]: string;
+    };
+};
+
+/**
  * AdminAboutInfo
  */
 export type AdminAboutInfo = {
@@ -49,21 +229,13 @@ export type AdminAboutInfo = {
      */
     oidcProviderName: string;
     /**
-     * Enableopenai
-     */
-    enableOpenai: boolean;
-    /**
-     * Enableopenaiimageservices
-     */
-    enableOpenaiImageServices: boolean;
-    /**
-     * Enableopenaitranscriptionservices
-     */
-    enableOpenaiTranscriptionServices: boolean;
-    /**
      * Tokentime
      */
     tokenTime: number;
+    /**
+     * Allowediframehosts
+     */
+    allowedIframeHosts?: Array<string>;
     /**
      * Versionlatest
      */
@@ -161,21 +333,13 @@ export type AppInfo = {
      */
     oidcProviderName: string;
     /**
-     * Enableopenai
-     */
-    enableOpenai: boolean;
-    /**
-     * Enableopenaiimageservices
-     */
-    enableOpenaiImageServices: boolean;
-    /**
-     * Enableopenaitranscriptionservices
-     */
-    enableOpenaiTranscriptionServices: boolean;
-    /**
      * Tokentime
      */
     tokenTime: number;
+    /**
+     * Allowediframehosts
+     */
+    allowedIframeHosts?: Array<string>;
 };
 
 /**
@@ -367,9 +531,9 @@ export type BodyCreateRecipeFromZipApiRecipesCreateZipPost = {
 };
 
 /**
- * Body_debug_openai_api_admin_debug_openai_post
+ * Body_debug_openai_api_admin_debug_openai__provider_id__post
  */
-export type BodyDebugOpenaiApiAdminDebugOpenaiPost = {
+export type BodyDebugOpenaiApiAdminDebugOpenaiProviderIdPost = {
     /**
      * Image
      */
@@ -591,10 +755,6 @@ export type CheckAppConfig = {
      * Oidcready
      */
     oidcReady: boolean;
-    /**
-     * Enableopenai
-     */
-    enableOpenai: boolean;
     /**
      * Baseurlset
      */
@@ -1140,6 +1300,7 @@ export type GroupAdminUpdate = {
      */
     name: string;
     preferences?: UpdateGroupPreferences | null;
+    aiProviderSettings?: AiProviderSettingsUpdate | null;
 };
 
 /**
@@ -1574,6 +1735,7 @@ export type GroupInDb = {
      */
     users?: Array<UserSummary> | null;
     preferences?: ReadGroupPreferences | null;
+    aiProviderSettings?: AiProviderSettingsOut | null;
 };
 
 /**
@@ -1715,6 +1877,7 @@ export type GroupSummary = {
      */
     slug: string;
     preferences?: ReadGroupPreferences | null;
+    aiProviderSettings?: AiProviderSettingsOut | null;
 };
 
 /**
@@ -6192,6 +6355,118 @@ export type MealieSchemaUserUserUserBase = {
     canOrganize?: boolean;
 };
 
+/**
+ * AIProviderSettingsOut
+ */
+export type AiProviderSettingsOutWritable = {
+    /**
+     * Defaultproviderid
+     */
+    defaultProviderId: string | null;
+    /**
+     * Audioproviderid
+     */
+    audioProviderId: string | null;
+    /**
+     * Imageproviderid
+     */
+    imageProviderId: string | null;
+    /**
+     * Providers
+     */
+    providers: Array<AiProviderSummary>;
+};
+
+/**
+ * GroupInDB
+ */
+export type GroupInDbWritable = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    /**
+     * Categories
+     */
+    categories?: Array<CategoryBase> | null;
+    /**
+     * Webhooks
+     */
+    webhooks?: Array<ReadWebhook>;
+    /**
+     * Households
+     */
+    households?: Array<GroupHouseholdSummary> | null;
+    /**
+     * Users
+     */
+    users?: Array<UserSummary> | null;
+    preferences?: ReadGroupPreferences | null;
+    aiProviderSettings?: AiProviderSettingsOutWritable | null;
+};
+
+/**
+ * GroupPagination
+ */
+export type GroupPaginationWritable = {
+    /**
+     * Page
+     */
+    page?: number;
+    /**
+     * Per Page
+     */
+    per_page?: number;
+    /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Total Pages
+     */
+    total_pages?: number;
+    /**
+     * Items
+     */
+    items: Array<GroupInDbWritable>;
+    /**
+     * Next
+     */
+    next?: string | null;
+    /**
+     * Previous
+     */
+    previous?: string | null;
+};
+
+/**
+ * GroupSummary
+ */
+export type GroupSummaryWritable = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    preferences?: ReadGroupPreferences | null;
+    aiProviderSettings?: AiProviderSettingsOutWritable | null;
+};
+
 export type GetAppInfoApiAppAboutGetData = {
     body?: never;
     path?: never;
@@ -9315,6 +9590,207 @@ export type UpdateOneApiHouseholdsMealplansItemIdPutResponses = {
 };
 
 export type UpdateOneApiHouseholdsMealplansItemIdPutResponse = UpdateOneApiHouseholdsMealplansItemIdPutResponses[keyof UpdateOneApiHouseholdsMealplansItemIdPutResponses];
+
+export type CreateAiProviderApiGroupsAiProvidersProvidersPostData = {
+    body: AiProviderCreate;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/groups/ai-providers/providers';
+};
+
+export type CreateAiProviderApiGroupsAiProvidersProvidersPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateAiProviderApiGroupsAiProvidersProvidersPostError = CreateAiProviderApiGroupsAiProvidersProvidersPostErrors[keyof CreateAiProviderApiGroupsAiProvidersProvidersPostErrors];
+
+export type CreateAiProviderApiGroupsAiProvidersProvidersPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: AiProviderOut;
+};
+
+export type CreateAiProviderApiGroupsAiProvidersProvidersPostResponse = CreateAiProviderApiGroupsAiProvidersProvidersPostResponses[keyof CreateAiProviderApiGroupsAiProvidersProvidersPostResponses];
+
+export type DeleteAiProviderApiGroupsAiProvidersProvidersProviderIdDeleteData = {
+    body?: never;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path: {
+        /**
+         * Provider Id
+         */
+        provider_id: string;
+    };
+    query?: never;
+    url: '/api/groups/ai-providers/providers/{provider_id}';
+};
+
+export type DeleteAiProviderApiGroupsAiProvidersProvidersProviderIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteAiProviderApiGroupsAiProvidersProvidersProviderIdDeleteError = DeleteAiProviderApiGroupsAiProvidersProvidersProviderIdDeleteErrors[keyof DeleteAiProviderApiGroupsAiProvidersProvidersProviderIdDeleteErrors];
+
+export type DeleteAiProviderApiGroupsAiProvidersProvidersProviderIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: AiProviderOut;
+};
+
+export type DeleteAiProviderApiGroupsAiProvidersProvidersProviderIdDeleteResponse = DeleteAiProviderApiGroupsAiProvidersProvidersProviderIdDeleteResponses[keyof DeleteAiProviderApiGroupsAiProvidersProvidersProviderIdDeleteResponses];
+
+export type GetAiProviderApiGroupsAiProvidersProvidersProviderIdGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path: {
+        /**
+         * Provider Id
+         */
+        provider_id: string;
+    };
+    query?: never;
+    url: '/api/groups/ai-providers/providers/{provider_id}';
+};
+
+export type GetAiProviderApiGroupsAiProvidersProvidersProviderIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetAiProviderApiGroupsAiProvidersProvidersProviderIdGetError = GetAiProviderApiGroupsAiProvidersProvidersProviderIdGetErrors[keyof GetAiProviderApiGroupsAiProvidersProvidersProviderIdGetErrors];
+
+export type GetAiProviderApiGroupsAiProvidersProvidersProviderIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: AiProviderOut;
+};
+
+export type GetAiProviderApiGroupsAiProvidersProvidersProviderIdGetResponse = GetAiProviderApiGroupsAiProvidersProvidersProviderIdGetResponses[keyof GetAiProviderApiGroupsAiProvidersProvidersProviderIdGetResponses];
+
+export type UpdateAiProviderApiGroupsAiProvidersProvidersProviderIdPutData = {
+    body: AiProviderUpdate;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path: {
+        /**
+         * Provider Id
+         */
+        provider_id: string;
+    };
+    query?: never;
+    url: '/api/groups/ai-providers/providers/{provider_id}';
+};
+
+export type UpdateAiProviderApiGroupsAiProvidersProvidersProviderIdPutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateAiProviderApiGroupsAiProvidersProvidersProviderIdPutError = UpdateAiProviderApiGroupsAiProvidersProvidersProviderIdPutErrors[keyof UpdateAiProviderApiGroupsAiProvidersProvidersProviderIdPutErrors];
+
+export type UpdateAiProviderApiGroupsAiProvidersProvidersProviderIdPutResponses = {
+    /**
+     * Successful Response
+     */
+    200: AiProviderOut;
+};
+
+export type UpdateAiProviderApiGroupsAiProvidersProvidersProviderIdPutResponse = UpdateAiProviderApiGroupsAiProvidersProvidersProviderIdPutResponses[keyof UpdateAiProviderApiGroupsAiProvidersProvidersProviderIdPutResponses];
+
+export type GetAiProviderSettingsApiGroupsAiProvidersSettingsGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/groups/ai-providers/settings';
+};
+
+export type GetAiProviderSettingsApiGroupsAiProvidersSettingsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetAiProviderSettingsApiGroupsAiProvidersSettingsGetError = GetAiProviderSettingsApiGroupsAiProvidersSettingsGetErrors[keyof GetAiProviderSettingsApiGroupsAiProvidersSettingsGetErrors];
+
+export type GetAiProviderSettingsApiGroupsAiProvidersSettingsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: AiProviderSettingsOut;
+};
+
+export type GetAiProviderSettingsApiGroupsAiProvidersSettingsGetResponse = GetAiProviderSettingsApiGroupsAiProvidersSettingsGetResponses[keyof GetAiProviderSettingsApiGroupsAiProvidersSettingsGetResponses];
+
+export type UpdateAiProviderSettingsApiGroupsAiProvidersSettingsPutData = {
+    body: AiProviderSettingsUpdate;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/groups/ai-providers/settings';
+};
+
+export type UpdateAiProviderSettingsApiGroupsAiProvidersSettingsPutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateAiProviderSettingsApiGroupsAiProvidersSettingsPutError = UpdateAiProviderSettingsApiGroupsAiProvidersSettingsPutErrors[keyof UpdateAiProviderSettingsApiGroupsAiProvidersSettingsPutErrors];
+
+export type UpdateAiProviderSettingsApiGroupsAiProvidersSettingsPutResponses = {
+    /**
+     * Successful Response
+     */
+    200: AiProviderSettingsOut;
+};
+
+export type UpdateAiProviderSettingsApiGroupsAiProvidersSettingsPutResponse = UpdateAiProviderSettingsApiGroupsAiProvidersSettingsPutResponses[keyof UpdateAiProviderSettingsApiGroupsAiProvidersSettingsPutResponses];
 
 export type GetAllHouseholdsApiGroupsHouseholdsGetData = {
     body?: never;
@@ -13938,6 +14414,162 @@ export type UpdateOneApiAdminGroupsItemIdPutResponses = {
 
 export type UpdateOneApiAdminGroupsItemIdPutResponse = UpdateOneApiAdminGroupsItemIdPutResponses[keyof UpdateOneApiAdminGroupsItemIdPutResponses];
 
+export type CreateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersPostData = {
+    body: AiProviderCreate;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path: {
+        /**
+         * Group Id
+         */
+        group_id: string;
+    };
+    query?: never;
+    url: '/api/admin/groups/{group_id}/ai-providers/providers';
+};
+
+export type CreateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersPostError = CreateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersPostErrors[keyof CreateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersPostErrors];
+
+export type CreateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: AiProviderOut;
+};
+
+export type CreateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersPostResponse = CreateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersPostResponses[keyof CreateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersPostResponses];
+
+export type DeleteAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdDeleteData = {
+    body?: never;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path: {
+        /**
+         * Group Id
+         */
+        group_id: string;
+        /**
+         * Provider Id
+         */
+        provider_id: string;
+    };
+    query?: never;
+    url: '/api/admin/groups/{group_id}/ai-providers/providers/{provider_id}';
+};
+
+export type DeleteAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdDeleteError = DeleteAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdDeleteErrors[keyof DeleteAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdDeleteErrors];
+
+export type DeleteAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: AiProviderOut;
+};
+
+export type DeleteAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdDeleteResponse = DeleteAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdDeleteResponses[keyof DeleteAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdDeleteResponses];
+
+export type GetAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path: {
+        /**
+         * Group Id
+         */
+        group_id: string;
+        /**
+         * Provider Id
+         */
+        provider_id: string;
+    };
+    query?: never;
+    url: '/api/admin/groups/{group_id}/ai-providers/providers/{provider_id}';
+};
+
+export type GetAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdGetError = GetAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdGetErrors[keyof GetAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdGetErrors];
+
+export type GetAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: AiProviderOut;
+};
+
+export type GetAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdGetResponse = GetAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdGetResponses[keyof GetAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdGetResponses];
+
+export type UpdateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdPutData = {
+    body: AiProviderUpdate;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path: {
+        /**
+         * Group Id
+         */
+        group_id: string;
+        /**
+         * Provider Id
+         */
+        provider_id: string;
+    };
+    query?: never;
+    url: '/api/admin/groups/{group_id}/ai-providers/providers/{provider_id}';
+};
+
+export type UpdateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdPutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdPutError = UpdateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdPutErrors[keyof UpdateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdPutErrors];
+
+export type UpdateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdPutResponses = {
+    /**
+     * Successful Response
+     */
+    200: AiProviderOut;
+};
+
+export type UpdateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdPutResponse = UpdateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdPutResponses[keyof UpdateAiProviderApiAdminGroupsGroupIdAiProvidersProvidersProviderIdPutResponses];
+
 export type CheckEmailConfigApiAdminEmailGetData = {
     body?: never;
     headers?: {
@@ -14356,36 +14988,41 @@ export type CleanRecipeFoldersApiAdminMaintenanceCleanRecipeFoldersPostResponses
 
 export type CleanRecipeFoldersApiAdminMaintenanceCleanRecipeFoldersPostResponse = CleanRecipeFoldersApiAdminMaintenanceCleanRecipeFoldersPostResponses[keyof CleanRecipeFoldersApiAdminMaintenanceCleanRecipeFoldersPostResponses];
 
-export type DebugOpenaiApiAdminDebugOpenaiPostData = {
-    body?: BodyDebugOpenaiApiAdminDebugOpenaiPost;
+export type DebugOpenaiApiAdminDebugOpenaiProviderIdPostData = {
+    body?: BodyDebugOpenaiApiAdminDebugOpenaiProviderIdPost;
     headers?: {
         /**
          * Accept-Language
          */
         'accept-language'?: string | null;
     };
-    path?: never;
+    path: {
+        /**
+         * Provider Id
+         */
+        provider_id: string;
+    };
     query?: never;
-    url: '/api/admin/debug/openai';
+    url: '/api/admin/debug/openai/{provider_id}';
 };
 
-export type DebugOpenaiApiAdminDebugOpenaiPostErrors = {
+export type DebugOpenaiApiAdminDebugOpenaiProviderIdPostErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type DebugOpenaiApiAdminDebugOpenaiPostError = DebugOpenaiApiAdminDebugOpenaiPostErrors[keyof DebugOpenaiApiAdminDebugOpenaiPostErrors];
+export type DebugOpenaiApiAdminDebugOpenaiProviderIdPostError = DebugOpenaiApiAdminDebugOpenaiProviderIdPostErrors[keyof DebugOpenaiApiAdminDebugOpenaiProviderIdPostErrors];
 
-export type DebugOpenaiApiAdminDebugOpenaiPostResponses = {
+export type DebugOpenaiApiAdminDebugOpenaiProviderIdPostResponses = {
     /**
      * Successful Response
      */
     200: DebugResponse;
 };
 
-export type DebugOpenaiApiAdminDebugOpenaiPostResponse = DebugOpenaiApiAdminDebugOpenaiPostResponses[keyof DebugOpenaiApiAdminDebugOpenaiPostResponses];
+export type DebugOpenaiApiAdminDebugOpenaiProviderIdPostResponse = DebugOpenaiApiAdminDebugOpenaiProviderIdPostResponses[keyof DebugOpenaiApiAdminDebugOpenaiProviderIdPostResponses];
 
 export type GetAllApiExploreGroupsGroupSlugFoodsGetData = {
     body?: never;
