@@ -1,7 +1,8 @@
 # Shopping-list builder — design
 
 Date: 2026-06-27
-Revised: 2026-06-27 (incorporating external review — API precision + edge cases)
+Revised: 2026-06-27 (incorporating two external reviews — API precision,
+contract ambiguities, concurrency, and edge cases)
 
 ## Problem
 
@@ -9,9 +10,8 @@ manaaki now has an authenticated tier (per-user Mealie identity via the BFF). Th
 first feature to ride on it is a **shopping-list builder**: a nicer-than-Mealie
 way to turn a meal plan into a shopping list and use it in the store. The user's
 core workflow is "create a plan, then add the next few days (often 4 or 5) to a
-shopping list," plus building lists recipe-by-recipe, plus actually checking
-items off while shopping. Mealie's own multi-list management is the pain point to
-avoid.
+shopping list," plus building lists recipe-by-recipe, plus checking items off
+while shopping. Mealie's own multi-list management is the pain point to avoid.
 
 Mealie already provides full shopping-list storage (lists, items with bulk
 create, check-off, food labels/aisle ordering, and a server-side
@@ -34,169 +34,196 @@ create, check-off, food labels/aisle ordering, and a server-side
 - Sharing/printing lists; offline-first sync.
 - Meal history feature (separate sub-project).
 
+## Implementation constraints (repo-specific)
+
+- The builder is entered from **both** `/plan` and `/shopping`, so its shared UI
+  and utilities live in `src/components/` and `src/utils/` (or `src/hooks/`) —
+  **not** inside route modules. Route files export only `Route`; route-dir test
+  files need a leading `-` (e.g. `-foo.test.ts`) to avoid the
+  "does not export a Route" SSR/module-runner warning (see `AGENTS.md`). (This
+  bit us once in the auth foundation.)
+- The generated client is built from `https://demo.mealie.io/openapi.json`
+  (latest), not the deployed instance (which has `API_DOCS=False`). Record the
+  deployed Mealie version and treat the contract-test items below as the guard
+  against schema drift.
+
 ## Core model
 
 - **Current list = the most recently created shopping list** for the household.
-  Mealie's default list sort is **by name**, so this MUST be requested
-  explicitly: `GET /api/households/shopping/lists?orderBy=createdAt&orderDirection=desc&perPage=-1`.
-  The first item is current. `ShoppingListSummary.createdAt` is `string | null`;
-  treat `null` as oldest (sort to the end — pass `orderByNullPosition` or handle
-  client-side). There is no real "archive" flag — "previous" just means "not the
-  latest."
-- **Scope caveat (explicit):** Mealie shopping lists are **household-wide**, and
-  `ShoppingListOut` carries both `userId` and `householdId`. "Current = newest"
-  is therefore household-wide: if two members create lists, the newest wins
-  regardless of author. Acceptable for this small-family deployment; noted so
-  it's not a surprise.
+  Mealie's default list sort is by name, so request the current list explicitly
+  and **separately from history**:
+  `getAllApiHouseholdsShoppingListsGet({ orderBy: "createdAt", orderDirection: "desc", orderByNullPosition: "last", perPage: 1 })`
+  → `items[0]` is current (or none). `createdAt` on `ShoppingListSummary` is
+  `string | null | undefined`; `orderByNullPosition: "last"` keeps null-dated
+  lists from masquerading as newest. History (previous lists) uses its own
+  paginated query — don't fetch everything with `perPage: -1`.
+- **Scope caveat (explicit):** Mealie shopping lists are **household-wide**
+  (`ShoppingListOut` has both `userId` and `householdId`); "current = newest" is
+  household-wide, so the newest wins regardless of which member created it.
+  Acceptable for this small-family deployment; noted so it's not a surprise.
 - **Building creates a new list**, which becomes current. **Per-recipe adds
   append to the current list** (creating one if none exists).
-- **Authed-only**: the whole feature requires the authenticated tier (writes).
-  Gated like `/plan`. The BFF already passes authed writes through to Mealie, and
-  `/api/households/shopping/*` is **not** in the anonymous allowlist, so the
-  proxy already 403s anonymous access (server-side enforcement). No allowlist
-  change needed.
+- **Authed-only.** Gated like `/plan`. `/api/households/shopping/*` is absent
+  from the anonymous allowlist, so the BFF already 403s anonymous access
+  (server-side enforcement; verified in `allowlist.ts` / `proxy.ts`).
 
 ## Components
 
 ### 1. Route, gating, nav
 
 - New route **`/shopping`** (`src/routes/shopping.tsx`), `beforeLoad` guard
-  mirroring `/plan` exactly: `fetchCurrentUser()` →
-  `throw redirect({ href: "/api/auth/oauth" })` when anonymous. (`fetchCurrentUser`
-  hits `/api/auth/me`, a TanStack Start server route — not a proxied Mealie path
-  — so the allowlist doesn't apply to it.)
+  mirroring `/plan`: `fetchCurrentUser()` →
+  `throw redirect({ href: "/api/auth/oauth" })` when anonymous.
 - Add a **"Shopping"** entry to `UserMenu` (next to "Meal Plan"), authed-only.
 
 ### 2. The builder: plan → new list (headline flow)
 
 Entry: a **"Build shopping list"** action on both `/plan` and `/shopping`.
 
-1. **Pick days** — quick options **next 3 / 4 / 5 / 7 days** from today
-   (inclusive).
-2. **Fetch the exact range.** The builder fetches its **own** mealplan query for
-   `today … today+N` rather than reusing the `/plan` page's loaded window
-   (`multiWeekBounds(-1, 1)`), which can miss days when "next 7" spills into a
-   not-yet-loaded week.
-3. **Gather recipes.** Include **every plan entry in range that has a linked
-   recipe** (`recipe`/`recipeId` non-null), regardless of `entryType`
-   (breakfast/lunch/dinner/side/…). Free-text entries (no recipe) are skipped.
-   Nothing is silently dropped — all gathered recipes appear on the review screen
-   for confirmation. Empty state when nothing in range has a recipe.
-4. **Review screen** — each recipe row:
-   - a checkbox (checked by default; uncheck to exclude — e.g. an eat-out night),
-   - a **servings stepper** defaulting to the recipe's base servings
-     (`RecipeSummary.recipeServings`, which is `number | undefined`). If base
-     servings is **undefined or ≤ 0**, fall back to a simple **×1 / ×2 …**
-     multiplier (never divide by zero).
-5. **Confirm** →
-   - Create a new list via `POST /api/households/shopping/lists`, auto-named from
-     the range: **`Shop · <start>–<end>`** (e.g. `Shop · Jun 28–Jul 2`).
-   - One **bulk** `POST /api/households/shopping/lists/{item_id}/recipe` with an
-     array of `{ recipeId, recipeIncrementQuantity }`, where
-     `recipeIncrementQuantity = chosenServings / baseServings` (1 when unchanged;
-     the chosen multiplier when base servings are unknown/≤0). Mealie scales and
-     merges ingredients server-side.
-   - Navigate to the new (now current) list.
+1. **Pick days** — quick options **next 3 / 4 / 5 / 7 days**, counting **today
+   as day 1**.
+2. **Fetch the exact range** with the builder's own mealplan query: `start_date =
+   today`, `end_date = today + (N − 1)` (inclusive end → exactly N calendar
+   dates; **not** `today + N`). Independent of the `/plan` page's loaded window.
+3. **Gather + normalise recipes** from entries in range:
+   - **Recipe id** = `entry.recipeId ?? entry.recipe?.id`. **Skip the entry only
+     when no usable id exists** (covers free-text entries and the independently
+     nullable `recipeId`/`recipe` shapes).
+   - **Display name** = `entry.recipe?.name ?? entry.title ?? "Recipe"`.
+   - **Missing recipe summary / `recipeServings`** → keep the entry but use
+     **multiplier mode** (×1/×2…), don't drop it.
+   - Include **all entry types** with a usable recipe (breakfast/lunch/dinner/
+     side/…); nothing is hidden — everything appears on the review screen.
+   - **Duplicate recipe in range** (same recipe planned twice): aggregate into a
+     single review row showing the occurrence count, with default scale = the
+     **sum of per-occurrence scales** (e.g. a 4-serving recipe planned twice =
+     ×2). User can adjust. (Contract-tested — don't assume bulk merge behaviour.)
+4. **Review screen** — each recipe row: a checkbox (checked by default; uncheck
+   to exclude) and a **servings stepper** (default = base servings; multiplier
+   mode when base is undefined or ≤ 0 — never divide by zero).
+5. **Confirm** → the create-and-add state machine in *Error handling* below.
 
-Day-range→recipe gathering and scale computation are **pure functions** (testable
-without the API), including the `baseServings ≤ 0` guard.
+Day-range math, recipe normalisation, duplicate aggregation, and scale
+computation are **pure functions** (unit-tested).
 
 ### 3. The shopping list view (in-store use)
 
 `/shopping` shows the **current** list (detail fetch
-`GET /api/households/shopping/lists/{item_id}`):
+`getOneApiHouseholdsShoppingListsItemIdGet`).
 
-- Items **grouped by Mealie food label/category** (aisle order); Mealie labels
-  items and auto-merges duplicates. Unlabelled items group under a default
-  heading.
-- **Big touch-target check-off** (reuse the cook-mode visual language). Checked
-  items strike through and sink to the bottom of their group.
-- **Check-off mechanics:** `PUT /api/households/shopping/items/{item_id}` with
-  body `ShoppingListItemUpdate` — this is a **full-object update**, and
-  `shoppingListId` is **required**. So copy the existing item, flip `checked`,
-  and send the whole object. The response is a
-  **`ShoppingListItemsCollectionOut`** (`{createdItems, updatedItems,
-  deletedItems}`), so reconcile the optimistic toggle from **`updatedItems[0]`**,
-  not a bare item.
-- **Mutation serialization:** check-off mutations are **serialized/queued per
-  item** (e.g. a per-item lock or React Query mutation chaining) so rapid
-  successive toggles on the same item can't race the full-object PUT into an
-  inconsistent state.
-- **Add a manual item** via `POST /api/households/shopping/items/create-bulk`
-  (response is also `ShoppingListItemsCollectionOut` — read new items from
-  **`createdItems`**).
-- **Delete an item** via `DELETE /api/households/shopping/items/{item_id}`.
-- **States:** distinguish (a) no current list at all → "build your first list"
-  empty state, from (b) a current list whose items are all checked/none left →
-  a **"all done / cleared"** completed state (not the same empty state).
+- **Aisle grouping (algorithmic):** group items by `item.label?.id`; order groups
+  by the matching `labelSettings[].position` on the list; unlabelled / unknown
+  groups go last. (These are aisle *labels*, distinct from recipe categories.)
+- **Big touch-target check-off** (cook-mode visual language); checked items strike
+  through and sink within their group.
+- **Check-off mechanics (contract-precise):** `updateOneApiHouseholdsShoppingItemsItemIdPut`
+  takes `ShoppingListItemUpdate` (requires `shoppingListId`; other fields
+  optional). Do **not** spread the response object (`ShoppingListItemOutOutput`
+  has response-only fields like `id`/`groupId`/`label`/timestamps). Instead use an
+  explicit **output→update mapper** that copies only the accepted mutable fields
+  (`shoppingListId`, `quantity`, `unit`, `food`/`foodId`, `note`, `display`,
+  `position`, `isFood`, `labelId`, …) and flips `checked`. **Contract test**
+  whether sending just `{ shoppingListId, checked }` preserves omitted fields; if
+  it doesn't (PUT replaces), the mapper must send all accepted fields.
+- **Reconcile safely:** the response is `ShoppingListItemsCollectionOut` whose
+  `updatedItems`/`createdItems` are **optional**. Reconcile via
+  `updatedItems?.find(i => i.id === targetId)`; if absent, invalidate/refetch the
+  list. Same `find`-or-refetch pattern for manual creation (`createdItems`).
+- **Mutation serialization:** check-off mutations are **serialized per item** so
+  rapid toggles can't race the full-object PUT into an inconsistent state.
+- **Add a manual item:** `createManyApiHouseholdsShoppingItemsCreateBulkPost`
+  with `{ shoppingListId, display }` where `display` is a **non-empty trimmed**
+  value; normalise `listItems ?? []` everywhere.
+- **Delete an item:** `deleteOneApiHouseholdsShoppingItemsItemIdDelete`.
+- **States:** (a) no current list → "build your first list"; (b) current list
+  with all items checked / none left → a **"all done / cleared"** completed
+  state (distinct from a).
 
 ### 4. Add-from-recipe + previous lists
 
-- **Recipe page**: an "Add to shopping list" control that adds the current recipe
-  to the **current** list (optional servings choice; create a list if none).
-  **Always use the bulk endpoint with a single element**
-  (`POST …/lists/{item_id}/recipe` with a one-item array). The single-recipe
-  endpoint (`…/recipe/{recipe_id}`) is deprecated in Mealie — do not use it; this
-  also keeps one add-recipe code path.
-- **Previous lists**: a minimal history view — older lists by date (from the
-  summary list), tap to open. `ShoppingListSummary` does **not** include items,
-  so opening one triggers a detail fetch
-  (`GET /api/households/shopping/lists/{item_id}`). Low-chrome; an escape hatch,
-  not a management surface.
+- **Recipe page** "Add to shopping list" → adds to the **current** list (optional
+  servings; create one if none), **always via the bulk endpoint with a single
+  element** (`addRecipeIngredientsToListApiHouseholdsShoppingListsItemIdRecipePost`).
+  The single-recipe endpoint is deprecated — don't use it.
+  - Recipe pages are **public**, so when anonymous this action is **hidden** and
+    replaced by a **Sign-in CTA that preserves the current recipe** (return-to),
+    rather than a dead button.
+- **Previous lists**: a minimal history view (own paginated summary query, tap to
+  open). `ShoppingListSummary` has no items, so opening one does a detail fetch.
+  The opened list is **URL-addressable** (e.g. `/shopping?list=<id>`) and
+  **visually distinct from "current"** so users don't accidentally mutate an old
+  list after browsing history.
 
 ### 5. Mealie API surface (all via the BFF, authed pass-through)
 
-Note: Mealie names the list-ID path param **`item_id`** throughout the shopping
-endpoints (a Mealie quirk); `{item_id}` is the shopping list's id.
+Mealie names the list-ID path param **`item_id`** throughout shopping endpoints.
 
-| Need | SDK fn / endpoint |
-|------|-------------------|
-| List all → current = newest | `getAllApiHouseholdsShoppingListsGet` — `?orderBy=createdAt&orderDirection=desc&perPage=-1` |
+| Need | SDK fn |
+|------|--------|
+| Current list (newest) | `getAllApiHouseholdsShoppingListsGet` (`orderBy=createdAt, orderDirection=desc, orderByNullPosition=last, perPage=1`) |
+| History | same fn, separate paginated query |
 | Create list | `createOneApiHouseholdsShoppingListsPost` |
 | List detail + items | `getOneApiHouseholdsShoppingListsItemIdGet` |
-| Add recipe(s), scaled (bulk, also for single) | `addRecipeIngredientsToListApiHouseholdsShoppingListsItemIdRecipePost` — `Array<{recipeId, recipeIncrementQuantity}>` |
-| Check off / update item (full PUT) | `updateOneApiHouseholdsShoppingItemsItemIdPut` — body needs `shoppingListId`; resp `ShoppingListItemsCollectionOut` |
-| Add manual item(s) | `createManyApiHouseholdsShoppingItemsCreateBulkPost` — new items in `createdItems` |
+| Add recipe(s), scaled (bulk; also single) | `addRecipeIngredientsToListApiHouseholdsShoppingListsItemIdRecipePost` — `Array<{recipeId, recipeIncrementQuantity}>` |
+| Check off / update item | `updateOneApiHouseholdsShoppingItemsItemIdPut` (explicit field mapper; resp `ShoppingListItemsCollectionOut`) |
+| Add manual item(s) | `createManyApiHouseholdsShoppingItemsCreateBulkPost` |
 | Delete item | `deleteOneApiHouseholdsShoppingItemsItemIdDelete` |
-| Cleanup empty list (half-fail) | `deleteOneApiHouseholdsShoppingListsItemIdDelete` |
-| Plan for day range | mealplans GET (builder's own `today…today+N` query) |
+| Cleanup empty list | `deleteOneApiHouseholdsShoppingListsItemIdDelete` |
+| Plan for range | mealplans GET (builder's own `today … today+(N−1)` query) |
 
-## Error handling
+## Error handling — create-and-add state machine
 
-- **Create-then-bulk-add is two calls.** If the bulk add fails after the list is
-  created, surface the error with a retry, and **best-effort delete the
-  just-created empty list** (fire-and-forget, swallow errors). If that cleanup
-  delete also fails, the error message tells the user a stray empty list may
-  remain and they can remove it in Mealie.
-- Empty day range (nothing planned / all free-text) → review empty state; no list
-  created.
-- Item check-off failure → revert the optimistic toggle and show an error.
-- Standard network/error toasts consistent with existing pages.
+The build is two non-transactional calls (create list, then bulk add). Specify a
+state machine rather than ad-hoc retry + fire-and-forget delete:
+
+1. **Disable Confirm while a build is pending** (prevents double-click creating
+   multiple lists).
+2. Create the list, then bulk-add recipes.
+3. **On ambiguous bulk failure**, fetch the just-created list:
+   - **Has items** → open it with a **partial-success warning** (keep it; it's a
+     usable list).
+   - **Empty** → **best-effort delete**, and **await cleanup completion** before
+     allowing retry.
+4. **Retry reruns the whole create-and-add** only *after* any cleanup has
+   completed — so retry never targets a list mid-deletion, and we never leak
+   multiple lists.
+5. If a cleanup delete itself fails, tell the user a stray empty list may remain
+   and can be removed in Mealie.
+
+Other: empty day range → review empty state (no list created); item check-off
+failure → revert optimistic toggle; **expired session mid-shop** → the BFF
+returns 403, so **roll back the optimistic change and prompt re-auth**
+(return-to), not a generic toast.
 
 ## Testing
 
-- Pure: day-range → recipe list from plan entries (skips free-text; includes all
-  recipe-linked entry types); scale = chosen/base with **`baseServings ≤ 0` /
-  undefined → multiplier fallback** (no NaN/divide-by-zero); bulk payload shape.
-- "Current list" selection = newest by `createdAt`, with `createdAt: null` sorted
-  oldest.
-- List view: grouping by label; optimistic check-off **reconciled from
-  `updatedItems[0]`** and reverted on failure; **rapid successive toggles on the
-  same item are serialized** (no inconsistent final state); manual add unwraps
-  `createdItems`; delete.
-- Builder flow: review excludes unchecked recipes; confirm issues create + one
-  bulk call; half-fail deletes the empty list (best-effort).
-- States: no-list empty state vs all-checked completed state.
-- Gating: `/shopping` redirects anonymous users; `UserMenu` shows Shopping only
-  when authed.
-- Builder fetches its own date range when "next N days" exceeds the `/plan`
-  window.
+- **Pure:** day-range with `end = today+(N−1)` incl. **month/year and DST
+  boundary** cases; recipe normalisation (`recipeId ?? recipe?.id`; skip only
+  when no id; name/multiplier fallbacks); duplicate-recipe aggregation; scale =
+  chosen/base with `baseServings ≤ 0`/undefined → multiplier (no NaN).
+- **Current-list selection:** newest by `createdAt`, `null` dates sorted last;
+  current query uses `perPage: 1` and is separate from history pagination.
+- **Contract tests (guard schema drift):** check-off field preservation
+  (`{shoppingListId, checked}` vs full mapper); repeated `recipeId` + fractional
+  scaling via the bulk endpoint.
+- **List view:** algorithmic aisle grouping/order by `labelSettings.position`,
+  unlabelled last; optimistic check-off reconciled via
+  `updatedItems?.find(id)` with refetch fallback; **rapid toggles serialized**;
+  manual add unwraps `createdItems` with refetch fallback; delete.
+- **Builder state machine:** unchecked recipes excluded; confirm disabled while
+  pending; ambiguous failure with items → open + warn; empty → delete then allow
+  retry; no duplicate lists on double-click.
+- **Auth UX:** `/shopping` redirects anonymous; recipe-page action hidden + sign-in
+  CTA (return-to) when anonymous; expired-session 403 → rollback + re-auth.
+- **History:** previous list opens via detail fetch, is URL-addressable, and is
+  visually distinct from current.
 
 ## Suggested build order (for the plan)
 
-1. `/shopping` route + gating + nav + current-list view with check-off
-   (foundation you can use immediately; includes the serialize/reconcile logic).
-2. The plan → new-list builder (own-range fetch → day picker → review/servings →
-   create + bulk add + half-fail cleanup).
-3. Add-from-recipe (bulk endpoint, single element).
-4. Previous-lists history view (summary list → detail fetch on open).
+1. `/shopping` route + gating + nav + current-list view (aisle grouping,
+   serialized check-off with explicit mapper + find/refetch reconcile, manual
+   add/delete, both empty/completed states).
+2. The plan → new-list builder (own-range fetch with `N−1`; recipe normalisation
+   + duplicate aggregation; review/servings; create-and-add state machine).
+3. Add-from-recipe (bulk single element; anonymous sign-in CTA).
+4. Previous-lists history view (URL-addressable, distinct from current).
