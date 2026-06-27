@@ -1,3 +1,12 @@
+# Honor the TLS-terminating proxy's (Traefik) X-Forwarded-Proto; nginx's own
+# $scheme is http here because Traefik talks to this container over http, so
+# using $scheme would tell the BFF every request is insecure. Fall back to
+# $scheme only when no upstream proto header is present.
+map $http_x_forwarded_proto $client_proto {
+    default $http_x_forwarded_proto;
+    ""      $scheme;
+}
+
 server {
     listen 80;
     root /app/html;
@@ -38,7 +47,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $client_proto;
         proxy_buffering off;
     }
 
@@ -73,7 +82,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $client_proto;
     }
 
     gzip on;
