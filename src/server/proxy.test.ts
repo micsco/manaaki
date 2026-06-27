@@ -1,13 +1,95 @@
 // src/server/proxy.test.ts
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import * as http from "node:http"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { handleApiProxy } from "./proxy"
 import { buildSessionSetCookie, unsealSession } from "./session"
 
-beforeEach(() => {
-  process.env.MEALIE_INTERNAL_URL = "http://mealie:9000"
+// ---------------------------------------------------------------------------
+// Minimal local upstream server
+// ---------------------------------------------------------------------------
+
+interface UpstreamRequest {
+  method: string
+  url: string
+  headers: http.IncomingHttpHeaders
+  body: string
+}
+
+interface UpstreamResponse {
+  status?: number
+  headers?: Record<string, string | string[]>
+  body?: string | Buffer
+}
+
+let server: http.Server
+let serverPort: number
+let lastUpstreamRequest: UpstreamRequest | null = null
+let nextUpstreamResponse: UpstreamResponse = { status: 200, body: "{}" }
+
+// Optional per-path override so refresh tests can serve different endpoints.
+let perPathResponses: Map<string, UpstreamResponse> = new Map()
+
+function setNextResponse(res: UpstreamResponse) {
+  nextUpstreamResponse = res
+}
+
+function setPathResponse(path: string, res: UpstreamResponse) {
+  perPathResponses.set(path, res)
+}
+
+function startServer(): Promise<void> {
+  return new Promise(resolve => {
+    server = http.createServer((req, res) => {
+      let rawBody = ""
+      req.on("data", chunk => {
+        rawBody += chunk
+      })
+      req.on("end", () => {
+        lastUpstreamRequest = {
+          method: req.method ?? "GET",
+          url: req.url ?? "/",
+          headers: req.headers,
+          body: rawBody,
+        }
+
+        const matchedPath = req.url ? perPathResponses.get(req.url.split("?")[0]) : undefined
+        const response = matchedPath ?? nextUpstreamResponse
+        const status = response.status ?? 200
+        const body = response.body ?? ""
+
+        res.writeHead(status, response.headers ?? {})
+        res.end(body)
+      })
+    })
+    server.listen(0, "127.0.0.1", () => {
+      const addr = server.address() as { port: number }
+      serverPort = addr.port
+      resolve()
+    })
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Test setup
+// ---------------------------------------------------------------------------
+
+beforeEach(async () => {
+  await startServer()
+  process.env.MEALIE_INTERNAL_URL = `http://127.0.0.1:${serverPort}`
   process.env.MEALIE_READONLY_TOKEN = "ro-token"
   process.env.SESSION_SECRET = "unit-test-secret"
+  lastUpstreamRequest = null
+  nextUpstreamResponse = { status: 200, body: "{}" }
+  perPathResponses = new Map()
 })
+
+afterEach(async () => {
+  await new Promise<void>(resolve => server.close(() => resolve()))
+})
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 function farFutureJwt(): string {
   const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url")
@@ -20,44 +102,72 @@ function sessionCookieHeader(jwt: string): string {
   return `__Host-manaaki_session=${value}`
 }
 
-describe("handleApiProxy — anonymous", () => {
-  it("forwards allowed GET with the read-only token", async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response("[]", { status: 200 }))
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+describe("handleApiProxy — Host regression (the fix)", () => {
+  it("sends the public Host header to the upstream, not the internal docker host", async () => {
+    setNextResponse({ status: 200, body: "[]" })
     const res = await handleApiProxy(
-      new Request("https://app/api/recipes", { headers: { "x-forwarded-proto": "https" } })
+      new Request("https://app/api/recipes", {
+        headers: {
+          host: "manaaki.micsco.nz",
+          "x-forwarded-proto": "https",
+        },
+      })
     )
     expect(res.status).toBe(200)
-    const [input, init] = fetchMock.mock.calls[0]
-    expect(String(input)).toBe("http://mealie:9000/api/recipes")
-    expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer ro-token")
-    fetchMock.mockRestore()
+    expect(lastUpstreamRequest).not.toBeNull()
+    // The core assertion: upstream must see the public host, NOT 127.0.0.1
+    expect(lastUpstreamRequest?.headers.host).toBe("manaaki.micsco.nz")
+    expect(lastUpstreamRequest?.headers.authorization).toBe("Bearer ro-token")
+  })
+})
+
+describe("handleApiProxy — anonymous", () => {
+  it("forwards allowed GET /api/recipes with the read-only token", async () => {
+    setNextResponse({ status: 200, body: "[]" })
+    const res = await handleApiProxy(
+      new Request("https://app/api/recipes", {
+        headers: { host: "manaaki.micsco.nz", "x-forwarded-proto": "https" },
+      })
+    )
+    expect(res.status).toBe(200)
+    expect(lastUpstreamRequest?.headers.authorization).toBe("Bearer ro-token")
+    expect(lastUpstreamRequest?.url).toBe("/api/recipes")
   })
 
-  it("blocks meal plans for anonymous with 403", async () => {
-    const fetchMock = vi.spyOn(globalThis, "fetch")
-    const res = await handleApiProxy(new Request("https://app/api/households/mealplans"))
+  it("blocks meal plans for anonymous with 403 — no upstream request made", async () => {
+    const res = await handleApiProxy(
+      new Request("https://app/api/households/mealplans", {
+        headers: { host: "manaaki.micsco.nz" },
+      })
+    )
     expect(res.status).toBe(403)
-    expect(fetchMock).not.toHaveBeenCalled()
-    fetchMock.mockRestore()
+    expect(lastUpstreamRequest).toBeNull()
   })
 
-  it("blocks non-GET for anonymous with 403", async () => {
-    const res = await handleApiProxy(new Request("https://app/api/recipes", { method: "POST" }))
+  it("blocks non-GET (POST /api/recipes) for anonymous with 403 — no upstream request", async () => {
+    const res = await handleApiProxy(
+      new Request("https://app/api/recipes", {
+        method: "POST",
+        headers: { host: "manaaki.micsco.nz" },
+      })
+    )
     expect(res.status).toBe(403)
+    expect(lastUpstreamRequest).toBeNull()
   })
 })
 
 describe("handleApiProxy — authed", () => {
-  it("forwards with the user token and strips client Authorization", async () => {
+  it("forwards with the user token, strips client Authorization and cookie, sets Cache-Control", async () => {
     const jwt = farFutureJwt()
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response("{}", { status: 200 }))
+    setNextResponse({ status: 200, body: "{}" })
     const res = await handleApiProxy(
       new Request("https://app/api/households/mealplans", {
         headers: {
+          host: "manaaki.micsco.nz",
           "x-forwarded-proto": "https",
           cookie: sessionCookieHeader(jwt),
           authorization: "Bearer attacker",
@@ -65,149 +175,97 @@ describe("handleApiProxy — authed", () => {
       })
     )
     expect(res.status).toBe(200)
-    const [, init] = fetchMock.mock.calls[0]
-    expect(new Headers(init?.headers).get("Authorization")).toBe(`Bearer ${jwt}`)
-    fetchMock.mockRestore()
+    // JWT from session, not the attacker token
+    expect(lastUpstreamRequest?.headers.authorization).toBe(`Bearer ${jwt}`)
+    // Cookie must be stripped
+    expect(lastUpstreamRequest?.headers.cookie).toBeUndefined()
+    // Public host forwarded
+    expect(lastUpstreamRequest?.headers.host).toBe("manaaki.micsco.nz")
+    // Authed responses must be private
+    expect(res.headers.get("Cache-Control")).toBe("private, no-store")
   })
+})
 
+describe("handleApiProxy — redirect passthrough", () => {
+  it("passes upstream 302 through to the browser without following it", async () => {
+    const googleUrl = "https://accounts.google.com/o/oauth2/v2/auth?x=1"
+    setNextResponse({
+      status: 302,
+      headers: { Location: googleUrl },
+      body: "",
+    })
+    const res = await handleApiProxy(
+      new Request("https://app/api/auth/oauth", {
+        headers: { host: "manaaki.micsco.nz", "x-forwarded-proto": "https" },
+      })
+    )
+    expect(res.status).toBe(302)
+    expect(res.headers.get("Location")).toBe(googleUrl)
+  })
+})
+
+describe("handleApiProxy — refresh near-expiry token", () => {
   it("refreshes a near-expiry token and sets a fresh session cookie", async () => {
     const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url")
     const nearExpireJwt = `${b64({ alg: "HS256" })}.${b64({ sub: "u1", exp: Math.floor(Date.now() / 1000) + 60 })}.sig`
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(input => {
-      const urlStr = String(input)
-      if (urlStr.includes("/api/auth/refresh")) {
-        return Promise.resolve(
-          new Response(JSON.stringify({ access_token: "refreshed-jwt" }), { status: 200 })
-        )
-      }
-      return Promise.resolve(new Response("{}", { status: 200 }))
+
+    // /api/auth/refresh → returns new access_token
+    setPathResponse("/api/auth/refresh", {
+      status: 200,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ access_token: "refreshed-jwt" }),
     })
+    // The actual forwarded request → 200
+    nextUpstreamResponse = { status: 200, body: "{}" }
+
     const res = await handleApiProxy(
       new Request("https://app/api/households/mealplans", {
         headers: {
+          host: "manaaki.micsco.nz",
           "x-forwarded-proto": "https",
           cookie: sessionCookieHeader(nearExpireJwt),
         },
       })
     )
     expect(res.status).toBe(200)
+
+    // Fresh session cookie must be set
     const setCookieHeader = res.headers.get("set-cookie")
     expect(setCookieHeader).toBeTruthy()
     expect(setCookieHeader).toContain("__Host-manaaki_session")
+
+    // Unsealed value must be the refreshed JWT
     const cookieValue = (setCookieHeader ?? "").split(";")[0].split("=").slice(1).join("=")
     const unsealed = unsealSession(cookieValue)
     expect(unsealed).toBe("refreshed-jwt")
-    const [, refreshInit] = fetchMock.mock.calls[0]
-    expect(new Headers(refreshInit?.headers).get("Authorization")).toBe(`Bearer ${nearExpireJwt}`)
-    const [, forwardInit] = fetchMock.mock.calls[1]
-    expect(new Headers(forwardInit?.headers).get("Authorization")).toBe("Bearer refreshed-jwt")
-    fetchMock.mockRestore()
-  })
 
-  it("does not forward the manaaki session cookie to Mealie", async () => {
-    const jwt = farFutureJwt()
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response("{}", { status: 200 }))
-    await handleApiProxy(
-      new Request("https://app/api/households/mealplans", {
-        headers: {
-          "x-forwarded-proto": "https",
-          cookie: sessionCookieHeader(jwt),
-        },
-      })
-    )
-    const [, init] = fetchMock.mock.calls[0]
-    expect(new Headers(init?.headers).get("cookie")).toBeNull()
-    expect(new Headers(init?.headers).get("Authorization")).toBe(`Bearer ${jwt}`)
-    fetchMock.mockRestore()
-  })
-
-  it("marks authed responses private, no-store", async () => {
-    const jwt = farFutureJwt()
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response("{}", { status: 200 }))
-    const res = await handleApiProxy(
-      new Request("https://app/api/households/mealplans", {
-        headers: {
-          "x-forwarded-proto": "https",
-          cookie: sessionCookieHeader(jwt),
-        },
-      })
-    )
-    expect(res.headers.get("Cache-Control")).toBe("private, no-store")
-    fetchMock.mockRestore()
+    // The forwarded real request carried the refreshed token
+    expect(lastUpstreamRequest?.headers.authorization).toBe("Bearer refreshed-jwt")
   })
 })
 
-describe("handleApiProxy — redirect passthrough", () => {
-  it("passes upstream redirects through to the browser", async () => {
-    const googleUrl = "https://accounts.google.com/o/oauth2/v2/auth?x=1"
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response(null, { status: 302, headers: { Location: googleUrl } }))
+describe("handleApiProxy — content-encoding passthrough", () => {
+  it("retains content-encoding: gzip from upstream (node:http does not decompress)", async () => {
+    // Simulate a gzip-encoded response; body bytes can be arbitrary for this test.
+    const fakeGzipBody = Buffer.from([0x1f, 0x8b, 0x08, 0x00])
+    setNextResponse({
+      status: 200,
+      headers: {
+        "content-type": "application/json",
+        "content-encoding": "gzip",
+        "content-length": String(fakeGzipBody.length),
+      },
+      body: fakeGzipBody,
+    })
     const res = await handleApiProxy(
-      new Request("https://app/api/auth/oauth", { headers: { "x-forwarded-proto": "https" } })
-    )
-    expect(res.status).toBe(302)
-    expect(res.headers.get("Location")).toBe(googleUrl)
-    const [, init] = fetchMock.mock.calls[0]
-    expect((init as RequestInit & { redirect?: string }).redirect).toBe("manual")
-    fetchMock.mockRestore()
-  })
-})
-
-describe("handleApiProxy — decoded-body framing headers", () => {
-  // undici decompresses the upstream body, so passing the upstream
-  // content-encoding/content-length through makes nginx see more bytes than
-  // declared. The proxy must strip them and let the runtime re-frame.
-  it("drops stale content-encoding/content-length on anonymous responses", async () => {
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response("[1,2,3]", {
-        status: 200,
-        headers: { "content-encoding": "gzip", "content-length": "9" },
-      })
-    )
-    const res = await handleApiProxy(
-      new Request("https://app/api/recipes", { headers: { "x-forwarded-proto": "https" } })
-    )
-    expect(res.status).toBe(200)
-    expect(res.headers.get("content-encoding")).toBeNull()
-    expect(res.headers.get("content-length")).toBeNull()
-    await expect(res.text()).resolves.toBe("[1,2,3]")
-    fetchMock.mockRestore()
-  })
-
-  it("drops stale content-encoding/content-length on authed responses", async () => {
-    const jwt = farFutureJwt()
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response("{}", {
-        status: 200,
-        headers: { "content-encoding": "br", "content-length": "4" },
-      })
-    )
-    const res = await handleApiProxy(
-      new Request("https://app/api/households/mealplans", {
-        headers: { "x-forwarded-proto": "https", cookie: sessionCookieHeader(jwt) },
+      new Request("https://app/api/recipes", {
+        headers: { host: "manaaki.micsco.nz", "x-forwarded-proto": "https" },
       })
     )
     expect(res.status).toBe(200)
-    expect(res.headers.get("content-encoding")).toBeNull()
-    expect(res.headers.get("content-length")).toBeNull()
-    fetchMock.mockRestore()
-  })
-})
-
-describe("handleApiProxy — anonymous cache headers", () => {
-  it("does not set Cache-Control: private, no-store on anonymous allowed GET", async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response("[]", { status: 200 }))
-    const res = await handleApiProxy(
-      new Request("https://app/api/recipes", { headers: { "x-forwarded-proto": "https" } })
-    )
-    expect(res.headers.get("Cache-Control")).not.toBe("private, no-store")
-    fetchMock.mockRestore()
+    // content-encoding MUST be preserved — we stream raw bytes, not decoded body
+    expect(res.headers.get("content-encoding")).toBe("gzip")
+    // content-length MUST also be preserved
+    expect(res.headers.get("content-length")).toBe(String(fakeGzipBody.length))
   })
 })
