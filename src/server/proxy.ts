@@ -1,9 +1,14 @@
 // src/server/proxy.ts
+import type http from "node:http"
+import { request as httpRequest } from "node:http"
+import { request as httpsRequest } from "node:https"
+import { Readable } from "node:stream"
 import { isAnonymousAllowed } from "./allowlist"
 import { mealieInternalUrl, readonlyToken } from "./env"
 import { buildSessionSetCookie, decodeJwtExp, isSecureRequest, readSessionToken } from "./session"
 
 const REFRESH_WINDOW_SECONDS = 60 * 60 // refresh if < 1h to expiry
+
 const STRIP_REQUEST_HEADERS = new Set([
   "authorization",
   "cookie",
@@ -12,52 +17,79 @@ const STRIP_REQUEST_HEADERS = new Set([
   "content-length",
 ])
 
-// Node's fetch (undici) transparently decompresses the upstream body, so the
-// upstream content-encoding/content-length describe the *compressed* bytes and
-// no longer match what we stream downstream. Passing them through makes nginx
-// log "upstream sent more data than specified in Content-Length" and can
-// truncate the body. Drop them (plus hop-by-hop headers) and let the runtime
-// re-derive the framing for the decoded body.
+// node:http does NOT auto-decompress the upstream body (unlike undici/fetch), so
+// content-encoding and content-length describe the actual bytes being streamed.
+// Pass them through unchanged. Strip only true hop-by-hop headers.
 const STRIP_RESPONSE_HEADERS = new Set([
-  "content-encoding",
-  "content-length",
-  "transfer-encoding",
   "connection",
+  "keep-alive",
+  "transfer-encoding",
+  "upgrade",
+  "proxy-connection",
 ])
 
-// Re-emit an upstream response with framing headers that match the decoded body.
-function passthroughResponse(upstream: Response): Response {
-  const headers = new Headers(upstream.headers)
-  for (const name of STRIP_RESPONSE_HEADERS) headers.delete(name)
-  return new Response(upstream.body, {
-    status: upstream.status,
-    statusText: upstream.statusText,
-    headers,
-  })
-}
-
-function upstreamHeaders(request: Request, token: string): Headers {
-  const headers = new Headers()
+function upstreamHeaders(request: Request, token: string): Record<string, string> {
+  const headers: Record<string, string> = {}
   for (const [k, v] of request.headers) {
-    if (!STRIP_REQUEST_HEADERS.has(k.toLowerCase())) headers.set(k, v)
+    if (!STRIP_REQUEST_HEADERS.has(k.toLowerCase())) headers[k] = v
   }
-  headers.set("Authorization", `Bearer ${token}`)
+  headers.authorization = `Bearer ${token}`
   const host = request.headers.get("host")
-  if (host) headers.set("Host", host)
-  headers.set("X-Forwarded-Proto", isSecureRequest(request) ? "https" : "http")
+  if (host) headers.host = host
+  headers["x-forwarded-proto"] = isSecureRequest(request) ? "https" : "http"
   return headers
 }
 
-async function forward(request: Request, token: string, pathWithQuery: string): Promise<Response> {
-  const url = `${mealieInternalUrl()}${pathWithQuery}`
+function buildResponseHeaders(incoming: http.IncomingMessage): Headers {
+  const headers = new Headers()
+  for (const [k, v] of Object.entries(incoming.headers)) {
+    if (v === undefined) continue
+    if (STRIP_RESPONSE_HEADERS.has(k.toLowerCase())) continue
+    if (Array.isArray(v)) {
+      for (const item of v) headers.append(k, item)
+    } else {
+      headers.set(k, v)
+    }
+  }
+  return headers
+}
+
+function forward(request: Request, token: string, pathWithQuery: string): Promise<Response> {
+  const base = new URL(mealieInternalUrl())
+  const isHttps = base.protocol === "https:"
+  const transport = isHttps ? httpsRequest : httpRequest
   const hasBody = request.method !== "GET" && request.method !== "HEAD"
-  return fetch(url, {
-    method: request.method,
-    headers: upstreamHeaders(request, token),
-    body: hasBody ? request.body : undefined,
-    redirect: "manual",
-    // @ts-expect-error Node fetch requires duplex for streamed bodies
-    duplex: "half",
+
+  return new Promise((resolve, reject) => {
+    const upstream = transport(
+      {
+        protocol: base.protocol,
+        hostname: base.hostname,
+        port: base.port || (isHttps ? 443 : 80),
+        method: request.method,
+        path: pathWithQuery,
+        headers: upstreamHeaders(request, token),
+      },
+      res => {
+        const headers = buildResponseHeaders(res)
+        const status = res.statusCode ?? 502
+        const noBody = status === 204 || status === 304 || request.method === "HEAD"
+        resolve(
+          new Response(noBody ? null : (Readable.toWeb(res) as ReadableStream), {
+            status,
+            statusText: res.statusMessage,
+            headers,
+          })
+        )
+      }
+    )
+    upstream.on("error", reject)
+    if (hasBody && request.body) {
+      // @ts-expect-error ReadableStream<Uint8Array> is compatible but types diverge
+      Readable.fromWeb(request.body).pipe(upstream)
+    } else {
+      upstream.end()
+    }
   })
 }
 
@@ -87,16 +119,22 @@ export async function handleApiProxy(request: Request): Promise<Response> {
     const refreshed = await maybeRefresh(userToken)
     const effective = refreshed ?? userToken
     const res = await forward(request, effective, pathWithQuery)
-    const out = passthroughResponse(res)
-    out.headers.set("Cache-Control", "private, no-store")
+    // Build a fresh Response so we can mutate headers (forwarded Response headers
+    // may be immutable in some runtimes).
+    const outHeaders = new Headers(res.headers)
+    outHeaders.set("Cache-Control", "private, no-store")
     if (refreshed) {
-      out.headers.append("Set-Cookie", buildSessionSetCookie(refreshed, isSecureRequest(request)))
+      outHeaders.append("Set-Cookie", buildSessionSetCookie(refreshed, isSecureRequest(request)))
     }
-    return out
+    return new Response(res.body, {
+      status: res.status,
+      statusText: res.statusText,
+      headers: outHeaders,
+    })
   }
 
   if (!isAnonymousAllowed(request.method, url.pathname)) {
     return new Response("Forbidden", { status: 403 })
   }
-  return passthroughResponse(await forward(request, readonlyToken(), pathWithQuery))
+  return forward(request, readonlyToken(), pathWithQuery)
 }
