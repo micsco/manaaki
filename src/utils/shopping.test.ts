@@ -10,6 +10,7 @@ import {
   groupItemsByAisle,
   itemUpdateFromOutput,
   shoppingDayRange,
+  shouldStartNewList,
 } from "./shopping"
 
 describe("shoppingDayRange", () => {
@@ -160,5 +161,22 @@ describe("groupItemsByAisle", () => {
     const groups = groupItemsByAisle(items, settings)
     expect(groups.map(g => g.name)).toEqual(["Dairy", "Produce", "Other"])
     expect(groups[2].items.map(i => i.id)).toEqual(["c"])
+  })
+})
+
+describe("shouldStartNewList", () => {
+  const now = Date.parse("2026-06-28T12:00:00Z")
+  it("true when there is no createdAt", () => {
+    expect(shouldStartNewList(null, now)).toBe(true)
+    expect(shouldStartNewList(undefined, now)).toBe(true)
+  })
+  it("true when createdAt is unparseable", () => {
+    expect(shouldStartNewList("not-a-date", now)).toBe(true)
+  })
+  it("false when <= 48h old", () => {
+    expect(shouldStartNewList("2026-06-26T12:00:01Z", now)).toBe(false)
+  })
+  it("true when > 48h old", () => {
+    expect(shouldStartNewList("2026-06-26T11:59:59Z", now)).toBe(true)
   })
 })

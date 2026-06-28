@@ -50,6 +50,17 @@ export function computeRecipeIncrement(args: {
   return args.value
 }
 
+const STALE_MS = 48 * 60 * 60 * 1000
+
+// "Add to shopping list" appends to the current list while it's an active shop,
+// but starts a fresh one if the current list is missing or older than 48h.
+export function shouldStartNewList(createdAt: string | null | undefined, now: number): boolean {
+  if (!createdAt) return true
+  const ts = Date.parse(createdAt)
+  if (Number.isNaN(ts)) return true
+  return now - ts > STALE_MS
+}
+
 // Map a response item to an update payload: ONLY accepted scalar/id fields.
 // Never spread the output object (its food/unit/label are Output types the
 // Update schema doesn't accept; id/groupId/etc. are response-only).
