@@ -1,8 +1,10 @@
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
+import { mdiChevronLeft } from "@mdi/js"
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 import { fetchCurrentUser } from "../api/auth"
 import { configureApiClient } from "../api/client"
 import { BuildShoppingListDialog } from "../components/BuildShoppingListDialog"
+import { Icon } from "../components/Icon"
 import { ShoppingListHistory } from "../components/ShoppingListHistory"
 import { ShoppingListView } from "../components/ShoppingListView"
 import { useCurrentShoppingList } from "../hooks/useShoppingList"
@@ -34,6 +36,13 @@ function ShoppingPage() {
     <main className="min-h-screen bg-gray-950 text-gray-100">
       <div className="mx-auto max-w-2xl px-4 pt-5">
         <div className="flex items-center gap-3">
+          <Link
+            to="/recipes"
+            className="inline-flex items-center gap-1 rounded-full bg-gray-800 px-3 py-1.5 font-medium text-gray-300 text-sm transition-colors hover:bg-gray-700"
+          >
+            <Icon path={mdiChevronLeft} size={0.7} aria-hidden={true} />
+            Recipes
+          </Link>
           <h1 className="font-bold text-2xl">Shopping</h1>
           <button
             type="button"
