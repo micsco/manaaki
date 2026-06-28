@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ShoppingRouteImport } from './routes/shopping'
 import { Route as RecipesRouteImport } from './routes/recipes'
 import { Route as PlanRouteImport } from './routes/plan'
 import { Route as LoginRouteImport } from './routes/login'
@@ -21,6 +22,11 @@ import { Route as ApiAuthMeRouteImport } from './routes/api.auth.me'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api.auth.logout'
 import { Route as ApiAuthCompleteRouteImport } from './routes/api.auth.complete'
 
+const ShoppingRoute = ShoppingRouteImport.update({
+  id: '/shopping',
+  path: '/shopping',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecipesRoute = RecipesRouteImport.update({
   id: '/recipes',
   path: '/recipes',
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/plan': typeof PlanRoute
   '/recipes': typeof RecipesRouteWithChildren
+  '/shopping': typeof ShoppingRoute
   '/api/$': typeof ApiSplatRoute
   '/recipes/$slug': typeof RecipesSlugRoute
   '/recipes/': typeof RecipesIndexRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/plan': typeof PlanRoute
+  '/shopping': typeof ShoppingRoute
   '/api/$': typeof ApiSplatRoute
   '/recipes/$slug': typeof RecipesSlugRoute
   '/recipes': typeof RecipesIndexRoute
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/plan': typeof PlanRoute
   '/recipes': typeof RecipesRouteWithChildren
+  '/shopping': typeof ShoppingRoute
   '/api/$': typeof ApiSplatRoute
   '/recipes/$slug': typeof RecipesSlugRoute
   '/recipes/': typeof RecipesIndexRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/plan'
     | '/recipes'
+    | '/shopping'
     | '/api/$'
     | '/recipes/$slug'
     | '/recipes/'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/plan'
+    | '/shopping'
     | '/api/$'
     | '/recipes/$slug'
     | '/recipes'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/plan'
     | '/recipes'
+    | '/shopping'
     | '/api/$'
     | '/recipes/$slug'
     | '/recipes/'
@@ -162,6 +174,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PlanRoute: typeof PlanRoute
   RecipesRoute: typeof RecipesRouteWithChildren
+  ShoppingRoute: typeof ShoppingRoute
   ApiSplatRoute: typeof ApiSplatRoute
   ApiAuthCompleteRoute: typeof ApiAuthCompleteRoute
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
@@ -170,6 +183,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/shopping': {
+      id: '/shopping'
+      path: '/shopping'
+      fullPath: '/shopping'
+      preLoaderRoute: typeof ShoppingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recipes': {
       id: '/recipes'
       path: '/recipes'
@@ -270,6 +290,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PlanRoute: PlanRoute,
   RecipesRoute: RecipesRouteWithChildren,
+  ShoppingRoute: ShoppingRoute,
   ApiSplatRoute: ApiSplatRoute,
   ApiAuthCompleteRoute: ApiAuthCompleteRoute,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,

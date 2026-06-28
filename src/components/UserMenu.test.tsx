@@ -33,6 +33,7 @@ describe("UserMenu", () => {
       expect(screen.getByRole("link", { name: /meal plan/i })).toBeInTheDocument()
     )
     expect(screen.getByRole("button", { name: /sign out/i })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /shopping/i })).toHaveAttribute("href", "/shopping")
     vi.restoreAllMocks()
   })
 })
