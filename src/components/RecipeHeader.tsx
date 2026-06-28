@@ -10,6 +10,7 @@ import { Link } from "@tanstack/react-router"
 import type { RecipeOutput } from "../api/generated/types.gen"
 import type { RecipeNavItem } from "../hooks/useRecipeNav"
 import { formatTime, recipeUrl } from "../utils/recipe"
+import { AddToShoppingListButton } from "./AddToShoppingListButton"
 import { Icon } from "./Icon"
 import { ShareRecipeButton } from "./ShareRecipeButton"
 
@@ -89,6 +90,7 @@ export function RecipeHeader({
       </div>
 
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        <AddToShoppingListButton recipe={recipe} />
         <ShareRecipeButton recipe={recipe} />
         {(prevRecipe || nextRecipe) && (
           <>

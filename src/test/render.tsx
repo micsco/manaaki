@@ -1,13 +1,17 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { type RenderOptions, render } from "@testing-library/react"
 import { NuqsTestingAdapter } from "nuqs/adapters/testing"
 import type { ReactElement, ReactNode } from "react"
 import { CookModeProvider } from "../contexts/CookModeContext"
 
 function AllProviders({ children }: { children: ReactNode }) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return (
-    <NuqsTestingAdapter>
-      <CookModeProvider>{children}</CookModeProvider>
-    </NuqsTestingAdapter>
+    <QueryClientProvider client={qc}>
+      <NuqsTestingAdapter>
+        <CookModeProvider>{children}</CookModeProvider>
+      </NuqsTestingAdapter>
+    </QueryClientProvider>
   )
 }
 
