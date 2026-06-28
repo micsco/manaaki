@@ -44,6 +44,23 @@ export function useToggleItem(listId: string) {
       body: itemUpdateFromOutput(item, { checked: !item.checked }),
     })
       .then(res => {
+        if (res.error) {
+          // roll back the optimistic flip
+          qc.setQueryData<ShoppingListOut>(key, prev =>
+            prev
+              ? {
+                  ...prev,
+                  listItems: (prev.listItems ?? []).map(i =>
+                    i.id === item.id ? { ...i, checked: item.checked } : i
+                  ),
+                }
+              : prev
+          )
+          if (res.response?.status === 403) {
+            window.location.assign("/api/auth/oauth")
+          }
+          return
+        }
         const updated = res.data?.updatedItems?.find(i => i.id === item.id)
         if (updated) {
           qc.setQueryData<ShoppingListOut>(key, prev =>
@@ -59,7 +76,7 @@ export function useToggleItem(listId: string) {
         }
       })
       .catch(() => {
-        // Rollback optimistic update on error
+        // Rollback optimistic update on network error
         qc.setQueryData<ShoppingListOut>(key, prev =>
           prev
             ? {
@@ -120,10 +137,11 @@ export async function buildShoppingList(args: {
   if (!listId) throw new Error("Could not create shopping list")
 
   try {
-    await addRecipeIngredientsToListApiHouseholdsShoppingListsItemIdRecipePost({
+    const addRes = await addRecipeIngredientsToListApiHouseholdsShoppingListsItemIdRecipePost({
       path: { item_id: listId },
       body: args.selections,
     })
+    if (addRes.error) throw addRes.error
     return { listId, partial: false }
   } catch (addError) {
     // Ambiguous failure: did anything land? Inspect the new list.

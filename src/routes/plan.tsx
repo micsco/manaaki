@@ -429,9 +429,12 @@ function PlanPage() {
       <BuildShoppingListDialog
         open={buildOpen}
         onClose={() => setBuildOpen(false)}
-        onBuilt={({ listId }) => {
+        onBuilt={({ listId, partial }) => {
           setBuildOpen(false)
-          navigate({ to: "/shopping", search: { list: listId } })
+          navigate({
+            to: "/shopping",
+            search: { list: listId, ...(partial ? { partial: true } : {}) },
+          })
         }}
       />
     </main>

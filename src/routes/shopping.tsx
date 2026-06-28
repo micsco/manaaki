@@ -7,12 +7,13 @@ import { ShoppingListHistory } from "../components/ShoppingListHistory"
 import { ShoppingListView } from "../components/ShoppingListView"
 import { useCurrentShoppingList } from "../hooks/useShoppingList"
 
-type ShoppingSearch = { list?: string }
+type ShoppingSearch = { list?: string; partial?: boolean }
 
 export const Route = createFileRoute("/shopping")({
   head: () => ({ meta: [{ title: "Shopping · Manaaki" }] }),
   validateSearch: (s: Record<string, unknown>): ShoppingSearch => ({
     list: typeof s.list === "string" ? s.list : undefined,
+    partial: s.partial === true || s.partial === "true",
   }),
   beforeLoad: async () => {
     configureApiClient()
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/shopping")({
 })
 
 function ShoppingPage() {
-  const { list: listParam } = Route.useSearch()
+  const { list: listParam, partial } = Route.useSearch()
   const current = useCurrentShoppingList()
   const listId = listParam ?? current?.id
   const navigate = useNavigate()
@@ -43,6 +44,11 @@ function ShoppingPage() {
           </button>
         </div>
       </div>
+      {partial && (
+        <p className="mx-auto max-w-2xl px-4 py-2 text-amber-400 text-sm">
+          Some items may be missing — the build didn't fully complete.
+        </p>
+      )}
       {listParam && listParam !== current?.id && (
         <p className="mx-auto max-w-2xl px-4 text-amber-400 text-sm">Viewing a previous list.</p>
       )}
@@ -59,9 +65,12 @@ function ShoppingPage() {
       <BuildShoppingListDialog
         open={buildOpen}
         onClose={() => setBuildOpen(false)}
-        onBuilt={({ listId }) => {
+        onBuilt={({ listId, partial }) => {
           setBuildOpen(false)
-          navigate({ to: "/shopping", search: { list: listId } })
+          navigate({
+            to: "/shopping",
+            search: { list: listId, ...(partial ? { partial: true } : {}) },
+          })
         }}
       />
     </main>

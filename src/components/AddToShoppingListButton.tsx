@@ -40,10 +40,11 @@ export function AddToShoppingListButton({ recipe }: { recipe: RecipeOutput }) {
         })
         listId = built.listId
       } else {
-        await addRecipeIngredientsToListApiHouseholdsShoppingListsItemIdRecipePost({
+        const res = await addRecipeIngredientsToListApiHouseholdsShoppingListsItemIdRecipePost({
           path: { item_id: listId },
           body: [{ recipeId: recipe.id, recipeIncrementQuantity: 1 }],
         })
+        if (res.error) throw res.error
       }
       qc.invalidateQueries({ queryKey: currentListQueryOptions.queryKey })
       setState("done")

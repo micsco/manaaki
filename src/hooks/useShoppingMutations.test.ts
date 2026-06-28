@@ -91,6 +91,39 @@ describe("useToggleItem", () => {
     expect(vi.mocked(sdk.updateOneApiHouseholdsShoppingItemsItemIdPut)).toHaveBeenCalledTimes(1)
     act(() => resolve({ data: { updatedItems: [] } }))
   })
+
+  it("on 403 response, rolls back the optimistic flip and redirects to /api/auth/oauth", async () => {
+    vi.mocked(sdk.updateOneApiHouseholdsShoppingItemsItemIdPut).mockResolvedValue({
+      error: { detail: "no" },
+      response: { status: 403 },
+    } as never)
+    const assignMock = vi.fn()
+    Object.defineProperty(window, "location", {
+      value: { ...window.location, assign: assignMock },
+      writable: true,
+    })
+    const { qc, wrapper } = setup()
+    const { result } = renderHook(() => useToggleItem("l1"), { wrapper })
+
+    act(() =>
+      result.current.toggle({
+        id: "i1",
+        shoppingListId: "l1",
+        checked: false,
+        display: "Eggs",
+      } as never)
+    )
+
+    await waitFor(() => {
+      expect(assignMock).toHaveBeenCalledWith("/api/auth/oauth")
+    })
+
+    // Optimistic flip should be rolled back to original checked=false
+    const list = qc.getQueryData(shoppingListDetailQueryOptions("l1").queryKey) as {
+      listItems: { checked: boolean }[]
+    }
+    expect(list.listItems[0].checked).toBe(false)
+  })
 })
 
 const sdk2 = sdk as unknown as Record<string, ReturnType<typeof vi.fn>>
@@ -127,7 +160,7 @@ describe("buildShoppingList", () => {
       .mockResolvedValue({ data: { id: "new2" } })
     sdk2.addRecipeIngredientsToListApiHouseholdsShoppingListsItemIdRecipePost = vi
       .fn()
-      .mockRejectedValue(new Error("boom"))
+      .mockResolvedValue({ error: { detail: "boom" }, response: { status: 500 } })
     sdk2.getOneApiHouseholdsShoppingListsItemIdGet = vi
       .fn()
       .mockResolvedValue({ data: { id: "new2", listItems: [] } })
@@ -149,7 +182,7 @@ describe("buildShoppingList", () => {
       .mockResolvedValue({ data: { id: "new3" } })
     sdk2.addRecipeIngredientsToListApiHouseholdsShoppingListsItemIdRecipePost = vi
       .fn()
-      .mockRejectedValue(new Error("partial"))
+      .mockResolvedValue({ error: { detail: "x" }, response: { status: 500 } })
     sdk2.getOneApiHouseholdsShoppingListsItemIdGet = vi
       .fn()
       .mockResolvedValue({ data: { id: "new3", listItems: [{ id: "x" }] } })
