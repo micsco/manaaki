@@ -43,7 +43,7 @@ export function ShoppingListItemRow({
         type="button"
         onClick={onDelete}
         aria-label={`Remove ${label}`}
-        className="ml-2 hidden size-10 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors hover:text-gray-300 group-hover:flex"
+        className="ml-2 flex size-10 shrink-0 items-center justify-center rounded-full text-gray-600 transition-colors hover:text-gray-300"
       >
         <Icon path={mdiClose} size={0.7} aria-hidden={true} />
       </button>
