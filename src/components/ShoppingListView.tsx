@@ -4,6 +4,7 @@ import { useShoppingListDetail } from "../hooks/useShoppingList"
 import { useAddManualItem, useDeleteItem, useToggleItem } from "../hooks/useShoppingMutations"
 import { groupItemsByAisle } from "../utils/shopping"
 import { ShoppingListItemRow } from "./ShoppingListItemRow"
+import { ShoppingListRecipes } from "./ShoppingListRecipes"
 
 export function ShoppingListView({ listId }: { listId: string }) {
   const { data: list, isLoading } = useShoppingListDetail(listId)
@@ -43,6 +44,8 @@ export function ShoppingListView({ listId }: { listId: string }) {
           Add
         </button>
       </form>
+
+      <ShoppingListRecipes refs={list.recipeReferences ?? []} />
 
       {allChecked && (
         <p className="rounded-lg bg-green-900/30 px-4 py-3 text-green-300">
