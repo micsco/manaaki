@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest"
-import type { ReadPlanEntry } from "../api/generated"
-import { gatherPlanRecipes, shoppingDayRange } from "./shopping"
+import type {
+  ReadPlanEntry,
+  ShoppingListItemOutOutput,
+  ShoppingListMultiPurposeLabelOut,
+} from "../api/generated"
+import {
+  computeRecipeIncrement,
+  gatherPlanRecipes,
+  groupItemsByAisle,
+  itemUpdateFromOutput,
+  shoppingDayRange,
+} from "./shopping"
 
 describe("shoppingDayRange", () => {
   it("spans exactly N days, today as day 1 (end = today + N-1)", () => {
@@ -56,5 +66,99 @@ describe("gatherPlanRecipes", () => {
       entry({ recipeId: "r1", recipe: r }),
     ])
     expect(out).toEqual([{ recipeId: "r1", name: "Chilli", baseServings: 4, occurrences: 2 }])
+  })
+})
+
+describe("computeRecipeIncrement", () => {
+  it("servings mode: chosen / base", () => {
+    expect(computeRecipeIncrement({ mode: "servings", value: 6, baseServings: 4 })).toBe(1.5)
+  })
+  it("multiplier mode: value passes through", () => {
+    expect(computeRecipeIncrement({ mode: "multiplier", value: 2, baseServings: null })).toBe(2)
+  })
+  it("servings mode with base <= 0 or null falls back to value (no divide-by-zero)", () => {
+    expect(computeRecipeIncrement({ mode: "servings", value: 2, baseServings: 0 })).toBe(2)
+    expect(computeRecipeIncrement({ mode: "servings", value: 3, baseServings: null })).toBe(3)
+  })
+})
+
+function item(over: Partial<ShoppingListItemOutOutput>): ShoppingListItemOutOutput {
+  return {
+    id: "i",
+    shoppingListId: "l",
+    groupId: "g",
+    householdId: "h",
+    ...over,
+  } as ShoppingListItemOutOutput
+}
+
+describe("itemUpdateFromOutput", () => {
+  it("copies only accepted scalar/id fields + applies patch (never response-only fields)", () => {
+    const out = itemUpdateFromOutput(
+      item({
+        id: "i1",
+        shoppingListId: "l1",
+        quantity: 2,
+        note: "n",
+        display: "2 eggs",
+        position: 3,
+        foodId: "f",
+        labelId: "lab",
+        unitId: "u",
+        checked: false,
+      }),
+      { checked: true }
+    )
+    expect(out).toEqual({
+      shoppingListId: "l1",
+      quantity: 2,
+      note: "n",
+      display: "2 eggs",
+      position: 3,
+      foodId: "f",
+      labelId: "lab",
+      unitId: "u",
+      checked: true,
+    })
+    expect(out).not.toHaveProperty("id")
+    expect(out).not.toHaveProperty("label")
+    expect(out).not.toHaveProperty("food")
+  })
+})
+
+describe("groupItemsByAisle", () => {
+  const settings = [
+    {
+      id: "s2",
+      shoppingListId: "l",
+      labelId: "produce",
+      position: 1,
+      label: { id: "produce", name: "Produce", groupId: "g" },
+    },
+    {
+      id: "s1",
+      shoppingListId: "l",
+      labelId: "dairy",
+      position: 0,
+      label: { id: "dairy", name: "Dairy", groupId: "g" },
+    },
+  ] as ShoppingListMultiPurposeLabelOut[]
+  it("groups by label, orders groups by labelSettings position, unlabelled last", () => {
+    const items = [
+      item({
+        id: "a",
+        labelId: "produce",
+        label: { id: "produce", name: "Produce", groupId: "g" } as never,
+      }),
+      item({
+        id: "b",
+        labelId: "dairy",
+        label: { id: "dairy", name: "Dairy", groupId: "g" } as never,
+      }),
+      item({ id: "c", labelId: null, label: null }),
+    ]
+    const groups = groupItemsByAisle(items, settings)
+    expect(groups.map(g => g.name)).toEqual(["Dairy", "Produce", "Other"])
+    expect(groups[2].items.map(i => i.id)).toEqual(["c"])
   })
 })
