@@ -23,6 +23,12 @@ export function UserMenu() {
   return (
     <div className="flex items-center gap-2">
       <a
+        href="/shopping"
+        className="rounded-lg bg-gray-800 px-3 py-1.5 font-medium text-gray-200 text-sm transition-colors hover:bg-gray-700"
+      >
+        Shopping
+      </a>
+      <a
         href="/plan"
         className="rounded-lg bg-gray-800 px-3 py-1.5 font-medium text-gray-200 text-sm transition-colors hover:bg-gray-700"
       >

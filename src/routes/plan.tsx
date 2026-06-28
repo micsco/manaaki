@@ -1,9 +1,10 @@
 import { mdiChevronLeft } from "@mdi/js"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import { createFileRoute, Link, redirect } from "@tanstack/react-router"
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { fetchCurrentUser } from "../api/auth"
 import type { ReadPlanEntry } from "../api/generated/types.gen"
+import { BuildShoppingListDialog } from "../components/BuildShoppingListDialog"
 import { Icon } from "../components/Icon"
 import { MealPlanEntryCard } from "../components/MealPlanEntryCard"
 import {
@@ -203,6 +204,8 @@ function WeekRow({
 }
 
 function PlanPage() {
+  const navigate = useNavigate()
+  const [buildOpen, setBuildOpen] = useState(false)
   const [today, setToday] = useState<string | null>(null)
   const [todayColIndex, setTodayColIndex] = useState<number | null>(null)
 
@@ -324,6 +327,13 @@ function PlanPage() {
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={() => setBuildOpen(true)}
+              className="rounded-full bg-gray-800 px-3 py-1.5 font-medium text-gray-300 text-sm transition-colors hover:bg-gray-700"
+            >
+              Build shopping list
+            </button>
+            <button
+              type="button"
               onClick={() => setEndOffset(effectiveEndOffset + 1)}
               disabled={isFetching}
               className="rounded-full bg-gray-800 px-3 py-1.5 font-medium text-gray-300 text-sm transition-colors hover:bg-gray-700 disabled:opacity-50"
@@ -416,6 +426,17 @@ function PlanPage() {
           </>
         )}
       </div>
+      <BuildShoppingListDialog
+        open={buildOpen}
+        onClose={() => setBuildOpen(false)}
+        onBuilt={({ listId, partial }) => {
+          setBuildOpen(false)
+          navigate({
+            to: "/shopping",
+            search: { list: listId, ...(partial ? { partial: true } : {}) },
+          })
+        }}
+      />
     </main>
   )
 }

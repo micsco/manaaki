@@ -1,4 +1,15 @@
 import { describe, expect, it, vi } from "vitest"
+
+// AddToShoppingListButton uses React Query hooks; this test tree has no
+// QueryClientProvider, so stub them (mirrors RecipeBody's test setup).
+vi.mock("../hooks/useCurrentUser", () => ({
+  useCurrentUser: () => ({ user: null, isAnonymous: true }),
+}))
+vi.mock("../hooks/useShoppingList", () => ({
+  useCurrentShoppingList: () => null,
+  currentListQueryOptions: { queryKey: ["shopping", "current"] },
+}))
+
 import type { RecipeOutput } from "../api/generated/types.gen"
 import type { RecipeNavItem } from "../hooks/useRecipeNav"
 import { render, screen } from "../test/render"
