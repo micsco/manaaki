@@ -13,7 +13,7 @@ export const Route = createFileRoute("/shopping")({
   head: () => ({ meta: [{ title: "Shopping · Manaaki" }] }),
   validateSearch: (s: Record<string, unknown>): ShoppingSearch => ({
     list: typeof s.list === "string" ? s.list : undefined,
-    partial: s.partial === true || s.partial === "true",
+    partial: s.partial === true || s.partial === "true" ? true : undefined,
   }),
   beforeLoad: async () => {
     configureApiClient()

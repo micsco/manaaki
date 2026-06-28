@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { renderHook, waitFor } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { describe, expect, it, vi } from "vitest"
+import * as auth from "../api/auth"
 import { useCurrentUser } from "./useCurrentUser"
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -10,12 +11,11 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 describe("useCurrentUser", () => {
-  it("returns the me payload", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ user: { groupSlug: "home" }, isAnonymous: true }), {
-        status: 200,
-      })
-    )
+  it("returns the current-user payload", async () => {
+    vi.spyOn(auth, "fetchCurrentUser").mockResolvedValue({
+      user: { groupSlug: "home" } as never,
+      isAnonymous: true,
+    })
     const { result } = renderHook(() => useCurrentUser(), { wrapper })
     await waitFor(() => expect(result.current?.isAnonymous).toBe(true))
     expect(result.current?.user?.groupSlug).toBe("home")

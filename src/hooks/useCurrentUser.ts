@@ -3,7 +3,7 @@ import { type CurrentUser, fetchCurrentUser } from "../api/auth"
 
 export const currentUserQueryOptions = queryOptions({
   queryKey: ["currentUser"],
-  queryFn: fetchCurrentUser,
+  queryFn: () => fetchCurrentUser(),
   staleTime: 5 * 60 * 1000,
 })
 

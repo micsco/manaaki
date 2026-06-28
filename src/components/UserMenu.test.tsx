@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { render, screen, waitFor } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { describe, expect, it, vi } from "vitest"
+import * as auth from "../api/auth"
 import { UserMenu } from "./UserMenu"
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -11,9 +12,7 @@ function wrapper({ children }: { children: ReactNode }) {
 
 describe("UserMenu", () => {
   it("shows Sign in when anonymous", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ user: null, isAnonymous: true }), { status: 200 })
-    )
+    vi.spyOn(auth, "fetchCurrentUser").mockResolvedValue({ user: null, isAnonymous: true })
     render(<UserMenu />, { wrapper })
     await waitFor(() =>
       expect(screen.getByRole("link", { name: /sign in/i })).toHaveAttribute(
@@ -25,9 +24,10 @@ describe("UserMenu", () => {
   })
 
   it("shows Meal Plan + Sign out when authed", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ user: { username: "a" }, isAnonymous: false }), { status: 200 })
-    )
+    vi.spyOn(auth, "fetchCurrentUser").mockResolvedValue({
+      user: { username: "a" } as never,
+      isAnonymous: false,
+    })
     render(<UserMenu />, { wrapper })
     await waitFor(() =>
       expect(screen.getByRole("link", { name: /meal plan/i })).toBeInTheDocument()
