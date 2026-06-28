@@ -5,14 +5,21 @@ import { useState } from "react"
 import {
   addRecipeIngredientsToListApiHouseholdsShoppingListsItemIdRecipePost,
   type RecipeOutput,
+  removeRecipeIngredientsFromListApiHouseholdsShoppingListsItemIdRecipeRecipeIdDeletePost,
 } from "../api/generated"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import { currentListQueryOptions, useCurrentShoppingList } from "../hooks/useShoppingList"
 import { buildShoppingList } from "../hooks/useShoppingMutations"
+import { toastManager } from "../lib/toastManager"
+import { shouldStartNewList } from "../utils/shopping"
 import { Icon } from "./Icon"
 
 const BTN =
   "inline-flex min-h-11 items-center gap-1.5 rounded-full bg-black/40 px-4 py-2 font-medium text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+
+function newListName(): string {
+  return `Shop · ${new Date().toLocaleDateString()}`
+}
 
 export function AddToShoppingListButton({ recipe }: { recipe: RecipeOutput }) {
   const current = useCurrentUser()
@@ -28,27 +35,60 @@ export function AddToShoppingListButton({ recipe }: { recipe: RecipeOutput }) {
     )
   }
 
+  // Move the recipe out of the existing list into a fresh one (the "New list
+  // instead" toast action). Removal from the old list is best-effort.
+  async function moveRecipeToNewList(recipeId: string, fromListId: string) {
+    const built = await buildShoppingList({
+      name: newListName(),
+      selections: [{ recipeId, recipeIncrementQuantity: 1 }],
+    })
+    await removeRecipeIngredientsFromListApiHouseholdsShoppingListsItemIdRecipeRecipeIdDeletePost({
+      path: { item_id: fromListId, recipe_id: recipeId },
+    }).catch(() => undefined)
+    qc.invalidateQueries({ queryKey: currentListQueryOptions.queryKey })
+    window.location.assign(`/shopping?list=${built.listId}`)
+  }
+
   async function add() {
     if (!recipe.id) return
+    const recipeId = recipe.id
+    const recipeName = recipe.name ?? "recipe"
     setState("adding")
     try {
-      let listId = list?.id
-      if (!listId) {
+      if (!list?.id || shouldStartNewList(list.createdAt, Date.now())) {
         const built = await buildShoppingList({
-          name: "Shopping list",
-          selections: [{ recipeId: recipe.id, recipeIncrementQuantity: 1 }],
+          name: newListName(),
+          selections: [{ recipeId, recipeIncrementQuantity: 1 }],
         })
-        listId = built.listId
+        toastManager.add({
+          title: "Started a new shopping list",
+          description: `Added ${recipeName}.`,
+          actionProps: {
+            children: "View list",
+            onClick: () => window.location.assign(`/shopping?list=${built.listId}`),
+          },
+        })
       } else {
+        const currentId = list.id
         const res = await addRecipeIngredientsToListApiHouseholdsShoppingListsItemIdRecipePost({
-          path: { item_id: listId },
-          body: [{ recipeId: recipe.id, recipeIncrementQuantity: 1 }],
+          path: { item_id: currentId },
+          body: [{ recipeId, recipeIncrementQuantity: 1 }],
         })
         if (res.error) throw res.error
+        toastManager.add({
+          title: `Added ${recipeName} to your list`,
+          actionProps: {
+            children: "New list instead",
+            onClick: () => {
+              void moveRecipeToNewList(recipeId, currentId)
+            },
+          },
+        })
       }
       qc.invalidateQueries({ queryKey: currentListQueryOptions.queryKey })
       setState("done")
     } catch {
+      toastManager.add({ title: "Couldn't add to your shopping list" })
       setState("error")
     }
   }

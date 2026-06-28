@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
 import { mealPlanQueryOptions } from "../hooks/useMealPlan"
 import { buildShoppingList } from "../hooks/useShoppingMutations"
+import { toastManager } from "../lib/toastManager"
 import { computeRecipeIncrement, gatherPlanRecipes, shoppingDayRange } from "../utils/shopping"
 
 const DAY_OPTIONS = [3, 4, 5, 7]
@@ -76,6 +77,11 @@ export function BuildShoppingListDialog({
       const result = await buildShoppingList({
         name: range ? `Shop · ${range.start}–${range.end}` : "Shopping list",
         selections,
+      })
+      toastManager.add({
+        title: `Created a shopping list from ${selections.length} ${
+          selections.length === 1 ? "recipe" : "recipes"
+        }`,
       })
       onBuilt(result)
     } catch {
