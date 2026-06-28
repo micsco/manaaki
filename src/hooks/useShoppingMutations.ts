@@ -2,8 +2,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useRef, useState } from "react"
 import {
+  addRecipeIngredientsToListApiHouseholdsShoppingListsItemIdRecipePost,
   createManyApiHouseholdsShoppingItemsCreateBulkPost,
+  createOneApiHouseholdsShoppingListsPost,
   deleteOneApiHouseholdsShoppingItemsItemIdDelete,
+  deleteOneApiHouseholdsShoppingListsItemIdDelete,
+  getOneApiHouseholdsShoppingListsItemIdGet,
   updateOneApiHouseholdsShoppingItemsItemIdPut,
 } from "../api/generated/sdk.gen"
 import type { ShoppingListItemOutOutput, ShoppingListOut } from "../api/generated/types.gen"
@@ -102,4 +106,41 @@ export function useDeleteItem(listId: string) {
     onSettled: () => qc.invalidateQueries({ queryKey: key }),
   })
   return { remove: (itemId: string) => mutation.mutateAsync(itemId).then(() => undefined) }
+}
+
+export type BuildSelection = { recipeId: string; recipeIncrementQuantity: number }
+export type BuildResult = { listId: string; partial: boolean }
+
+export async function buildShoppingList(args: {
+  name: string
+  selections: BuildSelection[]
+}): Promise<BuildResult> {
+  const created = await createOneApiHouseholdsShoppingListsPost({ body: { name: args.name } })
+  const listId = created.data?.id
+  if (!listId) throw new Error("Could not create shopping list")
+
+  try {
+    await addRecipeIngredientsToListApiHouseholdsShoppingListsItemIdRecipePost({
+      path: { item_id: listId },
+      body: args.selections,
+    })
+    return { listId, partial: false }
+  } catch (addError) {
+    // Ambiguous failure: did anything land? Inspect the new list.
+    let hasItems = false
+    try {
+      const check = await getOneApiHouseholdsShoppingListsItemIdGet({ path: { item_id: listId } })
+      hasItems = (check.data?.listItems?.length ?? 0) > 0
+    } catch {
+      hasItems = false
+    }
+    if (hasItems) return { listId, partial: true }
+    // Empty → best-effort cleanup, then surface the error.
+    try {
+      await deleteOneApiHouseholdsShoppingListsItemIdDelete({ path: { item_id: listId } })
+    } catch {
+      // swallow; caller's message notes a stray empty list may remain
+    }
+    throw addError
+  }
 }
