@@ -2,11 +2,16 @@ node_modules
 dist
 .env
 .env.local
-.claude/
 openapi-ts-error-*.log
+
+# Agent client config (per-machine)
+.claude/
+.codex/
 
 # Temporary/cache directories
 .tanstack/
+.pnpm-store/
 
 # Subagent-driven-development scratch (briefs, reports, ledger, diffs)
 .superpowers/
+.sdd-report-*.md
