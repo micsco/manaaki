@@ -3,6 +3,7 @@ import { useState } from "react"
 import { fetchCurrentUser } from "../api/auth"
 import { configureApiClient } from "../api/client"
 import { BuildShoppingListDialog } from "../components/BuildShoppingListDialog"
+import { ShoppingListHistory } from "../components/ShoppingListHistory"
 import { ShoppingListView } from "../components/ShoppingListView"
 import { useCurrentShoppingList } from "../hooks/useShoppingList"
 
@@ -42,6 +43,9 @@ function ShoppingPage() {
           </button>
         </div>
       </div>
+      {listParam && listParam !== current?.id && (
+        <p className="mx-auto max-w-2xl px-4 text-amber-400 text-sm">Viewing a previous list.</p>
+      )}
       {listId ? (
         <ShoppingListView listId={listId} />
       ) : current === null ? (
@@ -51,6 +55,7 @@ function ShoppingPage() {
       ) : (
         <p className="mx-auto max-w-2xl px-4 py-10 text-gray-500">Loading…</p>
       )}
+      <ShoppingListHistory currentId={current?.id} />
       <BuildShoppingListDialog
         open={buildOpen}
         onClose={() => setBuildOpen(false)}
