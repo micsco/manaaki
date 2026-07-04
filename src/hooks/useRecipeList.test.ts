@@ -3,7 +3,7 @@ import { renderHook, waitFor } from "@testing-library/react"
 import React from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import * as sdk from "../api/generated/sdk.gen"
-import { useRecipeList } from "./useRecipeList"
+import { recipeListQueryOptions, useRecipeList } from "./useRecipeList"
 
 vi.mock("../api/generated/sdk.gen", () => ({
   getAllApiRecipesGet: vi.fn(),
@@ -27,6 +27,22 @@ function wrapper() {
   })
   return ({ children }: { children: React.ReactNode }) =>
     React.createElement(QueryClientProvider, { client: queryClient }, children)
+}
+
+async function recipeFailure(status: number): Promise<unknown> {
+  mockGetAll.mockResolvedValueOnce({
+    data: undefined,
+    response: new Response(null, { status }),
+  } as never)
+  const queryClient = new QueryClient()
+
+  try {
+    await queryClient.fetchQuery({ ...recipeListQueryOptions, retry: false })
+  } catch (error) {
+    return error
+  }
+
+  throw new Error("Expected recipe query to fail")
 }
 
 describe("useRecipeList", () => {
@@ -114,5 +130,38 @@ describe("useRecipeList", () => {
 
     await waitFor(() => expect(result.current).toHaveLength(1))
     expect(mockGetAll).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe("recipeListQueryOptions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it("preserves the response status when recipe loading fails", async () => {
+    await expect(recipeFailure(401)).resolves.toMatchObject({
+      message: "Failed to load recipes",
+      status: 401,
+    })
+  })
+
+  it("does not retry unauthorized recipe requests", async () => {
+    const error = await recipeFailure(401)
+    const retry = recipeListQueryOptions.retry
+
+    expect(retry).toBeTypeOf("function")
+    if (typeof retry !== "function") throw new Error("Expected retry function")
+    expect(retry(0, error as Error)).toBe(false)
+  })
+
+  it("retries transient recipe failures up to three times", async () => {
+    const error = await recipeFailure(503)
+    const retry = recipeListQueryOptions.retry
+
+    expect(retry).toBeTypeOf("function")
+    if (typeof retry !== "function") throw new Error("Expected retry function")
+    expect(retry(0, error as Error)).toBe(true)
+    expect(retry(2, error as Error)).toBe(true)
+    expect(retry(3, error as Error)).toBe(false)
   })
 })

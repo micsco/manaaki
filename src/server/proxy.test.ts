@@ -25,6 +25,7 @@ let server: http.Server
 let serverPort: number
 let lastUpstreamRequest: UpstreamRequest | null = null
 let nextUpstreamResponse: UpstreamResponse = { status: 200, body: "{}" }
+let responseFactory: ((request: UpstreamRequest) => UpstreamResponse) | null = null
 
 // Optional per-path override so refresh tests can serve different endpoints.
 let perPathResponses: Map<string, UpstreamResponse> = new Map()
@@ -35,6 +36,10 @@ function setNextResponse(res: UpstreamResponse) {
 
 function setPathResponse(path: string, res: UpstreamResponse) {
   perPathResponses.set(path, res)
+}
+
+function setResponseFactory(factory: (request: UpstreamRequest) => UpstreamResponse) {
+  responseFactory = factory
 }
 
 function startServer(): Promise<void> {
@@ -53,7 +58,8 @@ function startServer(): Promise<void> {
         }
 
         const matchedPath = req.url ? perPathResponses.get(req.url.split("?")[0]) : undefined
-        const response = matchedPath ?? nextUpstreamResponse
+        const response =
+          responseFactory?.(lastUpstreamRequest) ?? matchedPath ?? nextUpstreamResponse
         const status = response.status ?? 200
         const body = response.body ?? ""
 
@@ -80,6 +86,7 @@ beforeEach(async () => {
   process.env.SESSION_SECRET = "unit-test-secret"
   lastUpstreamRequest = null
   nextUpstreamResponse = { status: 200, body: "{}" }
+  responseFactory = null
   perPathResponses = new Map()
 })
 
@@ -92,8 +99,20 @@ afterEach(async () => {
 // ---------------------------------------------------------------------------
 
 function farFutureJwt(): string {
+  return jwtWithExpiry(4102444800)
+}
+
+function nearExpiryJwt(): string {
+  return jwtWithExpiry(Math.floor(Date.now() / 1000) + 60)
+}
+
+function expiredJwt(): string {
+  return jwtWithExpiry(Math.floor(Date.now() / 1000) - 60)
+}
+
+function jwtWithExpiry(exp: number): string {
   const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url")
-  return `${b64({ alg: "HS256" })}.${b64({ sub: "u1", exp: 4102444800 })}.sig`
+  return `${b64({ alg: "HS256" })}.${b64({ sub: "u1", exp })}.sig`
 }
 
 function sessionCookieHeader(jwt: string): string {
@@ -186,6 +205,103 @@ describe("handleApiProxy — authed", () => {
   })
 })
 
+describe("handleApiProxy — invalid session recovery", () => {
+  it("falls back to the read-only token for an expired public session", async () => {
+    setPathResponse("/api/auth/refresh", { status: 401 })
+    setNextResponse({ status: 200, body: "[]" })
+
+    const response = await handleApiProxy(
+      new Request("https://app/api/recipes", {
+        headers: {
+          host: "manaaki.micsco.nz",
+          "x-forwarded-proto": "https",
+          cookie: sessionCookieHeader(expiredJwt()),
+        },
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expect(lastUpstreamRequest?.headers.authorization).toBe("Bearer ro-token")
+    expect(response.headers.get("set-cookie")).toContain("Max-Age=0")
+  })
+
+  it("rejects a private request when refresh reports an invalid session", async () => {
+    setPathResponse("/api/auth/refresh", { status: 401 })
+
+    const response = await handleApiProxy(
+      new Request("https://app/api/households/mealplans", {
+        headers: {
+          host: "manaaki.micsco.nz",
+          "x-forwarded-proto": "https",
+          cookie: sessionCookieHeader(nearExpiryJwt()),
+        },
+      })
+    )
+
+    expect(response.status).toBe(401)
+    expect(response.headers.get("set-cookie")).toContain("Max-Age=0")
+  })
+
+  it("retries a public request with the read-only token after an upstream 401", async () => {
+    setResponseFactory(request =>
+      request.headers.authorization === "Bearer ro-token"
+        ? { status: 200, body: "[]" }
+        : { status: 401 }
+    )
+
+    const response = await handleApiProxy(
+      new Request("https://app/api/recipes", {
+        headers: {
+          host: "manaaki.micsco.nz",
+          "x-forwarded-proto": "https",
+          cookie: sessionCookieHeader(farFutureJwt()),
+        },
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expect(lastUpstreamRequest?.headers.authorization).toBe("Bearer ro-token")
+    expect(response.headers.get("set-cookie")).toContain("Max-Age=0")
+  })
+
+  it("clears the session when a private request receives an upstream 401", async () => {
+    setNextResponse({ status: 401 })
+
+    const response = await handleApiProxy(
+      new Request("https://app/api/households/mealplans", {
+        headers: {
+          host: "manaaki.micsco.nz",
+          "x-forwarded-proto": "https",
+          cookie: sessionCookieHeader(farFutureJwt()),
+        },
+      })
+    )
+
+    expect(response.status).toBe(401)
+    expect(response.headers.get("set-cookie")).toContain("Max-Age=0")
+  })
+
+  it("keeps using a valid token after a transient refresh failure", async () => {
+    const jwt = nearExpiryJwt()
+    setPathResponse("/api/auth/refresh", { status: 503 })
+    setNextResponse({ status: 200, body: "{}" })
+
+    const response = await handleApiProxy(
+      new Request("https://app/api/households/mealplans", {
+        headers: {
+          host: "manaaki.micsco.nz",
+          "x-forwarded-proto": "https",
+          cookie: sessionCookieHeader(jwt),
+        },
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expect(lastUpstreamRequest?.headers.authorization).toBe(`Bearer ${jwt}`)
+    expect(response.headers.get("set-cookie")).toBeNull()
+  })
+})
+
 describe("handleApiProxy — redirect passthrough", () => {
   it("passes upstream 302 through to the browser without following it", async () => {
     const googleUrl = "https://accounts.google.com/o/oauth2/v2/auth?x=1"
@@ -206,8 +322,7 @@ describe("handleApiProxy — redirect passthrough", () => {
 
 describe("handleApiProxy — refresh near-expiry token", () => {
   it("refreshes a near-expiry token and sets a fresh session cookie", async () => {
-    const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url")
-    const nearExpireJwt = `${b64({ alg: "HS256" })}.${b64({ sub: "u1", exp: Math.floor(Date.now() / 1000) + 60 })}.sig`
+    const nearExpireJwt = nearExpiryJwt()
 
     // /api/auth/refresh → returns new access_token
     setPathResponse("/api/auth/refresh", {

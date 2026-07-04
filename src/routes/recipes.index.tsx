@@ -208,7 +208,7 @@ function RecipeListSkeleton() {
 }
 
 function RecipeList() {
-  const { data, isLoading } = useQuery(recipeListQueryOptions)
+  const { data, isError, isFetching, isLoading, refetch } = useQuery(recipeListQueryOptions)
   const recipes = data ?? []
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
@@ -279,7 +279,7 @@ function RecipeList() {
             <h1 className="font-bold text-4xl leading-none">Manaaki</h1>
           </button>
           <div className="flex shrink-0 items-center gap-3">
-            {!showSkeleton && (
+            {!showSkeleton && !isError && (
               <p className="text-gray-500 text-sm">
                 {isFiltered
                   ? `${filtered.length} of ${recipes.length}`
@@ -300,6 +300,18 @@ function RecipeList() {
               // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list, order never changes
               <RecipeCardSkeleton key={i} />
             ))}
+          </div>
+        ) : isError ? (
+          <div role="alert" className="flex flex-col items-center gap-4 py-20 text-center">
+            <p className="text-gray-300 text-lg">Unable to load recipes.</p>
+            <button
+              type="button"
+              disabled={isFetching}
+              onClick={() => void refetch()}
+              className="rounded-lg bg-orange-600 px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-orange-500 disabled:opacity-50"
+            >
+              {isFetching ? "Trying again…" : "Try again"}
+            </button>
           </div>
         ) : filtered.length === 0 && isFiltered ? (
           <div className="flex flex-col items-center gap-4 py-20 text-center">

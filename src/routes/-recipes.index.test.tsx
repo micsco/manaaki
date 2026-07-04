@@ -243,3 +243,34 @@ describe("RecipeList loading state", () => {
     expect(screen.queryByText(/\d+ recipes/i)).not.toBeInTheDocument()
   })
 })
+
+describe("RecipeList error state", () => {
+  it("shows an actionable error when recipes fail to load", async () => {
+    mockGetAll.mockResolvedValue({
+      data: undefined,
+      response: new Response(null, { status: 401 }),
+    } as never)
+
+    render(<RecipeListWrapper />)
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/unable to load recipes/i)
+    expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument()
+  })
+
+  it("loads recipes after retrying a failed request", async () => {
+    const user = userEvent.setup()
+    mockGetAll
+      .mockResolvedValueOnce({
+        data: undefined,
+        response: new Response(null, { status: 401 }),
+      } as never)
+      .mockResolvedValueOnce({
+        data: { items: [{ ...baseRecipe, id: undefined }], total_pages: 1 },
+      } as never)
+
+    render(<RecipeListWrapper />)
+    await user.click(await screen.findByRole("button", { name: /try again/i }))
+
+    expect(await screen.findByRole("heading", { name: /banana bread/i })).toBeInTheDocument()
+  })
+})

@@ -5,9 +5,19 @@ import type { RecipeSummary } from "../api/generated/types.gen"
 const PAGE_SIZE = 50
 const BASE_QUERY = { perPage: PAGE_SIZE, orderBy: "dateAdded", orderDirection: "desc" } as const
 
+export class RecipeListError extends Error {
+  constructor(readonly status?: number) {
+    super("Failed to load recipes")
+  }
+}
+
+export function shouldRetryRecipeList(failureCount: number, error: unknown): boolean {
+  return !(error instanceof RecipeListError && error.status === 401) && failureCount < 3
+}
+
 async function fetchPage(page: number) {
   const response = await getAllApiRecipesGet({ query: { ...BASE_QUERY, page } })
-  if (!response.data) throw new Error("Failed to load recipes")
+  if (!response.data) throw new RecipeListError(response.response?.status)
   return response.data
 }
 
@@ -23,6 +33,7 @@ export const recipeListQueryOptions = queryOptions({
     )
     return [...first.items, ...rest.flatMap(p => p.items)]
   },
+  retry: shouldRetryRecipeList,
   staleTime: 60_000,
 })
 

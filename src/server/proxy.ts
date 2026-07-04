@@ -5,7 +5,13 @@ import { request as httpsRequest } from "node:https"
 import { Readable } from "node:stream"
 import { isAnonymousAllowed } from "./allowlist"
 import { mealieInternalUrl, readonlyToken } from "./env"
-import { buildSessionSetCookie, decodeJwtExp, isSecureRequest, readSessionToken } from "./session"
+import {
+  buildClearSessionCookie,
+  buildSessionSetCookie,
+  decodeJwtExp,
+  isSecureRequest,
+  readSessionToken,
+} from "./session"
 
 const REFRESH_WINDOW_SECONDS = 60 * 60 // refresh if < 1h to expiry
 
@@ -27,6 +33,11 @@ const STRIP_RESPONSE_HEADERS = new Set([
   "upgrade",
   "proxy-connection",
 ])
+
+type SessionToken =
+  | { state: "valid"; token: string }
+  | { state: "refreshed"; token: string }
+  | { state: "invalid" }
 
 function upstreamHeaders(request: Request, token: string): Record<string, string> {
   const headers: Record<string, string> = {}
@@ -93,21 +104,57 @@ function forward(request: Request, token: string, pathWithQuery: string): Promis
   })
 }
 
-async function maybeRefresh(token: string): Promise<string | null> {
+async function resolveSessionToken(token: string): Promise<SessionToken> {
   const exp = decodeJwtExp(token)
-  if (exp === null) return null
+  if (exp === null) return { state: "valid", token }
   const secondsLeft = exp - Math.floor(Date.now() / 1000)
-  if (secondsLeft > REFRESH_WINDOW_SECONDS) return null
+  if (secondsLeft <= 0) return { state: "invalid" }
+  if (secondsLeft > REFRESH_WINDOW_SECONDS) return { state: "valid", token }
+
   try {
     const res = await fetch(`${mealieInternalUrl()}/api/auth/refresh`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-    if (!res.ok) return null
+    if (res.status === 401) return { state: "invalid" }
+    if (!res.ok) return { state: "valid", token }
     const body = (await res.json()) as { access_token?: string }
-    return typeof body.access_token === "string" ? body.access_token : null
+    return typeof body.access_token === "string"
+      ? { state: "refreshed", token: body.access_token }
+      : { state: "valid", token }
   } catch {
-    return null
+    return { state: "valid", token }
   }
+}
+
+function responseWithHeaders(response: Response, headers: Headers): Response {
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  })
+}
+
+function clearSessionHeaders(request: Request, initial?: Headers): Headers {
+  const headers = initial ?? new Headers()
+  headers.set("Cache-Control", "private, no-store")
+  headers.append("Set-Cookie", buildClearSessionCookie(isSecureRequest(request)))
+  return headers
+}
+
+async function recoverInvalidSession(
+  request: Request,
+  pathname: string,
+  pathWithQuery: string
+): Promise<Response> {
+  if (!isAnonymousAllowed(request.method, pathname)) {
+    return new Response("Unauthorized", {
+      status: 401,
+      headers: clearSessionHeaders(request),
+    })
+  }
+
+  const response = await forward(request, readonlyToken(), pathWithQuery)
+  return responseWithHeaders(response, clearSessionHeaders(request, new Headers(response.headers)))
 }
 
 export async function handleApiProxy(request: Request): Promise<Response> {
@@ -116,21 +163,28 @@ export async function handleApiProxy(request: Request): Promise<Response> {
   const userToken = readSessionToken(request)
 
   if (userToken) {
-    const refreshed = await maybeRefresh(userToken)
-    const effective = refreshed ?? userToken
-    const res = await forward(request, effective, pathWithQuery)
+    const sessionToken = await resolveSessionToken(userToken)
+    if (sessionToken.state === "invalid") {
+      return recoverInvalidSession(request, url.pathname, pathWithQuery)
+    }
+
+    const res = await forward(request, sessionToken.token, pathWithQuery)
+    if (res.status === 401) {
+      await res.body?.cancel()
+      return recoverInvalidSession(request, url.pathname, pathWithQuery)
+    }
+
     // Build a fresh Response so we can mutate headers (forwarded Response headers
     // may be immutable in some runtimes).
     const outHeaders = new Headers(res.headers)
     outHeaders.set("Cache-Control", "private, no-store")
-    if (refreshed) {
-      outHeaders.append("Set-Cookie", buildSessionSetCookie(refreshed, isSecureRequest(request)))
+    if (sessionToken.state === "refreshed") {
+      outHeaders.append(
+        "Set-Cookie",
+        buildSessionSetCookie(sessionToken.token, isSecureRequest(request))
+      )
     }
-    return new Response(res.body, {
-      status: res.status,
-      statusText: res.statusText,
-      headers: outHeaders,
-    })
+    return responseWithHeaders(res, outHeaders)
   }
 
   if (!isAnonymousAllowed(request.method, url.pathname)) {
