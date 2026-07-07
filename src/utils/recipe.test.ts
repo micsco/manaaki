@@ -325,7 +325,7 @@ describe("formatQuantity", () => {
     expect(formatQuantity(1.333)).toBe("1⅓")
   })
 
-  it("formats non-fraction decimals as rounded numbers", () => {
+  it("formats non-fraction decimals as rounded-sm numbers", () => {
     expect(formatQuantity(1.1)).toBe("1.1")
     expect(formatQuantity(2.75)).toBe("2¾")
   })

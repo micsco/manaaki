@@ -21,12 +21,12 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
+        <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs" />
         <Dialog.Popup
           className={[
             "fixed top-1/2 left-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2",
             "rounded-2xl border border-gray-800 bg-gray-900 shadow-xl",
-            "focus:outline-none",
+            "focus:outline-hidden",
           ].join(" ")}
         >
           <div className="flex items-center justify-between px-5 pt-5 pb-4">
@@ -34,7 +34,7 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
               About Manaaki
             </Dialog.Title>
             <Dialog.Close
-              className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-800 hover:text-gray-200 focus:outline-hidden focus:ring-2 focus:ring-orange-500"
               aria-label="Close"
             >
               <Icon path={mdiClose} size={0.7} aria-hidden={true} />

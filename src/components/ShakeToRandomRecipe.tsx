@@ -108,7 +108,7 @@ export function ShakeToRandomRecipe() {
         <div className="absolute inset-0 bg-gray-900" aria-hidden="true" />
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
+      <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/50 to-black/20" />
 
       <div className="absolute inset-0 flex flex-col items-center justify-between px-6 pt-12 pb-0">
         <div className="flex items-center gap-2 text-orange-400">
@@ -133,7 +133,7 @@ export function ShakeToRandomRecipe() {
           <button
             type="button"
             onClick={handleCancel}
-            className="rounded-full bg-white/10 px-7 py-3 font-medium text-sm text-white backdrop-blur-sm transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
+            className="rounded-full bg-white/10 px-7 py-3 font-medium text-sm text-white backdrop-blur-xs transition-colors hover:bg-white/20 focus:outline-hidden focus:ring-2 focus:ring-white/50"
           >
             Cancel
           </button>

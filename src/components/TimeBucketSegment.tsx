@@ -38,7 +38,7 @@ function TimeBucketOption({
       onClick={handleClick}
       className={[
         "flex flex-1 items-center justify-center py-2.5 font-medium text-sm transition-colors",
-        "focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset",
+        "focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:ring-inset",
         hasBorderLeft ? "border-gray-700 border-l" : "",
         active ? "bg-orange-600 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-gray-100",
       ].join(" ")}

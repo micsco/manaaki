@@ -154,7 +154,7 @@ export function BuildShoppingListDialog({
                         )
                       )
                     }
-                    className="w-16 rounded border border-gray-700 bg-gray-800 px-2 py-1 text-gray-100"
+                    className="w-16 rounded-sm border border-gray-700 bg-gray-800 px-2 py-1 text-gray-100"
                   />
                 </label>
               </li>

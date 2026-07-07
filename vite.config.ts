@@ -1,3 +1,4 @@
+import tailwindcss from '@tailwindcss/vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
@@ -57,6 +58,7 @@ export default defineConfig(({ mode }) => {
 
     plugins: [
       emitVersionJson(buildSha),
+      tailwindcss(),
       svgr(),
       tanstackStart(),
       // viteReact must come after tanstackStart

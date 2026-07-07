@@ -1,18 +1,258 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-/* Base UI portal setup */
-.root {
-	isolation: isolate;
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --breakpoint-*: initial;
+  --breakpoint-xs: 475px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+  --breakpoint-tablet: 1024px;
+  --breakpoint-tablet-lg: 1200px;
+
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-850: #1a202c;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
+
+  --color-orange-50: #fff7ed;
+  --color-orange-100: #ffedd5;
+  --color-orange-200: #fed7aa;
+  --color-orange-300: #fdba74;
+  --color-orange-400: #fb923c;
+  --color-orange-500: #f97316;
+  --color-orange-600: #ea580c;
+  --color-orange-700: #c2410c;
+  --color-orange-800: #9a3412;
+  --color-orange-900: #7c2d12;
+  --color-orange-950: #431407;
+
+  --color-card: #1e293b;
+  --color-card-hover: #334155;
+  --color-card-border: #334155;
+
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-mono: JetBrains Mono, monospace;
+  --font-serif: Playfair Display, Georgia, serif;
+
+  --background-image-gradient-radial: radial-gradient(var(--tw-gradient-stops));
+
+  --animate-fade-in: fadeIn 0.5s ease-in-out;
+  --animate-slide-up: slideUp 0.3s ease-out;
+
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  @keyframes slideUp {
+    0% {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
 }
 
-/* iOS Safari positioning fix for Base UI popups */
-body {
-	position: relative;
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
 }
 
-/* Custom base styles for dark theme */
+/* Custom component styles */
+@utility recipe-card {
+  /* Recipe card styles */
+  @apply block rounded-lg border border-card-border bg-card hover:bg-card-hover transition-all duration-200 hover:shadow-lg hover:-translate-y-1;
+}
+@utility recipe-card__placeholder {
+  @apply w-full h-40 bg-gray-800 rounded-t-lg;
+}
+@utility recipe-card__body {
+  @apply p-4;
+}
+@utility recipe-card__name {
+  @apply text-lg font-semibold text-gray-100 mb-2 line-clamp-2;
+}
+@utility recipe-card__description {
+  @apply text-sm text-gray-400 mb-3 line-clamp-2;
+}
+@utility recipe-card__meta {
+  @apply flex items-center gap-3 text-sm text-gray-500;
+}
+@utility recipe-detail {
+  /* Recipe detail styles */
+  @apply max-w-4xl mx-auto px-4 py-8;
+}
+@utility recipe-detail__hero {
+  @apply w-full h-64 object-cover rounded-lg shadow-lg mb-8;
+}
+@utility recipe-detail__name {
+  @apply text-4xl font-bold text-gray-100 mb-4;
+}
+@utility recipe-detail__description {
+  @apply text-lg text-gray-300 mb-6 leading-relaxed;
+}
+@utility recipe-detail__meta {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-900 rounded-lg;
+
+  & dt {
+    @apply text-sm font-medium text-gray-500;
+  }
+
+  & dd {
+    @apply text-sm text-gray-200 font-semibold;
+  }
+}
+@utility recipe-detail__tags {
+  @apply flex flex-wrap gap-2 mb-8;
+}
+@utility tag {
+  @apply px-3 py-1 rounded-full text-sm font-medium;
+}
+@utility tag--category {
+  @apply bg-orange-900/30 text-orange-300 border border-orange-800/50;
+}
+@utility tag--tag {
+  @apply bg-gray-800 text-gray-300 border border-gray-700;
+}
+@utility recipe-detail__body {
+  @apply grid md:grid-cols-2 gap-8 mb-8;
+}
+@utility recipe-detail__ingredients {
+  @apply bg-gray-900 rounded-lg p-6;
+
+  & h2 {
+    @apply text-xl font-semibold text-gray-100 mb-4;
+  }
+
+  & ul {
+    @apply space-y-2;
+  }
+
+  & li {
+    @apply text-gray-300;
+  }
+}
+@utility recipe-detail__instructions {
+  @apply bg-gray-900 rounded-lg p-6;
+
+  & h2 {
+    @apply text-xl font-semibold text-gray-100 mb-4;
+  }
+}
+@utility ingredient-section-title {
+  @apply font-semibold text-gray-200 mt-4 mb-2;
+}
+@utility instruction-step {
+  @apply relative pl-8 pb-6 last:pb-0;
+}
+@utility instruction-step__number {
+  @apply absolute left-0 top-0 w-6 h-6 bg-orange-600 text-white rounded-full flex items-center justify-center text-sm font-semibold;
+}
+@utility instruction-step__title {
+  @apply font-semibold text-gray-200 mb-2;
+}
+@utility instruction-step__text {
+  @apply text-gray-300 leading-relaxed;
+}
+@utility recipe-detail__notes {
+  @apply bg-gray-900 rounded-lg p-6 mb-8;
+
+  & h2 {
+    @apply text-xl font-semibold text-gray-100 mb-4;
+  }
+}
+@utility recipe-note {
+  @apply mb-4 last:mb-0;
+
+  & h3 {
+    @apply font-semibold text-gray-200 mb-2;
+  }
+
+  & p {
+    @apply text-gray-300;
+  }
+}
+@utility recipe-detail__source {
+  @apply text-sm text-gray-400;
+
+  & a {
+    @apply text-orange-400 hover:text-orange-300 underline;
+  }
+}
+@utility nav-link {
+  /* Navigation */
+  @apply text-orange-400 hover:text-orange-300 underline font-medium;
+}
+@utility line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+@utility cook-mode-hidden {
+  /* Cook mode utilities */
+  @apply hidden;
+}
+@utility cook-mode-visible {
+  @apply block;
+}
+@utility cook-mode-text {
+  /* Larger text for cook mode */
+  @apply text-lg leading-relaxed;
+}
+@utility cook-mode-step-active {
+  /* Step highlighting for cook mode */
+  @apply bg-orange-900/20 border-l-4 border-orange-500 -ml-4 pl-8 py-4 pr-4 rounded-r-lg;
+}
+@utility cook-mode-no-scroll {
+  /* Prevent scroll in cook mode for step-by-step */
+  @apply overflow-hidden;
+}
+
+@layer utilities {
+  /* Base UI portal setup */
+  .root {
+    isolation: isolate;
+  }
+
+  /* iOS Safari positioning fix for Base UI popups */
+  body {
+    position: relative;
+  }
+
+  /* Custom base styles for dark theme */
+}
 @layer base {
 	html {
 		color-scheme: dark;
@@ -28,211 +268,33 @@ body {
 	}
 }
 
-/* Custom component styles */
-@layer components {
-	/* Recipe card styles */
-	.recipe-card {
-		@apply block rounded-lg border border-card-border bg-card hover:bg-card-hover transition-all duration-200 hover:shadow-lg hover:-translate-y-1;
-	}
-
-	.recipe-card__placeholder {
-		@apply w-full h-40 bg-gray-800 rounded-t-lg;
-	}
-
-	.recipe-card__body {
-		@apply p-4;
-	}
-
-	.recipe-card__name {
-		@apply text-lg font-semibold text-gray-100 mb-2 line-clamp-2;
-	}
-
-	.recipe-card__description {
-		@apply text-sm text-gray-400 mb-3 line-clamp-2;
-	}
-
-	.recipe-card__meta {
-		@apply flex items-center gap-3 text-sm text-gray-500;
-	}
-
-	/* Recipe detail styles */
-	.recipe-detail {
-		@apply max-w-4xl mx-auto px-4 py-8;
-	}
-
-	.recipe-detail__hero {
-		@apply w-full h-64 object-cover rounded-lg shadow-lg mb-8;
-	}
-
-	.recipe-detail__name {
-		@apply text-4xl font-bold text-gray-100 mb-4;
-	}
-
-	.recipe-detail__description {
-		@apply text-lg text-gray-300 mb-6 leading-relaxed;
-	}
-
-	.recipe-detail__meta {
-		@apply grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-900 rounded-lg;
-	}
-
-	.recipe-detail__meta dt {
-		@apply text-sm font-medium text-gray-500;
-	}
-
-	.recipe-detail__meta dd {
-		@apply text-sm text-gray-200 font-semibold;
-	}
-
-	.recipe-detail__tags {
-		@apply flex flex-wrap gap-2 mb-8;
-	}
-
-	.tag {
-		@apply px-3 py-1 rounded-full text-sm font-medium;
-	}
-
-	.tag--category {
-		@apply bg-orange-900/30 text-orange-300 border border-orange-800/50;
-	}
-
-	.tag--tag {
-		@apply bg-gray-800 text-gray-300 border border-gray-700;
-	}
-
-	.recipe-detail__body {
-		@apply grid md:grid-cols-2 gap-8 mb-8;
-	}
-
-	.recipe-detail__ingredients,
-	.recipe-detail__instructions {
-		@apply bg-gray-900 rounded-lg p-6;
-	}
-
-	.recipe-detail__ingredients h2,
-	.recipe-detail__instructions h2 {
-		@apply text-xl font-semibold text-gray-100 mb-4;
-	}
-
-	.recipe-detail__ingredients ul {
-		@apply space-y-2;
-	}
-
-	.recipe-detail__ingredients li {
-		@apply text-gray-300;
-	}
-
-	.ingredient-section-title {
-		@apply font-semibold text-gray-200 mt-4 mb-2;
-	}
-
-	.instruction-step {
-		@apply relative pl-8 pb-6 last:pb-0;
-	}
-
-	.instruction-step__number {
-		@apply absolute left-0 top-0 w-6 h-6 bg-orange-600 text-white rounded-full flex items-center justify-center text-sm font-semibold;
-	}
-
-	.instruction-step__title {
-		@apply font-semibold text-gray-200 mb-2;
-	}
-
-	.instruction-step__text {
-		@apply text-gray-300 leading-relaxed;
-	}
-
-	.recipe-detail__notes {
-		@apply bg-gray-900 rounded-lg p-6 mb-8;
-	}
-
-	.recipe-detail__notes h2 {
-		@apply text-xl font-semibold text-gray-100 mb-4;
-	}
-
-	.recipe-note {
-		@apply mb-4 last:mb-0;
-	}
-
-	.recipe-note h3 {
-		@apply font-semibold text-gray-200 mb-2;
-	}
-
-	.recipe-note p {
-		@apply text-gray-300;
-	}
-
-	.recipe-detail__source {
-		@apply text-sm text-gray-400;
-	}
-
-	.recipe-detail__source a {
-		@apply text-orange-400 hover:text-orange-300 underline;
-	}
-
-	/* Navigation */
-	.nav-link {
-		@apply text-orange-400 hover:text-orange-300 underline font-medium;
-	}
-}
-
-/* Meal plan week date row: scroll-state driven styles when stuck */
-.week-date-row {
-	container-type: scroll-state;
-}
-
-.week-date-row__cell {
-	transition: padding 120ms ease-out;
-}
-
-@container scroll-state(stuck: top) {
-	.week-date-row__border {
-		border-bottom-width: 0;
-	}
-
-	.week-date-row__cell {
-		padding-top: 0;
-	}
-}
-
-.week-date-row--first .week-date-row__border {
-	border-bottom-width: 0;
-}
-
-.week-date-row--first .week-date-row__cell {
-	padding-top: 0;
-}
-
-/* Custom utilities */
 @layer utilities {
-	.line-clamp-2 {
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
+  /* Meal plan week date row: scroll-state driven styles when stuck */
+  .week-date-row {
+    container-type: scroll-state;
+  }
 
-	/* Cook mode utilities */
-	.cook-mode-hidden {
-		@apply hidden;
-	}
+  .week-date-row__cell {
+    transition: padding 120ms ease-out;
+  }
 
-	.cook-mode-visible {
-		@apply block;
-	}
+  @container scroll-state(stuck: top) {
+    .week-date-row__border {
+      border-bottom-width: 0;
+    }
 
-	/* Larger text for cook mode */
-	.cook-mode-text {
-		@apply text-lg leading-relaxed;
-	}
+    .week-date-row__cell {
+      padding-top: 0;
+    }
+  }
 
-	/* Step highlighting for cook mode */
-	.cook-mode-step-active {
-		@apply bg-orange-900/20 border-l-4 border-orange-500 -ml-4 pl-8 py-4 pr-4 rounded-r-lg;
-	}
+  .week-date-row--first .week-date-row__border {
+    border-bottom-width: 0;
+  }
 
-	/* Prevent scroll in cook mode for step-by-step */
-	.cook-mode-no-scroll {
-		@apply overflow-hidden;
-	}
+  .week-date-row--first .week-date-row__cell {
+    padding-top: 0;
+  }
+
+  /* Custom utilities */
 }

@@ -55,7 +55,7 @@ function ToggleChip({ icon, label, value, type, active, onToggle }: ToggleChipPr
       aria-pressed={active}
       className={[
         "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2.5 font-medium text-sm transition-colors",
-        "focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900",
+        "focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900",
         active
           ? "border-orange-500 bg-orange-900 text-orange-300"
           : "border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-600 hover:bg-gray-700",
@@ -105,7 +105,7 @@ function TimeBucketOptionWithTracking({
       onClick={handleClick}
       className={[
         "flex flex-1 items-center justify-center py-2.5 font-medium text-sm transition-colors",
-        "focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset",
+        "focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:ring-inset",
         hasBorderLeft ? "border-gray-700 border-l" : "",
         active ? "bg-orange-600 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-gray-100",
       ].join(" ")}
@@ -186,12 +186,12 @@ export function RecipeFilterDrawer({
       }}
     >
       <Drawer.Portal>
-        <Drawer.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
+        <Drawer.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs" />
         <Drawer.Popup
           className={[
             "fixed right-0 bottom-0 left-0 z-50 flex max-h-[85dvh] flex-col",
             "rounded-t-2xl border-gray-700 border-t bg-gray-900",
-            "focus:outline-none",
+            "focus:outline-hidden",
           ].join(" ")}
         >
           <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-gray-600" aria-hidden="true" />
@@ -201,7 +201,7 @@ export function RecipeFilterDrawer({
               Filter recipes
             </Drawer.Title>
             <Drawer.Close
-              className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-800 hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-800 hover:text-gray-200 focus:outline-hidden focus:ring-2 focus:ring-orange-500"
               aria-label="Close filters"
             >
               <Icon path={mdiClose} size={0.7} aria-hidden={true} />

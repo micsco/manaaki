@@ -18,14 +18,14 @@ const TOOL_BADGES: ToolBadge[] = [
     label: "Slow cooker",
     icon: mdiPotSteam,
     match: "slow cooker",
-    className: "bg-amber-800/80 border-amber-600/50 text-amber-100 backdrop-blur-sm",
+    className: "bg-amber-800/80 border-amber-600/50 text-amber-100 backdrop-blur-xs",
   },
   {
     key: "air-fryer",
     label: "Air fryer",
     icon: mdiToasterOven,
     match: "air fryer",
-    className: "bg-sky-700/80 border-sky-500/50 text-sky-100 backdrop-blur-sm",
+    className: "bg-sky-700/80 border-sky-500/50 text-sky-100 backdrop-blur-xs",
   },
 ]
 
