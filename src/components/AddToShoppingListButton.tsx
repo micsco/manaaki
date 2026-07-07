@@ -15,7 +15,7 @@ import { shouldStartNewList } from "../utils/shopping"
 import { Icon } from "./Icon"
 
 const BTN =
-  "inline-flex min-h-11 items-center gap-1.5 rounded-full bg-black/40 px-4 py-2 font-medium text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+  "inline-flex min-h-11 items-center gap-1.5 rounded-full bg-black/40 px-4 py-2 font-medium text-sm text-white backdrop-blur-xs transition-colors hover:bg-black/60"
 
 function newListName(): string {
   return `Shop · ${new Date().toLocaleDateString()}`

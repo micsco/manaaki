@@ -31,7 +31,7 @@ function FilterChip({ icon, label, value, type, active, onToggle }: FilterChipPr
       onClick={handleClick}
       className={[
         "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 font-medium text-sm transition-colors",
-        "focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950",
+        "focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950",
         active
           ? "border-orange-500 bg-orange-900 text-orange-300"
           : "border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-600 hover:bg-gray-700",
@@ -53,7 +53,7 @@ interface FilterPillsProps {
 
 export function FilterPills({ proteins, onToggleProtein, tools, onToggleTool }: FilterPillsProps) {
   return (
-    <div className="-mx-4 flex gap-2.5 overflow-x-auto px-4 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="scrollbar-none -mx-4 flex gap-2.5 overflow-x-auto px-4 py-1.5 [&::-webkit-scrollbar]:hidden">
       {PROTEIN_OPTIONS.map(opt => (
         <FilterChip
           key={opt.value}
@@ -138,7 +138,7 @@ export function FilterBar({
         value={search}
         onChange={e => handleSearchChange(e.target.value)}
         placeholder="Search recipes…"
-        className="min-w-0 flex-1 bg-transparent py-3 pr-2 pl-3 text-gray-100 text-sm placeholder:text-gray-500 focus:outline-none"
+        className="min-w-0 flex-1 bg-transparent py-3 pr-2 pl-3 text-gray-100 text-sm placeholder:text-gray-500 focus:outline-hidden"
         aria-label="Search recipes"
       />
 
@@ -158,7 +158,7 @@ export function FilterBar({
       <button
         type="button"
         onClick={handleOpenDrawer}
-        className="relative flex shrink-0 items-center gap-1.5 rounded-full py-3 pr-4 pl-3 font-medium text-gray-300 text-sm hover:text-gray-100 focus:outline-none"
+        className="relative flex shrink-0 items-center gap-1.5 rounded-full py-3 pr-4 pl-3 font-medium text-gray-300 text-sm hover:text-gray-100 focus:outline-hidden"
         aria-label={activeFilterCount > 0 ? `Filters, ${activeFilterCount} active` : "Filters"}
       >
         <Icon path={mdiTune} size={0.65} aria-hidden={true} />

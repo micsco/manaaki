@@ -107,38 +107,21 @@ shell scripts. See `.agents/skills/prek/AGENTS.md` for the full reference.
 To run hooks manually: `npx prek run --stage pre-commit --all-files`
 
 <!-- intent-skills:start -->
+## Skill Loading
 
-# Skill mappings - load `use` with `npx @tanstack/intent@latest load <use>`.
-
-skills:
-
-- when: "adding api endpoints, changing the mealie token, nginx proxy config, allowed routes, internal docker url, mealie connectivity, or MEALIE_API_TOKEN / MEALIE_INTERNAL_URL"
-  use: "nginx-api-proxy"
-
-- when: "working with routes, route trees, createRoute, createRootRoute, file naming conventions, or general router concepts"
-  use: "@tanstack/router-core#router-core"
-- when: "protecting routes, redirecting unauthenticated users, beforeLoad guards, RBAC, or integrating an auth provider"
-  use: "@tanstack/router-core#router-core/auth-and-guards"
-- when: "splitting route bundles, using .lazy.tsx files, createLazyFileRoute, or deferring non-critical route code"
-  use: "@tanstack/router-core#router-core/code-splitting"
-- when: "fetching data in loaders, caching with staleTime/gcTime, pending/error components, or deferred data"
-  use: "@tanstack/router-core#router-core/data-loading"
-- when: "using Link, useNavigate, preloading, navigation blocking, scroll restoration, or active link styles"
-  use: "@tanstack/router-core#router-core/navigation"
-- when: "handling 404s, not-found components, error boundaries, CatchBoundary, or route masking"
-  use: "@tanstack/router-core#router-core/not-found-and-errors"
-- when: "working with dynamic path segments ($param), splat routes, optional params, or useParams"
-  use: "@tanstack/router-core#router-core/path-params"
-- when: "reading or writing URL search params, validateSearch, Zod adapters, or custom serialization"
-  use: "@tanstack/router-core#router-core/search-params"
-- when: "setting up SSR, streaming, renderRouterToStream, or server-side data hydration"
-  use: "@tanstack/router-core#router-core/ssr"
-- when: "fixing TypeScript errors in router types, using Register declaration, getRouteApi, or LinkProps utilities"
-  use: "@tanstack/router-core#router-core/type-safety"
-
-- when: "writing tests, setting up vitest, react testing library, playwright, unit tests, component tests, hook tests, e2e tests, mocking, userEvent, screen queries, jest-dom, or debugging act warnings"
-  use: "react-testing"
-
-- when: "adding, removing, or modifying git hooks, changing hook stages, debugging hooks not running, reinstalling prek after cloning, or understanding what runs on commit or push"
-  use: "prek"
+Before editing files for a substantial task:
+- Run `pnpm dlx @tanstack/intent@latest list` from the workspace root to see available local skills.
+- If a listed skill matches the task, run `pnpm dlx @tanstack/intent@latest load <package>#<skill>` before changing files.
+- Use the loaded `SKILL.md` guidance while making the change.
+- Monorepos: when working across packages, run the skill check from the workspace root and prefer the local skill for the package being changed.
+- Multiple matches: prefer the most specific local skill for the package or concern you are changing; load additional skills only when the task spans multiple packages or concerns.
 <!-- intent-skills:end -->
+
+## Local Skills
+
+These live under `.devin/skills/<name>/SKILL.md` (not managed by intent) — read the
+SKILL.md directly when the task matches:
+
+- **nginx-api-proxy** — adding api endpoints, changing the mealie token, nginx proxy config, allowed routes, internal docker url, mealie connectivity, or `MEALIE_API_TOKEN` / `MEALIE_INTERNAL_URL`
+- **react-testing** — writing tests, setting up vitest, react testing library, playwright, unit/component/hook/e2e tests, mocking, userEvent, screen queries, jest-dom, or debugging act warnings
+- **prek** — adding, removing, or modifying git hooks, changing hook stages, debugging hooks not running, reinstalling prek after cloning, or understanding what runs on commit or push

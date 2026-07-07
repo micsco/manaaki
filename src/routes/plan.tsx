@@ -50,7 +50,7 @@ const CELL_MIN_W = "min-w-[140px]"
 
 function EmptyMealSlot({ mealType }: { mealType: ShownMealType }) {
   return (
-    <div className="relative aspect-[16/9] w-full bg-gray-900/30">
+    <div className="relative aspect-video w-full bg-gray-900/30">
       <div className="absolute bottom-0 left-0 px-2 py-1.5">
         <span className="font-semibold text-[10px] text-gray-700 uppercase tracking-widest">
           {mealType}
@@ -158,7 +158,7 @@ function WeekRow({
         </div>
       </div>
 
-      <div className="relative z-[1] overflow-x-auto bg-gray-950">
+      <div className="relative z-1 overflow-x-auto bg-gray-950">
         <div
           className={["flex", isCurrentWeek ? "bg-orange-950/5" : ""].join(" ")}
           style={{ minWidth: `${7 * 140}px` }}
@@ -312,7 +312,7 @@ function PlanPage() {
 
   return (
     <main className="min-h-screen bg-gray-950 text-gray-100">
-      <div className="fixed top-0 right-0 left-0 z-30 border-gray-800 border-b bg-gray-950/95 backdrop-blur-sm">
+      <div className="fixed top-0 right-0 left-0 z-30 border-gray-800 border-b bg-gray-950/95 backdrop-blur-xs">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             <Link
@@ -453,8 +453,8 @@ function LoadingSkeleton() {
                 " "
               )}
             >
-              <div className="aspect-[16/9] w-full animate-pulse rounded bg-gray-900" />
-              <div className="mt-px aspect-[16/9] w-full animate-pulse rounded bg-gray-900" />
+              <div className="aspect-video w-full animate-pulse rounded-sm bg-gray-900" />
+              <div className="mt-px aspect-video w-full animate-pulse rounded-sm bg-gray-900" />
             </div>
           ))}
         </div>

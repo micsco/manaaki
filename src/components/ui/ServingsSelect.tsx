@@ -18,8 +18,8 @@ export function ServingsSelect({ value, onChange, defaultServings }: ServingsSel
         className={[
           "flex items-center gap-1 text-gray-400 transition-colors",
           "hover:text-gray-200",
-          "focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950",
-          "data-[popup-open]:text-gray-200",
+          "focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950",
+          "data-popup-open:text-gray-200",
         ].join(" ")}
       >
         <span className="text-gray-500 text-xs uppercase tracking-widest">Servings</span>
@@ -33,11 +33,11 @@ export function ServingsSelect({ value, onChange, defaultServings }: ServingsSel
         <Select.Positioner align="end" sideOffset={8}>
           <Select.Popup
             className={[
-              "min-w-[9rem] rounded-xl border border-gray-700 bg-gray-900 py-1 shadow-black/40 shadow-xl",
-              "origin-[var(--transform-origin)] transition-[transform,scale,opacity]",
-              "data-[ending-style]:scale-95 data-[ending-style]:opacity-0",
-              "data-[starting-style]:scale-95 data-[starting-style]:opacity-0",
-              "focus:outline-none",
+              "min-w-36 rounded-xl border border-gray-700 bg-gray-900 py-1 shadow-black/40 shadow-xl",
+              "origin-(--transform-origin) transition-[transform,scale,opacity]",
+              "data-ending-style:scale-95 data-ending-style:opacity-0",
+              "data-starting-style:scale-95 data-starting-style:opacity-0",
+              "focus:outline-hidden",
             ].join(" ")}
           >
             <Select.List>
@@ -48,9 +48,9 @@ export function ServingsSelect({ value, onChange, defaultServings }: ServingsSel
                   className={[
                     "flex cursor-pointer items-center gap-2 py-2 pr-4 pl-3 text-sm transition-colors",
                     "text-gray-300 hover:bg-gray-800 hover:text-gray-100",
-                    "data-[selected]:font-semibold data-[selected]:text-orange-400",
-                    "data-[highlighted]:bg-gray-800 data-[highlighted]:text-gray-100",
-                    "focus:outline-none",
+                    "data-selected:font-semibold data-selected:text-orange-400",
+                    "data-highlighted:bg-gray-800 data-highlighted:text-gray-100",
+                    "focus:outline-hidden",
                   ].join(" ")}
                 >
                   <Select.ItemIndicator className="w-3 shrink-0 text-orange-500">

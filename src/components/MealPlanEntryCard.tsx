@@ -35,11 +35,11 @@ function CardInner({ entry, dayLabel, compact = false }: MealPlanEntryCardProps)
 
   const eyebrow = [dayLabel, typeLabel].filter(Boolean).join(" · ")
 
-  const aspectClass = compact ? "aspect-[16/9]" : "aspect-[16/7] sm:aspect-[16/6]"
+  const aspectClass = compact ? "aspect-video" : "aspect-16/7 sm:aspect-16/6"
   const padClass = compact ? "px-2 py-2" : "px-5 py-4 sm:px-8 sm:py-6"
   const titleClass = compact
     ? "text-sm leading-tight"
-    : "text-xl leading-tight drop-shadow sm:text-2xl"
+    : "text-xl leading-tight drop-shadow-sm sm:text-2xl"
   const eyebrowClass = compact ? "mb-0.5 text-[10px] leading-tight" : "mb-1 text-xs"
 
   return (
@@ -50,7 +50,7 @@ function CardInner({ entry, dayLabel, compact = false }: MealPlanEntryCardProps)
         <div className="h-full w-full bg-gray-800" aria-hidden="true" />
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+      <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent" />
 
       {compact ? (
         <>
@@ -95,7 +95,7 @@ export function MealPlanEntryCard({ entry, dayLabel, compact = false }: MealPlan
     return (
       <Link
         to={recipeUrl(recipeId, recipeSlug)}
-        className="block overflow-hidden focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
+        className="block overflow-hidden focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:ring-inset"
         aria-label={title}
       >
         <CardInner entry={entry} dayLabel={dayLabel} compact={compact} />

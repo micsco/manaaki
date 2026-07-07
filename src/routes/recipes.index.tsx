@@ -80,7 +80,7 @@ function RecipeImage({ recipe }: { recipe: RecipeSummary }) {
       ) : (
         <div className="h-full w-full bg-gray-800" aria-hidden="true" />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+      <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent" />
       <div className="absolute top-0 left-0 p-2">
         <RecipeCardTimeBadge recipe={recipe} />
       </div>
@@ -89,7 +89,7 @@ function RecipeImage({ recipe }: { recipe: RecipeSummary }) {
       </div>
       <div className="absolute right-0 bottom-0 left-0 px-3 pb-2.5">
         <div className="flex items-end justify-between gap-2">
-          <h3 className="line-clamp-2 text-balance font-bold text-base text-white leading-tight drop-shadow">
+          <h3 className="line-clamp-2 text-balance font-bold text-base text-white leading-tight drop-shadow-sm">
             {recipe.name}
           </h3>
           <RecipeCardInfoBadges recipe={recipe} />
@@ -107,7 +107,7 @@ function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
       {recipe.id && recipe.slug ? (
         <Link
           to={recipeUrl(recipe.id, recipe.slug)}
-          className="block rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+          className="block rounded-lg focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950"
           onClick={() =>
             posthog.capture("recipe_card_clicked", {
               recipe_id: recipe.id,
@@ -146,8 +146,8 @@ function RecipeCardSkeleton() {
           <div className="h-5 w-10 rounded-full bg-gray-700" />
         </div>
         <div className="absolute right-0 bottom-0 left-0 px-3 pb-2.5">
-          <div className="h-4 w-3/4 rounded bg-gray-700" />
-          <div className="mt-1.5 h-4 w-1/2 rounded bg-gray-700" />
+          <div className="h-4 w-3/4 rounded-sm bg-gray-700" />
+          <div className="mt-1.5 h-4 w-1/2 rounded-sm bg-gray-700" />
         </div>
       </div>
     </Card>
@@ -273,7 +273,7 @@ function RecipeList() {
             type="button"
             onClick={() => setAboutOpen(true)}
             aria-label="About Manaaki"
-            className="flex items-center gap-2.5 rounded-lg text-gray-400 transition-colors hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+            className="flex items-center gap-2.5 rounded-lg text-gray-400 transition-colors hover:text-gray-200 focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950"
           >
             <ManaakiLogo className="size-8 shrink-0" />
             <h1 className="font-bold text-4xl leading-none">Manaaki</h1>
@@ -319,7 +319,7 @@ function RecipeList() {
             <button
               type="button"
               onClick={handleClearAll}
-              className="text-orange-400 text-sm hover:text-orange-300 focus:underline focus:outline-none"
+              className="text-orange-400 text-sm hover:text-orange-300 focus:underline focus:outline-hidden"
             >
               Clear all filters
             </button>

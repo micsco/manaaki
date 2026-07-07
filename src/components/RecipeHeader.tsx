@@ -82,7 +82,7 @@ export function RecipeHeader({
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
         <Link
           to="/recipes"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-black/40 px-4 py-2 font-medium text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-black/40 px-4 py-2 font-medium text-sm text-white backdrop-blur-xs transition-colors hover:bg-black/60"
         >
           <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
           All recipes
@@ -98,7 +98,7 @@ export function RecipeHeader({
               <Link
                 to={recipeUrl(prevRecipe.id, prevRecipe.slug)}
                 aria-label="Previous recipe"
-                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-black/40 p-2.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-black/40 p-2.5 text-white backdrop-blur-xs transition-colors hover:bg-black/60"
                 onClick={() =>
                   posthog.capture("recipe_navigated", {
                     direction: "prev",
@@ -121,7 +121,7 @@ export function RecipeHeader({
               <Link
                 to={recipeUrl(nextRecipe.id, nextRecipe.slug)}
                 aria-label="Next recipe"
-                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-black/40 p-2.5 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-black/40 p-2.5 text-white backdrop-blur-xs transition-colors hover:bg-black/60"
                 onClick={() =>
                   posthog.capture("recipe_navigated", {
                     direction: "next",
@@ -156,7 +156,7 @@ export function RecipeHeader({
         <div className="h-full w-full bg-gray-800" />
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
+      <div className="absolute inset-0 bg-linear-to-t from-gray-950 via-gray-950/40 to-transparent" />
 
       <div className="absolute right-0 bottom-0 left-0 px-6 pb-12 md:px-10 md:pb-16">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
