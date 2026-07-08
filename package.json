@@ -2,6 +2,18 @@
   "name": "manaaki",
   "version": "1.0.0",
   "description": "An alternative frontend for Mealie — the self-hosted recipe manager.",
+  "keywords": [],
+  "homepage": "https://github.com/micsco/manaaki#readme",
+  "bugs": {
+    "url": "https://github.com/micsco/manaaki/issues"
+  },
+  "license": "ISC",
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/micsco/manaaki.git"
+  },
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "vite dev",
@@ -9,11 +21,11 @@
     "prepare": "prek install --hook-type pre-commit --hook-type pre-push || true",
     "preview": "vite preview",
     "generate": "openapi-ts",
-    "check": "biome check src --files-max-size=1048576",
-    "check:ci": "biome ci src --files-max-size=1048576",
-    "check:fix": "biome check --write src --files-max-size=1048576",
-    "format": "biome format --write src",
-    "format:check": "biome format src",
+    "check": "oxlint && oxfmt --check",
+    "check:ci": "oxlint && oxfmt --check",
+    "check:fix": "oxlint --fix && oxfmt",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
     "type-check": "tsc --noEmit",
     "validate": "pnpm run type-check && pnpm run check",
     "validate:ci": "pnpm run type-check && pnpm run check:ci",
@@ -23,19 +35,6 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/micsco/manaaki.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
-  "packageManager": "pnpm@10.33.0",
-  "bugs": {
-    "url": "https://github.com/micsco/manaaki/issues"
-  },
-  "homepage": "https://github.com/micsco/manaaki#readme",
   "dependencies": {
     "@base-ui/react": "^1.6.0",
     "@mdi/js": "^7.4.47",
@@ -54,7 +53,6 @@
     "uuid": "^14.0.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.2",
     "@hey-api/openapi-ts": "^0.99.0",
     "@j178/prek": "^0.4.8",
     "@playwright/test": "^1.61.1",
@@ -68,10 +66,13 @@
     "@vitejs/plugin-react": "^6.0.3",
     "@vitest/coverage-v8": "^4.1.10",
     "jsdom": "^29.1.1",
+    "oxfmt": "0.58.0",
+    "oxlint": "^1.73.0",
     "tailwindcss": "^4.3.2",
     "typescript": "^7.0.2",
     "vite": "^8.1.3",
     "vite-plugin-svgr": "^5.2.0",
     "vitest": "^4.1.10"
-  }
+  },
+  "packageManager": "pnpm@10.33.0"
 }

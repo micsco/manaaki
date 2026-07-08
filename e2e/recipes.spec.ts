@@ -118,7 +118,11 @@ test.describe("Recipe list", () => {
 
   test("clicking a recipe navigates to its detail page", async ({ page }) => {
     await page.route(`/api/recipes/${RECIPE_1_ID}`, route =>
-      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(mockRecipeDetail) })
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(mockRecipeDetail),
+      })
     )
 
     await page.goto("/recipes")

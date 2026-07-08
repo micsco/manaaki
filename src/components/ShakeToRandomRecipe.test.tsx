@@ -1,6 +1,7 @@
 import { act, fireEvent, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
 import type { MotionPermissionState } from "../hooks/useMotionPermission"
 import { render } from "../test/render"
 import { ShakeToRandomRecipe } from "./ShakeToRandomRecipe"

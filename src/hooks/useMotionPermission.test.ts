@@ -1,5 +1,6 @@
 import { act, renderHook } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
 import { useMotionPermission } from "./useMotionPermission"
 
 function defineDeviceMotionEvent(requestPermission?: () => Promise<"granted" | "denied">) {

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
 import { retryingFetch } from "./retryingFetch"
 
 const ok = (status = 200) => new Response(null, { status })

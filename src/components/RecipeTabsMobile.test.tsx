@@ -1,6 +1,7 @@
 import userEvent from "@testing-library/user-event"
 import { NuqsTestingAdapter } from "nuqs/adapters/testing"
 import { describe, expect, it } from "vitest"
+
 import type {
   RecipeCategory,
   RecipeIngredientOutput,

@@ -12,7 +12,7 @@ jobs:
     
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [24.x]
     
     steps:
     - name: Checkout code
@@ -35,7 +35,7 @@ jobs:
     - name: Type check
       run: pnpm run type-check
       
-    - name: Biome check
+    - name: Lint and format check (oxlint + oxfmt)
       run: pnpm run check:ci
       
     - name: Unit tests

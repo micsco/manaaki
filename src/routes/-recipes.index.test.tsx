@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import userEvent from "@testing-library/user-event"
 import React from "react"
 import { describe, expect, it, vi } from "vitest"
+
 import * as sdk from "../api/generated/sdk.gen"
 import type { RecipeSummary } from "../api/generated/types.gen"
 import {

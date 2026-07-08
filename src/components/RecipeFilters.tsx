@@ -1,5 +1,6 @@
 import { mdiClose, mdiMagnify, mdiTune } from "@mdi/js"
 import { usePostHog } from "@posthog/react"
+
 import { PROTEIN_OPTIONS, TOOL_OPTIONS } from "../hooks/useRecipeFilters"
 import { Icon } from "./Icon"
 
@@ -53,7 +54,7 @@ interface FilterPillsProps {
 
 export function FilterPills({ proteins, onToggleProtein, tools, onToggleTool }: FilterPillsProps) {
   return (
-    <div className="scrollbar-none -mx-4 flex gap-2.5 overflow-x-auto px-4 py-1.5 [&::-webkit-scrollbar]:hidden">
+    <div className="-mx-4 flex scrollbar-none gap-2.5 overflow-x-auto px-4 py-1.5 [&::-webkit-scrollbar]:hidden">
       {PROTEIN_OPTIONS.map(opt => (
         <FilterChip
           key={opt.value}
@@ -138,7 +139,7 @@ export function FilterBar({
         value={search}
         onChange={e => handleSearchChange(e.target.value)}
         placeholder="Search recipes…"
-        className="min-w-0 flex-1 bg-transparent py-3 pr-2 pl-3 text-gray-100 text-sm placeholder:text-gray-500 focus:outline-hidden"
+        className="min-w-0 flex-1 bg-transparent py-3 pr-2 pl-3 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-hidden"
         aria-label="Search recipes"
       />
 
@@ -158,13 +159,13 @@ export function FilterBar({
       <button
         type="button"
         onClick={handleOpenDrawer}
-        className="relative flex shrink-0 items-center gap-1.5 rounded-full py-3 pr-4 pl-3 font-medium text-gray-300 text-sm hover:text-gray-100 focus:outline-hidden"
+        className="relative flex shrink-0 items-center gap-1.5 rounded-full py-3 pr-4 pl-3 text-sm font-medium text-gray-300 hover:text-gray-100 focus:outline-hidden"
         aria-label={activeFilterCount > 0 ? `Filters, ${activeFilterCount} active` : "Filters"}
       >
         <Icon path={mdiTune} size={0.65} aria-hidden={true} />
         Filters
         {activeFilterCount > 0 && (
-          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 font-bold text-[10px] text-white">
+          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">
             {activeFilterCount}
           </span>
         )}

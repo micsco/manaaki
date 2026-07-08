@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
+
 import { buildClearSessionCookie, isSecureRequest } from "../server/session"
 
 export function logoutHandler(request: Request): Response {

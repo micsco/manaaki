@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+
 import type { RecipeIngredientOutput, RecipeStep } from "../api/generated/types.gen"
 import {
   displayDomain,

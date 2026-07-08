@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
+
 import { shoppingHistoryQueryOptions } from "../hooks/useShoppingList"
 
 export function ShoppingListHistory({ currentId }: { currentId: string | undefined }) {
@@ -8,7 +9,7 @@ export function ShoppingListHistory({ currentId }: { currentId: string | undefin
   if (previous.length === 0) return null
   return (
     <section className="mx-auto max-w-2xl px-4 pt-8">
-      <h2 className="mb-2 font-semibold text-gray-400 text-sm uppercase tracking-wide">
+      <h2 className="mb-2 text-sm font-semibold tracking-wide text-gray-400 uppercase">
         Previous lists
       </h2>
       <ul className="divide-y divide-gray-800">

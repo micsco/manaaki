@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+
 import { useCookMode } from "../contexts/CookModeContext"
 import { CookModeToggle } from "./CookModeToggle"
 
@@ -14,11 +15,11 @@ export function KitchenLayout({ children, title, backButton }: KitchenLayoutProp
   if (isCookMode) {
     return (
       <div className="flex h-screen flex-col bg-gray-950 text-gray-100">
-        <header className="shrink-0 border-gray-800 border-b bg-gray-950/95 px-4 py-3 backdrop-blur-xs">
+        <header className="shrink-0 border-b border-gray-800 bg-gray-950/95 px-4 py-3 backdrop-blur-xs">
           <div className="mx-auto flex max-w-7xl items-center gap-3">
             {backButton}
             {title && (
-              <h1 className="flex-1 truncate font-semibold text-gray-100 text-lg">{title}</h1>
+              <h1 className="flex-1 truncate text-lg font-semibold text-gray-100">{title}</h1>
             )}
             <CookModeToggle />
           </div>

@@ -34,6 +34,10 @@ No comments. Code should be self-explanatory through clear naming and structure.
 - Only add a comment if it explains a non-obvious workaround or external constraint that cannot be expressed in code
 - If code needs a comment to be understood, refactor it first
 
+Linting is **oxlint** (`.oxlintrc.json`) and formatting is **oxfmt** (`.oxfmtrc.json`).
+oxfmt also sorts imports, Tailwind classes, and package.json keys — never hand-order
+these. Suppress a lint finding with `// eslint-disable-next-line <plugin>/<rule> -- reason`.
+
 ## Skills
 
 Agent skills from `vercel-labs/agent-skills` are symlinked under `.devin/skills/`.
@@ -55,9 +59,9 @@ npx skills update vercel-labs/agent-skills --yes
 | --------------------- | ------------------------ |
 | Dev server            | `pnpm dev`               |
 | Type-check            | `pnpm type-check`        |
-| Biome check           | `pnpm check`             |
-| Biome check & fix     | `pnpm check:fix`         |
-| Biome format          | `pnpm format`            |
+| Lint + format check   | `pnpm check`             |
+| Lint & format fix     | `pnpm check:fix`         |
+| Format (oxfmt)        | `pnpm format`            |
 | Full validation       | `pnpm validate`          |
 | Build                 | `pnpm build`             |
 | Run unit tests        | `pnpm test`              |
@@ -99,7 +103,7 @@ shell scripts. See `.agents/skills/prek/AGENTS.md` for the full reference.
 
 | Hook | Stage | What it runs |
 |------|-------|-------------|
-| `biome-check` | pre-commit | `pnpm check:fix` |
+| `lint-format` | pre-commit | `pnpm check:fix` |
 | `type-check` | pre-commit | `pnpm type-check` |
 | `test` | pre-push | `pnpm test` |
 | `build` | pre-push | `pnpm build` |

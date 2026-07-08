@@ -1,4 +1,5 @@
 import { usePostHog } from "@posthog/react"
+
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { useGroupSlug } from "../hooks/useGroupSlug"
 import { displayDomain, mealieRecipeUrl } from "../utils/recipe"
@@ -15,7 +16,7 @@ export function RecipeFooter({ recipe }: { recipe: RecipeOutput }) {
     <div className="mx-auto max-w-6xl px-6 pb-12 md:px-10">
       <RecipeNotes notes={recipe.notes ?? []} />
       {(sourceDomain || mealieUrl) && (
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-gray-800 border-t pt-6 text-sm">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-gray-800 pt-6 text-sm">
           {sourceDomain && (
             <span className="text-gray-500">
               Source:{" "}

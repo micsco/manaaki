@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+
 import type { RecipeIngredientOutput, RecipeStep } from "../api/generated/types.gen"
 import { CookModeWrapper, render, screen } from "../test/render"
 import { IngredientsSection } from "./IngredientsSection"

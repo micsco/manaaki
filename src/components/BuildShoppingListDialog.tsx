@@ -1,6 +1,7 @@
 // src/components/BuildShoppingListDialog.tsx
 import { useQuery } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
+
 import { mealPlanQueryOptions } from "../hooks/useMealPlan"
 import { buildShoppingList } from "../hooks/useShoppingMutations"
 import { toastManager } from "../lib/toastManager"
@@ -97,7 +98,7 @@ export function BuildShoppingListDialog({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4">
       <div className="w-full max-w-lg rounded-t-2xl bg-gray-900 p-5 sm:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-bold text-gray-100 text-lg">Build shopping list</h2>
+          <h2 className="text-lg font-bold text-gray-100">Build shopping list</h2>
           <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-200">
             Close
           </button>
@@ -109,7 +110,7 @@ export function BuildShoppingListDialog({
               key={n}
               type="button"
               onClick={() => pick(n)}
-              className={`rounded-full px-3 py-1.5 font-medium text-sm ${days === n ? "bg-orange-600 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"}`}
+              className={`rounded-full px-3 py-1.5 text-sm font-medium ${days === n ? "bg-orange-600 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"}`}
             >
               Next {n} days
             </button>
@@ -126,7 +127,7 @@ export function BuildShoppingListDialog({
             {rows.map((r, idx) => (
               <li
                 key={r.recipeId}
-                className="flex items-center gap-3 border-gray-800 border-t py-3"
+                className="flex items-center gap-3 border-t border-gray-800 py-3"
               >
                 <input
                   type="checkbox"
@@ -140,7 +141,7 @@ export function BuildShoppingListDialog({
                   className="size-5"
                 />
                 <span className="min-w-0 flex-1 text-gray-200">{r.name}</span>
-                <label className="flex items-center gap-1 text-gray-400 text-sm">
+                <label className="flex items-center gap-1 text-sm text-gray-400">
                   {r.baseServings && r.baseServings > 0 ? "servings" : "×"}
                   <input
                     type="number"
@@ -162,7 +163,7 @@ export function BuildShoppingListDialog({
           </ul>
         )}
 
-        {error && <p className="mt-3 text-red-400 text-sm">{error}</p>}
+        {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
 
         <div className="mt-5 flex justify-end gap-2">
           <button

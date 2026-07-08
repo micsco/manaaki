@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
+
 import { getLoggedInUserApiUsersSelfGet, type UserOut } from "../api/generated"
 import { resolveCurrentUser } from "./currentUser"
 import { createMealieClient } from "./mealieClient"

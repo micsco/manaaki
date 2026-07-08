@@ -1,4 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query"
+
 import { getAllApiRecipesGet } from "../api/generated/sdk.gen"
 import type { RecipeSummary } from "../api/generated/types.gen"
 

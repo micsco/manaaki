@@ -1,6 +1,7 @@
 import { mdiChevronLeft } from "@mdi/js"
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
+
 import { fetchCurrentUser } from "../api/auth"
 import { configureApiClient } from "../api/client"
 import { BuildShoppingListDialog } from "../components/BuildShoppingListDialog"
@@ -38,28 +39,28 @@ function ShoppingPage() {
         <div className="flex items-center gap-3">
           <Link
             to="/recipes"
-            className="inline-flex items-center gap-1 rounded-full bg-gray-800 px-3 py-1.5 font-medium text-gray-300 text-sm transition-colors hover:bg-gray-700"
+            className="inline-flex items-center gap-1 rounded-full bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-700"
           >
             <Icon path={mdiChevronLeft} size={0.7} aria-hidden={true} />
             Recipes
           </Link>
-          <h1 className="font-bold text-2xl">Shopping</h1>
+          <h1 className="text-2xl font-bold">Shopping</h1>
           <button
             type="button"
             onClick={() => setBuildOpen(true)}
-            className="rounded-lg bg-orange-600 px-3 py-1.5 font-medium text-sm text-white hover:bg-orange-500"
+            className="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-500"
           >
             Build shopping list
           </button>
         </div>
       </div>
       {partial && (
-        <p className="mx-auto max-w-2xl px-4 py-2 text-amber-400 text-sm">
+        <p className="mx-auto max-w-2xl px-4 py-2 text-sm text-amber-400">
           Some items may be missing — the build didn't fully complete.
         </p>
       )}
       {listParam && listParam !== current?.id && (
-        <p className="mx-auto max-w-2xl px-4 text-amber-400 text-sm">Viewing a previous list.</p>
+        <p className="mx-auto max-w-2xl px-4 text-sm text-amber-400">Viewing a previous list.</p>
       )}
       {listId ? (
         <ShoppingListView listId={listId} />

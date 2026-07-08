@@ -1,4 +1,5 @@
 import { usePostHog } from "@posthog/react"
+
 import { TIME_BUCKETS, type TimeBucket } from "../hooks/useRecipeFilters"
 
 interface TimeBucketSegmentProps {
@@ -30,7 +31,6 @@ function TimeBucketOption({
   }
 
   return (
-    // biome-ignore lint/a11y/useSemanticElements: segmented control with deselect needs button+role="radio", not <input type="radio">
     <button
       type="button"
       role="radio"

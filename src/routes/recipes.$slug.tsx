@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
+
 import { configureApiClient } from "../api/client"
 import { getOneApiRecipesSlugGet } from "../api/generated/sdk.gen"
 import { recipeUrl, tryDecodeRecipeId } from "../utils/recipe"

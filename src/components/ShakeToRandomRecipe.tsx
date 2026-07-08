@@ -2,6 +2,7 @@ import { mdiShuffle } from "@mdi/js"
 import { usePostHog } from "@posthog/react"
 import { useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect, useRef, useState } from "react"
+
 import { useMotionPermissionContext } from "../contexts/MotionPermissionContext"
 import { useRecipeList } from "../hooks/useRecipeList"
 import { useShakeDetection } from "../hooks/useShakeDetection"
@@ -113,7 +114,7 @@ export function ShakeToRandomRecipe() {
       <div className="absolute inset-0 flex flex-col items-center justify-between px-6 pt-12 pb-0">
         <div className="flex items-center gap-2 text-orange-400">
           <Icon path={mdiShuffle} size={1} aria-hidden={true} />
-          <span className="font-semibold text-sm uppercase tracking-widest">Random Recipe</span>
+          <span className="text-sm font-semibold tracking-widest uppercase">Random Recipe</span>
         </div>
 
         <div
@@ -121,10 +122,10 @@ export function ShakeToRandomRecipe() {
           className="flex flex-col items-center gap-3 text-center"
           style={{ animation: "recipe-slide-up 0.35s ease-out forwards" }}
         >
-          <p className="font-bold text-3xl text-white leading-tight drop-shadow-lg [text-shadow:0_2px_12px_rgba(0,0,0,0.8)]">
+          <p className="text-3xl leading-tight font-bold text-white drop-shadow-lg [text-shadow:0_2px_12px_rgba(0,0,0,0.8)]">
             {pickedRecipe.name}
           </p>
-          <p className="text-orange-300/80 text-xs uppercase tracking-widest">
+          <p className="text-xs tracking-widest text-orange-300/80 uppercase">
             Shake again to reshuffle
           </p>
         </div>
@@ -133,7 +134,7 @@ export function ShakeToRandomRecipe() {
           <button
             type="button"
             onClick={handleCancel}
-            className="rounded-full bg-white/10 px-7 py-3 font-medium text-sm text-white backdrop-blur-xs transition-colors hover:bg-white/20 focus:outline-hidden focus:ring-2 focus:ring-white/50"
+            className="rounded-full bg-white/10 px-7 py-3 text-sm font-medium text-white backdrop-blur-xs transition-colors hover:bg-white/20 focus:ring-2 focus:ring-white/50 focus:outline-hidden"
           >
             Cancel
           </button>

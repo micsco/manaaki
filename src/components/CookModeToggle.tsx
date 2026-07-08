@@ -1,5 +1,6 @@
 import { mdiChefHat } from "@mdi/js"
 import { usePostHog } from "@posthog/react"
+
 import { useCookMode } from "../contexts/CookModeContext"
 import { Icon } from "./Icon"
 
@@ -16,7 +17,7 @@ export function CookModeToggle() {
     <button
       type="button"
       onClick={handleToggle}
-      className={`inline-flex min-h-11 min-w-11 items-center gap-2 rounded-full px-4 py-2 font-medium text-sm transition-colors ${
+      className={`inline-flex min-h-11 min-w-11 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
         isCookMode
           ? "bg-orange-600 text-white hover:bg-orange-500 active:bg-orange-700"
           : "bg-gray-800 text-gray-300 hover:bg-gray-700 active:bg-gray-600"

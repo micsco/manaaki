@@ -1,5 +1,6 @@
 import { Select } from "@base-ui/react/select"
 import { mdiCheck, mdiChevronDown } from "@mdi/js"
+
 import { Icon } from "../Icon"
 
 interface ServingsSelectProps {
@@ -22,7 +23,7 @@ export function ServingsSelect({ value, onChange, defaultServings }: ServingsSel
           "data-popup-open:text-gray-200",
         ].join(" ")}
       >
-        <span className="text-gray-500 text-xs uppercase tracking-widest">Servings</span>
+        <span className="text-xs tracking-widest text-gray-500 uppercase">Servings</span>
         <span className="font-semibold text-gray-100 tabular-nums">
           <Select.Value />
         </span>
@@ -58,7 +59,7 @@ export function ServingsSelect({ value, onChange, defaultServings }: ServingsSel
                   </Select.ItemIndicator>
                   <span className="flex flex-1 items-baseline justify-end gap-2">
                     {n === defaultServings && (
-                      <span className="text-gray-600 text-xs">original</span>
+                      <span className="text-xs text-gray-600">original</span>
                     )}
                     <Select.ItemText>
                       <span className="tabular-nums">{n}</span>

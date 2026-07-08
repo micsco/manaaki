@@ -3,6 +3,7 @@ import { usePostHog } from "@posthog/react"
 import { useHotkey } from "@tanstack/react-hotkeys"
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
+
 import { configureApiClient } from "../api/client"
 import { getOneApiRecipesSlugGet } from "../api/generated/sdk.gen"
 import type { RecipeOutput } from "../api/generated/types.gen"

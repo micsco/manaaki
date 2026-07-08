@@ -1,6 +1,7 @@
 import { mdiShareVariant } from "@mdi/js"
 import { usePostHog } from "@posthog/react"
 import { useEffect, useState } from "react"
+
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { Icon } from "./Icon"
 

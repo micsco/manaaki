@@ -1,5 +1,6 @@
 import { mdiCheck } from "@mdi/js"
 import { useCallback, useEffect, useState } from "react"
+
 import { ingredientStorageKey } from "../utils/recipe"
 import { Icon } from "./Icon"
 
@@ -63,14 +64,14 @@ export function IngredientSectionHeader({
   const { allChecked, toggleAll } = useGroupCheckedState(recipeId, indices)
 
   return (
-    <h3 className="mt-8 border-gray-800 border-t first:mt-0 first:border-t-0">
+    <h3 className="mt-8 border-t border-gray-800 first:mt-0 first:border-t-0">
       <button
         type="button"
         onClick={toggleAll}
         className="flex w-full items-center justify-between gap-3 py-3 text-left"
       >
         <span
-          className={`font-semibold text-sm uppercase tracking-widest transition-colors ${
+          className={`text-sm font-semibold tracking-widest uppercase transition-colors ${
             allChecked ? "text-gray-500" : "text-gray-400"
           }`}
         >

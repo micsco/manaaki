@@ -1,5 +1,6 @@
 import { act, render, screen } from "@testing-library/react"
 import { describe, it } from "vitest"
+
 import { toastManager } from "../lib/toastManager"
 import { AppToasts } from "./AppToasts"
 
