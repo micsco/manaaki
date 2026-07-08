@@ -58,7 +58,7 @@ export function IngredientsSection({
   return (
     <section className={className}>
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="font-sans font-semibold text-gray-500 text-xs uppercase tracking-widest">
+        <h2 className="font-sans text-xs font-semibold tracking-widest text-gray-500 uppercase">
           Ingredients
         </h2>
         {hasServings && (
@@ -74,7 +74,7 @@ export function IngredientsSection({
       {hasSections ? (
         <div>
           {groups.map((group, gi) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: group index is stable; groups are derived from ingredient list with no stable section ID
+            // eslint-disable-next-line react/no-array-index-key -- group index is stable; groups are derived from ingredient list with no stable section ID
             <section key={`${recipeId}-ing-group-${gi}`}>
               {group.title && (
                 <IngredientSectionHeader

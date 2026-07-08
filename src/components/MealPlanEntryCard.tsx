@@ -1,5 +1,6 @@
 import { mdiTimerOutline } from "@mdi/js"
 import { Link } from "@tanstack/react-router"
+
 import type { PlanEntryType, ReadPlanEntry } from "../api/generated/types.gen"
 import { formatTime, recipeImageUrl, recipeUrl } from "../utils/recipe"
 import { Icon } from "./Icon"
@@ -69,13 +70,13 @@ function CardInner({ entry, dayLabel, compact = false }: MealPlanEntryCardProps)
       ) : (
         <div className={`absolute right-0 bottom-0 left-0 ${padClass}`}>
           {eyebrow && (
-            <p className={`font-semibold text-white/70 uppercase tracking-widest ${eyebrowClass}`}>
+            <p className={`font-semibold tracking-widest text-white/70 uppercase ${eyebrowClass}`}>
               {eyebrow}
             </p>
           )}
           <p className={`font-bold text-white ${titleClass}`}>{title}</p>
           {cookTime && (
-            <p className="mt-2 flex items-center gap-1.5 text-white/60 text-xs">
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-white/60">
               <Icon path={mdiTimerOutline} size={0.55} aria-hidden={true} />
               {cookTime}
             </p>
@@ -95,7 +96,7 @@ export function MealPlanEntryCard({ entry, dayLabel, compact = false }: MealPlan
     return (
       <Link
         to={recipeUrl(recipeId, recipeSlug)}
-        className="block overflow-hidden focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:ring-inset"
+        className="block overflow-hidden focus:ring-2 focus:ring-orange-500 focus:outline-hidden focus:ring-inset"
         aria-label={title}
       >
         <CardInner entry={entry} dayLabel={dayLabel} compact={compact} />

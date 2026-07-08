@@ -2,6 +2,7 @@ import { mdiChevronLeft } from "@mdi/js"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect, useRef, useState } from "react"
+
 import { fetchCurrentUser } from "../api/auth"
 import type { ReadPlanEntry } from "../api/generated/types.gen"
 import { BuildShoppingListDialog } from "../components/BuildShoppingListDialog"
@@ -52,7 +53,7 @@ function EmptyMealSlot({ mealType }: { mealType: ShownMealType }) {
   return (
     <div className="relative aspect-video w-full bg-gray-900/30">
       <div className="absolute bottom-0 left-0 px-2 py-1.5">
-        <span className="font-semibold text-[10px] text-gray-700 uppercase tracking-widest">
+        <span className="text-[10px] font-semibold tracking-widest text-gray-700 uppercase">
           {mealType}
         </span>
       </div>
@@ -97,9 +98,10 @@ function WeekRow({
   useEffect(() => {
     const el = sentinelRef.current
     if (!el || !sentinelMapRef) return
-    sentinelMapRef.current.set(weekOffset, el)
+    const sentinelMap = sentinelMapRef.current
+    sentinelMap.set(weekOffset, el)
     return () => {
-      sentinelMapRef.current.delete(weekOffset)
+      sentinelMap.delete(weekOffset)
     }
   }, [weekOffset, sentinelMapRef])
 
@@ -178,7 +180,7 @@ function WeekRow({
                   <div
                     key={mealType}
                     className={
-                      idx < SHOWN_MEAL_TYPES.length - 1 ? "border-gray-800/50 border-b" : ""
+                      idx < SHOWN_MEAL_TYPES.length - 1 ? "border-b border-gray-800/50" : ""
                     }
                   >
                     {entry ? (
@@ -312,23 +314,23 @@ function PlanPage() {
 
   return (
     <main className="min-h-screen bg-gray-950 text-gray-100">
-      <div className="fixed top-0 right-0 left-0 z-30 border-gray-800 border-b bg-gray-950/95 backdrop-blur-xs">
+      <div className="fixed top-0 right-0 left-0 z-30 border-b border-gray-800 bg-gray-950/95 backdrop-blur-xs">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             <Link
               to="/recipes"
-              className="inline-flex items-center gap-1 rounded-full bg-gray-800 px-3 py-1.5 font-medium text-gray-300 text-sm transition-colors hover:bg-gray-700"
+              className="inline-flex items-center gap-1 rounded-full bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-700"
             >
               <Icon path={mdiChevronLeft} size={0.7} aria-hidden={true} />
               Recipes
             </Link>
-            <h1 className="font-bold text-gray-100 text-lg">Meal Plan</h1>
+            <h1 className="text-lg font-bold text-gray-100">Meal Plan</h1>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setBuildOpen(true)}
-              className="rounded-full bg-gray-800 px-3 py-1.5 font-medium text-gray-300 text-sm transition-colors hover:bg-gray-700"
+              className="rounded-full bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-700"
             >
               Build shopping list
             </button>
@@ -336,7 +338,7 @@ function PlanPage() {
               type="button"
               onClick={() => setEndOffset(effectiveEndOffset + 1)}
               disabled={isFetching}
-              className="rounded-full bg-gray-800 px-3 py-1.5 font-medium text-gray-300 text-sm transition-colors hover:bg-gray-700 disabled:opacity-50"
+              className="rounded-full bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-700 disabled:opacity-50"
             >
               Load future week
             </button>
@@ -345,7 +347,7 @@ function PlanPage() {
               onClick={() => {
                 todayRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" })
               }}
-              className="rounded-full bg-orange-600 px-3 py-1.5 font-medium text-sm text-white transition-colors hover:bg-orange-500"
+              className="rounded-full bg-orange-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-orange-500"
             >
               Today
             </button>
@@ -421,7 +423,7 @@ function PlanPage() {
             ))}
 
             <div ref={bottomSentinelRef} className="flex justify-center py-4">
-              {isFetching && <span className="text-gray-500 text-xs">Loading…</span>}
+              {isFetching && <span className="text-xs text-gray-500">Loading…</span>}
             </div>
           </>
         )}
@@ -445,7 +447,7 @@ function LoadingSkeleton() {
   return (
     <div role="status" aria-label="Loading meal plan">
       {(["a", "b", "c"] as const).map(k => (
-        <div key={k} className="flex border-gray-800 border-b">
+        <div key={k} className="flex border-b border-gray-800">
           {DAY_ABBREVS.map(day => (
             <div
               key={day}

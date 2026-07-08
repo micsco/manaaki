@@ -1,4 +1,5 @@
 import { mdiStar, mdiStarHalfFull, mdiStarOutline } from "@mdi/js"
+
 import { Icon } from "../Icon"
 
 interface StarRatingProps {

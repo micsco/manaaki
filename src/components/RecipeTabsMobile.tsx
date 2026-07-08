@@ -1,4 +1,5 @@
 import { useState } from "react"
+
 import type {
   RecipeCategory,
   RecipeIngredientOutput,
@@ -47,7 +48,7 @@ export function RecipeTabsMobile({
 
   return (
     <div className="md:hidden">
-      <div role="tablist" aria-label="Recipe sections" className="flex border-gray-800 border-b">
+      <div role="tablist" aria-label="Recipe sections" className="flex border-b border-gray-800">
         {availableTabs.map(tab => (
           <button
             key={tab}
@@ -102,7 +103,7 @@ export function RecipeTabsMobile({
           hidden={activeTab !== "description"}
           className="px-6 py-6"
         >
-          {description && <p className="text-base text-gray-300 leading-relaxed">{description}</p>}
+          {description && <p className="text-base leading-relaxed text-gray-300">{description}</p>}
           {categories?.length || tags?.length ? (
             <div className={`flex flex-wrap gap-2 ${description ? "mt-4" : ""}`}>
               {categories?.map(c => (

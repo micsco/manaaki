@@ -87,26 +87,26 @@ export function NutritionPanel({
   return (
     <section aria-label="Nutrition information" className="mx-auto max-w-6xl px-6 pb-6 md:ps-10">
       <div className="rounded-xl border border-gray-800 bg-gray-900 px-5 py-4">
-        <p className="mb-3 font-sans font-semibold text-gray-400 text-xs uppercase tracking-widest">
+        <p className="mb-3 font-sans text-xs font-semibold tracking-widest text-gray-400 uppercase">
           Per serving
         </p>
         {primary.length > 0 && (
           <div className="flex flex-wrap gap-x-6 gap-y-2">
             {primary.map(stat => (
               <div key={stat.label} className="flex flex-col items-start">
-                <span className="text-gray-400 text-xs">{stat.label}</span>
-                <span className="font-semibold text-white text-xl tabular-nums leading-none">
+                <span className="text-xs text-gray-400">{stat.label}</span>
+                <span className="text-xl leading-none font-semibold text-white tabular-nums">
                   {stat.value}
-                  <span className="ml-0.5 font-normal text-gray-400 text-xs">{stat.unit}</span>
+                  <span className="ml-0.5 text-xs font-normal text-gray-400">{stat.unit}</span>
                 </span>
               </div>
             ))}
           </div>
         )}
         {secondary.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 border-gray-800 border-t pt-3">
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 border-t border-gray-800 pt-3">
             {secondary.map(stat => (
-              <span key={stat.label} className="text-gray-400 text-xs">
+              <span key={stat.label} className="text-xs text-gray-400">
                 {stat.label}:{" "}
                 <span className="font-medium text-gray-300">
                   {stat.value}

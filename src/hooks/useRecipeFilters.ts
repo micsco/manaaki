@@ -12,6 +12,7 @@ import {
 } from "@mdi/js"
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs"
 import { useMemo } from "react"
+
 import type { RecipeSummary } from "../api/generated/types.gen"
 import { parseTimeMinutes } from "../utils/recipe"
 

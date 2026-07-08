@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router"
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router"
 import type { ReactNode } from "react"
+
 import { AppToasts } from "../components/AppToasts"
 import { BuildInfo } from "../components/BuildInfo"
 import { ShakeToRandomRecipe } from "../components/ShakeToRandomRecipe"
@@ -17,6 +18,7 @@ import { MotionPermissionProvider } from "../contexts/MotionPermissionContext"
 import { useVersionCheck } from "../hooks/useVersionCheck"
 import { queryClient } from "../lib/queryClient"
 import manaakiLogoUrl from "../manaaki.svg?url"
+
 import "../styles/globals.css"
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -99,8 +101,8 @@ function NotFound() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-950">
       <div className="text-center">
-        <h1 className="mb-4 font-bold text-4xl text-gray-100">404</h1>
-        <p className="text-gray-400 text-lg">Page not found.</p>
+        <h1 className="mb-4 text-4xl font-bold text-gray-100">404</h1>
+        <p className="text-lg text-gray-400">Page not found.</p>
       </div>
     </div>
   )

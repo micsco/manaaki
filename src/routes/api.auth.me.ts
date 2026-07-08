@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
+
 import { resolveCurrentUser } from "../server/currentUser"
 
 export async function meHandler(request: Request): Promise<Response> {

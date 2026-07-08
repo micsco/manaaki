@@ -1,5 +1,6 @@
 import { mdiChevronDown, mdiChevronUp } from "@mdi/js"
 import { useState } from "react"
+
 import type { RecipeStep } from "../api/generated/types.gen"
 import { useCookMode } from "../contexts/CookModeContext"
 import { CookModeToggle } from "./CookModeToggle"
@@ -49,7 +50,7 @@ function StepList({
     return (
       <div>
         {groups.map((group, gi) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: group index is stable; groups are derived from recipe steps with no stable ID
+          // eslint-disable-next-line react/no-array-index-key -- group index is stable; groups are derived from recipe steps with no stable ID
           <section key={`${recipeId}-group-${gi}`}>
             {group.title && (
               <InstructionSectionHeader
@@ -114,7 +115,7 @@ export function InstructionsSection({
         />
       )}
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="font-sans font-semibold text-gray-500 text-xs uppercase tracking-widest">
+        <h2 className="font-sans text-xs font-semibold tracking-widest text-gray-500 uppercase">
           Method
         </h2>
         {isCookMode ? (
@@ -123,7 +124,7 @@ export function InstructionsSection({
               type="button"
               aria-label={photoOpen ? "Hide photo" : "Show photo"}
               onClick={() => setPhotoOpen(prev => !prev)}
-              className="flex select-none items-center gap-1 text-gray-400 text-xs hover:text-gray-300"
+              className="flex items-center gap-1 text-xs text-gray-400 select-none hover:text-gray-300"
             >
               <Icon path={photoOpen ? mdiChevronUp : mdiChevronDown} size={0.55} aria-hidden />
               {photoOpen ? "Hide photo" : "Photo"}

@@ -19,7 +19,7 @@ function DescriptionRow({ recipe }: { recipe: RecipeOutput }) {
     <div className="mx-auto hidden max-w-6xl items-start gap-10 px-6 pt-8 pb-2 md:flex md:px-10">
       <div className="min-w-0 flex-1">
         {hasDescription && (
-          <p className="mb-4 text-gray-300 text-lg leading-relaxed">{recipe.description}</p>
+          <p className="mb-4 text-lg leading-relaxed text-gray-300">{recipe.description}</p>
         )}
         {(hasCategories || hasTags) && (
           <div className="flex flex-wrap gap-2">

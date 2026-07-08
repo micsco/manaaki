@@ -1,6 +1,7 @@
 import { screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+
 import type { MotionPermissionState } from "../hooks/useMotionPermission"
 import { render } from "../test/render"
 import { AboutModal } from "./AboutModal"

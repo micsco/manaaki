@@ -1,5 +1,6 @@
 import { NuqsTestingAdapter } from "nuqs/adapters/testing"
 import { describe, expect, it, vi } from "vitest"
+
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { CookModeProvider } from "../contexts/CookModeContext"
 import { render, screen } from "../test/render"

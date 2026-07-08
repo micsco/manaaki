@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start"
+
 import type { UserOut } from "./generated"
 
 export type CurrentUser = { user: UserOut | null; isAnonymous: boolean }

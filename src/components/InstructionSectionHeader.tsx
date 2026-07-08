@@ -1,5 +1,6 @@
 import { mdiCheck } from "@mdi/js"
 import { useCallback, useEffect, useState } from "react"
+
 import { stepStorageKey } from "../utils/recipe"
 import { Icon } from "./Icon"
 
@@ -70,7 +71,7 @@ export function InstructionSectionHeader({
         className="flex w-full items-center justify-between gap-3 py-3 text-left"
       >
         <span
-          className={`font-semibold text-sm uppercase tracking-widest transition-colors ${
+          className={`text-sm font-semibold tracking-widest uppercase transition-colors ${
             allChecked ? "text-gray-500" : "text-gray-400"
           }`}
         >

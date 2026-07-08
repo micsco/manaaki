@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -92,67 +92,67 @@
 /* Custom component styles */
 @utility recipe-card {
   /* Recipe card styles */
-  @apply block rounded-lg border border-card-border bg-card hover:bg-card-hover transition-all duration-200 hover:shadow-lg hover:-translate-y-1;
+  @apply block rounded-lg border border-card-border bg-card transition-all duration-200 hover:-translate-y-1 hover:bg-card-hover hover:shadow-lg;
 }
 @utility recipe-card__placeholder {
-  @apply w-full h-40 bg-gray-800 rounded-t-lg;
+  @apply h-40 w-full rounded-t-lg bg-gray-800;
 }
 @utility recipe-card__body {
   @apply p-4;
 }
 @utility recipe-card__name {
-  @apply text-lg font-semibold text-gray-100 mb-2 line-clamp-2;
+  @apply mb-2 line-clamp-2 text-lg font-semibold text-gray-100;
 }
 @utility recipe-card__description {
-  @apply text-sm text-gray-400 mb-3 line-clamp-2;
+  @apply mb-3 line-clamp-2 text-sm text-gray-400;
 }
 @utility recipe-card__meta {
   @apply flex items-center gap-3 text-sm text-gray-500;
 }
 @utility recipe-detail {
   /* Recipe detail styles */
-  @apply max-w-4xl mx-auto px-4 py-8;
+  @apply mx-auto max-w-4xl px-4 py-8;
 }
 @utility recipe-detail__hero {
-  @apply w-full h-64 object-cover rounded-lg shadow-lg mb-8;
+  @apply mb-8 h-64 w-full rounded-lg object-cover shadow-lg;
 }
 @utility recipe-detail__name {
-  @apply text-4xl font-bold text-gray-100 mb-4;
+  @apply mb-4 text-4xl font-bold text-gray-100;
 }
 @utility recipe-detail__description {
-  @apply text-lg text-gray-300 mb-6 leading-relaxed;
+  @apply mb-6 text-lg leading-relaxed text-gray-300;
 }
 @utility recipe-detail__meta {
-  @apply grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-900 rounded-lg;
+  @apply mb-6 grid grid-cols-2 gap-4 rounded-lg bg-gray-900 p-4 md:grid-cols-4;
 
   & dt {
     @apply text-sm font-medium text-gray-500;
   }
 
   & dd {
-    @apply text-sm text-gray-200 font-semibold;
+    @apply text-sm font-semibold text-gray-200;
   }
 }
 @utility recipe-detail__tags {
-  @apply flex flex-wrap gap-2 mb-8;
+  @apply mb-8 flex flex-wrap gap-2;
 }
 @utility tag {
-  @apply px-3 py-1 rounded-full text-sm font-medium;
+  @apply rounded-full px-3 py-1 text-sm font-medium;
 }
 @utility tag--category {
-  @apply bg-orange-900/30 text-orange-300 border border-orange-800/50;
+  @apply border border-orange-800/50 bg-orange-900/30 text-orange-300;
 }
 @utility tag--tag {
-  @apply bg-gray-800 text-gray-300 border border-gray-700;
+  @apply border border-gray-700 bg-gray-800 text-gray-300;
 }
 @utility recipe-detail__body {
-  @apply grid md:grid-cols-2 gap-8 mb-8;
+  @apply mb-8 grid gap-8 md:grid-cols-2;
 }
 @utility recipe-detail__ingredients {
-  @apply bg-gray-900 rounded-lg p-6;
+  @apply rounded-lg bg-gray-900 p-6;
 
   & h2 {
-    @apply text-xl font-semibold text-gray-100 mb-4;
+    @apply mb-4 text-xl font-semibold text-gray-100;
   }
 
   & ul {
@@ -164,39 +164,39 @@
   }
 }
 @utility recipe-detail__instructions {
-  @apply bg-gray-900 rounded-lg p-6;
+  @apply rounded-lg bg-gray-900 p-6;
 
   & h2 {
-    @apply text-xl font-semibold text-gray-100 mb-4;
+    @apply mb-4 text-xl font-semibold text-gray-100;
   }
 }
 @utility ingredient-section-title {
-  @apply font-semibold text-gray-200 mt-4 mb-2;
+  @apply mt-4 mb-2 font-semibold text-gray-200;
 }
 @utility instruction-step {
-  @apply relative pl-8 pb-6 last:pb-0;
+  @apply relative pb-6 pl-8 last:pb-0;
 }
 @utility instruction-step__number {
-  @apply absolute left-0 top-0 w-6 h-6 bg-orange-600 text-white rounded-full flex items-center justify-center text-sm font-semibold;
+  @apply absolute top-0 left-0 flex h-6 w-6 items-center justify-center rounded-full bg-orange-600 text-sm font-semibold text-white;
 }
 @utility instruction-step__title {
-  @apply font-semibold text-gray-200 mb-2;
+  @apply mb-2 font-semibold text-gray-200;
 }
 @utility instruction-step__text {
-  @apply text-gray-300 leading-relaxed;
+  @apply leading-relaxed text-gray-300;
 }
 @utility recipe-detail__notes {
-  @apply bg-gray-900 rounded-lg p-6 mb-8;
+  @apply mb-8 rounded-lg bg-gray-900 p-6;
 
   & h2 {
-    @apply text-xl font-semibold text-gray-100 mb-4;
+    @apply mb-4 text-xl font-semibold text-gray-100;
   }
 }
 @utility recipe-note {
   @apply mb-4 last:mb-0;
 
   & h3 {
-    @apply font-semibold text-gray-200 mb-2;
+    @apply mb-2 font-semibold text-gray-200;
   }
 
   & p {
@@ -207,12 +207,12 @@
   @apply text-sm text-gray-400;
 
   & a {
-    @apply text-orange-400 hover:text-orange-300 underline;
+    @apply text-orange-400 underline hover:text-orange-300;
   }
 }
 @utility nav-link {
   /* Navigation */
-  @apply text-orange-400 hover:text-orange-300 underline font-medium;
+  @apply font-medium text-orange-400 underline hover:text-orange-300;
 }
 @utility line-clamp-2 {
   display: -webkit-box;
@@ -233,7 +233,7 @@
 }
 @utility cook-mode-step-active {
   /* Step highlighting for cook mode */
-  @apply bg-orange-900/20 border-l-4 border-orange-500 -ml-4 pl-8 py-4 pr-4 rounded-r-lg;
+  @apply -ml-4 rounded-r-lg border-l-4 border-orange-500 bg-orange-900/20 py-4 pr-4 pl-8;
 }
 @utility cook-mode-no-scroll {
   /* Prevent scroll in cook mode for step-by-step */
@@ -254,18 +254,18 @@
   /* Custom base styles for dark theme */
 }
 @layer base {
-	html {
-		color-scheme: dark;
-	}
+  html {
+    color-scheme: dark;
+  }
 
-	body {
-		@apply bg-gray-950 text-gray-100 antialiased;
-		font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-	}
+  body {
+    @apply bg-gray-950 text-gray-100 antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
 
-	* {
-		@apply border-gray-800;
-	}
+  * {
+    @apply border-gray-800;
+  }
 }
 
 @layer utilities {

@@ -1,5 +1,6 @@
 // src/components/ShoppingListView.tsx
 import { useState } from "react"
+
 import { useShoppingListDetail } from "../hooks/useShoppingList"
 import { useAddManualItem, useDeleteItem, useToggleItem } from "../hooks/useShoppingMutations"
 import { groupItemsByAisle } from "../utils/shopping"
@@ -55,7 +56,7 @@ export function ShoppingListView({ listId }: { listId: string }) {
 
       {groups.map(group => (
         <section key={group.labelId ?? "none"} className="mt-5">
-          <h2 className="mb-1 font-semibold text-gray-400 text-sm uppercase tracking-wide">
+          <h2 className="mb-1 text-sm font-semibold tracking-wide text-gray-400 uppercase">
             {group.name}
           </h2>
           <ul>

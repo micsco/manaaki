@@ -8,7 +8,7 @@ export function UserMenu() {
     return (
       <a
         href="/api/auth/oauth"
-        className="rounded-lg bg-orange-600 px-3 py-1.5 font-medium text-sm text-white transition-colors hover:bg-orange-500"
+        className="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-orange-500"
       >
         Sign in
       </a>
@@ -24,20 +24,20 @@ export function UserMenu() {
     <div className="flex items-center gap-2">
       <a
         href="/shopping"
-        className="rounded-lg bg-gray-800 px-3 py-1.5 font-medium text-gray-200 text-sm transition-colors hover:bg-gray-700"
+        className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-200 transition-colors hover:bg-gray-700"
       >
         Shopping
       </a>
       <a
         href="/plan"
-        className="rounded-lg bg-gray-800 px-3 py-1.5 font-medium text-gray-200 text-sm transition-colors hover:bg-gray-700"
+        className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-200 transition-colors hover:bg-gray-700"
       >
         Meal Plan
       </a>
       <button
         type="button"
         onClick={signOut}
-        className="rounded-lg px-3 py-1.5 font-medium text-gray-400 text-sm transition-colors hover:text-gray-200"
+        className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-400 transition-colors hover:text-gray-200"
       >
         Sign out
       </button>

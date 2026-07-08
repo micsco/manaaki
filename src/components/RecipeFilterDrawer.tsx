@@ -2,6 +2,7 @@ import { Drawer } from "@base-ui/react/drawer"
 import { mdiClose } from "@mdi/js"
 import { usePostHog } from "@posthog/react"
 import type { ReactNode } from "react"
+
 import {
   PROTEIN_OPTIONS,
   TIME_BUCKETS,
@@ -19,7 +20,7 @@ interface SectionProps {
 function FilterSection({ label, children }: SectionProps) {
   return (
     <div>
-      <h3 className="mb-3 font-semibold text-gray-200 text-sm uppercase tracking-wider">{label}</h3>
+      <h3 className="mb-3 text-sm font-semibold tracking-wider text-gray-200 uppercase">{label}</h3>
       <div className="flex flex-wrap gap-2">{children}</div>
     </div>
   )
@@ -97,7 +98,6 @@ function TimeBucketOptionWithTracking({
   }
 
   return (
-    // biome-ignore lint/a11y/useSemanticElements: segmented control with deselect needs button+role="radio", not <input type="radio">
     <button
       type="button"
       role="radio"
@@ -197,11 +197,11 @@ export function RecipeFilterDrawer({
           <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-gray-600" aria-hidden="true" />
 
           <div className="flex items-center justify-between px-5 py-4">
-            <Drawer.Title className="font-semibold text-gray-100 text-lg">
+            <Drawer.Title className="text-lg font-semibold text-gray-100">
               Filter recipes
             </Drawer.Title>
             <Drawer.Close
-              className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-800 hover:text-gray-200 focus:outline-hidden focus:ring-2 focus:ring-orange-500"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-800 hover:text-gray-200 focus:ring-2 focus:ring-orange-500 focus:outline-hidden"
               aria-label="Close filters"
             >
               <Icon path={mdiClose} size={0.7} aria-hidden={true} />
@@ -242,7 +242,7 @@ export function RecipeFilterDrawer({
             </FilterSection>
           </div>
 
-          <div className="flex gap-3 border-gray-800 border-t px-5 py-4">
+          <div className="flex gap-3 border-t border-gray-800 px-5 py-4">
             {activeFilterCount > 0 && (
               <Button variant="ghost" size="lg" onClick={handleClearAll}>
                 Clear all

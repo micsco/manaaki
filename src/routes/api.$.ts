@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
+
 import { handleApiProxy } from "../server/proxy"
 
 export const Route = createFileRoute("/api/$")({

@@ -1,4 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query"
+
 import { getAllApiHouseholdsMealplansGet } from "../api/generated/sdk.gen"
 import type { ReadPlanEntry } from "../api/generated/types.gen"
 

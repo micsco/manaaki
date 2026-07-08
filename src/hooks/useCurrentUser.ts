@@ -1,4 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query"
+
 import { type CurrentUser, fetchCurrentUser } from "../api/auth"
 
 export const currentUserQueryOptions = queryOptions({

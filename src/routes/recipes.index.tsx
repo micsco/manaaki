@@ -3,6 +3,7 @@ import { usePostHog } from "@posthog/react"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
+
 import { configureApiClient } from "../api/client"
 import type { RecipeSummary } from "../api/generated/types.gen"
 import { AboutModal } from "../components/AboutModal"
@@ -14,8 +15,8 @@ import {
 } from "../components/RecipeCardMeta"
 import { RecipeFilterDrawer } from "../components/RecipeFilterDrawer"
 import { FilterBar, FilterPills } from "../components/RecipeFilters"
-import { UserMenu } from "../components/UserMenu"
 import { Card } from "../components/ui"
+import { UserMenu } from "../components/UserMenu"
 import { useRecipeFilters } from "../hooks/useRecipeFilters"
 import { recipeListQueryOptions } from "../hooks/useRecipeList"
 import ManaakiLogo from "../manaaki.svg?react"
@@ -56,7 +57,6 @@ export const Route = createFileRoute("/recipes/")({
   },
   loader: ({ context: { queryClient } }) => {
     configureApiClient()
-    // biome-ignore lint/suspicious/noEmptyBlockStatements: swallow fetch errors during SSR prerender (no base URL in Node)
     return void queryClient.ensureQueryData(recipeListQueryOptions).catch(_e => {})
   },
   component: RecipeList,
@@ -89,7 +89,7 @@ function RecipeImage({ recipe }: { recipe: RecipeSummary }) {
       </div>
       <div className="absolute right-0 bottom-0 left-0 px-3 pb-2.5">
         <div className="flex items-end justify-between gap-2">
-          <h3 className="line-clamp-2 text-balance font-bold text-base text-white leading-tight drop-shadow-sm">
+          <h3 className="line-clamp-2 text-base leading-tight font-bold text-balance text-white drop-shadow-sm">
             {recipe.name}
           </h3>
           <RecipeCardInfoBadges recipe={recipe} />
@@ -107,7 +107,7 @@ function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
       {recipe.id && recipe.slug ? (
         <Link
           to={recipeUrl(recipe.id, recipe.slug)}
-          className="block rounded-lg focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+          className="block rounded-lg focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950 focus:outline-hidden"
           onClick={() =>
             posthog.capture("recipe_card_clicked", {
               recipe_id: recipe.id,
@@ -130,8 +130,8 @@ function RecipeListEndMarker() {
   return (
     <div className="col-span-full flex h-48 flex-col items-center justify-center gap-3">
       <Icon path={mdiPotSteam} size={1.75} className="text-gray-700" aria-hidden={true} />
-      <p className="text-gray-600 text-sm">That's all the recipes</p>
-      <p className="text-gray-700 text-xs">All out of scroll. Time to decide.</p>
+      <p className="text-sm text-gray-600">That's all the recipes</p>
+      <p className="text-xs text-gray-700">All out of scroll. Time to decide.</p>
     </div>
   )
 }
@@ -160,7 +160,7 @@ function RecipeListSkeleton() {
       <div className="mx-auto max-w-7xl px-4 pt-5 pb-56">
         <div className="mb-6 flex items-center gap-2.5 text-gray-400">
           <ManaakiLogo className="size-8 shrink-0" />
-          <h1 className="font-bold text-4xl leading-none">Manaaki</h1>
+          <h1 className="text-4xl leading-none font-bold">Manaaki</h1>
         </div>
 
         <div
@@ -169,7 +169,6 @@ function RecipeListSkeleton() {
           className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
           {Array.from({ length: SKELETON_CARD_COUNT }, (_, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list, order never changes
             <RecipeCardSkeleton key={i} />
           ))}
         </div>
@@ -273,14 +272,14 @@ function RecipeList() {
             type="button"
             onClick={() => setAboutOpen(true)}
             aria-label="About Manaaki"
-            className="flex items-center gap-2.5 rounded-lg text-gray-400 transition-colors hover:text-gray-200 focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+            className="flex items-center gap-2.5 rounded-lg text-gray-400 transition-colors hover:text-gray-200 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950 focus:outline-hidden"
           >
             <ManaakiLogo className="size-8 shrink-0" />
-            <h1 className="font-bold text-4xl leading-none">Manaaki</h1>
+            <h1 className="text-4xl leading-none font-bold">Manaaki</h1>
           </button>
           <div className="flex shrink-0 items-center gap-3">
             {!showSkeleton && !isError && (
-              <p className="text-gray-500 text-sm">
+              <p className="text-sm text-gray-500">
                 {isFiltered
                   ? `${filtered.length} of ${recipes.length}`
                   : `${recipes.length} recipes`}
@@ -297,29 +296,28 @@ function RecipeList() {
             className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           >
             {Array.from({ length: SKELETON_CARD_COUNT }, (_, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list, order never changes
               <RecipeCardSkeleton key={i} />
             ))}
           </div>
         ) : isError ? (
           <div role="alert" className="flex flex-col items-center gap-4 py-20 text-center">
-            <p className="text-gray-300 text-lg">Unable to load recipes.</p>
+            <p className="text-lg text-gray-300">Unable to load recipes.</p>
             <button
               type="button"
               disabled={isFetching}
               onClick={() => void refetch()}
-              className="rounded-lg bg-orange-600 px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-orange-500 disabled:opacity-50"
+              className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-500 disabled:opacity-50"
             >
               {isFetching ? "Trying again…" : "Try again"}
             </button>
           </div>
         ) : filtered.length === 0 && isFiltered ? (
           <div className="flex flex-col items-center gap-4 py-20 text-center">
-            <p className="text-gray-400 text-lg">No recipes match your filters.</p>
+            <p className="text-lg text-gray-400">No recipes match your filters.</p>
             <button
               type="button"
               onClick={handleClearAll}
-              className="text-orange-400 text-sm hover:text-orange-300 focus:underline focus:outline-hidden"
+              className="text-sm text-orange-400 hover:text-orange-300 focus:underline focus:outline-hidden"
             >
               Clear all filters
             </button>

@@ -7,6 +7,7 @@ import {
 } from "@mdi/js"
 import { usePostHog } from "@posthog/react"
 import { Link } from "@tanstack/react-router"
+
 import type { RecipeOutput } from "../api/generated/types.gen"
 import type { RecipeNavItem } from "../hooks/useRecipeNav"
 import { formatTime, recipeUrl } from "../utils/recipe"
@@ -17,7 +18,7 @@ import { ShareRecipeButton } from "./ShareRecipeButton"
 function HeroRating({ rating }: { rating: number }) {
   return (
     <div className="flex flex-col items-start gap-1">
-      <span className="flex items-center gap-1 font-sans font-semibold text-gray-400 text-xs uppercase tracking-widest">
+      <span className="flex items-center gap-1 font-sans text-xs font-semibold tracking-widest text-gray-400 uppercase">
         <Icon path={mdiStarCircleOutline} size={0.6} aria-hidden={true} />
         Rating
       </span>
@@ -32,11 +33,11 @@ function HeroRating({ rating }: { rating: number }) {
 function HeroStat({ label, value, icon }: { label: string; value: string; icon: string }) {
   return (
     <div className="flex flex-col items-start gap-1">
-      <span className="flex items-center gap-1 font-sans font-semibold text-gray-400 text-xs uppercase tracking-widest">
+      <span className="flex items-center gap-1 font-sans text-xs font-semibold tracking-widest text-gray-400 uppercase">
         <Icon path={icon} size={0.6} aria-hidden={true} />
         {label}
       </span>
-      <span className="font-sans font-semibold text-sm text-white">{value}</span>
+      <span className="font-sans text-sm font-semibold text-white">{value}</span>
     </div>
   )
 }
@@ -82,7 +83,7 @@ export function RecipeHeader({
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
         <Link
           to="/recipes"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-black/40 px-4 py-2 font-medium text-sm text-white backdrop-blur-xs transition-colors hover:bg-black/60"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-black/40 px-4 py-2 text-sm font-medium text-white backdrop-blur-xs transition-colors hover:bg-black/60"
         >
           <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
           All recipes
@@ -160,7 +161,7 @@ export function RecipeHeader({
 
       <div className="absolute right-0 bottom-0 left-0 px-6 pb-12 md:px-10 md:pb-16">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <h1 className="max-w-2xl font-bold font-serif text-4xl text-white leading-tight drop-shadow-lg md:text-5xl lg:text-6xl">
+          <h1 className="max-w-2xl font-serif text-4xl leading-tight font-bold text-white drop-shadow-lg md:text-5xl lg:text-6xl">
             {recipe.name}
           </h1>
           <HeroStats recipe={recipe} />

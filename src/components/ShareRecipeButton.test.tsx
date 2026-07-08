@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
+
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { render, screen, waitFor } from "../test/render"
 import { ShareRecipeButton } from "./ShareRecipeButton"

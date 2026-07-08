@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
+
 import { mealieInternalUrl, readonlyToken, sessionSecret } from "./env"
 
 const KEYS = ["MEALIE_INTERNAL_URL", "MEALIE_READONLY_TOKEN", "SESSION_SECRET"] as const

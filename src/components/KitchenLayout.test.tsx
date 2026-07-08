@@ -1,5 +1,6 @@
 import { NuqsTestingAdapter } from "nuqs/adapters/testing"
 import { describe, expect, it } from "vitest"
+
 import { CookModeProvider } from "../contexts/CookModeContext"
 import { render, screen } from "../test/render"
 import { KitchenLayout } from "./KitchenLayout"

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
+
 import type { ReadPlanEntry } from "../api/generated/types.gen"
 import { render, screen } from "../test/render"
 import { entryTitle, MealPlanEntryCard } from "./MealPlanEntryCard"

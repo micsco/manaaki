@@ -49,7 +49,6 @@ interface ImportMetaEnv {
   readonly VITE_BUILD_TIME?: string
 }
 
-// biome-ignore lint/correctness/noUnusedVariables: global ImportMeta augmentation for Vite
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }

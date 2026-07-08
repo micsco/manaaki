@@ -21,7 +21,7 @@ export const Route = createFileRoute("/login")({
 export function LoginPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gray-950 px-6 text-center text-gray-100">
-      <h1 className="font-bold text-3xl">Sign in to Manaaki</h1>
+      <h1 className="text-3xl font-bold">Sign in to Manaaki</h1>
       <p className="max-w-sm text-gray-400">
         Browsing recipes is open to everyone. Sign in to use your meal planner and household
         features.

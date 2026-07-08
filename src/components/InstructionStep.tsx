@@ -1,6 +1,7 @@
 import { mdiCheck } from "@mdi/js"
 import { usePostHog } from "@posthog/react"
 import { useCallback } from "react"
+
 import type { RecipeStep } from "../api/generated/types.gen"
 import { useSessionStorage } from "../hooks/useSessionStorage"
 import { stepStorageKey } from "../utils/recipe"
@@ -34,7 +35,7 @@ export function InstructionStep({ step, index, recipeId, className = "" }: Instr
     : `Step ${stepNumber}${isChecked ? ", completed" : ""}`
 
   return (
-    <li className={`group border-gray-800 border-t last:border-b ${className}`}>
+    <li className={`group border-t border-gray-800 last:border-b ${className}`}>
       <button
         type="button"
         className="flex w-full cursor-pointer items-baseline gap-3 py-3 text-left transition-colors hover:text-gray-200"

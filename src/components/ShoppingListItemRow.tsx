@@ -1,5 +1,6 @@
 import { mdiCheck, mdiChevronDown, mdiClose } from "@mdi/js"
 import { useState } from "react"
+
 import type { ShoppingListItemOutOutput } from "../api/generated"
 import { useRecipeNameMap } from "../hooks/useRecipeNameMap"
 import { recipeUrl } from "../utils/recipe"
@@ -23,7 +24,7 @@ export function ShoppingListItemRow({
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <li className="group border-gray-800 border-t last:border-b">
+    <li className="group border-t border-gray-800 last:border-b">
       <div className="flex items-center">
         <button
           type="button"
@@ -73,7 +74,7 @@ export function ShoppingListItemRow({
         </button>
       </div>
       {expanded && recipeIds.length > 0 && (
-        <ul className="pb-2 pl-9 text-gray-400 text-xs">
+        <ul className="pb-2 pl-9 text-xs text-gray-400">
           {recipeIds.map(id => {
             const r = names.get(id)
             return (

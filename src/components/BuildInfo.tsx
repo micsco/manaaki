@@ -1,7 +1,7 @@
 /**
- * Subtle footer showing the git SHA and build time of the running bundle.
- * Values come from VITE_BUILD_* env vars baked in by the Dockerfile;
- * in `vite dev` they're undefined, so the whole footer stays hidden.
+ * Subtle footer showing the git SHA and build time of the running bundle. Values come from
+ * VITE_BUILD_* env vars baked in by the Dockerfile; in `vite dev` they're undefined, so the whole
+ * footer stays hidden.
  */
 export function BuildInfo() {
   const shortSha = import.meta.env.VITE_BUILD_GIT_SHORT_SHA
@@ -15,7 +15,7 @@ export function BuildInfo() {
   const commitUrl = fullSha ? `https://github.com/micsco/manaaki/commit/${fullSha}` : null
 
   return (
-    <footer className="px-4 py-3 text-center font-mono text-gray-500 text-xs">
+    <footer className="px-4 py-3 text-center font-mono text-xs text-gray-500">
       {commitUrl ? (
         <a
           href={commitUrl}

@@ -1,6 +1,7 @@
 import { mdiCheck } from "@mdi/js"
 import { usePostHog } from "@posthog/react"
 import { useCallback } from "react"
+
 import type {
   CreateIngredientFood,
   CreateIngredientUnit,
@@ -59,7 +60,7 @@ function StructuredIngredient({
   const noteOnly = food == null && !hasQuantity && unit == null
   return (
     <span
-      className={`min-w-0 flex-1 select-none transition-all duration-200 ${isChecked ? checkedClass : ""}`}
+      className={`min-w-0 flex-1 transition-all duration-200 select-none ${isChecked ? checkedClass : ""}`}
     >
       <span className="flex flex-wrap items-baseline gap-x-1.5 leading-relaxed">
         {(hasQuantity || unit != null) && (
@@ -117,7 +118,7 @@ export function IngredientCheckbox({
     food != null || unit != null || (quantity != null && quantity !== 0) || note != null
 
   return (
-    <li className={`group border-gray-800 border-t last:border-b ${className}`}>
+    <li className={`group border-t border-gray-800 last:border-b ${className}`}>
       <button
         type="button"
         className="flex w-full cursor-pointer items-baseline gap-3 py-3 text-left transition-colors hover:text-gray-200"
@@ -125,7 +126,7 @@ export function IngredientCheckbox({
         aria-label={`${ingredient}${isChecked ? ", checked" : ""}`}
       >
         <span
-          className={`shrink-0 select-none font-semibold transition-colors ${
+          className={`shrink-0 font-semibold transition-colors select-none ${
             isChecked ? "text-gray-600" : "text-orange-500"
           }`}
         >
@@ -141,7 +142,7 @@ export function IngredientCheckbox({
           />
         ) : (
           <span
-            className={`min-w-0 flex-1 select-none leading-relaxed transition-colors ${
+            className={`min-w-0 flex-1 leading-relaxed transition-colors select-none ${
               isChecked ? "text-gray-500 line-through opacity-75" : "text-gray-300"
             }`}
           >

@@ -1,5 +1,6 @@
 import { Dialog } from "@base-ui/react/dialog"
 import { mdiClose, mdiShuffle } from "@mdi/js"
+
 import { useMotionPermissionContext } from "../contexts/MotionPermissionContext"
 import ManaakiLogo from "../manaaki.svg?react"
 import { Icon } from "./Icon"
@@ -30,11 +31,11 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
           ].join(" ")}
         >
           <div className="flex items-center justify-between px-5 pt-5 pb-4">
-            <Dialog.Title className="font-semibold text-gray-100 text-lg">
+            <Dialog.Title className="text-lg font-semibold text-gray-100">
               About Manaaki
             </Dialog.Title>
             <Dialog.Close
-              className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-800 hover:text-gray-200 focus:outline-hidden focus:ring-2 focus:ring-orange-500"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-800 hover:text-gray-200 focus:ring-2 focus:ring-orange-500 focus:outline-hidden"
               aria-label="Close"
             >
               <Icon path={mdiClose} size={0.7} aria-hidden={true} />
@@ -44,7 +45,7 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
           <div className="space-y-5 px-5 pb-6">
             <div className="flex items-center gap-3">
               <ManaakiLogo className="size-10 shrink-0" />
-              <Dialog.Description className="text-gray-400 text-sm leading-relaxed">
+              <Dialog.Description className="text-sm leading-relaxed text-gray-400">
                 Manaaki is a beautiful frontend for <span className="text-gray-300">Mealie</span>,
                 the self-hosted recipe manager. Browse, filter, and cook through your family's
                 recipe collection.
@@ -57,9 +58,9 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-600/20 text-orange-400">
                     <Icon path={mdiShuffle} size={0.65} aria-hidden={true} />
                   </div>
-                  <p className="font-medium text-gray-200 text-sm">Shake for a random recipe</p>
+                  <p className="text-sm font-medium text-gray-200">Shake for a random recipe</p>
                 </div>
-                <p className="mb-3 text-gray-400 text-sm leading-relaxed">
+                <p className="mb-3 text-sm leading-relaxed text-gray-400">
                   Give your phone a shake and Manaaki will pick a random recipe for you. Tap below
                   to enable motion access.
                 </p>
@@ -70,7 +71,7 @@ export function AboutModal({ open, onOpenChange }: AboutModalProps) {
             )}
 
             {permissionState === "denied" && (
-              <p className="rounded-xl border border-gray-700 bg-gray-800/50 px-4 py-3 text-gray-500 text-sm">
+              <p className="rounded-xl border border-gray-700 bg-gray-800/50 px-4 py-3 text-sm text-gray-500">
                 Motion access was denied. You can re-enable it in your browser settings.
               </p>
             )}

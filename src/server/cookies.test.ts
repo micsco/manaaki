@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+
 import { parseCookie, serializeCookie } from "./cookies"
 
 describe("parseCookie", () => {

@@ -1,13 +1,13 @@
-import { defineConfig } from '@hey-api/openapi-ts'
+import { defineConfig } from "@hey-api/openapi-ts"
 
 export default defineConfig({
-  input: 'https://demo.mealie.io/openapi.json',
+  input: "https://demo.mealie.io/openapi.json",
   output: {
-    path: 'src/api/generated',
+    path: "src/api/generated",
   },
   plugins: [
     {
-      name: '@hey-api/client-fetch',
+      name: "@hey-api/client-fetch",
       baseUrl: false,
     },
   ],
