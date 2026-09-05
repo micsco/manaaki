@@ -31,21 +31,32 @@ export function CookModeProvider({ children }: CookModeProviderProps) {
     let wakeLock: WakeLockSentinel | null = null
     let cancelled = false
 
-    if (isCookMode && "wakeLock" in navigator) {
-      navigator.wakeLock
-        .request("screen")
-        .then(lock => {
-          if (cancelled) return lock.release()
-          wakeLock = lock
-        })
-        .catch(() => {})
+    let requesting = false
+    const acquire = async () => {
+      if (
+        !isCookMode ||
+        !("wakeLock" in navigator) ||
+        document.visibilityState === "hidden" ||
+        requesting ||
+        (wakeLock && !wakeLock.released)
+      )
+        return
+      requesting = true
+      try {
+        const lock = await navigator.wakeLock.request("screen")
+        if (cancelled) await lock.release()
+        else wakeLock = lock
+      } catch {
+      } finally {
+        requesting = false
+      }
     }
-
+    void acquire()
+    document.addEventListener("visibilitychange", acquire)
     return () => {
       cancelled = true
-      if (wakeLock) {
-        void wakeLock.release().catch(() => {})
-      }
+      document.removeEventListener("visibilitychange", acquire)
+      if (wakeLock) void wakeLock.release().catch(() => {})
     }
   }, [isCookMode])
 

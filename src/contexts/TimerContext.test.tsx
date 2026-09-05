@@ -257,3 +257,40 @@ describe("TimerContext", () => {
     expect(result.current.getTimer("non-existent")).toBeUndefined()
   })
 })
+
+it("restores timers after reopening and includes time spent away", async () => {
+  vi.useFakeTimers()
+  const first = renderHook(() => useTimer(), { wrapper: TimerProvider })
+  await act(async () => {
+    vi.runAllTicks()
+  })
+  act(() => first.result.current.startTimer({ id: "persisted", label: "Oven", totalSeconds: 600 }))
+  first.unmount()
+  vi.setSystemTime(Date.now() + 120_000)
+  const second = renderHook(() => useTimer(), { wrapper: TimerProvider })
+  await act(async () => {
+    vi.runAllTicks()
+  })
+  expect(second.result.current.getTimer("persisted")?.remainingSeconds).toBe(480)
+  second.unmount()
+  vi.useRealTimers()
+})
+
+it("completes a restored timer that expired while the app was closed", async () => {
+  vi.useFakeTimers()
+  const first = renderHook(() => useTimer(), { wrapper: TimerProvider })
+  await act(async () => {
+    vi.runAllTicks()
+  })
+  act(() => first.result.current.startTimer({ id: "expired", label: "Oven", totalSeconds: 60 }))
+  first.unmount()
+  vi.setSystemTime(Date.now() + 120_000)
+  const second = renderHook(() => useTimer(), { wrapper: TimerProvider })
+  await act(async () => {
+    vi.runAllTicks()
+  })
+  await act(async () => vi.advanceTimersByTimeAsync(250))
+  expect(second.result.current.getTimer("expired")?.status).toBe("completed")
+  second.unmount()
+  vi.useRealTimers()
+})

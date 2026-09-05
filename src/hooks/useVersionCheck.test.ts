@@ -67,13 +67,13 @@ describe("useVersionCheck", () => {
     expect(fetchSpy).not.toHaveBeenCalled()
   })
 
-  it("subscribes to onResolved and sets up a poll interval", () => {
+  it("does not subscribe to navigation for updates", () => {
     const router = makeMockRouter()
     global.fetch = mockFetch("abc1234")
 
     renderHook(() => useVersionCheck(router as any))
 
-    expect(router.subscribe).toHaveBeenCalledWith("onResolved", expect.any(Function))
+    expect(router.subscribe).not.toHaveBeenCalled()
   })
 
   it("does not reload on navigation when no update is detected", async () => {
@@ -89,7 +89,7 @@ describe("useVersionCheck", () => {
     expect(reloadMock).not.toHaveBeenCalled()
   })
 
-  it("reloads on navigation when a new version is detected", async () => {
+  it("preserves the page on navigation when a new version is detected", async () => {
     const router = makeMockRouter()
     global.fetch = mockFetch("newsha99")
 
@@ -99,7 +99,7 @@ describe("useVersionCheck", () => {
 
     act(() => router.triggerEvent("onResolved"))
 
-    expect(reloadMock).toHaveBeenCalledTimes(1)
+    expect(reloadMock).not.toHaveBeenCalled()
   }, 10000)
 
   it("shows a toast after 15 minutes of idle when update is available", async () => {
@@ -142,7 +142,7 @@ describe("useVersionCheck", () => {
     await advanceTimersAndFlush(POLL_INTERVAL_MS)
 
     vi.setSystemTime(Date.now() + IDLE_PROMPT_MS - 1000)
-    window.dispatchEvent(new Event("pointermove"))
+    window.dispatchEvent(new Event("pointerdown"))
 
     await advanceTimersAndFlush(POLL_INTERVAL_MS)
 

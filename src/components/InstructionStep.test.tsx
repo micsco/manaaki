@@ -117,17 +117,17 @@ describe("InstructionStep", () => {
   })
 
   describe("session storage persistence", () => {
-    it("persists checked state to sessionStorage", async () => {
+    it("persists checked state to localStorage", async () => {
       const user = userEvent.setup()
       render(<InstructionStep step={step} index={0} recipeId="recipe-1" />)
 
       await user.click(screen.getByRole("button"))
 
-      expect(sessionStorage.getItem("recipe-recipe-1-step-0")).toBe("true")
+      expect(localStorage.getItem("manaaki:cooking:v1:recipe-recipe-1-step-0")).toBe("true")
     })
 
-    it("restores checked state from sessionStorage after mount", async () => {
-      sessionStorage.setItem("recipe-recipe-1-step-0", "true")
+    it("restores checked state from localStorage after mount", async () => {
+      localStorage.setItem("manaaki:cooking:v1:recipe-recipe-1-step-0", "true")
 
       render(<InstructionStep step={step} index={0} recipeId="recipe-1" />)
 

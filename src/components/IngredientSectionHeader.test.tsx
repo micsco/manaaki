@@ -20,9 +20,9 @@ describe("IngredientSectionHeader", () => {
     expect(screen.queryByRole("img", { hidden: true })).not.toBeInTheDocument()
   })
 
-  it("shows check icon after mount when all ingredients are checked in sessionStorage", async () => {
-    sessionStorage.setItem("recipe-recipe-1-ingredient-0", "true")
-    sessionStorage.setItem("recipe-recipe-1-ingredient-1", "true")
+  it("shows check icon after mount when all ingredients are checked in localStorage", async () => {
+    localStorage.setItem("manaaki:cooking:v1:recipe-recipe-1-ingredient-0", "true")
+    localStorage.setItem("manaaki:cooking:v1:recipe-recipe-1-ingredient-1", "true")
 
     render(<IngredientSectionHeader title="Sauce" recipeId="recipe-1" indices={[0, 1]} />)
 
@@ -37,13 +37,13 @@ describe("IngredientSectionHeader", () => {
 
     await user.click(screen.getByRole("button"))
 
-    expect(sessionStorage.getItem("recipe-recipe-1-ingredient-0")).toBe("true")
-    expect(sessionStorage.getItem("recipe-recipe-1-ingredient-1")).toBe("true")
+    expect(localStorage.getItem("manaaki:cooking:v1:recipe-recipe-1-ingredient-0")).toBe("true")
+    expect(localStorage.getItem("manaaki:cooking:v1:recipe-recipe-1-ingredient-1")).toBe("true")
   })
 
   it("toggles all ingredients to unchecked on click when all are checked", async () => {
-    sessionStorage.setItem("recipe-recipe-1-ingredient-0", "true")
-    sessionStorage.setItem("recipe-recipe-1-ingredient-1", "true")
+    localStorage.setItem("manaaki:cooking:v1:recipe-recipe-1-ingredient-0", "true")
+    localStorage.setItem("manaaki:cooking:v1:recipe-recipe-1-ingredient-1", "true")
     const user = userEvent.setup()
     render(<IngredientSectionHeader title="Sauce" recipeId="recipe-1" indices={[0, 1]} />)
 
@@ -53,7 +53,7 @@ describe("IngredientSectionHeader", () => {
 
     await user.click(screen.getByRole("button"))
 
-    expect(sessionStorage.getItem("recipe-recipe-1-ingredient-0")).toBe("false")
-    expect(sessionStorage.getItem("recipe-recipe-1-ingredient-1")).toBe("false")
+    expect(localStorage.getItem("manaaki:cooking:v1:recipe-recipe-1-ingredient-0")).toBe("false")
+    expect(localStorage.getItem("manaaki:cooking:v1:recipe-recipe-1-ingredient-1")).toBe("false")
   })
 })

@@ -39,3 +39,18 @@ describe("CookModeProvider wake lock", () => {
     expect(release).toHaveBeenCalledOnce()
   })
 })
+
+it("reacquires a released wake lock when the app becomes visible", async () => {
+  const first = { released: false, release: vi.fn().mockResolvedValue(undefined) }
+  const request = vi
+    .spyOn(navigator.wakeLock, "request")
+    .mockResolvedValue(first as unknown as WakeLockSentinel)
+  const { unmount } = renderHook(() => useCookMode(), { wrapper: CookModeProvider })
+  await act(async () => {})
+  first.released = true
+  await act(async () => {
+    document.dispatchEvent(new Event("visibilitychange"))
+  })
+  expect(request).toHaveBeenCalledTimes(2)
+  unmount()
+})

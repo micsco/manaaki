@@ -10,4 +10,5 @@ Object.defineProperty(navigator, "wakeLock", {
 
 beforeEach(() => {
   sessionStorage.clear()
+  localStorage.clear()
 })

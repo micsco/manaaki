@@ -7,9 +7,13 @@ import {
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react"
 
 import { startKitchenAlarm, stopKitchenAlarm } from "../utils/audio"
+import { persistTimers, restoreTimers } from "../utils/timerStorage"
+
+const subscribeHydration = () => () => {}
 
 export type TimerStatus = "running" | "paused" | "completed"
 
@@ -64,13 +68,26 @@ export interface TimerProviderProps {
 
 export function TimerProvider({
   children,
-  initialTimers = [],
+  initialTimers,
   initialAlarmRinging = false,
 }: TimerProviderProps) {
-  const [timers, setTimers] = useState<ActiveTimer[]>(initialTimers)
+  const [timers, setTimers] = useState<ActiveTimer[]>(initialTimers ?? [])
   const [isAlarmRinging, setIsAlarmRinging] = useState(
-    initialAlarmRinging || initialTimers.some(t => t.status === "completed")
+    initialAlarmRinging || (initialTimers?.some(t => t.status === "completed") ?? false)
   )
+  const [restored, setRestored] = useState(false)
+  const hydrated = useSyncExternalStore(
+    subscribeHydration,
+    () => true,
+    () => false
+  )
+  if (hydrated && !restored) {
+    if (!initialTimers) setTimers(restoreTimers())
+    setRestored(true)
+  }
+  useEffect(() => {
+    if (restored) persistTimers(timers)
+  }, [timers, restored])
   const posthog = usePostHog()
   const posthogRef = useRef(posthog)
   useEffect(() => {
@@ -256,7 +273,7 @@ export function TimerProvider({
           const elapsed = Math.floor((now - timer.startedAt) / 1000)
           const nextRemaining = Math.max(0, timer.pausedRemainingSeconds - elapsed)
 
-          if (nextRemaining === timer.remainingSeconds) {
+          if (nextRemaining === timer.remainingSeconds && nextRemaining !== 0) {
             return timer
           }
 

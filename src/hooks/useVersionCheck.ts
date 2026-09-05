@@ -18,7 +18,7 @@ async function fetchRemoteSha(): Promise<string | null> {
   }
 }
 
-export function useVersionCheck(router: AnyRouter) {
+export function useVersionCheck(_router: AnyRouter) {
   const updateDetectedAtRef = useRef<number | null>(null)
   const toastShownRef = useRef(false)
   const lastInteractionRef = useRef(0)
@@ -31,7 +31,7 @@ export function useVersionCheck(router: AnyRouter) {
     const trackInteraction = () => {
       lastInteractionRef.current = Date.now()
     }
-    window.addEventListener("pointermove", trackInteraction, { passive: true })
+    window.addEventListener("pointerdown", trackInteraction, { passive: true })
     window.addEventListener("keydown", trackInteraction, { passive: true })
 
     const checkVersion = async () => {
@@ -61,17 +61,10 @@ export function useVersionCheck(router: AnyRouter) {
 
     const intervalId = setInterval(checkVersion, POLL_INTERVAL_MS)
 
-    const unsubscribe = router.subscribe("onResolved", () => {
-      if (updateDetectedAtRef.current !== null) {
-        window.location.reload()
-      }
-    })
-
     return () => {
       clearInterval(intervalId)
-      unsubscribe()
-      window.removeEventListener("pointermove", trackInteraction)
+      window.removeEventListener("pointerdown", trackInteraction)
       window.removeEventListener("keydown", trackInteraction)
     }
-  }, [router])
+  }, [])
 }

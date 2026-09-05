@@ -20,9 +20,9 @@ describe("InstructionSectionHeader", () => {
     expect(screen.queryByRole("img", { hidden: true })).not.toBeInTheDocument()
   })
 
-  it("shows check icon after mount when all steps are completed in sessionStorage", async () => {
-    sessionStorage.setItem("recipe-recipe-1-step-0", "true")
-    sessionStorage.setItem("recipe-recipe-1-step-1", "true")
+  it("shows check icon after mount when all steps are completed in localStorage", async () => {
+    localStorage.setItem("manaaki:cooking:v1:recipe-recipe-1-step-0", "true")
+    localStorage.setItem("manaaki:cooking:v1:recipe-recipe-1-step-1", "true")
 
     render(<InstructionSectionHeader title="Prep" recipeId="recipe-1" indices={[0, 1]} />)
 
@@ -37,13 +37,13 @@ describe("InstructionSectionHeader", () => {
 
     await user.click(screen.getByRole("button"))
 
-    expect(sessionStorage.getItem("recipe-recipe-1-step-0")).toBe("true")
-    expect(sessionStorage.getItem("recipe-recipe-1-step-1")).toBe("true")
+    expect(localStorage.getItem("manaaki:cooking:v1:recipe-recipe-1-step-0")).toBe("true")
+    expect(localStorage.getItem("manaaki:cooking:v1:recipe-recipe-1-step-1")).toBe("true")
   })
 
   it("toggles all steps to uncomplete on click when all are checked", async () => {
-    sessionStorage.setItem("recipe-recipe-1-step-0", "true")
-    sessionStorage.setItem("recipe-recipe-1-step-1", "true")
+    localStorage.setItem("manaaki:cooking:v1:recipe-recipe-1-step-0", "true")
+    localStorage.setItem("manaaki:cooking:v1:recipe-recipe-1-step-1", "true")
     const user = userEvent.setup()
     render(<InstructionSectionHeader title="Prep" recipeId="recipe-1" indices={[0, 1]} />)
 
@@ -53,7 +53,7 @@ describe("InstructionSectionHeader", () => {
 
     await user.click(screen.getByRole("button"))
 
-    expect(sessionStorage.getItem("recipe-recipe-1-step-0")).toBe("false")
-    expect(sessionStorage.getItem("recipe-recipe-1-step-1")).toBe("false")
+    expect(localStorage.getItem("manaaki:cooking:v1:recipe-recipe-1-step-0")).toBe("false")
+    expect(localStorage.getItem("manaaki:cooking:v1:recipe-recipe-1-step-1")).toBe("false")
   })
 })

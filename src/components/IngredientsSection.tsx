@@ -1,6 +1,6 @@
 import type { RecipeIngredientOutput, RecipeStep } from "../api/generated/types.gen"
 import { useCookMode } from "../contexts/CookModeContext"
-import { useSessionStorage } from "../hooks/useSessionStorage"
+import { useCookingStorage } from "../hooks/useCookingStorage"
 import { groupIngredients, scaleQuantity, servingsStorageKey } from "../utils/recipe"
 import { IngredientCheckbox } from "./IngredientCheckbox"
 import { IngredientSectionHeader } from "./IngredientSectionHeader"
@@ -47,7 +47,7 @@ export function IngredientsSection({
   const hasSections = groups.some(g => g.title !== null)
 
   const hasServings = defaultServings != null && defaultServings > 0
-  const [servings, setServings] = useSessionStorage(
+  const [servings, setServings] = useCookingStorage(
     servingsStorageKey(recipeId),
     hasServings ? defaultServings : 1
   )

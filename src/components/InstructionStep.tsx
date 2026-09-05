@@ -3,7 +3,7 @@ import { usePostHog } from "@posthog/react"
 import { type MouseEvent, useCallback, useMemo } from "react"
 
 import type { RecipeStep } from "../api/generated/types.gen"
-import { useSessionStorage } from "../hooks/useSessionStorage"
+import { useCookingStorage } from "../hooks/useCookingStorage"
 import { stepStorageKey } from "../utils/recipe"
 import { parseStepSegments } from "../utils/timer"
 import { Icon } from "./Icon"
@@ -17,7 +17,7 @@ interface InstructionStepProps {
 }
 
 export function InstructionStep({ step, index, recipeId, className = "" }: InstructionStepProps) {
-  const [isChecked, setIsChecked] = useSessionStorage(stepStorageKey(recipeId, index), false)
+  const [isChecked, setIsChecked] = useCookingStorage(stepStorageKey(recipeId, index), false)
   const posthog = usePostHog()
 
   const handleToggle = useCallback(() => {

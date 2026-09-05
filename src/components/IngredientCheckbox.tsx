@@ -8,7 +8,7 @@ import type {
   IngredientFoodOutput,
   IngredientUnitOutput,
 } from "../api/generated/types.gen"
-import { useSessionStorage } from "../hooks/useSessionStorage"
+import { useCookingStorage } from "../hooks/useCookingStorage"
 import { formatQuantity, ingredientStorageKey } from "../utils/recipe"
 import { Icon } from "./Icon"
 
@@ -98,7 +98,7 @@ export function IngredientCheckbox({
   note,
   className = "",
 }: IngredientCheckboxProps) {
-  const [isChecked, setIsChecked] = useSessionStorage(
+  const [isChecked, setIsChecked] = useCookingStorage(
     ingredientStorageKey(recipeId, ingredientIndex),
     false
   )

@@ -1,6 +1,6 @@
 import { mdiCheck } from "@mdi/js"
 
-import { useSessionStorageGroup } from "../hooks/useSessionStorage"
+import { useCookingStorageGroup } from "../hooks/useCookingStorage"
 import { stepStorageKey } from "../utils/recipe"
 import { Icon } from "./Icon"
 
@@ -15,7 +15,7 @@ export function InstructionSectionHeader({
   recipeId,
   indices,
 }: InstructionSectionHeaderProps) {
-  const { allChecked, toggleAll } = useSessionStorageGroup(
+  const { allChecked, toggleAll } = useCookingStorageGroup(
     indices.map(index => stepStorageKey(recipeId, index))
   )
 

@@ -74,17 +74,19 @@ describe("IngredientCheckbox", () => {
   })
 
   describe("session storage persistence", () => {
-    it("persists checked state to sessionStorage", async () => {
+    it("persists checked state to localStorage", async () => {
       const user = userEvent.setup()
       render(<IngredientCheckbox {...defaultProps} />)
 
       await user.click(screen.getByRole("button"))
 
-      expect(sessionStorage.getItem("recipe-test-recipe-ingredient-0")).toBe("true")
+      expect(localStorage.getItem("manaaki:cooking:v1:recipe-test-recipe-ingredient-0")).toBe(
+        "true"
+      )
     })
 
-    it("restores checked state from sessionStorage on mount", () => {
-      sessionStorage.setItem("recipe-test-recipe-ingredient-0", "true")
+    it("restores checked state from localStorage on mount", () => {
+      localStorage.setItem("manaaki:cooking:v1:recipe-test-recipe-ingredient-0", "true")
 
       render(<IngredientCheckbox {...defaultProps} />)
 
@@ -103,8 +105,10 @@ describe("IngredientCheckbox", () => {
       const buttons = screen.getAllByRole("button")
       await user.click(buttons[0])
 
-      expect(sessionStorage.getItem("recipe-test-recipe-ingredient-0")).toBe("true")
-      expect(sessionStorage.getItem("recipe-test-recipe-ingredient-1")).toBeNull()
+      expect(localStorage.getItem("manaaki:cooking:v1:recipe-test-recipe-ingredient-0")).toBe(
+        "true"
+      )
+      expect(localStorage.getItem("manaaki:cooking:v1:recipe-test-recipe-ingredient-1")).toBeNull()
     })
   })
 })
