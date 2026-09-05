@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react"
+
 import { useRecipeList } from "./useRecipeList"
 
 export interface RecipeNavItem {
@@ -21,9 +23,14 @@ function toNavItem(recipe: {
 }
 
 export function useRecipeNav(currentId: string): RecipeNav {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const recipes = useRecipeList()
 
-  if (recipes.length === 0) return { prevRecipe: null, nextRecipe: null }
+  if (!mounted || recipes.length === 0) return { prevRecipe: null, nextRecipe: null }
 
   const index = recipes.findIndex(r => r.id === currentId)
   if (index === -1) return { prevRecipe: null, nextRecipe: null }

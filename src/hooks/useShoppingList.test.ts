@@ -41,4 +41,12 @@ describe("useCurrentShoppingList", () => {
     const { result } = renderHook(() => useCurrentShoppingList(), { wrapper: wrapper() })
     await waitFor(() => expect(result.current).toBeNull())
   })
+
+  it("does not fetch when enabled is false", () => {
+    const { result } = renderHook(() => useCurrentShoppingList({ enabled: false }), {
+      wrapper: wrapper(),
+    })
+    expect(result.current).toBeUndefined()
+    expect(sdk.getAllApiHouseholdsShoppingListsGet).not.toHaveBeenCalled()
+  })
 })

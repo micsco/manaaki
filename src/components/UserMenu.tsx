@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router"
+
 import { useCurrentUser } from "../hooks/useCurrentUser"
 
 export function UserMenu() {
@@ -22,18 +24,18 @@ export function UserMenu() {
 
   return (
     <div className="flex items-center gap-2">
-      <a
-        href="/shopping"
+      <Link
+        to="/shopping"
         className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-200 transition-colors hover:bg-gray-700"
       >
         Shopping
-      </a>
-      <a
-        href="/plan"
+      </Link>
+      <Link
+        to="/plan"
         className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-200 transition-colors hover:bg-gray-700"
       >
         Meal Plan
-      </a>
+      </Link>
       <button
         type="button"
         onClick={signOut}

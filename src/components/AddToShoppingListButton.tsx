@@ -24,7 +24,7 @@ function newListName(): string {
 
 export function AddToShoppingListButton({ recipe }: { recipe: RecipeOutput }) {
   const current = useCurrentUser()
-  const list = useCurrentShoppingList()
+  const list = useCurrentShoppingList({ enabled: Boolean(current && !current.isAnonymous) })
   const qc = useQueryClient()
   const [state, setState] = useState<"idle" | "adding" | "done" | "error">("idle")
 

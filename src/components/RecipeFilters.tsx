@@ -160,13 +160,14 @@ export function FilterBar({
         type="button"
         onClick={handleOpenDrawer}
         className="relative flex shrink-0 items-center gap-1.5 rounded-full py-3 pr-4 pl-3 text-sm font-medium text-gray-300 hover:text-gray-100 focus:outline-hidden"
-        aria-label={activeFilterCount > 0 ? `Filters, ${activeFilterCount} active` : "Filters"}
       >
         <Icon path={mdiTune} size={0.65} aria-hidden={true} />
         Filters
         {activeFilterCount > 0 && (
           <span className="flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">
+            <span className="sr-only">, </span>
             {activeFilterCount}
+            <span className="sr-only"> active</span>
           </span>
         )}
       </button>

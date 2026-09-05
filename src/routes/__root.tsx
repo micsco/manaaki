@@ -12,9 +12,11 @@ import type { ReactNode } from "react"
 
 import { AppToasts } from "../components/AppToasts"
 import { BuildInfo } from "../components/BuildInfo"
+import { KitchenTimerHUD } from "../components/KitchenTimerHUD"
 import { ShakeToRandomRecipe } from "../components/ShakeToRandomRecipe"
 import { CookModeProvider } from "../contexts/CookModeContext"
 import { MotionPermissionProvider } from "../contexts/MotionPermissionContext"
+import { TimerProvider } from "../contexts/TimerContext"
 import { useVersionCheck } from "../hooks/useVersionCheck"
 import { queryClient } from "../lib/queryClient"
 import manaakiLogoUrl from "../manaaki.svg?url"
@@ -86,7 +88,10 @@ function RootComponent() {
           <MotionPermissionProvider>
             <NuqsAdapter>
               <CookModeProvider>
-                <Outlet />
+                <TimerProvider>
+                  <Outlet />
+                  <KitchenTimerHUD />
+                </TimerProvider>
               </CookModeProvider>
             </NuqsAdapter>
             <ShakeToRandomRecipe />
@@ -110,11 +115,11 @@ function NotFound() {
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <div className="root">{children}</div>
         <BuildInfo />
         <AppToasts />

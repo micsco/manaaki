@@ -43,6 +43,7 @@ export const Route = createFileRoute("/recipes/")({
     return {
       meta: [
         { title },
+        { name: "description", content: description },
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:image", content: ogImage },
@@ -89,9 +90,9 @@ function RecipeImage({ recipe }: { recipe: RecipeSummary }) {
       </div>
       <div className="absolute right-0 bottom-0 left-0 px-3 pb-2.5">
         <div className="flex items-end justify-between gap-2">
-          <h3 className="line-clamp-2 text-base leading-tight font-bold text-balance text-white drop-shadow-sm">
+          <h2 className="line-clamp-2 text-base leading-tight font-bold text-balance text-white drop-shadow-sm">
             {recipe.name}
-          </h3>
+          </h2>
           <RecipeCardInfoBadges recipe={recipe} />
         </div>
       </div>
@@ -279,7 +280,7 @@ function RecipeList() {
           </button>
           <div className="flex shrink-0 items-center gap-3">
             {!showSkeleton && !isError && (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-400">
                 {isFiltered
                   ? `${filtered.length} of ${recipes.length}`
                   : `${recipes.length} recipes`}

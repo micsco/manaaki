@@ -24,8 +24,10 @@ export const currentListQueryOptions = queryOptions({
   staleTime: 60_000,
 })
 
-export function useCurrentShoppingList(): ShoppingListSummary | null | undefined {
-  return useQuery(currentListQueryOptions).data
+export function useCurrentShoppingList(options?: {
+  enabled?: boolean
+}): ShoppingListSummary | null | undefined {
+  return useQuery({ ...currentListQueryOptions, enabled: options?.enabled ?? true }).data
 }
 
 export function shoppingListDetailQueryOptions(id: string) {

@@ -4,13 +4,16 @@ import { NuqsTestingAdapter } from "nuqs/adapters/testing"
 import type { ReactElement, ReactNode } from "react"
 
 import { CookModeProvider } from "../contexts/CookModeContext"
+import { TimerProvider } from "../contexts/TimerContext"
 
 function AllProviders({ children }: { children: ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return (
     <QueryClientProvider client={qc}>
       <NuqsTestingAdapter>
-        <CookModeProvider>{children}</CookModeProvider>
+        <CookModeProvider>
+          <TimerProvider>{children}</TimerProvider>
+        </CookModeProvider>
       </NuqsTestingAdapter>
     </QueryClientProvider>
   )

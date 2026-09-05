@@ -144,4 +144,48 @@ describe("InstructionStep", () => {
       await expect(user.click(screen.getByRole("button"))).resolves.not.toThrow()
     })
   })
+
+  describe("timer integration", () => {
+    const stepWithTimer: RecipeStep = {
+      id: "step-timer-1",
+      text: "Roast the vegetables for 25 minutes until tender.",
+      title: null,
+      summary: "Roast vegetables",
+    }
+
+    it("renders inline timer chip for duration expression", () => {
+      render(<InstructionStep step={stepWithTimer} index={1} recipeId="recipe-1" />)
+
+      expect(screen.getByRole("button", { name: "Start timer for 25 minutes" })).toBeInTheDocument()
+    })
+
+    it("clicking timer chip does not complete the step", async () => {
+      const user = userEvent.setup()
+      render(<InstructionStep step={stepWithTimer} index={1} recipeId="recipe-1" />)
+
+      const timerButton = screen.getByRole("button", {
+        name: "Start timer for 25 minutes",
+      })
+      const stepButton = screen.getByRole("button", {
+        name: "Step 2: Roast vegetables",
+      })
+
+      await user.click(timerButton)
+
+      expect(stepButton).toHaveAttribute("aria-label", "Step 2: Roast vegetables")
+      expect(screen.getByRole("button", { name: /timer running/i })).toBeInTheDocument()
+    })
+
+    it("clicking step text marks step as completed", async () => {
+      const user = userEvent.setup()
+      render(<InstructionStep step={stepWithTimer} index={1} recipeId="recipe-1" />)
+
+      const stepText = screen.getByText("Roast the vegetables for")
+      await user.click(stepText)
+
+      expect(
+        screen.getByRole("button", { name: "Step 2: Roast vegetables, completed" })
+      ).toBeInTheDocument()
+    })
+  })
 })

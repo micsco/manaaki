@@ -41,11 +41,13 @@ describe("AddToShoppingListButton", () => {
 
   it("shows a sign-in CTA when anonymous", () => {
     vi.spyOn(currentUser, "useCurrentUser").mockReturnValue({ user: null, isAnonymous: true })
+    const listSpy = vi.spyOn(shoppingList, "useCurrentShoppingList").mockReturnValue(null)
     render(<AddToShoppingListButton recipe={recipe} />, { wrapper: wrap() })
     expect(screen.getByRole("link", { name: /sign in/i })).toHaveAttribute(
       "href",
       "/api/auth/oauth"
     )
+    expect(listSpy).toHaveBeenCalledWith({ enabled: false })
   })
 
   it("appends to a recent (<48h) list and offers 'New list instead'", async () => {

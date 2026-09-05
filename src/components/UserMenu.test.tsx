@@ -6,6 +6,18 @@ import { describe, expect, it, vi } from "vitest"
 import * as auth from "../api/auth"
 import { UserMenu } from "./UserMenu"
 
+vi.mock("@tanstack/react-router", async importOriginal => {
+  const actual = await importOriginal<typeof import("@tanstack/react-router")>()
+  return {
+    ...actual,
+    Link: ({ to, children, ...props }: any) => (
+      <a href={to} {...props}>
+        {children}
+      </a>
+    ),
+  }
+})
+
 function wrapper({ children }: { children: ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
