@@ -511,16 +511,6 @@ export type BackupFile = {
 };
 
 /**
- * Body_create_recipe_from_image_api_recipes_create_image_post
- */
-export type BodyCreateRecipeFromImageApiRecipesCreateImagePost = {
-    /**
-     * Images
-     */
-    images: Array<Blob | File>;
-};
-
-/**
  * Body_create_recipe_from_zip_api_recipes_create_zip_post
  */
 export type BodyCreateRecipeFromZipApiRecipesCreateZipPost = {
@@ -528,6 +518,58 @@ export type BodyCreateRecipeFromZipApiRecipesCreateZipPost = {
      * Archive
      */
     archive: Blob | File;
+};
+
+/**
+ * Body_create_recipe_with_ai_api_recipes_create_ai_post
+ */
+export type BodyCreateRecipeWithAiApiRecipesCreateAiPost = {
+    /**
+     * Content
+     */
+    content?: string | null;
+    /**
+     * Url
+     */
+    url?: string | null;
+    /**
+     * Translatelanguage
+     */
+    translateLanguage?: string | null;
+    /**
+     * Createneworganizers
+     */
+    createNewOrganizers?: boolean;
+    /**
+     * Images
+     */
+    images?: Array<Blob | File>;
+};
+
+/**
+ * Body_create_recipe_with_ai_stream_api_recipes_create_ai_stream_post
+ */
+export type BodyCreateRecipeWithAiStreamApiRecipesCreateAiStreamPost = {
+    /**
+     * Content
+     */
+    content?: string | null;
+    /**
+     * Url
+     */
+    url?: string | null;
+    /**
+     * Translatelanguage
+     */
+    translateLanguage?: string | null;
+    /**
+     * Createneworganizers
+     */
+    createNewOrganizers?: boolean;
+    /**
+     * Images
+     */
+    images?: Array<Blob | File>;
 };
 
 /**
@@ -686,6 +728,20 @@ export type CategoryIn = {
 };
 
 /**
+ * CategoryMerge
+ */
+export type CategoryMerge = {
+    /**
+     * Fromid
+     */
+    fromId: string;
+    /**
+     * Toid
+     */
+    toId: string;
+};
+
+/**
  * CategoryOut
  */
 export type CategoryOut = {
@@ -705,6 +761,10 @@ export type CategoryOut = {
      * Slug
      */
     slug: string;
+    /**
+     * Recipecount
+     */
+    recipeCount?: number;
 };
 
 /**
@@ -752,9 +812,17 @@ export type CheckAppConfig = {
      */
     ldapReady: boolean;
     /**
+     * Ldapdisabled
+     */
+    ldapDisabled: boolean;
+    /**
      * Oidcready
      */
     oidcReady: boolean;
+    /**
+     * Oidcdisabled
+     */
+    oidcDisabled: boolean;
     /**
      * Baseurlset
      */
@@ -2681,6 +2749,30 @@ export type MultiPurposeLabelUpdate = {
 };
 
 /**
+ * NativeOIDCTokenRequest
+ *
+ * An authorization code captured by a native client, for server-side exchange.
+ */
+export type NativeOidcTokenRequest = {
+    /**
+     * Code
+     */
+    code: string;
+    /**
+     * Code Verifier
+     */
+    code_verifier: string;
+    /**
+     * Redirect Uri
+     */
+    redirect_uri: string;
+    /**
+     * Nonce
+     */
+    nonce?: string | null;
+};
+
+/**
  * Nutrition
  */
 export type Nutrition = {
@@ -2728,6 +2820,26 @@ export type Nutrition = {
      * Unsaturatedfatcontent
      */
     unsaturatedFatContent?: string | null;
+};
+
+/**
+ * OIDCNativeConfig
+ *
+ * Parameters a native client needs to start an OIDC authorization request itself.
+ */
+export type OidcNativeConfig = {
+    /**
+     * Authorization Endpoint
+     */
+    authorization_endpoint: string;
+    /**
+     * Client Id
+     */
+    client_id: string;
+    /**
+     * Scope
+     */
+    scope: string;
 };
 
 /**
@@ -3740,6 +3852,10 @@ export type RecipeCategory = {
      * Slug
      */
     slug: string;
+    /**
+     * Recipecount
+     */
+    recipeCount?: number;
 };
 
 /**
@@ -4286,6 +4402,10 @@ export type RecipeTag = {
      * Slug
      */
     slug: string;
+    /**
+     * Recipecount
+     */
+    recipeCount?: number;
 };
 
 /**
@@ -4493,6 +4613,10 @@ export type RecipeTool = {
      * Slug
      */
     slug: string;
+    /**
+     * Recipecount
+     */
+    recipeCount?: number;
     /**
      * Householdswithtool
      */
@@ -5686,6 +5810,20 @@ export type TagIn = {
 };
 
 /**
+ * TagMerge
+ */
+export type TagMerge = {
+    /**
+     * Fromid
+     */
+    fromId: string;
+    /**
+     * Toid
+     */
+    toId: string;
+};
+
+/**
  * TagOut
  */
 export type TagOut = {
@@ -5705,6 +5843,10 @@ export type TagOut = {
      * Slug
      */
     slug: string;
+    /**
+     * Recipecount
+     */
+    recipeCount?: number;
 };
 
 /**
@@ -6566,14 +6708,53 @@ export type OauthCallbackApiAuthOauthCallbackGetResponses = {
     200: unknown;
 };
 
-export type RefreshTokenApiAuthRefreshGetData = {
+export type OauthNativeConfigApiAuthOauthNativeConfigGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/auth/oauth/native/config';
+};
+
+export type OauthNativeConfigApiAuthOauthNativeConfigGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: OidcNativeConfig;
+};
+
+export type OauthNativeConfigApiAuthOauthNativeConfigGetResponse = OauthNativeConfigApiAuthOauthNativeConfigGetResponses[keyof OauthNativeConfigApiAuthOauthNativeConfigGetResponses];
+
+export type OauthNativeTokenApiAuthOauthNativeTokenPostData = {
+    body: NativeOidcTokenRequest;
+    path?: never;
+    query?: never;
+    url: '/api/auth/oauth/native/token';
+};
+
+export type OauthNativeTokenApiAuthOauthNativeTokenPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OauthNativeTokenApiAuthOauthNativeTokenPostError = OauthNativeTokenApiAuthOauthNativeTokenPostErrors[keyof OauthNativeTokenApiAuthOauthNativeTokenPostErrors];
+
+export type OauthNativeTokenApiAuthOauthNativeTokenPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type RefreshTokenApiAuthRefreshPostData = {
     body?: never;
     path?: never;
     query?: never;
     url: '/api/auth/refresh';
 };
 
-export type RefreshTokenApiAuthRefreshGetResponses = {
+export type RefreshTokenApiAuthRefreshPostResponses = {
     /**
      * Successful Response
      */
@@ -10757,6 +10938,68 @@ export type ParseRecipeUrlStreamApiRecipesCreateUrlStreamPostResponses = {
     200: unknown;
 };
 
+export type CreateRecipeWithAiApiRecipesCreateAiPostData = {
+    body?: BodyCreateRecipeWithAiApiRecipesCreateAiPost;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/recipes/create/ai';
+};
+
+export type CreateRecipeWithAiApiRecipesCreateAiPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateRecipeWithAiApiRecipesCreateAiPostError = CreateRecipeWithAiApiRecipesCreateAiPostErrors[keyof CreateRecipeWithAiApiRecipesCreateAiPostErrors];
+
+export type CreateRecipeWithAiApiRecipesCreateAiPostResponses = {
+    /**
+     * Response Create Recipe With Ai Api Recipes Create Ai Post
+     *
+     * Successful Response
+     */
+    201: string;
+};
+
+export type CreateRecipeWithAiApiRecipesCreateAiPostResponse = CreateRecipeWithAiApiRecipesCreateAiPostResponses[keyof CreateRecipeWithAiApiRecipesCreateAiPostResponses];
+
+export type CreateRecipeWithAiStreamApiRecipesCreateAiStreamPostData = {
+    body?: BodyCreateRecipeWithAiStreamApiRecipesCreateAiStreamPost;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/recipes/create/ai/stream';
+};
+
+export type CreateRecipeWithAiStreamApiRecipesCreateAiStreamPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateRecipeWithAiStreamApiRecipesCreateAiStreamPostError = CreateRecipeWithAiStreamApiRecipesCreateAiStreamPostErrors[keyof CreateRecipeWithAiStreamApiRecipesCreateAiStreamPostErrors];
+
+export type CreateRecipeWithAiStreamApiRecipesCreateAiStreamPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type ParseRecipeUrlBulkApiRecipesCreateUrlBulkPostData = {
     body: CreateRecipeByUrlBulk;
     headers?: {
@@ -10809,40 +11052,6 @@ export type CreateRecipeFromZipApiRecipesCreateZipPostErrors = {
 export type CreateRecipeFromZipApiRecipesCreateZipPostError = CreateRecipeFromZipApiRecipesCreateZipPostErrors[keyof CreateRecipeFromZipApiRecipesCreateZipPostErrors];
 
 export type CreateRecipeFromZipApiRecipesCreateZipPostResponses = {
-    /**
-     * Successful Response
-     */
-    201: unknown;
-};
-
-export type CreateRecipeFromImageApiRecipesCreateImagePostData = {
-    body: BodyCreateRecipeFromImageApiRecipesCreateImagePost;
-    headers?: {
-        /**
-         * Accept-Language
-         */
-        'accept-language'?: string | null;
-    };
-    path?: never;
-    query?: {
-        /**
-         * Translatelanguage
-         */
-        translateLanguage?: string | null;
-    };
-    url: '/api/recipes/create/image';
-};
-
-export type CreateRecipeFromImageApiRecipesCreateImagePostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type CreateRecipeFromImageApiRecipesCreateImagePostError = CreateRecipeFromImageApiRecipesCreateImagePostErrors[keyof CreateRecipeFromImageApiRecipesCreateImagePostErrors];
-
-export type CreateRecipeFromImageApiRecipesCreateImagePostResponses = {
     /**
      * Successful Response
      */
@@ -11399,8 +11608,10 @@ export type ScrapeImageUrlApiRecipesSlugImagePostResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: UpdateImageResponse;
 };
+
+export type ScrapeImageUrlApiRecipesSlugImagePostResponse = ScrapeImageUrlApiRecipesSlugImagePostResponses[keyof ScrapeImageUrlApiRecipesSlugImagePostResponses];
 
 export type UpdateRecipeImageApiRecipesSlugImagePutData = {
     body: BodyUpdateRecipeImageApiRecipesSlugImagePut;
@@ -12168,6 +12379,37 @@ export type GetAllEmptyApiOrganizersCategoriesEmptyGetResponses = {
 
 export type GetAllEmptyApiOrganizersCategoriesEmptyGetResponse = GetAllEmptyApiOrganizersCategoriesEmptyGetResponses[keyof GetAllEmptyApiOrganizersCategoriesEmptyGetResponses];
 
+export type MergeCategoriesApiOrganizersCategoriesMergePostData = {
+    body: CategoryMerge;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/organizers/categories/merge';
+};
+
+export type MergeCategoriesApiOrganizersCategoriesMergePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MergeCategoriesApiOrganizersCategoriesMergePostError = MergeCategoriesApiOrganizersCategoriesMergePostErrors[keyof MergeCategoriesApiOrganizersCategoriesMergePostErrors];
+
+export type MergeCategoriesApiOrganizersCategoriesMergePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: CategoryOut;
+};
+
+export type MergeCategoriesApiOrganizersCategoriesMergePostResponse = MergeCategoriesApiOrganizersCategoriesMergePostResponses[keyof MergeCategoriesApiOrganizersCategoriesMergePostResponses];
+
 export type DeleteOneApiOrganizersCategoriesItemIdDeleteData = {
     body?: never;
     headers?: {
@@ -12426,6 +12668,37 @@ export type GetEmptyTagsApiOrganizersTagsEmptyGetResponses = {
      */
     200: unknown;
 };
+
+export type MergeTagsApiOrganizersTagsMergePostData = {
+    body: TagMerge;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/organizers/tags/merge';
+};
+
+export type MergeTagsApiOrganizersTagsMergePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MergeTagsApiOrganizersTagsMergePostError = MergeTagsApiOrganizersTagsMergePostErrors[keyof MergeTagsApiOrganizersTagsMergePostErrors];
+
+export type MergeTagsApiOrganizersTagsMergePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: TagOut;
+};
+
+export type MergeTagsApiOrganizersTagsMergePostResponse = MergeTagsApiOrganizersTagsMergePostResponses[keyof MergeTagsApiOrganizersTagsMergePostResponses];
 
 export type DeleteRecipeTagApiOrganizersTagsItemIdDeleteData = {
     body?: never;

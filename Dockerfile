@@ -5,7 +5,7 @@ WORKDIR /app
 RUN corepack enable pnpm && apk add --no-cache git
 
 # Copy lockfile first so dependency layer is cached independently of source changes
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml .pnpmfile.cjs ./
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 
