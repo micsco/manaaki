@@ -39,13 +39,16 @@ export function unsealSession(sealed: string): string | null {
   }
 }
 
-export function decodeJwtExp(token: string): number | null {
+export type JwtTiming = { exp: number; iat: number | null }
+
+export function decodeJwtTiming(token: string): JwtTiming | null {
   try {
     const payload = token.split(".")[1]
     if (!payload) return null
     const json = Buffer.from(payload, "base64url").toString("utf8")
-    const claims = JSON.parse(json) as { exp?: unknown }
-    return typeof claims.exp === "number" ? claims.exp : null
+    const claims = JSON.parse(json) as { exp?: unknown; iat?: unknown }
+    if (typeof claims.exp !== "number") return null
+    return { exp: claims.exp, iat: typeof claims.iat === "number" ? claims.iat : null }
   } catch {
     return null
   }

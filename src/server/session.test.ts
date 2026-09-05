@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest"
 import {
   buildClearSessionCookie,
   buildSessionSetCookie,
-  decodeJwtExp,
+  decodeJwtTiming,
   isSecureRequest,
   readSessionToken,
   SESSION_COOKIE_NAME,
@@ -37,12 +37,21 @@ describe("seal/unseal", () => {
   })
 })
 
-describe("decodeJwtExp", () => {
-  it("reads the exp claim", () => {
-    expect(decodeJwtExp(fakeJwt({ exp: 1893456000 }))).toBe(1893456000)
+describe("decodeJwtTiming", () => {
+  it("reads the exp and iat claims", () => {
+    expect(decodeJwtTiming(fakeJwt({ exp: 1893456000, iat: 1893283200 }))).toEqual({
+      exp: 1893456000,
+      iat: 1893283200,
+    })
+  })
+  it("reports a null iat for tokens minted without one", () => {
+    expect(decodeJwtTiming(fakeJwt({ exp: 1893456000 }))).toEqual({ exp: 1893456000, iat: null })
   })
   it("returns null when malformed", () => {
-    expect(decodeJwtExp("nope")).toBeNull()
+    expect(decodeJwtTiming("nope")).toBeNull()
+  })
+  it("returns null when exp is missing", () => {
+    expect(decodeJwtTiming(fakeJwt({ iat: 1893283200 }))).toBeNull()
   })
 })
 

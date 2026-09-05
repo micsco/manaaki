@@ -9,12 +9,14 @@ import { mealieInternalUrl, readonlyToken } from "./env"
 import {
   buildClearSessionCookie,
   buildSessionSetCookie,
-  decodeJwtExp,
+  decodeJwtTiming,
+  type JwtTiming,
   isSecureRequest,
   readSessionToken,
 } from "./session"
 
-const REFRESH_WINDOW_SECONDS = 60 * 60 // refresh if < 1h to expiry
+// Tokens minted before Mealie 3.25 carry no iat, so fall back to a final-hour window.
+const LEGACY_REFRESH_WINDOW_SECONDS = 60 * 60
 
 const STRIP_REQUEST_HEADERS = new Set([
   "authorization",
@@ -110,15 +112,21 @@ function forward(request: Request, token: string, pathWithQuery: string): Promis
   })
 }
 
+function isPastRefreshPoint({ exp, iat }: JwtTiming, now: number): boolean {
+  if (iat === null) return exp - now <= LEGACY_REFRESH_WINDOW_SECONDS
+  return now >= iat + (exp - iat) / 2
+}
+
 async function resolveSessionToken(token: string): Promise<SessionToken> {
-  const exp = decodeJwtExp(token)
-  if (exp === null) return { state: "valid", token }
-  const secondsLeft = exp - Math.floor(Date.now() / 1000)
-  if (secondsLeft <= 0) return { state: "invalid" }
-  if (secondsLeft > REFRESH_WINDOW_SECONDS) return { state: "valid", token }
+  const timing = decodeJwtTiming(token)
+  if (timing === null) return { state: "valid", token }
+  const now = Math.floor(Date.now() / 1000)
+  if (timing.exp <= now) return { state: "invalid" }
+  if (!isPastRefreshPoint(timing, now)) return { state: "valid", token }
 
   try {
     const res = await fetch(`${mealieInternalUrl()}/api/auth/refresh`, {
+      method: "POST",
       headers: { Authorization: `Bearer ${token}` },
     })
     if (res.status === 401) return { state: "invalid" }

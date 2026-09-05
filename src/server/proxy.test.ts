@@ -26,6 +26,7 @@ interface UpstreamResponse {
 let server: http.Server
 let serverPort: number
 let lastUpstreamRequest: UpstreamRequest | null = null
+let upstreamRequests: UpstreamRequest[] = []
 let nextUpstreamResponse: UpstreamResponse = { status: 200, body: "{}" }
 let responseFactory: ((request: UpstreamRequest) => UpstreamResponse) | null = null
 
@@ -58,6 +59,7 @@ function startServer(): Promise<void> {
           headers: req.headers,
           body: rawBody,
         }
+        upstreamRequests.push(lastUpstreamRequest)
 
         const matchedPath = req.url ? perPathResponses.get(req.url.split("?")[0]) : undefined
         const response =
@@ -87,6 +89,7 @@ beforeEach(async () => {
   process.env.MEALIE_READONLY_TOKEN = "ro-token"
   process.env.SESSION_SECRET = "unit-test-secret"
   lastUpstreamRequest = null
+  upstreamRequests = []
   nextUpstreamResponse = { status: 200, body: "{}" }
   responseFactory = null
   perPathResponses = new Map()
@@ -115,6 +118,30 @@ function expiredJwt(): string {
 function jwtWithExpiry(exp: number): string {
   const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url")
   return `${b64({ alg: "HS256" })}.${b64({ sub: "u1", exp })}.sig`
+}
+
+function jwtIssuedHoursAgo(issuedHoursAgo: number, lifetimeHours: number): string {
+  const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url")
+  const iat = Math.floor(Date.now() / 1000) - issuedHoursAgo * 3600
+  const exp = iat + lifetimeHours * 3600
+  return `${b64({ alg: "HS256" })}.${b64({ sub: "u1", iat, exp })}.sig`
+}
+
+function refreshedSessionToken(res: Response): string | null {
+  const setCookieHeader = res.headers.get("set-cookie")
+  if (!setCookieHeader) return null
+  const cookieValue = setCookieHeader.split(";")[0].split("=").slice(1).join("=")
+  return unsealSession(cookieValue)
+}
+
+function authedRequest(path: string, jwt: string): Request {
+  return new Request(`https://app${path}`, {
+    headers: {
+      host: "manaaki.micsco.nz",
+      "x-forwarded-proto": "https",
+      cookie: sessionCookieHeader(jwt),
+    },
+  })
 }
 
 function sessionCookieHeader(jwt: string): string {
@@ -358,6 +385,58 @@ describe("handleApiProxy — refresh near-expiry token", () => {
 
     // The forwarded real request carried the refreshed token
     expect(lastUpstreamRequest?.headers.authorization).toBe("Bearer refreshed-jwt")
+  })
+
+  it("calls /api/auth/refresh with POST (Mealie 3.25 removed the GET form)", async () => {
+    setPathResponse("/api/auth/refresh", {
+      status: 200,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ access_token: "refreshed-jwt" }),
+    })
+
+    await handleApiProxy(authedRequest("/api/households/mealplans", nearExpiryJwt()))
+
+    const refreshCall = upstreamRequests.find(r => r.url === "/api/auth/refresh")
+    expect(refreshCall?.method).toBe("POST")
+  })
+})
+
+describe("handleApiProxy — sliding refresh policy", () => {
+  beforeEach(() => {
+    setPathResponse("/api/auth/refresh", {
+      status: 200,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ access_token: "refreshed-jwt" }),
+    })
+  })
+
+  it("refreshes a token past half its lifetime even with hours left", async () => {
+    const res = await handleApiProxy(
+      authedRequest("/api/households/mealplans", jwtIssuedHoursAgo(30, 48))
+    )
+
+    expect(res.status).toBe(200)
+    expect(refreshedSessionToken(res)).toBe("refreshed-jwt")
+    expect(lastUpstreamRequest?.headers.authorization).toBe("Bearer refreshed-jwt")
+  })
+
+  it("leaves a token alone before half its lifetime has elapsed", async () => {
+    const jwt = jwtIssuedHoursAgo(10, 48)
+    const res = await handleApiProxy(authedRequest("/api/households/mealplans", jwt))
+
+    expect(res.status).toBe(200)
+    expect(res.headers.get("set-cookie")).toBeNull()
+    expect(upstreamRequests.map(r => r.url)).toEqual(["/api/households/mealplans"])
+    expect(lastUpstreamRequest?.headers.authorization).toBe(`Bearer ${jwt}`)
+  })
+
+  it("falls back to the final-hour window for tokens without an iat claim", async () => {
+    const jwt = jwtWithExpiry(Math.floor(Date.now() / 1000) + 2 * 3600)
+    const res = await handleApiProxy(authedRequest("/api/households/mealplans", jwt))
+
+    expect(res.status).toBe(200)
+    expect(res.headers.get("set-cookie")).toBeNull()
+    expect(upstreamRequests.map(r => r.url)).toEqual(["/api/households/mealplans"])
   })
 })
 
