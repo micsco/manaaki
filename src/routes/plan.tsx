@@ -6,9 +6,9 @@ import { loginStartHref } from "../utils/loginReturn"
 
 export const Route = createFileRoute("/plan")({
   head: () => ({ meta: [{ title: "Meal Plan · Manaaki" }] }),
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     const { isAnonymous } = await fetchCurrentUser()
-    if (isAnonymous) throw redirect({ href: loginStartHref("/plan") })
+    if (isAnonymous) throw redirect({ href: loginStartHref(location.href) })
   },
   component: WeeklyMealPlan,
 })

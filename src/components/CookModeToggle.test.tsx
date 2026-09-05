@@ -35,11 +35,18 @@ describe("CookModeToggle", () => {
 
     await user.click(screen.getByRole("button", { name: /cook mode/i }))
 
-    expect(screen.getByRole("button").className).toContain("bg-orange-600")
+    expect(screen.getByRole("button").className).toContain("bg-gray-900")
   })
 
   it("applies inactive styles when cook mode is off", () => {
     render(<CookModeToggle />)
     expect(screen.getByRole("button").className).toContain("bg-gray-800")
   })
+})
+
+it("offers a primary Cook action on recipe detail", async () => {
+  const user = userEvent.setup()
+  render(<CookModeToggle primary />)
+  await user.click(screen.getByRole("button", { name: "Cook" }))
+  expect(screen.getByRole("button", { name: "Exit Cook Mode" })).toBeInTheDocument()
 })

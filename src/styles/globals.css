@@ -298,3 +298,10 @@
 
   /* Custom utilities */
 }
+
+@media (width < 768px) {
+  :root:has([data-mobile-navigation]) {
+    --app-navigation-height: 4rem;
+    scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  }
+}

@@ -1,3 +1,4 @@
+import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { RecipeOutput } from "../api/generated/types.gen"
@@ -27,9 +28,9 @@ afterEach(() => {
 })
 
 describe("ShareRecipeButton", () => {
-  it("does not render when navigator.share is unavailable", () => {
+  it("offers a copy-link fallback when native sharing is unavailable", () => {
     render(<ShareRecipeButton recipe={recipe} />)
-    expect(screen.queryByRole("button", { name: /share recipe/i })).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /copy recipe link/i })).toBeInTheDocument()
   })
 
   it("renders the share button when navigator.share is available", async () => {
@@ -62,4 +63,25 @@ describe("ShareRecipeButton", () => {
     await waitFor(() => expect(share).toHaveBeenCalled())
     // No assertion needed beyond the absence of an unhandled rejection.
   })
+})
+
+it("copies a clean recipe URL without cook state", async () => {
+  const user = userEvent.setup()
+  window.history.replaceState({}, "", "/recipes/abc/soup?cook=true#method")
+  const copy = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue()
+  render(<ShareRecipeButton recipe={recipe} />)
+  await user.click(screen.getByRole("button", { name: "Copy recipe link" }))
+  expect(copy).toHaveBeenCalledWith(`${window.location.origin}/recipes/abc/soup`)
+  expect(screen.getByRole("status")).toHaveTextContent("Recipe link copied")
+  window.history.replaceState({}, "", "/")
+})
+it("provides a selectable link when clipboard access fails", async () => {
+  const user = userEvent.setup()
+  vi.spyOn(navigator.clipboard, "writeText").mockRejectedValue(new Error("Denied"))
+  render(<ShareRecipeButton recipe={recipe} />)
+  await user.click(screen.getByRole("button", { name: "Copy recipe link" }))
+  expect(await screen.findByRole("dialog")).toBeInTheDocument()
+  expect(screen.getByRole("textbox", { name: "Recipe link" })).toHaveValue(window.location.href)
+  await user.click(screen.getByRole("button", { name: "Done" }))
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
 })

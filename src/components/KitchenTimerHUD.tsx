@@ -23,7 +23,7 @@ export function KitchenTimerHUD() {
   return (
     <aside
       aria-label="Active kitchen timers"
-      className="pointer-events-none fixed right-4 bottom-4 z-50 flex w-full max-w-xs flex-col gap-2.5 sm:right-6 sm:bottom-6"
+      className="pointer-events-none fixed right-4 bottom-[calc(var(--app-navigation-height,0px)+env(safe-area-inset-bottom,0px)+1rem)] z-40 flex w-[calc(100%-2rem)] max-w-xs flex-col gap-2.5 sm:right-6"
     >
       {timers.map(timer => {
         const isRunning = timer.status === "running"

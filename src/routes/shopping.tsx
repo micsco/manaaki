@@ -1,11 +1,9 @@
-import { mdiChevronLeft } from "@mdi/js"
-import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router"
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 
 import { fetchCurrentUser } from "../api/auth"
 import { configureApiClient } from "../api/client"
 import { BuildShoppingListDialog } from "../components/BuildShoppingListDialog"
-import { Icon } from "../components/Icon"
 import { ShoppingListHistory } from "../components/ShoppingListHistory"
 import { ShoppingListView } from "../components/ShoppingListView"
 import { useCurrentShoppingList } from "../hooks/useShoppingList"
@@ -19,10 +17,10 @@ export const Route = createFileRoute("/shopping")({
     list: typeof s.list === "string" ? s.list : undefined,
     partial: s.partial === true || s.partial === "true" ? true : undefined,
   }),
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     configureApiClient()
     const { isAnonymous } = await fetchCurrentUser()
-    if (isAnonymous) throw redirect({ href: loginStartHref("/shopping") })
+    if (isAnonymous) throw redirect({ href: loginStartHref(location.href) })
   },
   component: ShoppingPage,
 })
@@ -35,21 +33,14 @@ function ShoppingPage() {
   const [buildOpen, setBuildOpen] = useState(false)
 
   return (
-    <main className="min-h-screen bg-gray-950 text-gray-100">
+    <main className="bg-gray-950 text-gray-100">
       <div className="mx-auto max-w-2xl px-4 pt-5">
-        <div className="flex items-center gap-3">
-          <Link
-            to="/recipes"
-            className="inline-flex items-center gap-1 rounded-full bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-700"
-          >
-            <Icon path={mdiChevronLeft} size={0.7} aria-hidden={true} />
-            Recipes
-          </Link>
-          <h1 className="text-2xl font-bold">Shopping</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="font-serif text-3xl font-bold">Shopping</h1>
           <button
             type="button"
             onClick={() => setBuildOpen(true)}
-            className="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-500"
+            className="min-h-11 rounded-full bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
           >
             Build shopping list
           </button>
@@ -78,7 +69,7 @@ function ShoppingPage() {
         onClose={() => setBuildOpen(false)}
         onBuilt={({ listId, partial }) => {
           setBuildOpen(false)
-          navigate({
+          void navigate({
             to: "/shopping",
             search: { list: listId, ...(partial ? { partial: true } : {}) },
           })

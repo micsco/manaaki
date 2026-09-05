@@ -3,7 +3,6 @@ import { useState } from "react"
 
 import type { RecipeStep } from "../api/generated/types.gen"
 import { useCookMode } from "../contexts/CookModeContext"
-import { CookModeToggle } from "./CookModeToggle"
 import { Icon } from "./Icon"
 import { InstructionSectionHeader } from "./InstructionSectionHeader"
 import { InstructionStep } from "./InstructionStep"
@@ -118,20 +117,16 @@ export function InstructionsSection({
         <h2 className="font-sans text-xs font-semibold tracking-widest text-gray-500 uppercase">
           Method
         </h2>
-        {isCookMode ? (
-          img && (
-            <button
-              type="button"
-              aria-label={photoOpen ? "Hide photo" : "Show photo"}
-              onClick={() => setPhotoOpen(prev => !prev)}
-              className="flex items-center gap-1 text-xs text-gray-400 select-none hover:text-gray-300"
-            >
-              <Icon path={photoOpen ? mdiChevronUp : mdiChevronDown} size={0.55} aria-hidden />
-              {photoOpen ? "Hide photo" : "Photo"}
-            </button>
-          )
-        ) : (
-          <CookModeToggle />
+        {isCookMode && img && (
+          <button
+            type="button"
+            aria-label={photoOpen ? "Hide photo" : "Show photo"}
+            onClick={() => setPhotoOpen(prev => !prev)}
+            className="flex items-center gap-1 text-xs text-gray-400 select-none hover:text-gray-300"
+          >
+            <Icon path={photoOpen ? mdiChevronUp : mdiChevronDown} size={0.55} aria-hidden />
+            {photoOpen ? "Hide photo" : "Photo"}
+          </button>
         )}
       </div>
       <StepList steps={steps} groups={groups} hasSections={hasSections} recipeId={recipeId} />

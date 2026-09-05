@@ -1,17 +1,12 @@
 import { Menu } from "@base-ui/react/menu"
-import {
-  mdiAccount,
-  mdiCalendarMonthOutline,
-  mdiCartOutline,
-  mdiInformationOutline,
-  mdiLogout,
-} from "@mdi/js"
-import { Link } from "@tanstack/react-router"
+import { mdiAccount, mdiInformationOutline, mdiLogout } from "@mdi/js"
 
 import { useCurrentUser } from "../hooks/useCurrentUser"
+import { loginStartHref } from "../utils/loginReturn"
 import { Icon } from "./Icon"
 
 export interface UserMenuProps {
+  returnTo?: string
   onOpenAbout?: () => void
 }
 
@@ -31,15 +26,16 @@ function extractInitials(fullName?: string | null, username?: string | null): st
   return ""
 }
 
-export function UserMenu({ onOpenAbout }: UserMenuProps) {
+export function UserMenu({ onOpenAbout, returnTo = "/recipes" }: UserMenuProps) {
   const current = useCurrentUser()
-  if (!current) return null
+  if (!current)
+    return <span className="block h-11 w-16" aria-label="Loading account" role="status" />
 
   if (current.isAnonymous) {
     return (
       <a
-        href="/api/auth/oauth"
-        className="inline-flex min-h-11 items-center rounded-lg bg-orange-600 px-3.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-orange-500 focus:ring-2 focus:ring-orange-500 focus:outline-hidden"
+        href={loginStartHref(returnTo)}
+        className="inline-flex min-h-11 items-center rounded-lg px-3.5 py-1.5 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-800 focus:ring-2 focus:ring-orange-500 focus:outline-hidden"
       >
         Sign in
       </a>
@@ -58,21 +54,6 @@ export function UserMenu({ onOpenAbout }: UserMenuProps) {
 
   return (
     <div className="flex items-center gap-2">
-      <div className="hidden items-center gap-2 md:flex">
-        <Link
-          to="/shopping"
-          className="inline-flex min-h-11 items-center rounded-lg bg-gray-800 px-3.5 py-1.5 text-sm font-medium text-gray-200 transition-colors hover:bg-gray-700 focus:ring-2 focus:ring-orange-500 focus:outline-hidden"
-        >
-          Shopping
-        </Link>
-        <Link
-          to="/plan"
-          className="inline-flex min-h-11 items-center rounded-lg bg-gray-800 px-3.5 py-1.5 text-sm font-medium text-gray-200 transition-colors hover:bg-gray-700 focus:ring-2 focus:ring-orange-500 focus:outline-hidden"
-        >
-          Meal Plan
-        </Link>
-      </div>
-
       <Menu.Root>
         <Menu.Trigger
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-gray-700 bg-gray-800 text-sm font-semibold text-orange-400 transition-colors hover:border-gray-600 hover:bg-gray-700 focus:ring-2 focus:ring-orange-500 focus:outline-hidden"
@@ -96,34 +77,6 @@ export function UserMenu({ onOpenAbout }: UserMenuProps) {
               </div>
 
               <hr className="my-1 border-gray-800" />
-
-              <Menu.LinkItem
-                render={<Link to="/shopping" />}
-                closeOnClick
-                className="flex min-h-11 items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-gray-200 transition-colors hover:bg-gray-800/80 focus:bg-gray-800/80 focus:outline-hidden"
-              >
-                <Icon
-                  path={mdiCartOutline}
-                  size={0.7}
-                  className="text-gray-400"
-                  aria-hidden={true}
-                />
-                Shopping List
-              </Menu.LinkItem>
-
-              <Menu.LinkItem
-                render={<Link to="/plan" />}
-                closeOnClick
-                className="flex min-h-11 items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-gray-200 transition-colors hover:bg-gray-800/80 focus:bg-gray-800/80 focus:outline-hidden"
-              >
-                <Icon
-                  path={mdiCalendarMonthOutline}
-                  size={0.7}
-                  className="text-gray-400"
-                  aria-hidden={true}
-                />
-                Meal Plan
-              </Menu.LinkItem>
 
               {onOpenAbout && (
                 <>

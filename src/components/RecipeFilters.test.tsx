@@ -99,3 +99,20 @@ describe("FilterBar", () => {
     expect(screen.getByRole("searchbox")).toHaveValue("pasta")
   })
 })
+
+it("shows only selected filters in the compact summary", async () => {
+  const toggle = vi.fn()
+  const user = userEvent.setup()
+  render(
+    <FilterPills
+      selectedOnly
+      proteins={["chicken"]}
+      tools={[]}
+      onToggleProtein={toggle}
+      onToggleTool={vi.fn()}
+    />
+  )
+  expect(screen.getAllByRole("button")).toHaveLength(1)
+  await user.click(screen.getByRole("button", { name: /chicken/i }))
+  expect(toggle).toHaveBeenCalledWith("chicken")
+})

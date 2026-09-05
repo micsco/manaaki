@@ -46,16 +46,23 @@ function FilterChip({ icon, label, value, type, active, onToggle }: FilterChipPr
 }
 
 interface FilterPillsProps {
+  selectedOnly?: boolean
   proteins: string[]
   onToggleProtein: (value: string) => void
   tools: string[]
   onToggleTool: (value: string) => void
 }
 
-export function FilterPills({ proteins, onToggleProtein, tools, onToggleTool }: FilterPillsProps) {
+export function FilterPills({
+  proteins,
+  onToggleProtein,
+  tools,
+  onToggleTool,
+  selectedOnly = false,
+}: FilterPillsProps) {
   return (
     <div className="-mx-4 flex scrollbar-none gap-2.5 overflow-x-auto px-4 py-1.5 [&::-webkit-scrollbar]:hidden">
-      {PROTEIN_OPTIONS.map(opt => (
+      {PROTEIN_OPTIONS.filter(opt => !selectedOnly || proteins.includes(opt.value)).map(opt => (
         <FilterChip
           key={opt.value}
           icon={opt.icon}
@@ -67,7 +74,7 @@ export function FilterPills({ proteins, onToggleProtein, tools, onToggleTool }: 
         />
       ))}
 
-      {TOOL_OPTIONS.map(opt => (
+      {TOOL_OPTIONS.filter(opt => !selectedOnly || tools.includes(opt.value)).map(opt => (
         <FilterChip
           key={opt.value}
           icon={opt.icon}
@@ -139,7 +146,7 @@ export function FilterBar({
         value={search}
         onChange={e => handleSearchChange(e.target.value)}
         placeholder="Search recipes…"
-        className="min-w-0 flex-1 bg-transparent py-3 pr-2 pl-3 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-hidden"
+        className="min-w-0 flex-1 bg-transparent py-3 pr-2 pl-3 text-base text-gray-100 placeholder:text-gray-500 focus:outline-hidden"
         aria-label="Search recipes"
       />
 

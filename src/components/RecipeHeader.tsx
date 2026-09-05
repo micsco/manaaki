@@ -12,8 +12,10 @@ import type { RecipeOutput } from "../api/generated/types.gen"
 import type { RecipeNavItem } from "../hooks/useRecipeNav"
 import { formatTime, recipeUrl } from "../utils/recipe"
 import { AddToMealPlanButton } from "./AddToMealPlanButton"
-import { AddToShoppingListButton } from "./AddToShoppingListButton"
+import { CookModeToggle } from "./CookModeToggle"
 import { Icon } from "./Icon"
+import { RecipeActionsMenu } from "./RecipeActionsMenu"
+import { RecipeBackLink } from "./RecipeBackLink"
 import { ShareRecipeButton } from "./ShareRecipeButton"
 
 function HeroRating({ rating }: { rating: number }) {
@@ -82,17 +84,11 @@ export function RecipeHeader({
   return (
     <div className="relative flex min-h-[55vh] w-full flex-col overflow-hidden bg-gray-900 md:h-[55vh] md:min-h-64">
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
-        <Link
-          to="/recipes"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-black/40 px-4 py-2 text-sm font-medium text-white backdrop-blur-xs transition-colors hover:bg-black/60"
-        >
-          <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
-          All recipes
-        </Link>
+        <RecipeBackLink />
       </div>
 
       <div className="absolute top-18 right-4 left-4 z-20 flex flex-wrap items-center justify-end gap-2 sm:top-4 sm:left-auto">
-        <AddToShoppingListButton recipe={recipe} />
+        <RecipeActionsMenu recipe={recipe} />
         <ShareRecipeButton recipe={recipe} />
         {(prevRecipe || nextRecipe) && (
           <>
@@ -167,7 +163,10 @@ export function RecipeHeader({
           </h1>
           <div className="flex flex-col items-start gap-4">
             <HeroStats recipe={recipe} />
-            <AddToMealPlanButton recipe={recipe} />
+            <div className="flex flex-wrap items-center gap-2">
+              <CookModeToggle primary />
+              <AddToMealPlanButton recipe={recipe} />
+            </div>
           </div>
         </div>
       </div>

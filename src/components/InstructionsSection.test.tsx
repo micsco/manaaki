@@ -28,9 +28,9 @@ describe("InstructionsSection", () => {
       expect(screen.getAllByRole("button", { name: /step/i })).toHaveLength(2)
     })
 
-    it("renders the cook mode toggle button", () => {
+    it("leaves the cooking entry action to the recipe header", () => {
       render(<InstructionsSection steps={steps} recipeId="recipe-1" />)
-      expect(screen.getByRole("button", { name: /cook mode/i })).toBeInTheDocument()
+      expect(screen.queryByRole("button", { name: /cook mode/i })).not.toBeInTheDocument()
     })
 
     it("renders section titles when steps have titles", () => {

@@ -10,12 +10,14 @@ import {
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router"
 import type { ReactNode } from "react"
 
+import { AppShell } from "../components/AppShell"
 import { AppToasts } from "../components/AppToasts"
 import { BuildInfo } from "../components/BuildInfo"
 import { KitchenTimerHUD } from "../components/KitchenTimerHUD"
 import { ShakeToRandomRecipe } from "../components/ShakeToRandomRecipe"
 import { CookModeProvider } from "../contexts/CookModeContext"
 import { MotionPermissionProvider } from "../contexts/MotionPermissionContext"
+import { NavigationProvider } from "../contexts/NavigationContext"
 import { TimerProvider } from "../contexts/TimerContext"
 import { useVersionCheck } from "../hooks/useVersionCheck"
 import { queryClient } from "../lib/queryClient"
@@ -89,7 +91,11 @@ function RootComponent() {
             <NuqsAdapter>
               <CookModeProvider>
                 <TimerProvider>
-                  <Outlet />
+                  <NavigationProvider>
+                    <AppShell>
+                      <Outlet />
+                    </AppShell>
+                  </NavigationProvider>
                   <KitchenTimerHUD />
                 </TimerProvider>
               </CookModeProvider>

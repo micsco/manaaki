@@ -10,8 +10,17 @@ import {
   RecipeCardTimeBadge,
   RecipeCardToolBadges,
 } from "../components/RecipeCardMeta"
+import { useCurrentUser } from "../hooks/useCurrentUser"
 import { render, screen } from "../test/render"
 import { Route } from "./recipes.index"
+
+vi.mock("../hooks/useCurrentUser", () => ({
+  useCurrentUser: vi.fn(() => ({ user: null, isAnonymous: false })),
+}))
+vi.mock("../components/ImportRecipeModal", () => ({
+  ImportRecipeModal: ({ open }: { open: boolean }) =>
+    open ? <div role="dialog">Import Recipe</div> : null,
+}))
 
 vi.mock("../contexts/MotionPermissionContext", () => ({
   useMotionPermissionContext: vi.fn(() => ({ state: "granted", request: vi.fn() })),
@@ -211,25 +220,17 @@ describe("RecipeList loading state", () => {
     expect(screen.getByRole("status", { name: /loading recipes/i })).toBeInTheDocument()
   })
 
-  it("shows the Manaaki heading while loading", () => {
+  it("shows the Recipes heading while loading", () => {
     mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
     render(<RecipeListWrapper />)
-    expect(screen.getByRole("heading", { name: /manaaki/i })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: /^recipes$/i })).toBeInTheDocument()
   })
 
-  it("shows an About Manaaki button", () => {
+  it("keeps branding and account navigation in the shared shell", () => {
     mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
     render(<RecipeListWrapper />)
-    expect(screen.getByRole("button", { name: /about manaaki/i })).toBeInTheDocument()
-  })
-
-  it("opens the About modal when the Manaaki button is clicked", async () => {
-    const user = userEvent.setup()
-    mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
-    render(<RecipeListWrapper />)
-    await user.click(screen.getByRole("button", { name: /about manaaki/i }))
-    expect(screen.getByRole("dialog")).toBeInTheDocument()
-    expect(screen.getByText("About Manaaki")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /about manaaki/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole("navigation")).not.toBeInTheDocument()
   })
 
   it("shows an Import recipe button", () => {
@@ -289,4 +290,11 @@ describe("RecipeList error state", () => {
 
     expect(await screen.findByRole("heading", { name: /banana bread/i })).toBeInTheDocument()
   })
+})
+
+it("hides import for visitors", () => {
+  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true })
+  mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
+  render(<RecipeListWrapper />)
+  expect(screen.queryByRole("button", { name: /import recipe/i })).not.toBeInTheDocument()
 })

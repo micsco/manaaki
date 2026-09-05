@@ -36,17 +36,16 @@ async function click(name = /add to shopping list/i) {
 describe("AddToShoppingListButton", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+
     vi.restoreAllMocks()
   })
 
-  it("shows a sign-in CTA when anonymous", () => {
+  it("hides shopping when anonymous", () => {
     vi.spyOn(currentUser, "useCurrentUser").mockReturnValue({ user: null, isAnonymous: true })
     const listSpy = vi.spyOn(shoppingList, "useCurrentShoppingList").mockReturnValue(null)
     render(<AddToShoppingListButton recipe={recipe} />, { wrapper: wrap() })
-    expect(screen.getByRole("link", { name: /sign in/i })).toHaveAttribute(
-      "href",
-      "/api/auth/oauth"
-    )
+    expect(screen.queryByRole("link")).not.toBeInTheDocument()
+    expect(screen.queryByRole("button")).not.toBeInTheDocument()
     expect(listSpy).toHaveBeenCalledWith({ enabled: false })
   })
 
@@ -59,7 +58,7 @@ describe("AddToShoppingListButton", () => {
       id: "l1",
       createdAt: new Date().toISOString(),
     } as never)
-    const addToast = vi.spyOn(toastManager, "add").mockReturnValue("t1" as never)
+    const addToast = vi.spyOn(toastManager, "add").mockReturnValue("t1")
     render(<AddToShoppingListButton recipe={recipe} />, { wrapper: wrap() })
     await click()
     await waitFor(() =>
@@ -82,7 +81,7 @@ describe("AddToShoppingListButton", () => {
     const build = vi
       .spyOn(mutations, "buildShoppingList")
       .mockResolvedValue({ listId: "new1", partial: false })
-    const addToast = vi.spyOn(toastManager, "add").mockReturnValue("t2" as never)
+    const addToast = vi.spyOn(toastManager, "add").mockReturnValue("t2")
     render(<AddToShoppingListButton recipe={recipe} />, { wrapper: wrap() })
     await click()
     await waitFor(() => expect(build).toHaveBeenCalled())

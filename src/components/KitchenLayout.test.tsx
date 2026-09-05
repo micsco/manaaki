@@ -73,14 +73,16 @@ describe("KitchenLayout", () => {
       expect(screen.getByText("Content")).toBeInTheDocument()
     })
 
-    it("renders the back button when provided", () => {
+    it("keeps global navigation out of cooking", () => {
       render(
-        <KitchenLayout backButton={<a href="/recipes">Back</a>}>
+        <KitchenLayout title="Soup">
           <p>body</p>
         </KitchenLayout>,
-        { wrapper: ({ children }) => <CookModeWrapper cookMode>{children}</CookModeWrapper> }
+        {
+          wrapper: ({ children }) => <CookModeWrapper cookMode>{children}</CookModeWrapper>,
+        }
       )
-      expect(screen.getByRole("link", { name: /back/i })).toBeInTheDocument()
+      expect(screen.queryByRole("link")).not.toBeInTheDocument()
     })
 
     it("renders the cook mode toggle in the header", () => {

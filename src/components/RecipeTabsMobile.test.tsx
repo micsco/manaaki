@@ -172,3 +172,18 @@ describe("RecipeTabsMobile", () => {
     expect(screen.getByRole("tablist", { name: /recipe sections/i })).toBeInTheDocument()
   })
 })
+
+it("supports keyboard navigation between recipe sections", async () => {
+  const user = userEvent.setup()
+  render(
+    <Wrapper>
+      <RecipeTabsMobile ingredients={ingredients} instructions={instructions} recipeId="r1" />
+    </Wrapper>
+  )
+  screen.getByRole("tab", { name: /ingredients/i }).focus()
+  await user.keyboard("{ArrowRight}")
+  expect(screen.getByRole("tab", { name: /method/i })).toHaveFocus()
+  await user.keyboard("{Enter}")
+  expect(screen.getByRole("tab", { name: /method/i })).toHaveAttribute("aria-selected", "true")
+  expect(screen.getByRole("tabpanel")).toHaveTextContent("Boil water.")
+})

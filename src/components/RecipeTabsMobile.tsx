@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { Tabs } from "@base-ui/react/tabs"
 
 import type {
   RecipeCategory,
@@ -44,65 +44,35 @@ export function RecipeTabsMobile({
     ...(hasDescription ? (["description"] as Tab[]) : []),
   ]
 
-  const [activeTab, setActiveTab] = useState<Tab>("ingredients")
-
   return (
-    <div className="md:hidden">
-      <div role="tablist" aria-label="Recipe sections" className="flex border-b border-gray-800">
+    <Tabs.Root defaultValue="ingredients" className="md:hidden">
+      <Tabs.List aria-label="Recipe sections" className="flex border-b border-gray-800">
         {availableTabs.map(tab => (
-          <button
+          <Tabs.Tab
             key={tab}
-            role="tab"
-            type="button"
-            aria-selected={activeTab === tab}
-            aria-controls={`tab-panel-${tab}`}
-            id={`tab-${tab}`}
-            onClick={() => setActiveTab(tab)}
-            className={[
-              "flex-1 pt-2 pb-3 font-medium font-sans text-sm transition-colors",
-              activeTab === tab
-                ? "border-orange-500 border-b-2 text-white"
-                : "text-gray-400 hover:text-gray-200",
-            ].join(" ")}
+            value={tab}
+            className="min-h-11 flex-1 border-b-2 border-transparent py-3 font-sans text-sm font-medium text-gray-400 transition-colors hover:text-gray-200 focus-visible:outline-2 focus-visible:outline-orange-400 data-active:border-orange-500 data-active:text-white"
           >
             {TAB_LABELS[tab]}
-          </button>
+          </Tabs.Tab>
         ))}
-      </div>
+      </Tabs.List>
 
-      <div
-        id="tab-panel-ingredients"
-        role="tabpanel"
-        aria-labelledby="tab-ingredients"
-        hidden={activeTab !== "ingredients"}
-        className="px-6 py-6"
-      >
+      <Tabs.Panel value="ingredients" className="px-6 py-6">
         <IngredientsSection
           ingredients={ingredients}
           recipeId={recipeId}
           defaultServings={defaultServings}
           steps={instructions}
         />
-      </div>
+      </Tabs.Panel>
 
-      <div
-        id="tab-panel-method"
-        role="tabpanel"
-        aria-labelledby="tab-method"
-        hidden={activeTab !== "method"}
-        className="px-6 py-6"
-      >
+      <Tabs.Panel value="method" className="px-6 py-6">
         <InstructionsSection steps={instructions} recipeId={recipeId} img={img} />
-      </div>
+      </Tabs.Panel>
 
       {hasDescription && (
-        <div
-          id="tab-panel-description"
-          role="tabpanel"
-          aria-labelledby="tab-description"
-          hidden={activeTab !== "description"}
-          className="px-6 py-6"
-        >
+        <Tabs.Panel value="description" className="px-6 py-6">
           {description && <p className="text-base leading-relaxed text-gray-300">{description}</p>}
           {categories?.length || tags?.length ? (
             <div className={`flex flex-wrap gap-2 ${description ? "mt-4" : ""}`}>
@@ -118,8 +88,8 @@ export function RecipeTabsMobile({
               ))}
             </div>
           ) : null}
-        </div>
+        </Tabs.Panel>
       )}
-    </div>
+    </Tabs.Root>
   )
 }

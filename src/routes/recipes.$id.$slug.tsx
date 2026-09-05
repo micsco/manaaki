@@ -1,13 +1,11 @@
-import { mdiChevronLeft } from "@mdi/js"
 import { usePostHog } from "@posthog/react"
 import { useHotkey } from "@tanstack/react-hotkeys"
-import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router"
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
 
 import { configureApiClient } from "../api/client"
 import { getOneApiRecipesSlugGet } from "../api/generated/sdk.gen"
 import type { RecipeOutput } from "../api/generated/types.gen"
-import { Icon } from "../components/Icon"
 import { KitchenLayout } from "../components/KitchenLayout"
 import { RecipeBody } from "../components/RecipeBody"
 import { RecipeHeader } from "../components/RecipeHeader"
@@ -91,7 +89,7 @@ function RecipeDetail() {
   }, [recipe.id, recipe.name, recipe.rating, recipe.totalTime, img, posthog])
 
   useHotkey("ArrowLeft", () => {
-    if (prevRecipe) {
+    if (!isCookMode && prevRecipe) {
       posthog.capture("recipe_navigated", {
         direction: "prev",
         method: "keyboard",
@@ -100,12 +98,12 @@ function RecipeDetail() {
         to_recipe_id: prevRecipe.id,
         to_recipe_name: prevRecipe.name,
       })
-      navigate({ to: recipeUrl(prevRecipe.id, prevRecipe.slug) })
+      void navigate({ to: recipeUrl(prevRecipe.id, prevRecipe.slug) })
     }
   })
 
   useHotkey("ArrowRight", () => {
-    if (nextRecipe) {
+    if (!isCookMode && nextRecipe) {
       posthog.capture("recipe_navigated", {
         direction: "next",
         method: "keyboard",
@@ -114,22 +112,12 @@ function RecipeDetail() {
         to_recipe_id: nextRecipe.id,
         to_recipe_name: nextRecipe.name,
       })
-      navigate({ to: recipeUrl(nextRecipe.id, nextRecipe.slug) })
+      void navigate({ to: recipeUrl(nextRecipe.id, nextRecipe.slug) })
     }
   })
 
-  const cookModeBackButton = (
-    <Link
-      to="/recipes"
-      className="inline-flex items-center gap-2 font-medium text-orange-400 hover:text-orange-300"
-    >
-      <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
-      All recipes
-    </Link>
-  )
-
   return (
-    <KitchenLayout title={recipe.name ?? undefined} backButton={cookModeBackButton}>
+    <KitchenLayout title={recipe.name ?? undefined}>
       {!isCookMode && (
         <RecipeHeader recipe={recipe} img={img} prevRecipe={prevRecipe} nextRecipe={nextRecipe} />
       )}

@@ -1,9 +1,10 @@
 import userEvent from "@testing-library/user-event"
+import { NuqsTestingAdapter } from "nuqs/adapters/testing"
 import { beforeEach, expect, it, vi } from "vitest"
 
 import { getAllApiHouseholdsMealplansGet } from "../api/generated/sdk.gen"
 import { todayIsoDateString } from "../hooks/useMealPlan"
-import { render, screen, within } from "../test/render"
+import { render, screen, waitFor, within } from "../test/render"
 import { WeeklyMealPlan } from "./WeeklyMealPlan"
 
 vi.mock("../api/generated/sdk.gen", () => ({ getAllApiHouseholdsMealplansGet: vi.fn() }))
@@ -19,8 +20,11 @@ vi.mock("./BuildShoppingListDialog", () => ({
   ),
 }))
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ to, children, ...props }: any) => (
-    <a href={to} {...props}>
+  Link: ({ to, children, params, search, ...props }: any) => (
+    <a
+      href={params ? `/recipes/${params.id}/${params.slug}${search?.cook ? "?cook=true" : ""}` : to}
+      {...props}
+    >
       {children}
     </a>
   ),
@@ -54,42 +58,73 @@ it("shows every meal type, multiple dinners, images and recipe-free notes", asyn
     },
   } as never)
   const user = userEvent.setup()
-  render(<WeeklyMealPlan />)
+  render(
+    <NuqsTestingAdapter hasMemory>
+      <WeeklyMealPlan />
+    </NuqsTestingAdapter>
+  )
   expect(await screen.findByRole("heading", { name: "Salad" })).toBeInTheDocument()
   expect(screen.getByRole("heading", { name: "Soup" })).toBeInTheDocument()
   expect(screen.getByRole("heading", { name: "Toast" })).toBeInTheDocument()
   expect(screen.getByText("Early start")).toBeInTheDocument()
-  const salad = within(screen.getByRole("link", { name: /Salad/ }))
+  expect(screen.getAllByRole("button", { name: /^Add meal for / })).toHaveLength(6)
+  const salad = within(screen.getByRole("heading", { name: "Salad" }).closest("article")!)
   expect(salad.getByText("30m")).toBeInTheDocument()
   expect(salad.getByText("Air fryer")).toBeInTheDocument()
   expect(salad.getByText("Slow cooker")).toBeInTheDocument()
   expect(
-    within(screen.getByRole("link", { name: /Salad/ })).getByRole("presentation")
+    within(screen.getByRole("link", { name: /^dinner salad$/i })).getByRole("presentation")
   ).toHaveAttribute("src", expect.stringContaining("min-original"))
-  await user.click(screen.getByRole("button", { name: "Edit Salad" }))
+  expect(
+    within(screen.getByRole("link", { name: /^dinner salad$/i })).queryByRole("button")
+  ).not.toBeInTheDocument()
+  expect(salad.getByRole("link", { name: "Cook Salad" })).toHaveAttribute(
+    "href",
+    expect.stringContaining("?cook=true")
+  )
+  const edit = salad.getByRole("button", { name: "Adjust plan for Salad" })
+  expect(edit).toHaveAttribute("title", "Adjust plan: change date, meal type or note")
+  expect(edit).toHaveTextContent("")
+  edit.focus()
+  expect(edit).toHaveFocus()
+  await user.keyboard("{Enter}")
   expect(screen.getByRole("dialog")).toHaveTextContent(date)
 })
 it("offers recovery when the plan fails to load", async () => {
   vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({ error: {} } as never)
-  render(<WeeklyMealPlan />)
+  render(
+    <NuqsTestingAdapter hasMemory>
+      <WeeklyMealPlan />
+    </NuqsTestingAdapter>
+  )
   expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't load")
   expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument()
 })
 it("navigates weeks without leaving previous entries under new dates", async () => {
   vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({ data: { items: [] } } as never)
   const user = userEvent.setup()
-  render(<WeeklyMealPlan />)
+  render(
+    <NuqsTestingAdapter hasMemory>
+      <WeeklyMealPlan />
+    </NuqsTestingAdapter>
+  )
   await screen.findAllByText("Nothing planned yet.")
-  const original = screen.getByLabelText("Start date").getAttribute("value")
+  expect(screen.queryByLabelText("Start date")).not.toBeInTheDocument()
+  await user.click(screen.getByRole("button", { name: "Choose another date…" }))
+  const original = todayIsoDateString()
   await user.click(screen.getByRole("button", { name: "Next week" }))
-  expect(screen.getByLabelText("Start date")).not.toHaveValue(original)
-  await user.click(screen.getByRole("button", { name: /^Today$/ }))
-  expect(screen.getByLabelText("Start date")).toHaveValue(original)
+  await waitFor(() => expect(screen.getByLabelText("Start date")).not.toHaveValue(original))
+  await user.click(screen.getByRole("button", { name: "Back to today" }))
+  await waitFor(() => expect(screen.getByLabelText("Start date")).toHaveValue(original))
 })
 it("keeps a dated add action available on every empty day", async () => {
   vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({ data: { items: [] } } as never)
   const user = userEvent.setup()
-  render(<WeeklyMealPlan />)
+  render(
+    <NuqsTestingAdapter hasMemory>
+      <WeeklyMealPlan />
+    </NuqsTestingAdapter>
+  )
   const actions = await screen.findAllByRole("button", { name: /^Add meal for / })
   expect(actions).toHaveLength(7)
   const regions = screen.getAllByRole("region")
@@ -108,11 +143,16 @@ it("keeps a dated add action available on every empty day", async () => {
 it("opens and closes shopping from the page action outside date navigation", async () => {
   vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({ data: { items: [] } } as never)
   const user = userEvent.setup()
-  render(<WeeklyMealPlan />)
+  render(
+    <NuqsTestingAdapter hasMemory>
+      <WeeklyMealPlan />
+    </NuqsTestingAdapter>
+  )
+  expect(screen.getByRole("button", { name: "Build shopping list" })).toBeInTheDocument()
   const dates = screen.getByRole("group", { name: "Choose dates" })
-  expect(within(dates).getByRole("button", { name: "Previous week" })).toBeInTheDocument()
+
   expect(within(dates).getByRole("button", { name: "Next week" })).toBeInTheDocument()
-  expect(within(dates).getByLabelText("Start date")).toHaveValue(todayIsoDateString())
+  expect(within(dates).queryByLabelText("Start date")).not.toBeInTheDocument()
   expect(
     within(dates).queryByRole("button", { name: "Build shopping list" })
   ).not.toBeInTheDocument()
@@ -120,4 +160,41 @@ it("opens and closes shopping from the page action outside date navigation", asy
   expect(screen.getByRole("dialog", { name: "Build shopping list" })).toBeInTheDocument()
   await user.click(screen.getByRole("button", { name: "Cancel" }))
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+})
+
+it("loads recent meals on demand and adjusts the original planned date", async () => {
+  const date = new Date(`${todayIsoDateString()}T00:00:00`)
+  date.setDate(date.getDate() - 2)
+  const previous = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+  vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({
+    data: { items: [{ id: 12, date: previous, title: "Leftover curry", entryType: "dinner" }] },
+  } as never)
+  const user = userEvent.setup()
+  render(
+    <NuqsTestingAdapter hasMemory>
+      <WeeklyMealPlan />
+    </NuqsTestingAdapter>
+  )
+  await screen.findAllByText("Nothing planned yet.")
+  expect(screen.queryByRole("heading", { name: "Leftover curry" })).not.toBeInTheDocument()
+  expect(getAllApiHouseholdsMealplansGet).toHaveBeenCalledTimes(1)
+  await user.click(screen.getByRole("button", { name: /Recent meals/ }))
+  expect(await screen.findByRole("heading", { name: "Leftover curry" })).toBeInTheDocument()
+  await user.click(screen.getByRole("button", { name: "Adjust plan for Leftover curry" }))
+  expect(screen.getByRole("dialog")).toHaveTextContent(previous)
+})
+it("shows a useful empty state for recent meals", async () => {
+  vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({ data: { items: [] } } as never)
+  const user = userEvent.setup()
+  render(
+    <NuqsTestingAdapter hasMemory>
+      <WeeklyMealPlan />
+    </NuqsTestingAdapter>
+  )
+  await user.click(screen.getByRole("button", { name: /Recent meals/ }))
+  expect(
+    await screen.findByText("No meals planned in the previous seven days.")
+  ).toBeInTheDocument()
+  await user.click(screen.getByRole("button", { name: /Recent meals/ }))
+  expect(screen.queryByText("No meals planned in the previous seven days.")).not.toBeInTheDocument()
 })

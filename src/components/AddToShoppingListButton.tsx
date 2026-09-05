@@ -28,13 +28,7 @@ export function AddToShoppingListButton({ recipe }: { recipe: RecipeOutput }) {
   const qc = useQueryClient()
   const [state, setState] = useState<"idle" | "adding" | "done" | "error">("idle")
 
-  if (!current || current.isAnonymous) {
-    return (
-      <a href="/api/auth/oauth" className={BTN}>
-        <Icon path={mdiCartPlus} size={0.75} aria-hidden={true} /> Sign in to add
-      </a>
-    )
-  }
+  if (!current || current.isAnonymous) return null
 
   // Move the recipe out of the existing list into a fresh one (the "New list
   // instead" toast action). Removal from the old list is best-effort.

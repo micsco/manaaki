@@ -6,7 +6,6 @@ import { useEffect, useState } from "react"
 
 import { configureApiClient } from "../api/client"
 import type { RecipeSummary } from "../api/generated/types.gen"
-import { AboutModal } from "../components/AboutModal"
 import { Icon } from "../components/Icon"
 import { ImportRecipeModal } from "../components/ImportRecipeModal"
 import {
@@ -17,10 +16,9 @@ import {
 import { RecipeFilterDrawer } from "../components/RecipeFilterDrawer"
 import { FilterBar, FilterPills } from "../components/RecipeFilters"
 import { Card } from "../components/ui"
-import { UserMenu } from "../components/UserMenu"
+import { useCurrentUser } from "../hooks/useCurrentUser"
 import { useRecipeFilters } from "../hooks/useRecipeFilters"
 import { recipeListQueryOptions } from "../hooks/useRecipeList"
-import ManaakiLogo from "../manaaki.svg?react"
 import { recipeImageUrl, recipeUrl } from "../utils/recipe"
 
 export const Route = createFileRoute("/recipes/")({
@@ -158,11 +156,10 @@ function RecipeCardSkeleton() {
 
 function RecipeListSkeleton() {
   return (
-    <main className="min-h-screen bg-gray-950">
-      <div className="mx-auto max-w-7xl px-4 pt-5 pb-56">
+    <main className="bg-gray-950">
+      <div className="mx-auto max-w-7xl px-4 pt-5 pb-10">
         <div className="mb-6 flex items-center gap-2.5 text-gray-400">
-          <ManaakiLogo className="size-8 shrink-0" />
-          <h1 className="text-4xl leading-none font-bold">Manaaki</h1>
+          <h1 className="font-serif text-3xl font-bold">Recipes</h1>
         </div>
 
         <div
@@ -175,35 +172,6 @@ function RecipeListSkeleton() {
           ))}
         </div>
       </div>
-
-      <div className="fixed right-0 bottom-[68px] left-0 z-30 px-4 pb-1">
-        <div className="mx-auto max-w-7xl">
-          <FilterPills
-            proteins={[]}
-            onToggleProtein={() => undefined}
-            tools={[]}
-            onToggleTool={() => undefined}
-          />
-        </div>
-      </div>
-
-      <div
-        className={[
-          "fixed right-0 bottom-0 left-0 z-30",
-          "border-gray-800 border-t",
-          "bg-gray-950/90 backdrop-blur-md supports-[not_(backdrop-filter:blur(1px))]:bg-gray-950",
-        ].join(" ")}
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-      >
-        <div className="mx-auto max-w-7xl px-4 py-3">
-          <FilterBar
-            search=""
-            onSearchChange={() => undefined}
-            activeFilterCount={0}
-            onOpenDrawer={() => undefined}
-          />
-        </div>
-      </div>
     </main>
   )
 }
@@ -211,11 +179,10 @@ function RecipeListSkeleton() {
 function RecipeList() {
   const { data, isError, isFetching, isLoading, refetch } = useQuery(recipeListQueryOptions)
   const recipes = data ?? []
+  const current = useCurrentUser()
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [aboutOpen, setAboutOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
-
   useEffect(() => {
     setIsMounted(true)
   }, [])
@@ -241,7 +208,7 @@ function RecipeList() {
   }
 
   function handleSearchChange(value: string) {
-    setSearch(value)
+    void setSearch(value)
     scrollToTop()
   }
 
@@ -268,18 +235,10 @@ function RecipeList() {
   const isFiltered = activeFilterCount > 0
 
   return (
-    <main className="min-h-screen bg-gray-950">
-      <div className="mx-auto max-w-7xl px-4 pt-5 pb-56">
+    <main className="bg-gray-950">
+      <div className="mx-auto max-w-7xl px-4 pt-5 pb-10">
         <div className="mb-6 flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => setAboutOpen(true)}
-            aria-label="About Manaaki"
-            className="flex items-center gap-2 rounded-lg text-gray-400 transition-colors hover:text-gray-200 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950 focus:outline-hidden"
-          >
-            <ManaakiLogo className="size-7 shrink-0 sm:size-8" />
-            <h1 className="text-2xl leading-none font-bold sm:text-3xl md:text-4xl">Manaaki</h1>
-          </button>
+          <h1 className="font-serif text-3xl font-bold text-gray-100">Recipes</h1>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {!showSkeleton && !isError && (
               <p className="hidden text-sm text-gray-400 sm:inline">
@@ -288,17 +247,41 @@ function RecipeList() {
                   : `${recipes.length} recipes`}
               </p>
             )}
-            <button
-              type="button"
-              onClick={() => setImportOpen(true)}
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-gray-800 bg-gray-900 px-2.5 py-1.5 text-sm font-medium text-gray-200 transition-colors hover:border-gray-700 hover:bg-gray-800 focus:ring-2 focus:ring-orange-500 focus:outline-hidden sm:px-3"
-              aria-label="Import recipe"
-            >
-              <Icon path={mdiBookPlus} size={0.7} className="text-orange-500" aria-hidden={true} />
-              <span className="hidden sm:inline">Import</span>
-            </button>
-            <UserMenu onOpenAbout={() => setAboutOpen(true)} />
+            {current && !current.isAnonymous && (
+              <button
+                type="button"
+                onClick={() => setImportOpen(true)}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-gray-800 bg-gray-900 px-2.5 py-1.5 text-sm font-medium text-gray-200 transition-colors hover:border-gray-700 hover:bg-gray-800 focus:ring-2 focus:ring-orange-500 focus:outline-hidden sm:px-3"
+                aria-label="Import recipe"
+              >
+                <Icon
+                  path={mdiBookPlus}
+                  size={0.7}
+                  className="text-orange-500"
+                  aria-hidden={true}
+                />
+                <span className="hidden sm:inline">Import</span>
+              </button>
+            )}
           </div>
+        </div>
+
+        <div className="mb-6 space-y-2">
+          <FilterBar
+            search={search}
+            onSearchChange={handleSearchChange}
+            activeFilterCount={activeFilterCount}
+            onOpenDrawer={() => setDrawerOpen(true)}
+          />
+          {(proteins.length > 0 || tools.length > 0) && (
+            <FilterPills
+              proteins={proteins}
+              onToggleProtein={handleToggleProtein}
+              tools={tools}
+              onToggleTool={handleToggleTool}
+              selectedOnly
+            />
+          )}
         </div>
 
         {showSkeleton ? (
@@ -344,35 +327,6 @@ function RecipeList() {
         )}
       </div>
 
-      <div className="fixed right-0 bottom-[68px] left-0 z-30 px-4 pb-1">
-        <div className="mx-auto max-w-7xl">
-          <FilterPills
-            proteins={proteins}
-            onToggleProtein={handleToggleProtein}
-            tools={tools}
-            onToggleTool={handleToggleTool}
-          />
-        </div>
-      </div>
-
-      <div
-        className={[
-          "fixed right-0 bottom-0 left-0 z-30",
-          "border-gray-800 border-t",
-          "bg-gray-950/90 backdrop-blur-md supports-[not_(backdrop-filter:blur(1px))]:bg-gray-950",
-        ].join(" ")}
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-      >
-        <div className="mx-auto max-w-7xl px-4 py-3">
-          <FilterBar
-            search={search}
-            onSearchChange={handleSearchChange}
-            activeFilterCount={activeFilterCount}
-            onOpenDrawer={() => setDrawerOpen(true)}
-          />
-        </div>
-      </div>
-
       <RecipeFilterDrawer
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
@@ -387,7 +341,6 @@ function RecipeList() {
       />
 
       <ImportRecipeModal open={importOpen} onOpenChange={setImportOpen} />
-      <AboutModal open={aboutOpen} onOpenChange={setAboutOpen} />
     </main>
   )
 }

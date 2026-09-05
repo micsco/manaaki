@@ -27,6 +27,7 @@ function wrapper({ children }: { children: ReactNode }) {
 describe("UserMenu", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+
     vi.restoreAllMocks()
   })
 
@@ -39,12 +40,12 @@ describe("UserMenu", () => {
     await waitFor(() =>
       expect(screen.getByRole("link", { name: /sign in/i })).toHaveAttribute(
         "href",
-        "/api/auth/oauth"
+        "/api/auth/oauth?returnTo=%2Frecipes"
       )
     )
   })
 
-  it("shows desktop navigation links and avatar trigger when authenticated", async () => {
+  it("shows identity without mixing in application destinations", async () => {
     vi.spyOn(auth, "fetchCurrentUser").mockResolvedValue({
       user: { fullName: "Mike Scott", username: "micsco" } as never,
       isAnonymous: false,
@@ -56,8 +57,8 @@ describe("UserMenu", () => {
       expect(screen.getByRole("button", { name: /user menu for mike scott/i })).toBeInTheDocument()
     })
 
-    expect(screen.getByRole("link", { name: /^shopping$/i })).toHaveAttribute("href", "/shopping")
-    expect(screen.getByRole("link", { name: /^meal plan$/i })).toHaveAttribute("href", "/plan")
+    expect(screen.queryByRole("link", { name: /^shopping$/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole("link", { name: /^meal plan$/i })).not.toBeInTheDocument()
     expect(screen.getByText("MS")).toBeInTheDocument()
   })
 
@@ -77,8 +78,8 @@ describe("UserMenu", () => {
     await user.click(trigger)
 
     expect(await screen.findByText("@micsco")).toBeInTheDocument()
-    expect(screen.getByRole("menuitem", { name: /shopping list/i })).toBeInTheDocument()
-    expect(screen.getByRole("menuitem", { name: /meal plan/i })).toBeInTheDocument()
+    expect(screen.queryByRole("menuitem", { name: /shopping list/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole("menuitem", { name: /meal plan/i })).not.toBeInTheDocument()
     expect(screen.getByRole("menuitem", { name: /about manaaki/i })).toBeInTheDocument()
     expect(screen.getByRole("menuitem", { name: /sign out/i })).toBeInTheDocument()
 

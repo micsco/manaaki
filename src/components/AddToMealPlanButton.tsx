@@ -14,7 +14,7 @@ export function AddToMealPlanButton({ recipe }: { recipe: RecipeOutput }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="min-h-11 rounded-full bg-orange-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-500"
+        className="min-h-11 rounded-full bg-gray-800 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-700"
       >
         Add to meal plan
       </button>
