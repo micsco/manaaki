@@ -44,7 +44,13 @@
   "ignorePatterns": ["src/api/generated", "src/routeTree.gen.ts", "dist", "coverage", ".devin"],
   "overrides": [
     {
-      "files": ["src/server/**", "src/routes/api.$.ts", "*.config.ts", "server.js"],
+      "files": [
+        "src/server/**",
+        "src/routes/api.$.ts",
+        "*.config.ts",
+        "server.js",
+        ".pnpmfile.cjs"
+      ],
       "env": { "node": true }
     },
     {
