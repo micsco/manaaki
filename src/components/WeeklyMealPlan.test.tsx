@@ -43,6 +43,9 @@ it("shows every meal type, multiple dinners, images and recipe-free notes", asyn
             slug: "salad",
             name: "Salad",
             image: "123",
+            totalTime: "30 minutes",
+            tags: [{ name: "Air fryer" }],
+            tools: [{ name: "Slow cooker" }],
           },
         },
         { id: 2, date, entryType: "dinner", title: "Soup" },
@@ -56,6 +59,10 @@ it("shows every meal type, multiple dinners, images and recipe-free notes", asyn
   expect(screen.getByRole("heading", { name: "Soup" })).toBeInTheDocument()
   expect(screen.getByRole("heading", { name: "Toast" })).toBeInTheDocument()
   expect(screen.getByText("Early start")).toBeInTheDocument()
+  const salad = within(screen.getByRole("link", { name: /Salad/ }))
+  expect(salad.getByText("30m")).toBeInTheDocument()
+  expect(salad.getByText("Air fryer")).toBeInTheDocument()
+  expect(salad.getByText("Slow cooker")).toBeInTheDocument()
   expect(
     within(screen.getByRole("link", { name: /Salad/ })).getByRole("presentation")
   ).toHaveAttribute("src", expect.stringContaining("min-original"))

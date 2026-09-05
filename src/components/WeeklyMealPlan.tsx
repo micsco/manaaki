@@ -10,6 +10,7 @@ import { BuildShoppingListDialog } from "./BuildShoppingListDialog"
 import { Icon } from "./Icon"
 import { MealPlanDialog, mealTypes } from "./MealPlanDialog"
 import { entryTitle } from "./MealPlanEntryCard"
+import { RecipeCardTimeBadge, RecipeCardToolBadges } from "./RecipeCardMeta"
 
 const dateLabel = (date: string, options: Intl.DateTimeFormatOptions) =>
   new Date(`${date}T00:00:00`).toLocaleDateString("en-GB", options)
@@ -234,6 +235,12 @@ function MealStory({ entry, onEdit }: { entry: ReadPlanEntry; onEdit: () => void
         <h3 className="font-serif text-xl leading-snug font-bold text-gray-100 group-hover:text-orange-200 group-focus-visible:underline group-focus-visible:decoration-orange-400 group-focus-visible:underline-offset-4">
           {title}
         </h3>
+        {entry.recipe && (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <RecipeCardTimeBadge recipe={entry.recipe} />
+            <RecipeCardToolBadges recipe={entry.recipe} />
+          </div>
+        )}
         {entry.text && entry.text !== title && (
           <p className="mt-1 text-sm leading-relaxed text-gray-400">{entry.text}</p>
         )}
