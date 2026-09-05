@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1
 
-FROM node:24-alpine AS build
+FROM node:24.20.0-alpine3.24 AS build
 WORKDIR /app
 RUN corepack enable pnpm && apk add --no-cache git
 
 # Copy lockfile first so dependency layer is cached independently of source changes
-COPY package.json pnpm-lock.yaml .pnpmfile.cjs ./
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .pnpmfile.cjs ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile --store-dir=/pnpm/store
 
 # PostHog vars are baked into the JS bundle at build time by Vite
 ARG VITE_PUBLIC_POSTHOG_PROJECT_TOKEN
@@ -53,11 +53,12 @@ RUN --mount=type=secret,id=POSTHOG_CLI_API_KEY,required=false \
       echo "Skipping PostHog source map upload (POSTHOG_CLI_API_KEY/POSTHOG_PROJECT_ID not set)"; \
     fi
 
-RUN pnpm prune --prod
+RUN pnpm prune --prod --ignore-scripts
 
-FROM nginx:stable-alpine AS serve
+FROM nginx:1.30.4-alpine3.24 AS serve
 
-RUN apk add --no-cache nodejs
+RUN apk add --no-cache libstdc++
+COPY --from=build /usr/local/bin/node /usr/local/bin/node
 
 # Templates go in conf-templates/, not /etc/nginx/templates/, to prevent the
 # nginx image's built-in entrypoint from running envsubst and clobbering nginx
@@ -66,8 +67,7 @@ RUN apk add --no-cache nodejs
 COPY nginx.conf.template /etc/nginx/conf-templates/nginx.conf.template
 # (mealie-proxy-headers template removed — the node BFF owns Mealie auth)
 
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+COPY --chmod=755 docker-entrypoint.sh /docker-entrypoint.sh
 
 COPY --from=build /app/node_modules /app/node_modules
 COPY --from=build /app/dist /app/dist

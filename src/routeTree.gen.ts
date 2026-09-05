@@ -9,33 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ShoppingRouteImport } from './routes/shopping'
-import { Route as RecipesRouteImport } from './routes/recipes'
-import { Route as PlanRouteImport } from './routes/plan'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as PlanRouteImport } from './routes/plan'
+import { Route as RecipesRouteImport } from './routes/recipes'
+import { Route as ShoppingRouteImport } from './routes/shopping'
+import { Route as ApiSplatRouteImport } from './routes/api.$'
 import { Route as RecipesIndexRouteImport } from './routes/recipes.index'
 import { Route as RecipesSlugRouteImport } from './routes/recipes.$slug'
-import { Route as ApiSplatRouteImport } from './routes/api.$'
-import { Route as RecipesIdSlugRouteImport } from './routes/recipes.$id.$slug'
-import { Route as ApiAuthOauthRouteImport } from './routes/api.auth.oauth'
-import { Route as ApiAuthMeRouteImport } from './routes/api.auth.me'
-import { Route as ApiAuthLogoutRouteImport } from './routes/api.auth.logout'
 import { Route as ApiAuthCompleteRouteImport } from './routes/api.auth.complete'
+import { Route as ApiAuthLogoutRouteImport } from './routes/api.auth.logout'
+import { Route as ApiAuthMeRouteImport } from './routes/api.auth.me'
+import { Route as ApiAuthOauthRouteImport } from './routes/api.auth.oauth'
+import { Route as RecipesIdSlugRouteImport } from './routes/recipes.$id.$slug'
 
-const ShoppingRoute = ShoppingRouteImport.update({
-  id: '/shopping',
-  path: '/shopping',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecipesRoute = RecipesRouteImport.update({
-  id: '/recipes',
-  path: '/recipes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PlanRoute = PlanRouteImport.update({
-  id: '/plan',
-  path: '/plan',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -43,9 +33,24 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const PlanRoute = PlanRouteImport.update({
+  id: '/plan',
+  path: '/plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecipesRoute = RecipesRouteImport.update({
+  id: '/recipes',
+  path: '/recipes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShoppingRoute = ShoppingRouteImport.update({
+  id: '/shopping',
+  path: '/shopping',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSplatRoute = ApiSplatRouteImport.update({
+  id: '/api/$',
+  path: '/api/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecipesIndexRoute = RecipesIndexRouteImport.update({
@@ -58,24 +63,9 @@ const RecipesSlugRoute = RecipesSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => RecipesRoute,
 } as any)
-const ApiSplatRoute = ApiSplatRouteImport.update({
-  id: '/api/$',
-  path: '/api/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecipesIdSlugRoute = RecipesIdSlugRouteImport.update({
-  id: '/$id/$slug',
-  path: '/$id/$slug',
-  getParentRoute: () => RecipesRoute,
-} as any)
-const ApiAuthOauthRoute = ApiAuthOauthRouteImport.update({
-  id: '/api/auth/oauth',
-  path: '/api/auth/oauth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAuthMeRoute = ApiAuthMeRouteImport.update({
-  id: '/api/auth/me',
-  path: '/api/auth/me',
+const ApiAuthCompleteRoute = ApiAuthCompleteRouteImport.update({
+  id: '/api/auth/complete',
+  path: '/api/auth/complete',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthLogoutRoute = ApiAuthLogoutRouteImport.update({
@@ -83,10 +73,20 @@ const ApiAuthLogoutRoute = ApiAuthLogoutRouteImport.update({
   path: '/api/auth/logout',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAuthCompleteRoute = ApiAuthCompleteRouteImport.update({
-  id: '/api/auth/complete',
-  path: '/api/auth/complete',
+const ApiAuthMeRoute = ApiAuthMeRouteImport.update({
+  id: '/api/auth/me',
+  path: '/api/auth/me',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthOauthRoute = ApiAuthOauthRouteImport.update({
+  id: '/api/auth/oauth',
+  path: '/api/auth/oauth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecipesIdSlugRoute = RecipesIdSlugRouteImport.update({
+  id: '/$id/$slug',
+  path: '/$id/$slug',
+  getParentRoute: () => RecipesRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -196,25 +196,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/shopping': {
-      id: '/shopping'
-      path: '/shopping'
-      fullPath: '/shopping'
-      preLoaderRoute: typeof ShoppingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/recipes': {
-      id: '/recipes'
-      path: '/recipes'
-      fullPath: '/recipes'
-      preLoaderRoute: typeof RecipesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/plan': {
-      id: '/plan'
-      path: '/plan'
-      fullPath: '/plan'
-      preLoaderRoute: typeof PlanRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -224,11 +210,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/plan': {
+      id: '/plan'
+      path: '/plan'
+      fullPath: '/plan'
+      preLoaderRoute: typeof PlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recipes': {
+      id: '/recipes'
+      path: '/recipes'
+      fullPath: '/recipes'
+      preLoaderRoute: typeof RecipesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shopping': {
+      id: '/shopping'
+      path: '/shopping'
+      fullPath: '/shopping'
+      preLoaderRoute: typeof ShoppingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/$': {
+      id: '/api/$'
+      path: '/api/$'
+      fullPath: '/api/$'
+      preLoaderRoute: typeof ApiSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recipes/': {
@@ -245,32 +252,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecipesSlugRouteImport
       parentRoute: typeof RecipesRoute
     }
-    '/api/$': {
-      id: '/api/$'
-      path: '/api/$'
-      fullPath: '/api/$'
-      preLoaderRoute: typeof ApiSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/recipes/$id/$slug': {
-      id: '/recipes/$id/$slug'
-      path: '/$id/$slug'
-      fullPath: '/recipes/$id/$slug'
-      preLoaderRoute: typeof RecipesIdSlugRouteImport
-      parentRoute: typeof RecipesRoute
-    }
-    '/api/auth/oauth': {
-      id: '/api/auth/oauth'
-      path: '/api/auth/oauth'
-      fullPath: '/api/auth/oauth'
-      preLoaderRoute: typeof ApiAuthOauthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/me': {
-      id: '/api/auth/me'
-      path: '/api/auth/me'
-      fullPath: '/api/auth/me'
-      preLoaderRoute: typeof ApiAuthMeRouteImport
+    '/api/auth/complete': {
+      id: '/api/auth/complete'
+      path: '/api/auth/complete'
+      fullPath: '/api/auth/complete'
+      preLoaderRoute: typeof ApiAuthCompleteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/logout': {
@@ -280,12 +266,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthLogoutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/auth/complete': {
-      id: '/api/auth/complete'
-      path: '/api/auth/complete'
-      fullPath: '/api/auth/complete'
-      preLoaderRoute: typeof ApiAuthCompleteRouteImport
+    '/api/auth/me': {
+      id: '/api/auth/me'
+      path: '/api/auth/me'
+      fullPath: '/api/auth/me'
+      preLoaderRoute: typeof ApiAuthMeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/oauth': {
+      id: '/api/auth/oauth'
+      path: '/api/auth/oauth'
+      fullPath: '/api/auth/oauth'
+      preLoaderRoute: typeof ApiAuthOauthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recipes/$id/$slug': {
+      id: '/recipes/$id/$slug'
+      path: '/$id/$slug'
+      fullPath: '/recipes/$id/$slug'
+      preLoaderRoute: typeof RecipesIdSlugRouteImport
+      parentRoute: typeof RecipesRoute
     }
   }
 }

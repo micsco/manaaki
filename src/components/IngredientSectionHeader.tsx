@@ -1,54 +1,8 @@
 import { mdiCheck } from "@mdi/js"
-import { useCallback, useEffect, useState } from "react"
 
+import { useSessionStorageGroup } from "../hooks/useSessionStorage"
 import { ingredientStorageKey } from "../utils/recipe"
 import { Icon } from "./Icon"
-
-function readChecked(recipeId: string, indices: number[]): boolean[] {
-  if (typeof window === "undefined") return indices.map(() => false)
-  return indices.map(i => {
-    try {
-      const raw = sessionStorage.getItem(ingredientStorageKey(recipeId, i))
-      return raw ? JSON.parse(raw) === true : false
-    } catch {
-      return false
-    }
-  })
-}
-
-function useGroupCheckedState(recipeId: string, indices: number[]) {
-  const [checked, setChecked] = useState<boolean[]>(() => indices.map(() => false))
-
-  useEffect(() => {
-    setChecked(readChecked(recipeId, indices))
-
-    const keys = new Set(indices.map(i => ingredientStorageKey(recipeId, i)))
-    const onSessionStorage = (e: Event) => {
-      const { key } = (e as CustomEvent<{ key: string }>).detail
-      if (keys.has(key)) setChecked(readChecked(recipeId, indices))
-    }
-    window.addEventListener("session-storage", onSessionStorage)
-    return () => window.removeEventListener("session-storage", onSessionStorage)
-  }, [recipeId, indices])
-
-  const allChecked = checked.length > 0 && checked.every(Boolean)
-
-  const toggleAll = useCallback(() => {
-    const next = !allChecked
-    for (const i of indices) {
-      try {
-        const key = ingredientStorageKey(recipeId, i)
-        sessionStorage.setItem(key, JSON.stringify(next))
-        window.dispatchEvent(new CustomEvent("session-storage", { detail: { key } }))
-      } catch (_) {
-        // sessionStorage unavailable
-      }
-    }
-    setChecked(indices.map(() => next))
-  }, [allChecked, indices, recipeId])
-
-  return { allChecked, toggleAll }
-}
 
 interface IngredientSectionHeaderProps {
   title: string
@@ -61,7 +15,9 @@ export function IngredientSectionHeader({
   recipeId,
   indices,
 }: IngredientSectionHeaderProps) {
-  const { allChecked, toggleAll } = useGroupCheckedState(recipeId, indices)
+  const { allChecked, toggleAll } = useSessionStorageGroup(
+    indices.map(index => ingredientStorageKey(recipeId, index))
+  )
 
   return (
     <h3 className="mt-8 border-t border-gray-800 first:mt-0 first:border-t-0">

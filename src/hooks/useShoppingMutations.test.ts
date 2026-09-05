@@ -2,7 +2,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { act, renderHook, waitFor } from "@testing-library/react"
 import React from "react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import * as sdk from "../api/generated/sdk.gen"
 import { shoppingListDetailQueryOptions } from "./useShoppingList"
@@ -42,8 +42,6 @@ function setup() {
 }
 
 describe("useToggleItem", () => {
-  beforeEach(() => vi.clearAllMocks())
-
   it("optimistically flips checked and sends a mapped update", async () => {
     vi.mocked(sdk.updateOneApiHouseholdsShoppingItemsItemIdPut).mockResolvedValue({
       data: { updatedItems: [{ id: "i1", shoppingListId: "l1", checked: true, display: "Eggs" }] },
@@ -100,7 +98,7 @@ describe("useToggleItem", () => {
     } as never)
     const assignMock = vi.fn()
     Object.defineProperty(window, "location", {
-      value: { ...window.location, assign: assignMock },
+      value: { href: window.location.href, assign: assignMock },
       writable: true,
     })
     const { qc, wrapper } = setup()
@@ -130,8 +128,6 @@ describe("useToggleItem", () => {
 const sdk2 = sdk as unknown as Record<string, ReturnType<typeof vi.fn>>
 
 describe("buildShoppingList", () => {
-  beforeEach(() => vi.clearAllMocks())
-
   it("creates a list then bulk-adds recipes; returns the new list id", async () => {
     sdk2.createOneApiHouseholdsShoppingListsPost = vi
       .fn()

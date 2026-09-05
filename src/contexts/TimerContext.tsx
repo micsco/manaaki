@@ -73,7 +73,9 @@ export function TimerProvider({
   )
   const posthog = usePostHog()
   const posthogRef = useRef(posthog)
-  posthogRef.current = posthog
+  useEffect(() => {
+    posthogRef.current = posthog
+  }, [posthog])
 
   const silenceAlarm = useCallback(() => {
     stopKitchenAlarm()

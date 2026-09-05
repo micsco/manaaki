@@ -12,7 +12,7 @@ export function extractErrorMessage(error: unknown): string {
   if (typeof error === "string") return error
   if (error && typeof error === "object") {
     if ("detail" in error) {
-      const detail = (error as { detail: unknown }).detail
+      const detail = error.detail
       if (typeof detail === "string") {
         if (detail.toLowerCase().includes("could not validate credentials")) {
           return "You do not have permission to import recipes. Please sign in."
@@ -20,7 +20,7 @@ export function extractErrorMessage(error: unknown): string {
         return detail
       }
       if (detail && typeof detail === "object") {
-        if ("message" in detail && typeof (detail as { message: unknown }).message === "string") {
+        if ("message" in detail && typeof detail.message === "string") {
           const msg = (detail as { message: string }).message
           if (msg === "HTTPException") {
             return "Unable to scrape recipe from this URL. Please verify the link and try again."
@@ -36,7 +36,7 @@ export function extractErrorMessage(error: unknown): string {
         if (messages) return messages
       }
     }
-    if ("message" in error && typeof (error as { message: unknown }).message === "string") {
+    if ("message" in error && typeof error.message === "string") {
       return (error as { message: string }).message
     }
   }
@@ -67,7 +67,7 @@ export function useImportRecipe() {
       return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["recipes"] })
+      return queryClient.invalidateQueries({ queryKey: ["recipes"] })
     },
   })
 }

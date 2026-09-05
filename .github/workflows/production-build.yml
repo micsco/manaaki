@@ -1,13 +1,12 @@
-name: CI
+name: Production build validation
 
 on:
   push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
-  validate:
+  validate-production:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,21 +25,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Type check
-        run: pnpm run type-check
-
-      - name: Lint and format check (oxlint + oxfmt)
-        run: pnpm run check:ci
-
-      - name: Unit tests
-        run: pnpm test
+      - name: Run validations
+        run: pnpm run validate:ci
 
       - name: Build
         run: pnpm run build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v7.0.1
-        if: always()
-        with:
-          name: build-files
-          path: dist/

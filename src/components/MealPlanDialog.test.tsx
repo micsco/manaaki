@@ -30,7 +30,6 @@ const entry: ReadPlanEntry = {
   text: "Use greens first",
 }
 beforeEach(() => {
-  vi.clearAllMocks()
   vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({
     data: { items: [entry] },
   } as never)

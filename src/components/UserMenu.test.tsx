@@ -26,8 +26,6 @@ function wrapper({ children }: { children: ReactNode }) {
 
 describe("UserMenu", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-
     vi.restoreAllMocks()
   })
 

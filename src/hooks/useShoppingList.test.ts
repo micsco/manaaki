@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { renderHook, waitFor } from "@testing-library/react"
 import React from "react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import * as sdk from "../api/generated/sdk.gen"
 import { useCurrentShoppingList } from "./useShoppingList"
@@ -18,8 +18,6 @@ function wrapper() {
 }
 
 describe("useCurrentShoppingList", () => {
-  beforeEach(() => vi.clearAllMocks())
-
   it("requests newest-first with perPage 1 and returns items[0]", async () => {
     vi.mocked(sdk.getAllApiHouseholdsShoppingListsGet).mockResolvedValue({
       data: { items: [{ id: "newest", name: "Shop" }] },

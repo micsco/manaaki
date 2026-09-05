@@ -23,7 +23,6 @@ vi.mock("../manaaki.svg?react", () => ({
 describe("AboutModal", () => {
   beforeEach(() => {
     permissionState = "granted"
-    vi.clearAllMocks()
   })
 
   it("renders nothing when closed", () => {

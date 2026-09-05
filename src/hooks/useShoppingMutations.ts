@@ -73,7 +73,7 @@ export function useToggleItem(listId: string) {
               : prev
           )
         } else {
-          qc.invalidateQueries({ queryKey: key })
+          return qc.invalidateQueries({ queryKey: key })
         }
       })
       .catch(() => {

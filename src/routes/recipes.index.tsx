@@ -2,7 +2,8 @@ import { mdiBookPlus, mdiPotSteam } from "@mdi/js"
 import { usePostHog } from "@posthog/react"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { useEffect, useState } from "react"
+import { useHydrated } from "@tanstack/react-router"
+import { useState } from "react"
 
 import { configureApiClient } from "../api/client"
 import type { RecipeSummary } from "../api/generated/types.gen"
@@ -182,10 +183,7 @@ function RecipeList() {
   const current = useCurrentUser()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
+  const isMounted = useHydrated()
 
   const showSkeleton = isLoading || !isMounted
 

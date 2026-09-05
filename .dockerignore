@@ -7,6 +7,12 @@ dist
 .claude
 .agents
 .env
-.env.local
+.env.*
+!.env.example
 *.md
 LICENSE
+
+coverage
+playwright-report
+test-results
+docs

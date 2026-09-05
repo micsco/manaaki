@@ -23,9 +23,11 @@
     ".devin",
     ".vscode",
     ".agents",
-    ".github",
     "docs",
     "**/*.md",
-    "pnpm-lock.yaml"
+    "pnpm-lock.yaml",
+    "coverage",
+    "playwright-report",
+    "test-results"
   ]
 }

@@ -33,7 +33,6 @@ vi.mock("./AboutModal", () => ({
 vi.mock("../manaaki.svg?react", () => ({ default: () => null }))
 
 beforeEach(() => {
-  vi.clearAllMocks()
   Object.assign(route, {
     pathname: "/plan",
     searchStr: "?date=2026-10-12",

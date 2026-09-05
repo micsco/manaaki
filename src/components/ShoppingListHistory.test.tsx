@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { render, screen } from "@testing-library/react"
 import type { ReactNode } from "react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import * as sdk from "../api/generated/sdk.gen"
 import { ShoppingListHistory } from "./ShoppingListHistory"
@@ -31,7 +31,6 @@ function wrap() {
 }
 
 describe("ShoppingListHistory", () => {
-  beforeEach(() => vi.clearAllMocks())
   it("lists previous lists with links to open them", async () => {
     vi.mocked(sdk.getAllApiHouseholdsShoppingListsGet).mockResolvedValue({
       data: {

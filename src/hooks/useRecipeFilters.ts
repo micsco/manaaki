@@ -113,22 +113,24 @@ export function useRecipeFilters(recipes: RecipeSummary[]) {
   )
 
   function toggleProtein(value: string) {
-    setProteins(prev => (prev.includes(value) ? prev.filter(p => p !== value) : [...prev, value]))
+    void setProteins(prev =>
+      prev.includes(value) ? prev.filter(p => p !== value) : [...prev, value]
+    )
   }
 
   function toggleTool(value: string) {
-    setTools(prev => (prev.includes(value) ? prev.filter(t => t !== value) : [...prev, value]))
+    void setTools(prev => (prev.includes(value) ? prev.filter(t => t !== value) : [...prev, value]))
   }
 
   function setTimeBucket(value: TimeBucket | null) {
-    setTime(value ?? "")
+    void setTime(value ?? "")
   }
 
   function clearAll() {
-    setSearch("")
-    setProteins([])
-    setTools([])
-    setTime("")
+    void setSearch("")
+    void setProteins([])
+    void setTools([])
+    void setTime("")
   }
 
   return {

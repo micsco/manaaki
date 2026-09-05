@@ -44,7 +44,7 @@ describe("useVersionCheck", () => {
     vi.useFakeTimers()
     vi.stubEnv("VITE_BUILD_GIT_SHORT_SHA", "abc1234")
     Object.defineProperty(window, "location", {
-      value: { ...window.location, reload: reloadMock },
+      value: { href: window.location.href, reload: reloadMock },
       writable: true,
     })
     reloadMock.mockReset()

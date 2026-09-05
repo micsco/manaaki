@@ -61,7 +61,6 @@ describe("normalizeRecipeUrl", () => {
 
 describe("ImportRecipeModal", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
     vi.spyOn(currentUserHook, "useCurrentUser").mockReturnValue({
       user: { id: "user-1", username: "chef" } as never,
       isAnonymous: false,

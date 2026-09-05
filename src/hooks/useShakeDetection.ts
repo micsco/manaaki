@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useEffectEvent, useRef } from "react"
 
 const THRESHOLD = 13
 const JERK_COUNT = 3
@@ -51,8 +51,7 @@ function processJerk(state: ShakeState, now: number, axis: "x" | "y" | "z", sign
 
 export function useShakeDetection({ onShake, enabled = true }: UseShakeDetectionOptions): void {
   const stateRef = useRef<ShakeState>({ jerks: [], lastAxis: null, lastSign: 0, lastFire: 0 })
-  const onShakeRef = useRef(onShake)
-  onShakeRef.current = onShake
+  const handleShake = useEffectEvent(onShake)
 
   useEffect(() => {
     if (!enabled) return
@@ -73,7 +72,7 @@ export function useShakeDetection({ onShake, enabled = true }: UseShakeDetection
       if (Math.sqrt(x * x + y * y + z * z) < THRESHOLD) return
 
       const { axis, sign } = dominantAxis(x, y, z)
-      if (processJerk(state, now, axis, sign)) onShakeRef.current()
+      if (processJerk(state, now, axis, sign)) handleShake()
     }
 
     window.addEventListener("devicemotion", handleMotion)

@@ -14,7 +14,6 @@ vi.mock("../utils/audio", () => ({
 describe("TimerContext", () => {
   beforeEach(() => {
     vi.useFakeTimers()
-    vi.clearAllMocks()
   })
 
   afterEach(() => {

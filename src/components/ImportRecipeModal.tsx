@@ -104,7 +104,7 @@ export function ImportRecipeModal({ open, onOpenChange }: ImportRecipeModalProps
         description: "Opening your new recipe now.",
       })
       handleOpenChange(false)
-      navigate({ to: "/recipes/$slug", params: { slug } })
+      await navigate({ to: "/recipes/$slug", params: { slug } })
     } catch (error) {
       posthog.capture("recipe_import_failed", {
         url: normalizedUrl,

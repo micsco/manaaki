@@ -50,7 +50,7 @@ export function displayDomain(url: string | null | undefined): string | null {
 export function recipeImageUrl(
   id: string | null | undefined,
   size: "original" | "min-original",
-  cacheKey?: string | null | unknown
+  cacheKey?: unknown
 ): string | null {
   if (!id) return null
   const base = `/api/media/recipes/${id}/images/${size}.webp`

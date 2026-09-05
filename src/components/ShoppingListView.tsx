@@ -27,7 +27,7 @@ export function ShoppingListView({ listId }: { listId: string }) {
         onSubmit={e => {
           e.preventDefault()
           if (!draft.trim()) return
-          add(draft)
+          void add(draft)
           setDraft("")
         }}
       >

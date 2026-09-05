@@ -21,9 +21,10 @@ async function fetchRemoteSha(): Promise<string | null> {
 export function useVersionCheck(router: AnyRouter) {
   const updateDetectedAtRef = useRef<number | null>(null)
   const toastShownRef = useRef(false)
-  const lastInteractionRef = useRef(Date.now())
+  const lastInteractionRef = useRef(0)
 
   useEffect(() => {
+    lastInteractionRef.current = Date.now()
     const currentSha = import.meta.env.VITE_BUILD_GIT_SHORT_SHA as string | undefined
     if (!currentSha) return
 

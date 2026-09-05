@@ -30,9 +30,7 @@ vi.mock("@tanstack/react-router", () => ({
   ),
   useNavigate: () => vi.fn(),
 }))
-beforeEach(() => {
-  vi.clearAllMocks()
-})
+beforeEach(() => {})
 it("shows every meal type, multiple dinners, images and recipe-free notes", async () => {
   const date = todayIsoDateString()
   vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({

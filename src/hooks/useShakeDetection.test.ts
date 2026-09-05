@@ -68,6 +68,23 @@ describe("useShakeDetection", () => {
     expect(onShake).toHaveBeenCalledTimes(1)
   })
 
+  it("uses the latest callback without replacing the motion listener", () => {
+    const onShake = vi.fn()
+    const nextOnShake = vi.fn()
+    const { rerender } = renderHook(({ callback }) => useShakeDetection({ onShake: callback }), {
+      initialProps: { callback: onShake },
+    })
+    const originalHandler = capturedHandler
+
+    rerender({ callback: nextOnShake })
+    shake(capturedHandler, "x", 20)
+
+    expect(onShake).not.toHaveBeenCalled()
+    expect(nextOnShake).toHaveBeenCalledTimes(1)
+    expect(capturedHandler).toBe(originalHandler)
+    expect(removeEventListenerSpy).not.toHaveBeenCalledWith("devicemotion", originalHandler)
+  })
+
   it("fires when dominant axis changes (chaotic shake)", () => {
     const onShake = vi.fn()
     renderHook(() => useShakeDetection({ onShake }))

@@ -1,7 +1,8 @@
 import { Dialog } from "@base-ui/react/dialog"
 import { mdiCheck, mdiLinkVariant, mdiShareVariant } from "@mdi/js"
 import { usePostHog } from "@posthog/react"
-import { useEffect, useState } from "react"
+import { useHydrated } from "@tanstack/react-router"
+import { useState } from "react"
 
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { Icon } from "./Icon"
@@ -9,10 +10,8 @@ import { Button } from "./ui/Button"
 
 export function ShareRecipeButton({ recipe }: { recipe: RecipeOutput }) {
   const posthog = usePostHog()
-  const [supported, setSupported] = useState(false)
-  useEffect(() => {
-    setSupported(typeof navigator.share === "function")
-  }, [])
+  const hydrated = useHydrated()
+  const supported = hydrated && typeof navigator.share === "function"
   const [copied, setCopied] = useState(false)
   const [manualLink, setManualLink] = useState("")
 

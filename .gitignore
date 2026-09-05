@@ -15,3 +15,7 @@ openapi-ts-error-*.log
 # Subagent-driven-development scratch (briefs, reports, ledger, diffs)
 .superpowers/
 .sdd-report-*.md
+
+coverage/
+playwright-report/
+test-results/

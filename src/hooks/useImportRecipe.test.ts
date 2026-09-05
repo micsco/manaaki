@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { act, renderHook } from "@testing-library/react"
 import React from "react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import * as sdk from "../api/generated/sdk.gen"
 import { extractErrorMessage, useImportRecipe } from "./useImportRecipe"
@@ -65,10 +65,6 @@ describe("extractErrorMessage", () => {
 })
 
 describe("useImportRecipe", () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
   it("successfully imports a recipe and invalidates the recipe query cache", async () => {
     vi.mocked(sdk.parseRecipeUrlApiRecipesCreateUrlPost).mockResolvedValue({
       data: "classic-guacamole",

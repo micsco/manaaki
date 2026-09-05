@@ -55,7 +55,6 @@ describe("ShakeToRandomRecipe", () => {
   beforeEach(() => {
     shakeCallback = null
     permissionState = "granted"
-    vi.clearAllMocks()
   })
 
   afterEach(() => {
@@ -127,7 +126,7 @@ describe("ShakeToRandomRecipe", () => {
       render(<ShakeToRandomRecipe />)
       act(() => shakeCallback?.())
       expect(screen.getByRole("dialog")).toBeInTheDocument()
-      act(() => vi.advanceTimersByTime(5000))
+      void act(() => vi.advanceTimersByTime(5000))
       expect(mockNavigate).toHaveBeenCalledTimes(1)
       expect(mockCapture).toHaveBeenCalledWith(
         "shake_random_recipe_navigated",
@@ -140,7 +139,7 @@ describe("ShakeToRandomRecipe", () => {
       render(<ShakeToRandomRecipe />)
       act(() => shakeCallback?.())
       fireEvent.click(screen.getByRole("button", { name: /cancel/i }))
-      act(() => vi.advanceTimersByTime(5000))
+      void act(() => vi.advanceTimersByTime(5000))
       expect(mockNavigate).not.toHaveBeenCalled()
     })
 
@@ -165,7 +164,7 @@ describe("ShakeToRandomRecipe", () => {
       act(() => shakeCallback?.())
       expect(screen.getByRole("dialog")).toBeInTheDocument()
 
-      act(() => vi.advanceTimersByTime(3000))
+      void act(() => vi.advanceTimersByTime(3000))
       expect(mockNavigate).not.toHaveBeenCalled()
 
       act(() => shakeCallback?.())
@@ -174,10 +173,10 @@ describe("ShakeToRandomRecipe", () => {
         expect.objectContaining({ total_recipes: 2 })
       )
 
-      act(() => vi.advanceTimersByTime(3000))
+      void act(() => vi.advanceTimersByTime(3000))
       expect(mockNavigate).not.toHaveBeenCalled()
 
-      act(() => vi.advanceTimersByTime(2000))
+      void act(() => vi.advanceTimersByTime(2000))
       expect(mockNavigate).toHaveBeenCalledTimes(1)
     })
 
@@ -186,9 +185,9 @@ describe("ShakeToRandomRecipe", () => {
       render(<ShakeToRandomRecipe />)
 
       act(() => shakeCallback?.())
-      act(() => vi.advanceTimersByTime(2000))
+      void act(() => vi.advanceTimersByTime(2000))
       act(() => shakeCallback?.())
-      act(() => vi.advanceTimersByTime(5000))
+      void act(() => vi.advanceTimersByTime(5000))
 
       expect(mockNavigate).toHaveBeenCalledTimes(1)
     })

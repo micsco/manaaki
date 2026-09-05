@@ -52,7 +52,7 @@ describe("MealPlanEntryCard", () => {
         id: "550e8400-e29b-41d4-a716-446655440000",
         slug: "pasta",
         name: "Pasta Bake",
-      } as any,
+      },
     })
     render(<MealPlanEntryCard entry={entry} />)
     expect(screen.getByText("Pasta Bake")).toBeInTheDocument()
@@ -95,7 +95,7 @@ describe("MealPlanEntryCard", () => {
         slug: "pasta",
         name: "Pasta",
         totalTime: "35 minutes",
-      } as any,
+      },
     })
     render(<MealPlanEntryCard entry={entry} />)
     expect(screen.getByText("35m")).toBeInTheDocument()
@@ -107,7 +107,7 @@ describe("MealPlanEntryCard", () => {
         id: "550e8400-e29b-41d4-a716-446655440000",
         slug: "pasta",
         name: "Pasta",
-      } as any,
+      },
     })
     render(<MealPlanEntryCard entry={entry} />)
     expect(screen.getByRole("link")).toBeInTheDocument()

@@ -22,8 +22,6 @@ export function ShakeToRandomRecipe() {
   const navigate = useNavigate()
   const posthog = usePostHog()
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const recipesRef = useRef(recipes)
-  recipesRef.current = recipes
 
   const handleShake = useCallback(() => {
     if (timerRef.current !== null) {
@@ -31,7 +29,7 @@ export function ShakeToRandomRecipe() {
       timerRef.current = null
     }
 
-    const eligible = recipesRef.current.filter((r): r is typeof r & { id: string; slug: string } =>
+    const eligible = recipes.filter((r): r is typeof r & { id: string; slug: string } =>
       Boolean(r.id && r.slug)
     )
     if (eligible.length === 0) return
@@ -50,7 +48,7 @@ export function ShakeToRandomRecipe() {
     posthog.capture("shake_random_recipe_triggered", {
       recipe_id: picked.id,
       recipe_name: picked.name,
-      total_recipes: recipesRef.current.length,
+      total_recipes: recipes.length,
     })
 
     timerRef.current = setTimeout(() => {
@@ -60,9 +58,9 @@ export function ShakeToRandomRecipe() {
         recipe_id: picked.id,
         recipe_name: picked.name,
       })
-      navigate({ to: recipeUrl(picked.id, picked.slug) })
+      void navigate({ to: recipeUrl(picked.id, picked.slug) })
     }, COUNTDOWN_MS)
-  }, [navigate, posthog])
+  }, [navigate, posthog, recipes])
 
   function handleCancel() {
     if (timerRef.current) {

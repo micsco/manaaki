@@ -1,4 +1,4 @@
-import { useQueryState } from "nuqs"
+import { parseAsBoolean, useQueryState } from "nuqs"
 import { createContext, type ReactNode, useCallback, useContext, useEffect } from "react"
 
 interface CookModeContextType {
@@ -21,35 +21,30 @@ interface CookModeProviderProps {
 }
 
 export function CookModeProvider({ children }: CookModeProviderProps) {
-  const [isCookMode, setIsCookMode] = useQueryState("cook", {
-    parse: (value: string) => value === "true",
-    serialize: (value: boolean) => value.toString(),
-    defaultValue: false,
-    clearOnDefault: true,
-  })
+  const [isCookMode, setIsCookMode] = useQueryState("cook", parseAsBoolean.withDefault(false))
 
   const toggleCookMode = useCallback(() => {
-    setIsCookMode(prev => !prev)
+    void setIsCookMode(prev => !prev)
   }, [setIsCookMode])
 
-  // Prevent screen timeout in cook mode
   useEffect(() => {
     let wakeLock: WakeLockSentinel | null = null
+    let cancelled = false
 
     if (isCookMode && "wakeLock" in navigator) {
       navigator.wakeLock
         .request("screen")
         .then(lock => {
+          if (cancelled) return lock.release()
           wakeLock = lock
         })
-        .catch(() => {
-          // Wake lock not supported or denied
-        })
+        .catch(() => {})
     }
 
     return () => {
+      cancelled = true
       if (wakeLock) {
-        wakeLock.release()
+        void wakeLock.release().catch(() => {})
       }
     }
   }, [isCookMode])

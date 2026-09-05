@@ -30,7 +30,6 @@ function requestWithSession(token: string): Request {
 
 describe("resolveCurrentUser", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
     process.env.MEALIE_READONLY_TOKEN = "ro-token"
     process.env.SESSION_SECRET = "unit-test-secret"
   })

@@ -43,7 +43,7 @@ function entry(over: Partial<ReadPlanEntry>): ReadPlanEntry {
     userId: "u",
     householdId: "h",
     ...over,
-  } as ReadPlanEntry
+  }
 }
 
 describe("gatherPlanRecipes", () => {
@@ -53,8 +53,8 @@ describe("gatherPlanRecipes", () => {
   })
   it("derives id from recipeId or recipe.id, name from recipe.name/title", () => {
     const out = gatherPlanRecipes([
-      entry({ recipeId: "r1", recipe: { id: "r1", name: "Soup", recipeServings: 4 } as never }),
-      entry({ recipeId: null, recipe: { id: "r2", name: null } as never, title: "Mystery" }),
+      entry({ recipeId: "r1", recipe: { id: "r1", name: "Soup", recipeServings: 4 } }),
+      entry({ recipeId: null, recipe: { id: "r2", name: null }, title: "Mystery" }),
     ])
     expect(out).toEqual([
       { recipeId: "r1", name: "Soup", baseServings: 4, occurrences: 1 },
@@ -91,7 +91,7 @@ function item(over: Partial<ShoppingListItemOutOutput>): ShoppingListItemOutOutp
     groupId: "g",
     householdId: "h",
     ...over,
-  } as ShoppingListItemOutOutput
+  }
 }
 
 describe("itemUpdateFromOutput", () => {
@@ -150,12 +150,12 @@ describe("groupItemsByAisle", () => {
       item({
         id: "a",
         labelId: "produce",
-        label: { id: "produce", name: "Produce", groupId: "g" } as never,
+        label: { id: "produce", name: "Produce", groupId: "g" },
       }),
       item({
         id: "b",
         labelId: "dairy",
-        label: { id: "dairy", name: "Dairy", groupId: "g" } as never,
+        label: { id: "dairy", name: "Dairy", groupId: "g" },
       }),
       item({ id: "c", labelId: null, label: null }),
     ]

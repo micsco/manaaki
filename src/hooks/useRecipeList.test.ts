@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { renderHook, waitFor } from "@testing-library/react"
 import React from "react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import * as sdk from "../api/generated/sdk.gen"
 import { recipeListQueryOptions, useRecipeList } from "./useRecipeList"
@@ -47,10 +47,6 @@ async function recipeFailure(status: number): Promise<unknown> {
 }
 
 describe("useRecipeList", () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
   it("returns items from a single-page response", async () => {
     const recipes = [makeRecipe("apple-pie"), makeRecipe("banana-bread")]
     mockGetAll.mockResolvedValue(makePage(recipes, 1) as any)
@@ -68,10 +64,13 @@ describe("useRecipeList", () => {
     const page2 = [makeRecipe("recipe-3"), makeRecipe("recipe-4")]
     const page3 = [makeRecipe("recipe-5")]
 
-    mockGetAll
-      .mockResolvedValueOnce(makePage(page1, 3, 1) as any)
-      .mockResolvedValueOnce(makePage(page2, 3, 2) as any)
-      .mockResolvedValueOnce(makePage(page3, 3, 3) as any)
+    vi.when(mockGetAll)
+      .calledWith(expect.objectContaining({ query: expect.objectContaining({ page: 1 }) }))
+      .thenResolve(makePage(page1, 3, 1) as never)
+      .calledWith(expect.objectContaining({ query: expect.objectContaining({ page: 2 }) }))
+      .thenResolve(makePage(page2, 3, 2) as never)
+      .calledWith(expect.objectContaining({ query: expect.objectContaining({ page: 3 }) }))
+      .thenResolve(makePage(page3, 3, 3) as never)
 
     const { result } = renderHook(() => useRecipeList(), { wrapper: wrapper() })
 
@@ -135,10 +134,6 @@ describe("useRecipeList", () => {
 })
 
 describe("recipeListQueryOptions", () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
   it("preserves the response status when recipe loading fails", async () => {
     await expect(recipeFailure(401)).resolves.toMatchObject({
       message: "Failed to load recipes",

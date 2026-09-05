@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useHydrated } from "@tanstack/react-router"
 
 import { useRecipeList } from "./useRecipeList"
 
@@ -23,10 +23,7 @@ function toNavItem(recipe: {
 }
 
 export function useRecipeNav(currentId: string): RecipeNav {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const mounted = useHydrated()
 
   const recipes = useRecipeList()
 

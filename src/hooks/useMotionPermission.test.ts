@@ -1,4 +1,6 @@
 import { act, renderHook } from "@testing-library/react"
+import { createElement } from "react"
+import { renderToString } from "react-dom/server"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { useMotionPermission } from "./useMotionPermission"
@@ -20,6 +22,13 @@ function removeDeviceMotionEvent() {
 }
 
 describe("useMotionPermission", () => {
+  it("renders the unavailable fallback on the server", () => {
+    defineDeviceMotionEvent()
+    function PermissionState() {
+      return createElement("span", null, useMotionPermission().state)
+    }
+    expect(renderToString(createElement(PermissionState))).toBe("<span>unavailable</span>")
+  })
   afterEach(() => {
     vi.restoreAllMocks()
     defineDeviceMotionEvent()

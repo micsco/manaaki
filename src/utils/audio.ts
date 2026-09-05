@@ -83,10 +83,10 @@ export function startKitchenAlarm(maxDurationMs = 30000, onAutoStop?: () => void
     return
   }
 
-  playKitchenChime()
+  void playKitchenChime()
 
   alarmIntervalId = setInterval(() => {
-    playKitchenChime()
+    void playKitchenChime()
   }, 1600)
 
   alarmTimeoutId = setTimeout(() => {

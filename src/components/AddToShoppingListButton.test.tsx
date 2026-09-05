@@ -35,8 +35,6 @@ async function click(name = /add to shopping list/i) {
 
 describe("AddToShoppingListButton", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-
     vi.restoreAllMocks()
   })
 

@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event"
-import { beforeEach, expect, it, vi } from "vitest"
+import { expect, it, vi } from "vitest"
 
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import { render, screen } from "../test/render"
@@ -7,7 +7,6 @@ import { AddToMealPlanButton } from "./AddToMealPlanButton"
 
 vi.mock("../hooks/useCurrentUser", () => ({ useCurrentUser: vi.fn() }))
 vi.mock("./MealPlanDialog", () => ({ MealPlanDialog: () => <div role="dialog">Choose a day</div> }))
-beforeEach(() => vi.clearAllMocks())
 it("opens dated planning for a signed-in recipe reader", async () => {
   vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: false })
   render(<AddToMealPlanButton recipe={{ id: "salad" }} />)

@@ -40,7 +40,7 @@ export function AddToShoppingListButton({ recipe }: { recipe: RecipeOutput }) {
     await removeRecipeIngredientsFromListApiHouseholdsShoppingListsItemIdRecipeRecipeIdDeletePost({
       path: { item_id: fromListId, recipe_id: recipeId },
     }).catch(() => undefined)
-    qc.invalidateQueries({ queryKey: currentListQueryOptions.queryKey })
+    await qc.invalidateQueries({ queryKey: currentListQueryOptions.queryKey })
     window.location.assign(`/shopping?list=${built.listId}`)
   }
 
@@ -80,7 +80,7 @@ export function AddToShoppingListButton({ recipe }: { recipe: RecipeOutput }) {
           },
         })
       }
-      qc.invalidateQueries({ queryKey: currentListQueryOptions.queryKey })
+      await qc.invalidateQueries({ queryKey: currentListQueryOptions.queryKey })
       setState("done")
     } catch {
       toastManager.add({ title: "Couldn't add to your shopping list" })

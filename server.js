@@ -4,5 +4,5 @@ import serverBuild from "./dist/server/server.js"
 
 serve({
   port: Number(process.env.PORT) || 3000,
-  fetch: serverBuild.fetch,
+  fetch: request => serverBuild.fetch(request),
 })

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react"
+import { useHydrated } from "@tanstack/react-router"
+import { useCallback, useState } from "react"
 
 export type MotionPermissionState = "unavailable" | "prompt" | "granted" | "denied"
 
@@ -20,11 +21,9 @@ function detectInitialState(): MotionPermissionState {
 }
 
 export function useMotionPermission() {
-  const [state, setState] = useState<MotionPermissionState>(detectInitialState)
-
-  useEffect(() => {
-    setState(detectInitialState())
-  }, [])
+  const hydrated = useHydrated()
+  const [permission, setState] = useState<MotionPermissionState | null>(null)
+  const state = permission ?? (hydrated ? detectInitialState() : "unavailable")
 
   const request = useCallback(async () => {
     if (!needsPermissionRequest()) {

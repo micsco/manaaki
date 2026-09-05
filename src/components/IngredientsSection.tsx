@@ -49,9 +49,9 @@ export function IngredientsSection({
   const hasServings = defaultServings != null && defaultServings > 0
   const [servings, setServings] = useSessionStorage(
     servingsStorageKey(recipeId),
-    hasServings ? (defaultServings as number) : 1
+    hasServings ? defaultServings : 1
   )
-  const scale = hasServings ? servings / (defaultServings as number) : 1
+  const scale = hasServings ? servings / defaultServings : 1
 
   const className = isCookMode ? "overflow-y-auto px-4 py-6 lg:pr-10" : "pr-0 md:pr-10"
 
@@ -64,7 +64,7 @@ export function IngredientsSection({
         {hasServings && (
           <ServingsSelect
             value={servings}
-            defaultServings={defaultServings as number}
+            defaultServings={defaultServings}
             onChange={v => {
               if (v != null) setServings(v)
             }}

@@ -3,7 +3,7 @@ import { vi } from "vitest"
 
 Object.defineProperty(navigator, "wakeLock", {
   value: {
-    request: vi.fn().mockResolvedValue({ release: vi.fn() }),
+    request: vi.fn().mockResolvedValue({ release: vi.fn().mockResolvedValue(undefined) }),
   },
   writable: true,
 })
