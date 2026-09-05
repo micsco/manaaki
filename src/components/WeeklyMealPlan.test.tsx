@@ -11,7 +11,13 @@ vi.mock("./MealPlanDialog", () => ({
   mealTypes: ["breakfast", "lunch", "dinner", "side", "snack", "drink", "dessert"],
   MealPlanDialog: ({ date }: { date: string }) => <div role="dialog">{date}</div>,
 }))
-vi.mock("./BuildShoppingListDialog", () => ({ BuildShoppingListDialog: () => null }))
+vi.mock("./BuildShoppingListDialog", () => ({
+  BuildShoppingListDialog: ({ onClose }: { onClose: () => void }) => (
+    <div role="dialog" aria-label="Build shopping list">
+      <button onClick={onClose}>Cancel</button>
+    </div>
+  ),
+}))
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ to, children, ...props }: any) => (
     <a href={to} {...props}>
@@ -67,9 +73,44 @@ it("navigates weeks without leaving previous entries under new dates", async () 
   const user = userEvent.setup()
   render(<WeeklyMealPlan />)
   await screen.findAllByText("Nothing planned yet.")
-  const original = screen.getByLabelText("From").getAttribute("value")
+  const original = screen.getByLabelText("Start date").getAttribute("value")
   await user.click(screen.getByRole("button", { name: "Next week" }))
-  expect(screen.getByLabelText("From")).not.toHaveValue(original)
+  expect(screen.getByLabelText("Start date")).not.toHaveValue(original)
   await user.click(screen.getByRole("button", { name: /^Today$/ }))
-  expect(screen.getByLabelText("From")).toHaveValue(original)
+  expect(screen.getByLabelText("Start date")).toHaveValue(original)
+})
+it("keeps a dated add action available on every empty day", async () => {
+  vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({ data: { items: [] } } as never)
+  const user = userEvent.setup()
+  render(<WeeklyMealPlan />)
+  const actions = await screen.findAllByRole("button", { name: /^Add meal for / })
+  expect(actions).toHaveLength(7)
+  const regions = screen.getAllByRole("region")
+  expect(regions).toHaveLength(7)
+  for (const region of regions) {
+    expect(within(region).getByRole("button", { name: /^Add meal for / })).toBeInTheDocument()
+  }
+  await user.click(actions[6])
+  const date = new Date(`${todayIsoDateString()}T00:00:00`)
+  date.setDate(date.getDate() + 6)
+  expect(screen.getByRole("dialog")).toHaveTextContent(
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+  )
+})
+
+it("opens and closes shopping from the page action outside date navigation", async () => {
+  vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({ data: { items: [] } } as never)
+  const user = userEvent.setup()
+  render(<WeeklyMealPlan />)
+  const dates = screen.getByRole("group", { name: "Choose dates" })
+  expect(within(dates).getByRole("button", { name: "Previous week" })).toBeInTheDocument()
+  expect(within(dates).getByRole("button", { name: "Next week" })).toBeInTheDocument()
+  expect(within(dates).getByLabelText("Start date")).toHaveValue(todayIsoDateString())
+  expect(
+    within(dates).queryByRole("button", { name: "Build shopping list" })
+  ).not.toBeInTheDocument()
+  await user.click(screen.getByRole("button", { name: "Build shopping list" }))
+  expect(screen.getByRole("dialog", { name: "Build shopping list" })).toBeInTheDocument()
+  await user.click(screen.getByRole("button", { name: "Cancel" }))
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
 })
