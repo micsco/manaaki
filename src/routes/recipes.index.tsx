@@ -270,19 +270,19 @@ function RecipeList() {
   return (
     <main className="min-h-screen bg-gray-950">
       <div className="mx-auto max-w-7xl px-4 pt-5 pb-56">
-        <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="mb-6 flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={() => setAboutOpen(true)}
             aria-label="About Manaaki"
-            className="flex items-center gap-2.5 rounded-lg text-gray-400 transition-colors hover:text-gray-200 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950 focus:outline-hidden"
+            className="flex items-center gap-2 rounded-lg text-gray-400 transition-colors hover:text-gray-200 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950 focus:outline-hidden"
           >
-            <ManaakiLogo className="size-8 shrink-0" />
-            <h1 className="text-4xl leading-none font-bold">Manaaki</h1>
+            <ManaakiLogo className="size-7 shrink-0 sm:size-8" />
+            <h1 className="text-2xl leading-none font-bold sm:text-3xl md:text-4xl">Manaaki</h1>
           </button>
-          <div className="flex shrink-0 items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {!showSkeleton && !isError && (
-              <p className="text-sm text-gray-400">
+              <p className="hidden text-sm text-gray-400 sm:inline">
                 {isFiltered
                   ? `${filtered.length} of ${recipes.length}`
                   : `${recipes.length} recipes`}
@@ -291,13 +291,13 @@ function RecipeList() {
             <button
               type="button"
               onClick={() => setImportOpen(true)}
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-gray-800 bg-gray-900 px-3 py-1.5 text-sm font-medium text-gray-200 transition-colors hover:border-gray-700 hover:bg-gray-800 focus:ring-2 focus:ring-orange-500 focus:outline-hidden"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-gray-800 bg-gray-900 px-2.5 py-1.5 text-sm font-medium text-gray-200 transition-colors hover:border-gray-700 hover:bg-gray-800 focus:ring-2 focus:ring-orange-500 focus:outline-hidden sm:px-3"
               aria-label="Import recipe"
             >
               <Icon path={mdiBookPlus} size={0.7} className="text-orange-500" aria-hidden={true} />
               <span className="hidden sm:inline">Import</span>
             </button>
-            <UserMenu />
+            <UserMenu onOpenAbout={() => setAboutOpen(true)} />
           </div>
         </div>
 
