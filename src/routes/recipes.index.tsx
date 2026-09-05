@@ -1,4 +1,4 @@
-import { mdiPotSteam } from "@mdi/js"
+import { mdiBookPlus, mdiPotSteam } from "@mdi/js"
 import { usePostHog } from "@posthog/react"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
@@ -8,6 +8,7 @@ import { configureApiClient } from "../api/client"
 import type { RecipeSummary } from "../api/generated/types.gen"
 import { AboutModal } from "../components/AboutModal"
 import { Icon } from "../components/Icon"
+import { ImportRecipeModal } from "../components/ImportRecipeModal"
 import {
   RecipeCardInfoBadges,
   RecipeCardTimeBadge,
@@ -212,6 +213,7 @@ function RecipeList() {
   const recipes = data ?? []
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
@@ -286,6 +288,15 @@ function RecipeList() {
                   : `${recipes.length} recipes`}
               </p>
             )}
+            <button
+              type="button"
+              onClick={() => setImportOpen(true)}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-gray-800 bg-gray-900 px-3 py-1.5 text-sm font-medium text-gray-200 transition-colors hover:border-gray-700 hover:bg-gray-800 focus:ring-2 focus:ring-orange-500 focus:outline-hidden"
+              aria-label="Import recipe"
+            >
+              <Icon path={mdiBookPlus} size={0.7} className="text-orange-500" aria-hidden={true} />
+              <span className="hidden sm:inline">Import</span>
+            </button>
             <UserMenu />
           </div>
         </div>
@@ -375,6 +386,7 @@ function RecipeList() {
         onClearAll={handleClearAll}
       />
 
+      <ImportRecipeModal open={importOpen} onOpenChange={setImportOpen} />
       <AboutModal open={aboutOpen} onOpenChange={setAboutOpen} />
     </main>
   )

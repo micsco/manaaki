@@ -232,6 +232,21 @@ describe("RecipeList loading state", () => {
     expect(screen.getByText("About Manaaki")).toBeInTheDocument()
   })
 
+  it("shows an Import recipe button", () => {
+    mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
+    render(<RecipeListWrapper />)
+    expect(screen.getByRole("button", { name: /import recipe/i })).toBeInTheDocument()
+  })
+
+  it("opens the Import modal when the Import button is clicked", async () => {
+    const user = userEvent.setup()
+    mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
+    render(<RecipeListWrapper />)
+    await user.click(screen.getByRole("button", { name: /import recipe/i }))
+    expect(screen.getByRole("dialog")).toBeInTheDocument()
+    expect(screen.getByText("Import Recipe")).toBeInTheDocument()
+  })
+
   it("shows the search bar while loading", () => {
     mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
     render(<RecipeListWrapper />)
