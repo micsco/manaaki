@@ -154,8 +154,8 @@ function sessionCookieHeader(jwt: string): string {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe("handleApiProxy — Host regression (the fix)", () => {
-  it("sends the public Host header to the upstream, not the internal docker host", async () => {
+describe("handleApiProxy — upstream Host", () => {
+  it("addresses Mealie by its own internal host rather than impersonating manaaki's", async () => {
     setNextResponse({ status: 200, body: "[]" })
     const res = await handleApiProxy(
       new Request("https://app/api/recipes", {
@@ -167,8 +167,7 @@ describe("handleApiProxy — Host regression (the fix)", () => {
     )
     expect(res.status).toBe(200)
     expect(lastUpstreamRequest).not.toBeNull()
-    // The core assertion: upstream must see the public host, NOT 127.0.0.1
-    expect(lastUpstreamRequest?.headers.host).toBe("manaaki.micsco.nz")
+    expect(lastUpstreamRequest?.headers.host).toBe(`127.0.0.1:${serverPort}`)
     expect(lastUpstreamRequest?.headers.authorization).toBe("Bearer ro-token")
   })
 })
@@ -227,8 +226,7 @@ describe("handleApiProxy — authed", () => {
     expect(lastUpstreamRequest?.headers.authorization).toBe(`Bearer ${jwt}`)
     // Cookie must be stripped
     expect(lastUpstreamRequest?.headers.cookie).toBeUndefined()
-    // Public host forwarded
-    expect(lastUpstreamRequest?.headers.host).toBe("manaaki.micsco.nz")
+    expect(lastUpstreamRequest?.headers.host).toBe(`127.0.0.1:${serverPort}`)
     // Authed responses must be private
     expect(res.headers.get("Cache-Control")).toBe("private, no-store")
   })
@@ -339,11 +337,7 @@ describe("handleApiProxy — redirect passthrough", () => {
       headers: { Location: googleUrl },
       body: "",
     })
-    const res = await handleApiProxy(
-      new Request("https://app/api/auth/oauth", {
-        headers: { host: "manaaki.micsco.nz", "x-forwarded-proto": "https" },
-      })
-    )
+    const res = await handleApiProxy(authedRequest("/api/households/mealplans", farFutureJwt()))
     expect(res.status).toBe(302)
     expect(res.headers.get("Location")).toBe(googleUrl)
   })

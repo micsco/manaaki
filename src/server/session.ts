@@ -14,15 +14,15 @@ function key(): Buffer {
   return createHash("sha256").update(sessionSecret()).digest()
 }
 
-export function sealSession(token: string): string {
+export function sealJson(value: unknown): string {
   const iv = randomBytes(IV_LEN)
   const cipher = createCipheriv(ALGO, key(), iv)
-  const enc = Buffer.concat([cipher.update(JSON.stringify({ t: token }), "utf8"), cipher.final()])
+  const enc = Buffer.concat([cipher.update(JSON.stringify(value), "utf8"), cipher.final()])
   const tag = cipher.getAuthTag()
   return Buffer.concat([iv, tag, enc]).toString("base64url")
 }
 
-export function unsealSession(sealed: string): string | null {
+export function unsealJson(sealed: string): unknown {
   try {
     const raw = Buffer.from(sealed, "base64url")
     if (raw.length < IV_LEN + TAG_LEN) return null
@@ -31,12 +31,19 @@ export function unsealSession(sealed: string): string | null {
     const enc = raw.subarray(IV_LEN + TAG_LEN)
     const decipher = createDecipheriv(ALGO, key(), iv)
     decipher.setAuthTag(tag)
-    const dec = Buffer.concat([decipher.update(enc), decipher.final()]).toString("utf8")
-    const parsed = JSON.parse(dec) as { t?: unknown }
-    return typeof parsed.t === "string" ? parsed.t : null
+    return JSON.parse(Buffer.concat([decipher.update(enc), decipher.final()]).toString("utf8"))
   } catch {
     return null
   }
+}
+
+export function sealSession(token: string): string {
+  return sealJson({ t: token })
+}
+
+export function unsealSession(sealed: string): string | null {
+  const parsed = unsealJson(sealed) as { t?: unknown } | null
+  return typeof parsed?.t === "string" ? parsed.t : null
 }
 
 export type JwtTiming = { exp: number; iat: number | null }

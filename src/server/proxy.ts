@@ -48,13 +48,7 @@ function upstreamHeaders(request: Request, token: string): Record<string, string
     if (!STRIP_REQUEST_HEADERS.has(k.toLowerCase())) headers[k] = v
   }
   headers.authorization = `Bearer ${token}`
-  const host = request.headers.get("host")
-  const isLocalhost = host?.startsWith("localhost") || host?.startsWith("127.0.0.1")
-  if (host && !isLocalhost) {
-    headers.host = host
-  } else {
-    headers.host = new URL(mealieInternalUrl()).host
-  }
+  headers.host = new URL(mealieInternalUrl()).host
   headers["x-forwarded-proto"] = isSecureRequest(request) ? "https" : "http"
   return headers
 }
