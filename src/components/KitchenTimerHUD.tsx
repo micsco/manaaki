@@ -1,11 +1,20 @@
-import { mdiClose, mdiPause, mdiPlay, mdiPlus, mdiRestart } from "@mdi/js"
+import { mdiBellRingOutline, mdiClose, mdiPause, mdiPlay, mdiPlus, mdiRestart } from "@mdi/js"
 
 import { useTimer } from "../contexts/TimerContext"
 import { formatTimerDisplay } from "../utils/timer"
 import { Icon } from "./Icon"
 
 export function KitchenTimerHUD() {
-  const { timers, pauseTimer, resumeTimer, resetTimer, addMinute, dismissTimer } = useTimer()
+  const {
+    timers,
+    isAlarmRinging,
+    silenceAlarm,
+    pauseTimer,
+    resumeTimer,
+    resetTimer,
+    addMinute,
+    dismissTimer,
+  } = useTimer()
 
   if (timers.length === 0) {
     return null
@@ -29,7 +38,9 @@ export function KitchenTimerHUD() {
         return (
           <div
             key={timer.id}
-            className="pointer-events-auto rounded-2xl border border-gray-700 bg-gray-900/95 p-3.5 shadow-2xl backdrop-blur-md transition-all"
+            className={`pointer-events-auto rounded-2xl border bg-gray-900/95 p-3.5 shadow-2xl backdrop-blur-md transition-all ${
+              isCompleted ? "border-green-500 shadow-green-950/40" : "border-gray-700"
+            }`}
             role="region"
             aria-label={`Timer: ${timer.label}`}
           >
@@ -61,8 +72,9 @@ export function KitchenTimerHUD() {
               </span>
 
               {isCompleted && (
-                <span className="rounded-full border border-green-800 bg-green-950 px-2 py-0.5 text-xs font-semibold text-green-400">
-                  Done!
+                <span className="inline-flex items-center gap-1 rounded-full border border-green-700 bg-green-950 px-2 py-0.5 text-xs font-semibold text-green-400">
+                  {isAlarmRinging && <Icon path={mdiBellRingOutline} size={0.45} aria-hidden />}
+                  <span>Done!</span>
                 </span>
               )}
 
@@ -102,7 +114,17 @@ export function KitchenTimerHUD() {
                 <Icon path={mdiRestart} size={0.55} aria-hidden />
               </button>
 
-              {isRunning ? (
+              {isCompleted && isAlarmRinging ? (
+                <button
+                  type="button"
+                  onClick={silenceAlarm}
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-lg bg-green-600 px-2.5 py-1 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-green-500 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-green-400"
+                  aria-label={`Silence alarm for ${timer.label}`}
+                >
+                  <Icon path={mdiBellRingOutline} size={0.5} aria-hidden />
+                  <span>Silence</span>
+                </button>
+              ) : isRunning ? (
                 <button
                   type="button"
                   onClick={() => pauseTimer(timer.id)}

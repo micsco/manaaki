@@ -1,6 +1,13 @@
 let sharedAudioContext: AudioContext | null = null
+let alarmIntervalId: ReturnType<typeof setInterval> | null = null
+let alarmTimeoutId: ReturnType<typeof setTimeout> | null = null
+
+export function isKitchenAlarmActive(): boolean {
+  return alarmIntervalId !== null
+}
 
 export function resetAudioContextForTesting(): void {
+  stopKitchenAlarm()
   sharedAudioContext = null
 }
 
@@ -24,7 +31,13 @@ function getAudioContext(): AudioContext | null {
   return sharedAudioContext
 }
 
-function playTone(context: AudioContext, frequency: number, startTime: number, duration: number) {
+function playTone(
+  context: AudioContext,
+  frequency: number,
+  startTime: number,
+  duration: number,
+  peakGain = 0.7
+) {
   const osc = context.createOscillator()
   const gain = context.createGain()
 
@@ -32,7 +45,7 @@ function playTone(context: AudioContext, frequency: number, startTime: number, d
   osc.frequency.setValueAtTime(frequency, startTime)
 
   gain.gain.setValueAtTime(0.0001, startTime)
-  gain.gain.linearRampToValueAtTime(0.3, startTime + 0.02)
+  gain.gain.linearRampToValueAtTime(peakGain, startTime + 0.015)
   gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration)
 
   osc.connect(gain)
@@ -55,14 +68,41 @@ export async function playKitchenChime(): Promise<boolean> {
 
     const now = context.currentTime
 
-    playTone(context, 880, now, 0.25)
-    playTone(context, 1320, now + 0.18, 0.45)
-
-    playTone(context, 880, now + 0.5, 0.25)
-    playTone(context, 1320, now + 0.68, 0.6)
+    playTone(context, 1760, now, 0.09, 0.7)
+    playTone(context, 1760, now + 0.14, 0.09, 0.7)
+    playTone(context, 2093, now + 0.28, 0.22, 0.75)
 
     return true
   } catch {
     return false
+  }
+}
+
+export function startKitchenAlarm(maxDurationMs = 30000, onAutoStop?: () => void): void {
+  if (alarmIntervalId !== null) {
+    return
+  }
+
+  playKitchenChime()
+
+  alarmIntervalId = setInterval(() => {
+    playKitchenChime()
+  }, 1600)
+
+  alarmTimeoutId = setTimeout(() => {
+    stopKitchenAlarm()
+    onAutoStop?.()
+  }, maxDurationMs)
+}
+
+export function stopKitchenAlarm(): void {
+  if (alarmIntervalId !== null) {
+    clearInterval(alarmIntervalId)
+    alarmIntervalId = null
+  }
+
+  if (alarmTimeoutId !== null) {
+    clearTimeout(alarmTimeoutId)
+    alarmTimeoutId = null
   }
 }

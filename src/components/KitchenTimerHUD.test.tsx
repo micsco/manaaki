@@ -1,7 +1,7 @@
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it } from "vitest"
 
-import { useTimer } from "../contexts/TimerContext"
+import { TimerProvider, useTimer } from "../contexts/TimerContext"
 import { render, screen } from "../test/render"
 import { KitchenTimerHUD } from "./KitchenTimerHUD"
 
@@ -94,5 +94,45 @@ describe("KitchenTimerHUD", () => {
     await user.click(dismissButton)
 
     expect(screen.queryByText("Step 1: Simmer sauce")).not.toBeInTheDocument()
+  })
+
+  it("silences alarm when silence button is clicked on completed timer", async () => {
+    const user = userEvent.setup()
+    render(
+      <TimerProvider
+        initialTimers={[
+          {
+            id: "timer-done",
+            label: "Step 2: Bake bread",
+            totalSeconds: 300,
+            remainingSeconds: 0,
+            status: "completed",
+            startedAt: null,
+            pausedRemainingSeconds: 0,
+          },
+        ]}
+      >
+        <KitchenTimerHUD />
+      </TimerProvider>
+    )
+
+    expect(
+      screen.getByRole("button", {
+        name: "Silence alarm for Step 2: Bake bread",
+      })
+    ).toBeInTheDocument()
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Silence alarm for Step 2: Bake bread",
+      })
+    )
+
+    expect(
+      screen.queryByRole("button", {
+        name: "Silence alarm for Step 2: Bake bread",
+      })
+    ).not.toBeInTheDocument()
+    expect(screen.getByText("Done!")).toBeInTheDocument()
   })
 })

@@ -6,6 +6,9 @@ import { TimerProvider, useTimer } from "./TimerContext"
 
 vi.mock("../utils/audio", () => ({
   playKitchenChime: vi.fn(),
+  startKitchenAlarm: vi.fn(),
+  stopKitchenAlarm: vi.fn(),
+  isKitchenAlarmActive: vi.fn().mockReturnValue(false),
 }))
 
 describe("TimerContext", () => {
@@ -142,7 +145,7 @@ describe("TimerContext", () => {
     expect(result.current.timers).toHaveLength(0)
   })
 
-  it("completes when remaining seconds reach 0 and triggers chime", () => {
+  it("completes when remaining seconds reach 0 and starts kitchen alarm", () => {
     const { result } = renderHook(() => useTimer(), { wrapper: TimerProvider })
 
     act(() => {
@@ -159,7 +162,84 @@ describe("TimerContext", () => {
 
     expect(result.current.timers[0]?.status).toBe("completed")
     expect(result.current.timers[0]?.remainingSeconds).toBe(0)
-    expect(audioModule.playKitchenChime).toHaveBeenCalledTimes(1)
+    expect(result.current.isAlarmRinging).toBe(true)
+    expect(audioModule.startKitchenAlarm).toHaveBeenCalledTimes(1)
+    expect(audioModule.startKitchenAlarm).toHaveBeenCalledWith(30000, expect.any(Function))
+  })
+
+  it("silences active alarm and sets isAlarmRinging to false", () => {
+    const { result } = renderHook(() => useTimer(), { wrapper: TimerProvider })
+
+    act(() => {
+      result.current.startTimer({
+        id: "step-1",
+        label: "Step 1",
+        totalSeconds: 2,
+      })
+    })
+
+    act(() => {
+      vi.advanceTimersByTime(2500)
+    })
+
+    expect(result.current.isAlarmRinging).toBe(true)
+
+    act(() => {
+      result.current.silenceAlarm()
+    })
+
+    expect(result.current.isAlarmRinging).toBe(false)
+    expect(audioModule.stopKitchenAlarm).toHaveBeenCalled()
+  })
+
+  it("stops alarm when completed timer is dismissed", () => {
+    const { result } = renderHook(() => useTimer(), { wrapper: TimerProvider })
+
+    act(() => {
+      result.current.startTimer({
+        id: "step-1",
+        label: "Step 1",
+        totalSeconds: 1,
+      })
+    })
+
+    act(() => {
+      vi.advanceTimersByTime(1500)
+    })
+
+    expect(result.current.isAlarmRinging).toBe(true)
+
+    act(() => {
+      result.current.dismissTimer("step-1")
+    })
+
+    expect(result.current.isAlarmRinging).toBe(false)
+    expect(audioModule.stopKitchenAlarm).toHaveBeenCalled()
+  })
+
+  it("stops alarm when completed timer is reset", () => {
+    const { result } = renderHook(() => useTimer(), { wrapper: TimerProvider })
+
+    act(() => {
+      result.current.startTimer({
+        id: "step-1",
+        label: "Step 1",
+        totalSeconds: 1,
+      })
+    })
+
+    act(() => {
+      vi.advanceTimersByTime(1500)
+    })
+
+    expect(result.current.isAlarmRinging).toBe(true)
+
+    act(() => {
+      result.current.resetTimer("step-1")
+    })
+
+    expect(result.current.isAlarmRinging).toBe(false)
+    expect(audioModule.stopKitchenAlarm).toHaveBeenCalled()
   })
 
   it("gets timer by id helper", () => {
