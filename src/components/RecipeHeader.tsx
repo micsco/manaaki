@@ -11,6 +11,7 @@ import { Link } from "@tanstack/react-router"
 import type { RecipeOutput } from "../api/generated/types.gen"
 import type { RecipeNavItem } from "../hooks/useRecipeNav"
 import { formatTime, recipeUrl } from "../utils/recipe"
+import { AddToMealPlanButton } from "./AddToMealPlanButton"
 import { AddToShoppingListButton } from "./AddToShoppingListButton"
 import { Icon } from "./Icon"
 import { ShareRecipeButton } from "./ShareRecipeButton"
@@ -79,7 +80,7 @@ export function RecipeHeader({
   const posthog = usePostHog()
 
   return (
-    <div className="relative h-[55vh] min-h-64 w-full overflow-hidden bg-gray-900">
+    <div className="relative flex min-h-[55vh] w-full flex-col overflow-hidden bg-gray-900 md:h-[55vh] md:min-h-64">
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
         <Link
           to="/recipes"
@@ -90,7 +91,7 @@ export function RecipeHeader({
         </Link>
       </div>
 
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+      <div className="absolute top-18 right-4 left-4 z-20 flex flex-wrap items-center justify-end gap-2 sm:top-4 sm:left-auto">
         <AddToShoppingListButton recipe={recipe} />
         <ShareRecipeButton recipe={recipe} />
         {(prevRecipe || nextRecipe) && (
@@ -149,22 +150,25 @@ export function RecipeHeader({
         <img
           src={img}
           alt={recipe.name ?? ""}
-          className="h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover"
           width={1600}
           height={900}
         />
       ) : (
-        <div className="h-full w-full bg-gray-800" />
+        <div className="absolute inset-0 h-full w-full bg-gray-800" />
       )}
 
       <div className="absolute inset-0 bg-linear-to-t from-gray-950 via-gray-950/40 to-transparent" />
 
-      <div className="absolute right-0 bottom-0 left-0 px-6 pb-12 md:px-10 md:pb-16">
+      <div className="relative mt-auto px-6 pt-52 pb-12 sm:pt-36 md:absolute md:right-0 md:bottom-0 md:left-0 md:px-10 md:pt-0 md:pb-16">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <h1 className="max-w-2xl font-serif text-4xl leading-tight font-bold text-white drop-shadow-lg md:text-5xl lg:text-6xl">
             {recipe.name}
           </h1>
-          <HeroStats recipe={recipe} />
+          <div className="flex flex-col items-start gap-4">
+            <HeroStats recipe={recipe} />
+            <AddToMealPlanButton recipe={recipe} />
+          </div>
         </div>
       </div>
     </div>

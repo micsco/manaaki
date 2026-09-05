@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 // AddToShoppingListButton uses React Query hooks; this test tree has no
 // QueryClientProvider, so stub them (mirrors RecipeBody's test setup).
 vi.mock("../hooks/useCurrentUser", () => ({
-  useCurrentUser: () => ({ user: null, isAnonymous: true }),
+  useCurrentUser: vi.fn(() => ({ user: null, isAnonymous: true })),
 }))
 vi.mock("../hooks/useShoppingList", () => ({
   useCurrentShoppingList: () => null,
@@ -11,6 +11,7 @@ vi.mock("../hooks/useShoppingList", () => ({
 }))
 
 import type { RecipeOutput } from "../api/generated/types.gen"
+import { useCurrentUser } from "../hooks/useCurrentUser"
 import type { RecipeNavItem } from "../hooks/useRecipeNav"
 import { render, screen } from "../test/render"
 import { encodeRecipeId } from "../utils/recipe"
@@ -132,4 +133,11 @@ describe("RecipeHeader", () => {
       writable: true,
     })
   })
+})
+
+it("keeps recipe photography and exposes planning to signed-in readers", () => {
+  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: false })
+  render(<RecipeHeader recipe={minimalRecipe} img="/salad.webp" />)
+  expect(screen.getByRole("img", { name: "Banana Bread" })).toHaveAttribute("src", "/salad.webp")
+  expect(screen.getByRole("button", { name: "Add to meal plan" })).toBeInTheDocument()
 })
