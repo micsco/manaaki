@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { loginCompletionHref } from "./loginReturn"
+import { loginCompletionHref, loginStartHref } from "./loginReturn"
 
 describe("loginCompletionHref", () => {
   it("forwards a successful provider return (code + state) to the completion route", () => {
@@ -24,6 +24,15 @@ describe("loginCompletionHref", () => {
   it("encodes values", () => {
     expect(loginCompletionHref({ code: "a b&c", state: "s/t" })).toBe(
       "/api/auth/complete?code=a%20b%26c&state=s%2Ft"
+    )
+  })
+})
+
+describe("loginStartHref", () => {
+  it("points a guarded route at the login start with itself as the return path", () => {
+    expect(loginStartHref("/plan")).toBe("/api/auth/oauth?returnTo=%2Fplan")
+    expect(loginStartHref("/shopping?partial=true")).toBe(
+      "/api/auth/oauth?returnTo=%2Fshopping%3Fpartial%3Dtrue"
     )
   })
 })

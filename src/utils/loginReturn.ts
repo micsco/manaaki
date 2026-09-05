@@ -9,3 +9,7 @@ export function loginCompletionHref(search: LoginReturnSearch): string | null {
   params.set("state", search.state)
   return `/api/auth/complete?${params.toString().replace(/\+/g, "%20")}`
 }
+
+export function loginStartHref(returnTo: string): string {
+  return `/api/auth/oauth?returnTo=${encodeURIComponent(returnTo)}`
+}

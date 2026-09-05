@@ -9,6 +9,7 @@ import { Icon } from "../components/Icon"
 import { ShoppingListHistory } from "../components/ShoppingListHistory"
 import { ShoppingListView } from "../components/ShoppingListView"
 import { useCurrentShoppingList } from "../hooks/useShoppingList"
+import { loginStartHref } from "../utils/loginReturn"
 
 type ShoppingSearch = { list?: string; partial?: boolean }
 
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/shopping")({
   beforeLoad: async () => {
     configureApiClient()
     const { isAnonymous } = await fetchCurrentUser()
-    if (isAnonymous) throw redirect({ href: "/api/auth/oauth?returnTo=/shopping" })
+    if (isAnonymous) throw redirect({ href: loginStartHref("/shopping") })
   },
   component: ShoppingPage,
 })
