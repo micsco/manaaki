@@ -1,6 +1,8 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
 
-type LoginSearch = { code?: string; state?: string; error?: string }
+import { loginCompletionHref, type LoginReturnSearch } from "../utils/loginReturn"
+
+type LoginSearch = LoginReturnSearch
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>): LoginSearch => ({
@@ -9,11 +11,8 @@ export const Route = createFileRoute("/login")({
     error: typeof search.error === "string" ? search.error : undefined,
   }),
   beforeLoad: ({ search }) => {
-    if (search.code && search.state) {
-      throw redirect({
-        href: `/api/auth/complete?code=${encodeURIComponent(search.code)}&state=${encodeURIComponent(search.state)}`,
-      })
-    }
+    const href = loginCompletionHref(search)
+    if (href) throw redirect({ href })
   },
   component: LoginPage,
 })

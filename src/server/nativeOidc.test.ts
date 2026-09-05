@@ -9,6 +9,7 @@ import {
   completeNativeLogin,
   readLoginAttempt,
 } from "./nativeOidc"
+import { buildKnownDeviceSetCookie } from "./silentLogin"
 
 interface UpstreamRequest {
   method: string
@@ -74,10 +75,27 @@ afterEach(async () => {
   await new Promise<void>(resolve => server.close(() => resolve()))
 })
 
-function startRequest(): Request {
-  return new Request("https://app/api/auth/oauth", {
-    headers: { host: "manaaki.micsco.nz", "x-forwarded-proto": "https" },
+function startRequest(query = "", cookie?: string): Request {
+  return new Request(`https://app/api/auth/oauth${query}`, {
+    headers: {
+      host: "manaaki.micsco.nz",
+      "x-forwarded-proto": "https",
+      ...(cookie ? { cookie } : {}),
+    },
   })
+}
+
+function attemptFrom(res: Response) {
+  return readLoginAttempt(
+    new Request("https://app/x", {
+      headers: {
+        "x-forwarded-proto": "https",
+        cookie: (res.headers.getSetCookie().find(c => c.includes("manaaki_oidc=")) ?? "").split(
+          ";"
+        )[0],
+      },
+    })
+  )
 }
 
 function cookieHeaderFrom(setCookie: string): string {
@@ -146,6 +164,34 @@ describe("beginNativeLogin", () => {
     expect(setCookie).toContain("SameSite=Lax")
     expect(setCookie).toContain("Max-Age=600")
     expect(setCookie).not.toContain(res.headers.get("location") ?? "unreachable")
+  })
+
+  it("defaults to an interactive login that returns to /recipes", async () => {
+    const res = await beginNativeLogin(startRequest())
+    const location = new URL(res.headers.get("location") ?? "")
+    expect(location.searchParams.has("prompt")).toBe(false)
+    expect(location.searchParams.has("login_hint")).toBe(false)
+    expect(attemptFrom(res)).toMatchObject({ returnTo: "/recipes", silent: false })
+    expect(res.headers.getSetCookie().some(c => c.includes("manaaki_silent="))).toBe(false)
+  })
+
+  it("remembers a same-origin returnTo and discards foreign ones", async () => {
+    const same = await beginNativeLogin(startRequest("?returnTo=%2Fplan%3Fweek%3D2"))
+    expect(attemptFrom(same)?.returnTo).toBe("/plan?week=2")
+    const foreign = await beginNativeLogin(startRequest("?returnTo=https%3A%2F%2Fevil.example"))
+    expect(attemptFrom(foreign)?.returnTo).toBe("/recipes")
+  })
+
+  it("runs a silent attempt with prompt=none, the known email as login_hint, and a loop-guard marker", async () => {
+    const known = buildKnownDeviceSetCookie("mike@example.com", true).split(";")[0]
+    const res = await beginNativeLogin(startRequest("?silent=1&returnTo=%2Fplan", known))
+
+    const location = new URL(res.headers.get("location") ?? "")
+    expect(location.searchParams.get("prompt")).toBe("none")
+    expect(location.searchParams.get("login_hint")).toBe("mike@example.com")
+    expect(attemptFrom(res)).toMatchObject({ returnTo: "/plan", silent: true })
+    const marker = res.headers.getSetCookie().find(c => c.startsWith("__Host-manaaki_silent="))
+    expect(marker).toContain("Max-Age=600")
   })
 
   it("generates a fresh state and verifier for every attempt", async () => {

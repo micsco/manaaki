@@ -3,6 +3,7 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto"
 import { parseCookie, serializeCookie } from "./cookies"
 import { mealieInternalUrl } from "./env"
 import { isSecureRequest, sealJson, unsealJson } from "./session"
+import { buildSilentAttemptMarkerCookie, readKnownDevice, safeReturnPath } from "./silentLogin"
 
 const ATTEMPT_MAX_AGE_SECONDS = 600
 
@@ -11,6 +12,8 @@ export type LoginAttempt = {
   nonce: string
   codeVerifier: string
   redirectUri: string
+  returnTo: string
+  silent: boolean
 }
 
 type ProviderConfig = {
@@ -51,11 +54,15 @@ function equalStates(a: string, b: string): boolean {
 
 export async function beginNativeLogin(request: Request): Promise<Response> {
   const config = await fetchProviderConfig()
+  const params = new URL(request.url).searchParams
+  const silent = params.get("silent") === "1"
   const attempt: LoginAttempt = {
     state: randomBytes(16).toString("base64url"),
     nonce: randomBytes(16).toString("base64url"),
     codeVerifier: randomBytes(32).toString("base64url"),
     redirectUri: `${publicOrigin(request)}/login`,
+    returnTo: safeReturnPath(params.get("returnTo")),
+    silent,
   }
 
   const authorize = new URL(config.authorization_endpoint)
@@ -67,6 +74,11 @@ export async function beginNativeLogin(request: Request): Promise<Response> {
   authorize.searchParams.set("nonce", attempt.nonce)
   authorize.searchParams.set("code_challenge", codeChallenge(attempt.codeVerifier))
   authorize.searchParams.set("code_challenge_method", "S256")
+  if (silent) {
+    authorize.searchParams.set("prompt", "none")
+    const known = readKnownDevice(request)
+    if (known) authorize.searchParams.set("login_hint", known.email)
+  }
 
   const secure = isSecureRequest(request)
   const headers = new Headers({ Location: authorize.toString(), "Cache-Control": "no-store" })
@@ -78,6 +90,7 @@ export async function beginNativeLogin(request: Request): Promise<Response> {
       attemptCookieOptions(secure, ATTEMPT_MAX_AGE_SECONDS)
     )
   )
+  if (silent) headers.append("Set-Cookie", buildSilentAttemptMarkerCookie(secure))
   return new Response(null, { status: 302, headers })
 }
 
@@ -102,6 +115,8 @@ export function readLoginAttempt(request: Request): LoginAttempt | null {
     nonce: parsed.nonce,
     codeVerifier: parsed.codeVerifier,
     redirectUri: parsed.redirectUri,
+    returnTo: safeReturnPath(typeof parsed.returnTo === "string" ? parsed.returnTo : null),
+    silent: parsed.silent === true,
   }
 }
 

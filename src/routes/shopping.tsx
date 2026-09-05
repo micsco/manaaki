@@ -21,7 +21,7 @@ export const Route = createFileRoute("/shopping")({
   beforeLoad: async () => {
     configureApiClient()
     const { isAnonymous } = await fetchCurrentUser()
-    if (isAnonymous) throw redirect({ href: "/api/auth/oauth" })
+    if (isAnonymous) throw redirect({ href: "/api/auth/oauth?returnTo=/shopping" })
   },
   component: ShoppingPage,
 })
