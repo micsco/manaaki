@@ -55,6 +55,7 @@ createServer(async (request, response) => {
       }
     if (url.pathname === "/api/recipes") data = { items: [recipe], total_pages: 1 }
     if (url.pathname.startsWith("/api/recipes/")) data = recipe
+    if (url.pathname === "/api/recipes/create/url" && request.method === "POST") data = recipe.slug
     if (url.pathname === "/api/households/mealplans")
       data = {
         items: [

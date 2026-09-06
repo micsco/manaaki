@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import * as currentUserHook from "../hooks/useCurrentUser"
 import * as importRecipeHook from "../hooks/useImportRecipe"
 import { toastManager } from "../lib/toastManager"
+import * as onlineHook from "../pwa/useOnline"
 import { render } from "../test/render"
 import { ImportRecipeModal, normalizeRecipeUrl } from "./ImportRecipeModal"
 
@@ -71,6 +72,44 @@ describe("ImportRecipeModal", () => {
       isPending: false,
       error: null,
     } as never)
+  })
+
+  it("prefills a shared URL without automatically importing", () => {
+    render(
+      <ImportRecipeModal open shared initialUrl="https://youtu.be/recipe" onOpenChange={vi.fn()} />
+    )
+    expect(screen.getByLabelText(/recipe url/i)).toHaveValue("https://youtu.be/recipe")
+    expect(mockMutateAsync).not.toHaveBeenCalled()
+  })
+
+  it("preserves the shared page through sign-in", () => {
+    vi.spyOn(currentUserHook, "useCurrentUser").mockReturnValue({ user: null, isAnonymous: true })
+    const returnTo = "/share?text=https%3A%2F%2Fyoutu.be%2Frecipe"
+    render(<ImportRecipeModal open returnTo={returnTo} onOpenChange={vi.fn()} />)
+    expect(screen.getByRole("link", { name: /sign in with mealie/i })).toHaveAttribute(
+      "href",
+      `/api/auth/oauth?returnTo=${encodeURIComponent(returnTo)}`
+    )
+  })
+
+  it("retains the link offline and enables import after reconnecting", () => {
+    const online = vi.spyOn(onlineHook, "useOnline").mockReturnValue(false)
+    const { rerender } = render(
+      <ImportRecipeModal open initialUrl="https://example.com/recipe" onOpenChange={vi.fn()} />
+    )
+    expect(screen.getByRole("button", { name: /import recipe/i })).toBeDisabled()
+    expect(screen.getByText(/you’re offline/i)).toBeVisible()
+    online.mockReturnValue(true)
+    rerender(
+      <ImportRecipeModal open initialUrl="https://example.com/recipe" onOpenChange={vi.fn()} />
+    )
+    expect(screen.getByRole("button", { name: /import recipe/i })).toBeEnabled()
+    expect(screen.getByLabelText(/recipe url/i)).toHaveValue("https://example.com/recipe")
+  })
+
+  it("explains shares without a link", () => {
+    render(<ImportRecipeModal open shared onOpenChange={vi.fn()} />)
+    expect(screen.getByText(/did not include a web link/i)).toBeVisible()
   })
 
   it("renders nothing when closed", () => {

@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PlanRouteImport } from './routes/plan'
 import { Route as RecipesRouteImport } from './routes/recipes'
+import { Route as ShareRouteImport } from './routes/share'
 import { Route as ShoppingRouteImport } from './routes/shopping'
 import { Route as ApiSplatRouteImport } from './routes/api.$'
 import { Route as RecipesIndexRouteImport } from './routes/recipes.index'
@@ -41,6 +42,11 @@ const PlanRoute = PlanRouteImport.update({
 const RecipesRoute = RecipesRouteImport.update({
   id: '/recipes',
   path: '/recipes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShareRoute = ShareRouteImport.update({
+  id: '/share',
+  path: '/share',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShoppingRoute = ShoppingRouteImport.update({
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/plan': typeof PlanRoute
   '/recipes': typeof RecipesRouteWithChildren
+  '/share': typeof ShareRoute
   '/shopping': typeof ShoppingRoute
   '/api/$': typeof ApiSplatRoute
   '/recipes/$slug': typeof RecipesSlugRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/plan': typeof PlanRoute
+  '/share': typeof ShareRoute
   '/shopping': typeof ShoppingRoute
   '/api/$': typeof ApiSplatRoute
   '/recipes/$slug': typeof RecipesSlugRoute
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/plan': typeof PlanRoute
   '/recipes': typeof RecipesRouteWithChildren
+  '/share': typeof ShareRoute
   '/shopping': typeof ShoppingRoute
   '/api/$': typeof ApiSplatRoute
   '/recipes/$slug': typeof RecipesSlugRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/plan'
     | '/recipes'
+    | '/share'
     | '/shopping'
     | '/api/$'
     | '/recipes/$slug'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/plan'
+    | '/share'
     | '/shopping'
     | '/api/$'
     | '/recipes/$slug'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/plan'
     | '/recipes'
+    | '/share'
     | '/shopping'
     | '/api/$'
     | '/recipes/$slug'
@@ -186,6 +198,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PlanRoute: typeof PlanRoute
   RecipesRoute: typeof RecipesRouteWithChildren
+  ShareRoute: typeof ShareRoute
   ShoppingRoute: typeof ShoppingRoute
   ApiSplatRoute: typeof ApiSplatRoute
   ApiAuthCompleteRoute: typeof ApiAuthCompleteRoute
@@ -222,6 +235,13 @@ declare module '@tanstack/react-router' {
       path: '/recipes'
       fullPath: '/recipes'
       preLoaderRoute: typeof RecipesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/share': {
+      id: '/share'
+      path: '/share'
+      fullPath: '/share'
+      preLoaderRoute: typeof ShareRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shopping': {
@@ -310,6 +330,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PlanRoute: PlanRoute,
   RecipesRoute: RecipesRouteWithChildren,
+  ShareRoute: ShareRoute,
   ShoppingRoute: ShoppingRoute,
   ApiSplatRoute: ApiSplatRoute,
   ApiAuthCompleteRoute: ApiAuthCompleteRoute,

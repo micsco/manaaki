@@ -14,9 +14,14 @@ import { useEffect, useState } from "react"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import { useImportRecipe } from "../hooks/useImportRecipe"
 import { toastManager } from "../lib/toastManager"
+import { useOnline } from "../pwa/useOnline"
+import { loginStartHref } from "../utils/loginReturn"
 import { Icon } from "./Icon"
 
 export interface ImportRecipeModalProps {
+  initialUrl?: string
+  returnTo?: string
+  shared?: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -39,8 +44,15 @@ export function normalizeRecipeUrl(input: string): string | null {
   }
 }
 
-export function ImportRecipeModal({ open, onOpenChange }: ImportRecipeModalProps) {
-  const [url, setUrl] = useState("")
+export function ImportRecipeModal({
+  open,
+  onOpenChange,
+  initialUrl = "",
+  returnTo,
+  shared = false,
+}: ImportRecipeModalProps) {
+  const [url, setUrl] = useState(initialUrl)
+  const online = useOnline()
   const [validationError, setValidationError] = useState<string | null>(null)
   const current = useCurrentUser()
   const importRecipe = useImportRecipe()
@@ -84,6 +96,7 @@ export function ImportRecipeModal({ open, onOpenChange }: ImportRecipeModalProps
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
+    if (!online) return
     const normalizedUrl = normalizeRecipeUrl(url)
 
     if (!normalizedUrl) {
@@ -151,7 +164,7 @@ export function ImportRecipeModal({ open, onOpenChange }: ImportRecipeModalProps
               </Dialog.Description>
               <div className="flex w-full flex-col gap-2.5 pt-2 sm:flex-row sm:justify-center">
                 <a
-                  href="/api/auth/oauth"
+                  href={returnTo ? loginStartHref(returnTo) : "/api/auth/oauth"}
                   className="inline-flex min-h-11 items-center justify-center rounded-xl bg-orange-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-orange-500"
                 >
                   Sign in with Mealie
@@ -172,6 +185,18 @@ export function ImportRecipeModal({ open, onOpenChange }: ImportRecipeModalProps
                 your recipe collection.
               </Dialog.Description>
 
+              {shared && (
+                <p role="status" className="text-sm text-gray-300">
+                  {initialUrl
+                    ? "Your shared link is ready. Review it, then import. Social posts and videos need Mealie’s video and AI import support."
+                    : "This share did not include a web link. Paste the original recipe or post URL below."}
+                </p>
+              )}
+              {!online && (
+                <p role="status" className="text-sm text-orange-300">
+                  You’re offline. Keep this page open and import when you reconnect.
+                </p>
+              )}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label htmlFor="recipe-url" className="text-sm font-medium text-gray-200">
@@ -262,7 +287,7 @@ export function ImportRecipeModal({ open, onOpenChange }: ImportRecipeModalProps
                 </button>
                 <button
                   type="submit"
-                  disabled={importRecipe.isPending || !url.trim()}
+                  disabled={!online || importRecipe.isPending || !url.trim()}
                   className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-orange-500 disabled:opacity-50"
                 >
                   {importRecipe.isPending ? (

@@ -54,3 +54,43 @@ the fixture server's connections because its Playwright offline-emulation mode
 returns an internal navigation error with service workers. Both verify cached
 reloads and persistent cooking checks. Physical installed iOS and Android testing
 is still useful for OS-specific installation, keyboard, and suspension behaviour.
+
+## Share a recipe into Manaaki
+
+On Android, install Manaaki using Chrome, then share a recipe webpage, Instagram
+post, or YouTube link and choose Manaaki. Existing installations may take time to
+pick up the updated manifest. The share opens the import dialog with the URL
+filled in; importing starts when you tap Import Recipe. Links embedded in shared
+text or titles are supported. Sign-in preserves the incoming share.
+
+The entry point is `/share?url=<encoded URL>`; `text` and `title` are also accepted.
+It uses GET because receiving a share only opens a form. No recipe is created on
+navigation or reload. The precached shell can open this page offline after an
+online visit. The original shared link stays in the page URL across reloads;
+importing requires connectivity. Edits to the input are not persisted on reload.
+
+Safari on iOS does not support PWA share targets. A Shortcuts share-sheet action
+can use the same entry point without an API token:
+
+1. Create a shortcut named “Import into Manaaki” and enable Show in Share Sheet.
+2. Accept URLs and Text; use Get URLs from Shortcut Input and Get First Item.
+3. URL Encode that URL.
+4. Add a URL action containing `https://manaaki.micsco.nz/share?url=` followed by
+   the encoded URL variable (use your own Manaaki origin if different).
+5. Add Open URLs.
+
+This opens Manaaki’s web import flow; iOS may open Safari rather than the installed
+home-screen app. Sharing a page URL is supported; sharing screenshots or video
+files is not part of this handler.
+
+Manaaki sends the link to the existing Mealie URL importer. Video/social recipe
+extraction depends on the installed Mealie version and its configured AI/audio
+providers, and private or inaccessible posts can fail. Receiving a link does not
+add transcription capabilities to the server.
+
+References: [Chrome share target guide](https://developer.chrome.com/docs/capabilities/web-apis/web-share-target),
+[MDN share_target](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/share_target),
+[Mealie AI providers](https://docs.mealie.io/documentation/getting-started/installation/ai-providers/).
+The PWA tests simulate incoming share URLs in Chromium and WebKit, including
+review-before-import and reload. OS share-sheet registration still needs a
+physical installed-device check.

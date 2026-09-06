@@ -53,3 +53,12 @@ it("includes a portrait installation screenshot that exists in public assets", (
     readFileSync(resolve(__dirname, "../../public", manifest.screenshots[0].src.slice(1))).length
   ).toBeGreaterThan(0)
 })
+
+it("receives shared links and text without performing an import on GET", () => {
+  expect(manifest.share_target).toEqual({
+    action: "/share",
+    method: "GET",
+    enctype: "application/x-www-form-urlencoded",
+    params: { title: "title", text: "text", url: "url" },
+  })
+})
