@@ -13,7 +13,10 @@ ingredients, that added 14 confirmation clicks without correcting any data.
 - [NN/g: Progressive disclosure](https://www.nngroup.com/articles/progressive-disclosure/)
   recommends deferring secondary controls to reduce complexity. Matched rows start
   collapsed. Unmatched rows open their editing controls because they require a
-  decision. Recipe order remains unchanged, so comparison with the source is easy.
+  decision. Needs attention appears first, grouping uncertain suggestions, unmatched
+  records, and invalid amounts. Ready to save contains matched suggestions and
+  retained originals. Recipe order is preserved within each group and when saving.
+  Moving between groups retains the active editor and keyboard focus.
 - [NN/g: Usability heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/)
   emphasizes recognition, error prevention, and user control. Original text stays
   beside the suggestion. Low confidence is a visible warning; only missing record

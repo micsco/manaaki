@@ -126,6 +126,16 @@ function IngredientReviewDialog({
       row.parsed.ingredient.quantity != null &&
       (!Number.isFinite(row.parsed.ingredient.quantity) || row.parsed.ingredient.quantity < 0)
   )
+  const indexedRows = rows.map((row, index) => ({ row, index }))
+  const needsAttention = ({ row }: (typeof indexedRows)[number]) =>
+    !row.keepOriginal &&
+    (ingredientNeedsReview(row.parsed) ||
+      (row.parsed.ingredient.quantity != null &&
+        (!Number.isFinite(row.parsed.ingredient.quantity) || row.parsed.ingredient.quantity < 0)))
+  const groups = [
+    { title: "Needs attention", entries: indexedRows.filter(needsAttention) },
+    { title: "Ready to save", entries: indexedRows.filter(entry => !needsAttention(entry)) },
+  ]
   const unresolved = unmatched.length > 0 || invalid
   function change(index: number, row: ReviewRow) {
     setRows(previous =>
@@ -193,7 +203,9 @@ function IngredientReviewDialog({
               ? `${unmatched.length} ${unmatched.length === 1 ? "needs" : "need"} matching`
               : invalid
                 ? "Check amounts"
-                : "Ready to save"}
+                : groups[0].entries.length
+                  ? "Review suggestions"
+                  : "Ready to save"}
           </p>
           {unmatched.length > 0 && (
             <button
@@ -226,19 +238,30 @@ function IngredientReviewDialog({
             }}
           >
             <fieldset disabled={pending} className="space-y-4">
-              {rows.map((row, index) => (
-                <IngredientReviewRow
-                  key={review.recipe.recipeIngredient?.[index]?.referenceId ?? index}
-                  row={row}
-                  index={index}
-                  catalog={catalogQuery.data}
-                  disabled={!online}
-                  onChange={value => change(index, value)}
-                  onCreated={() =>
-                    void queryClient.invalidateQueries({ queryKey: ["ingredientCatalog", userId] })
-                  }
-                />
-              ))}
+              {groups.flatMap(({ title, entries }) =>
+                entries.length
+                  ? [
+                      <h3 key={title} className="pt-2 text-base font-semibold">
+                        {title} ({entries.length})
+                      </h3>,
+                      ...entries.map(({ row, index }) => (
+                        <IngredientReviewRow
+                          key={`ingredient-${index}`}
+                          row={row}
+                          index={index}
+                          catalog={catalogQuery.data}
+                          disabled={!online}
+                          onChange={value => change(index, value)}
+                          onCreated={() =>
+                            void queryClient.invalidateQueries({
+                              queryKey: ["ingredientCatalog", userId],
+                            })
+                          }
+                        />
+                      )),
+                    ]
+                  : []
+              )}
             </fieldset>
             {unresolved && (
               <p role="status" className="my-3 text-sm text-orange-300">
