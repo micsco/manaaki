@@ -113,13 +113,14 @@ parsing was in progress. Successful recipe edits invalidate cached detail aliase
 and recipe lists so that old offline data does not hide the change.
 
 
-The review follows Mealie’s validation rules: confidence below 0.85 (including
-missing confidence) and suggested foods or units without IDs require attention.
+The review uses Mealie’s confidence threshold of 0.85 to highlight uncertain
+suggestions. Confidence warnings do not block saving or require acknowledgements.
+Unmatched foods/units and invalid amounts still need correction or an original-text
+fallback.
 Compare the original text, edit quantities and notes, choose existing foods or
 units, or explicitly create missing records. New foods/units are added immediately
 when their Create button is pressed, as in Mealie; canceling the review does not
-remove those catalog records. Ingredient changes are applied only by Save reviewed
-ingredients. Keeping an original ingredient declines its suggestion. Suggestions
+remove those catalog records. Ingredient changes are applied only by Save ingredients. Keeping an original ingredient declines its suggestion. Suggestions
 are held in memory per signed-in user; reloading can require parsing again.
 
 Reviewed against Mealie commit

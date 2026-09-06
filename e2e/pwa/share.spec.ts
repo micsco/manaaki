@@ -28,15 +28,15 @@ test("opens a shared social link, survives reload, and imports only after review
   expect(updates).toEqual([])
   await page.getByRole("button", { name: "Review parsed ingredients", exact: true }).click()
   await expect(page.getByText("Original: 200g spaghetti")).toBeVisible()
-  await expect(page.getByRole("button", { name: "Save reviewed ingredients" })).toBeDisabled()
+  await expect(page.getByRole("button", { name: "Save ingredients" })).toBeEnabled()
   await page.getByRole("button", { name: "Cancel", exact: true }).click()
   expect(updates).toEqual([])
   await page.getByRole("button", { name: "Review parsed ingredients", exact: true }).click()
-  await page.getByLabel("I’ve checked this ingredient").check()
+  await expect(page.getByRole("checkbox")).toHaveCount(0)
   await page.screenshot({
     path: `/tmp/manaaki-ingredient-review-${page.context().browser()?.browserType().name()}.png`,
   })
-  await page.getByRole("button", { name: "Save reviewed ingredients" }).click()
+  await page.getByRole("button", { name: "Save ingredients" }).click()
   await expect(page.getByRole("dialog", { name: "Review parsed ingredients" })).not.toBeVisible()
   await expect(page.getByRole("button", { name: "Review parsed ingredients" })).not.toBeVisible()
   expect(updates).toEqual([
@@ -80,11 +80,21 @@ test("opens an incoming share offline without losing its URL", async ({
     })
     await page.reload()
     await expect(page.getByRole("heading", { name: "Pasta Carbonara" })).toBeVisible()
+    await expect
+      .poll(() =>
+        page.evaluate(async () => {
+          const cached = await caches.match("/api/auth/me")
+          if (!cached) return false
+          const current = await cached.json()
+          return current.user?.id === "fixture-user" && !current.isAnonymous
+        })
+      )
+      .toBe(true)
     if (browserName === "webkit") await request.get("/__network?offline=true")
     else await context.setOffline(true)
     const url = "https://example.com/dinner?servings=4"
     await page.goto(`/share?${new URLSearchParams({ url })}`)
-    await expect(page.getByLabel("Recipe URL")).toHaveValue(url)
+    await expect(page.getByLabel("Recipe URL")).toHaveValue(url, { timeout: 10_000 })
     await expect(page.getByRole("button", { name: "Import Recipe", exact: true })).toBeDisabled()
     if (browserName === "webkit") await request.get("/__network?offline=false")
     else await context.setOffline(false)

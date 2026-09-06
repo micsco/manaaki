@@ -19,6 +19,7 @@ import {
 } from "../api/recipeParsing"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import { useOnline } from "../pwa/useOnline"
+import { formatQuantity } from "../utils/recipe"
 
 export function IngredientParsingAction({ recipe }: { recipe: RecipeOutput }) {
   const current = useCurrentUser()
@@ -86,8 +87,6 @@ export function IngredientParsingAction({ recipe }: { recipe: RecipeOutput }) {
 type ReviewRow = {
   parsed: ParsedIngredient
   keepOriginal: boolean
-  reviewed: boolean
-  needsReview: boolean
 }
 
 function IngredientReviewDialog({
@@ -103,8 +102,6 @@ function IngredientReviewDialog({
     review.parsed.map(parsed => ({
       parsed: structuredClone(parsed),
       keepOriginal: false,
-      reviewed: !ingredientNeedsReview(parsed),
-      needsReview: ingredientNeedsReview(parsed),
     }))
   )
   const [pending, setPending] = useState(false)
@@ -117,15 +114,41 @@ function IngredientReviewDialog({
     queryFn: loadIngredientCatalog,
     enabled: online,
   })
-  const unresolved = rows.some(
+  const unmatched = rows.filter(
     row =>
       !row.keepOriginal &&
-      (!row.reviewed ||
-        (row.parsed.ingredient.food && !row.parsed.ingredient.food.id) ||
+      ((row.parsed.ingredient.food && !row.parsed.ingredient.food.id) ||
         (row.parsed.ingredient.unit && !row.parsed.ingredient.unit.id))
   )
+  const invalid = rows.some(
+    row =>
+      !row.keepOriginal &&
+      row.parsed.ingredient.quantity != null &&
+      (!Number.isFinite(row.parsed.ingredient.quantity) || row.parsed.ingredient.quantity < 0)
+  )
+  const unresolved = unmatched.length > 0 || invalid
   function change(index: number, row: ReviewRow) {
-    setRows(previous => previous.map((value, position) => (position === index ? row : value)))
+    setRows(previous =>
+      previous.map((value, position) => {
+        if (position === index) return row
+        const ingredient = { ...value.parsed.ingredient }
+        for (const kind of ["food", "unit"] as const) {
+          const before = previous[index].parsed.ingredient[kind]
+          const after = row.parsed.ingredient[kind]
+          const other = ingredient[kind]
+          if (
+            !before?.id &&
+            after?.id &&
+            other &&
+            !other.id &&
+            other.name.trim().toLowerCase() === before?.name.trim().toLowerCase()
+          ) {
+            ingredient[kind] = after
+          }
+        }
+        return { ...value, parsed: { ...value.parsed, ingredient } }
+      })
+    )
   }
   async function save() {
     if (pending || !online || unresolved) return
@@ -158,13 +181,36 @@ function IngredientReviewDialog({
     >
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/60" />
-        <Dialog.Popup className="fixed top-1/2 left-1/2 z-[60] mobile-dialog max-h-[90dvh] w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-gray-800 bg-gray-900 p-5 text-gray-200">
+        <Dialog.Popup className="fixed top-1/2 left-1/2 z-[60] mobile-dialog max-h-[90dvh] w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain rounded-2xl border border-gray-800 bg-gray-900 p-5 text-gray-200">
           <Dialog.Title className="text-xl font-semibold">Review parsed ingredients</Dialog.Title>
           <Dialog.Description className="my-3 text-sm text-gray-400">
-            Compare each suggestion with the original. Check uncertain matches before saving.
-            Creating a food or unit adds it to Mealie immediately; ingredient changes wait until
-            Save reviewed ingredients.
+            Scan the suggestions and edit anything that looks wrong. Save ingredients applies your
+            changes together.
           </Dialog.Description>
+          <p role="status" className="mb-3 text-sm text-gray-300">
+            {rows.length} {rows.length === 1 ? "ingredient" : "ingredients"} ·{" "}
+            {unmatched.length
+              ? `${unmatched.length} ${unmatched.length === 1 ? "needs" : "need"} matching`
+              : invalid
+                ? "Check amounts"
+                : "Ready to save"}
+          </p>
+          {unmatched.length > 0 && (
+            <button
+              type="button"
+              disabled={pending || !online}
+              className="mb-3 min-h-11 text-sm text-orange-300 underline"
+              onClick={() =>
+                setRows(previous =>
+                  previous.map(row =>
+                    unmatched.includes(row) ? { ...row, keepOriginal: true } : row
+                  )
+                )
+              }
+            >
+              Keep originals for unmatched ingredients
+            </button>
+          )}
           {catalogQuery.error && (
             <div role="alert" className="mb-4 text-sm text-red-300">
               Could not load foods and units.{" "}
@@ -196,8 +242,9 @@ function IngredientReviewDialog({
             </fieldset>
             {unresolved && (
               <p role="status" className="my-3 text-sm text-orange-300">
-                Review flagged ingredients and resolve unmatched foods or units, or keep their
-                original text.
+                {invalid
+                  ? "Enter valid, non-negative amounts before saving."
+                  : "Choose a food or unit for unmatched ingredients, or keep their original text."}
               </p>
             )}
             {error && (
@@ -216,7 +263,7 @@ function IngredientReviewDialog({
                 disabled={!online || pending || unresolved}
                 className="min-h-11 rounded-xl bg-orange-600 px-4 disabled:opacity-50"
               >
-                {pending ? "Saving…" : "Save reviewed ingredients"}
+                {pending ? "Saving…" : "Save ingredients"}
               </button>
             </div>
           </form>
@@ -245,7 +292,20 @@ function IngredientReviewRow({
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState("")
   const ingredient = row.parsed.ingredient
-  const confidence = row.parsed.confidence?.average
+  const hasMissingMatch = Boolean(
+    (ingredient.food && !ingredient.food.id) || (ingredient.unit && !ingredient.unit.id)
+  )
+  const [expanded, setExpanded] = useState(hasMissingMatch)
+  const suggestion =
+    [
+      ingredient.quantity ? formatQuantity(ingredient.quantity) : "",
+      ingredient.unit?.name,
+      ingredient.food?.name,
+      ingredient.note,
+    ]
+      .filter(Boolean)
+      .join(" ") || row.parsed.input
+
   async function create(kind: "food" | "unit") {
     const name = ingredient[kind]?.name
     if (!name || !catalog || disabled) return
@@ -255,8 +315,6 @@ function IngredientReviewRow({
       const match = await createIngredientMatch(kind, name)
       onChange({
         ...row,
-        reviewed: false,
-        needsReview: true,
         parsed: { ...row.parsed, ingredient: { ...ingredient, [kind]: match } },
       })
       onCreated()
@@ -271,126 +329,136 @@ function IngredientReviewRow({
       className="space-y-3 rounded-xl border border-gray-700 p-4"
       disabled={disabled || creating}
     >
-      <legend className="px-1 text-sm font-semibold">Ingredient {index + 1}</legend>
-      <p className="text-sm text-gray-300">Original: {row.parsed.input}</p>
-      <p className="text-xs text-gray-400">
-        {confidence == null
-          ? "Confidence unavailable — please review"
-          : `Parser confidence: ${Math.round(confidence * 100)}%${confidence < 0.85 ? " — please review" : ""}`}
-      </p>
-      <label className="flex min-h-11 items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={row.keepOriginal}
-          onChange={event => onChange({ ...row, keepOriginal: event.target.checked })}
-        />
-        Keep original text
-      </label>
-      {!row.keepOriginal && (
-        <>
-          <label className="block text-sm">
-            Quantity
-            <input
-              type="number"
-              min="0"
-              step="any"
-              required
-              value={Number.isNaN(ingredient.quantity) ? "" : (ingredient.quantity ?? 0)}
-              onChange={event =>
-                onChange({
-                  ...row,
-                  reviewed: false,
-                  needsReview: true,
-                  parsed: {
-                    ...row.parsed,
-                    ingredient: { ...ingredient, quantity: event.target.valueAsNumber },
-                  },
-                })
-              }
-              className="mt-1 min-h-11 w-full rounded-lg border border-gray-700 bg-gray-800 px-3 text-base"
-            />
-          </label>
-          {(["unit", "food"] as const).map(kind => (
-            <div key={kind}>
-              <label className="block text-sm">
-                {kind === "food" ? "Food" : "Unit"}
-                <input
-                  list={`${id}-${kind}`}
-                  value={ingredient[kind]?.name ?? ""}
-                  onChange={event => {
-                    const name = event.target.value
-                    const match = catalog?.[kind].find(
-                      item => item.name.toLowerCase() === name.trim().toLowerCase()
-                    )
-                    onChange({
-                      ...row,
-                      reviewed: false,
-                      needsReview: true,
-                      parsed: {
-                        ...row.parsed,
-                        ingredient: {
-                          ...ingredient,
-                          [kind]: name.trim() ? (match ?? { name }) : null,
+      <legend className="sr-only">Ingredient {index + 1}</legend>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1 break-words">
+          <p className="text-sm text-gray-400">Original: {row.parsed.input}</p>
+          <p className="text-base font-medium text-gray-100">
+            {row.keepOriginal ? row.parsed.input : suggestion}
+          </p>
+          <p className="text-xs text-orange-300">
+            {row.keepOriginal
+              ? "Keeping original"
+              : hasMissingMatch
+                ? "Needs a food or unit match"
+                : ingredientNeedsReview(row.parsed)
+                  ? "Double-check this suggestion"
+                  : "Matched"}
+          </p>
+        </div>
+        <button
+          type="button"
+          aria-label={`Edit ingredient ${index + 1}`}
+          aria-expanded={expanded}
+          aria-controls={`${id}-fields`}
+          onClick={() => setExpanded(value => !value)}
+          className="min-h-11 shrink-0 px-2 text-sm text-orange-300 underline"
+        >
+          {expanded ? "Done" : "Edit"}
+        </button>
+      </div>
+      <div id={`${id}-fields`} hidden={!expanded}>
+        {expanded && (
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => onChange({ ...row, keepOriginal: !row.keepOriginal })}
+              className="min-h-11 text-sm text-orange-300 underline"
+            >
+              {row.keepOriginal ? "Use parsed suggestion" : "Keep original text"}
+            </button>
+            {!row.keepOriginal && (
+              <>
+                <label className="block text-sm">
+                  Quantity
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    required
+                    value={Number.isNaN(ingredient.quantity) ? "" : (ingredient.quantity ?? 0)}
+                    onChange={event =>
+                      onChange({
+                        ...row,
+                        parsed: {
+                          ...row.parsed,
+                          ingredient: { ...ingredient, quantity: event.target.valueAsNumber },
                         },
-                      },
-                    })
-                  }}
-                  className="mt-1 min-h-11 w-full rounded-lg border border-gray-700 bg-gray-800 px-3 text-base"
-                />
-              </label>
-              <datalist id={`${id}-${kind}`}>
-                {catalog?.[kind].map(item => (
-                  <option key={item.id} value={item.name}>
-                    {item.name}
-                  </option>
+                      })
+                    }
+                    className="mt-1 min-h-11 w-full rounded-lg border border-gray-700 bg-gray-800 px-3 text-base"
+                  />
+                </label>
+                {(["unit", "food"] as const).map(kind => (
+                  <div key={kind}>
+                    <label className="block text-sm">
+                      {kind === "food" ? "Food" : "Unit"}
+                      <input
+                        list={`${id}-${kind}`}
+                        value={ingredient[kind]?.name ?? ""}
+                        onChange={event => {
+                          const name = event.target.value
+                          const match = catalog?.[kind].find(
+                            item => item.name.toLowerCase() === name.trim().toLowerCase()
+                          )
+                          onChange({
+                            ...row,
+                            parsed: {
+                              ...row.parsed,
+                              ingredient: {
+                                ...ingredient,
+                                [kind]: name.trim() ? (match ?? { name }) : null,
+                              },
+                            },
+                          })
+                        }}
+                        className="mt-1 min-h-11 w-full rounded-lg border border-gray-700 bg-gray-800 px-3 text-base"
+                      />
+                    </label>
+                    <datalist id={`${id}-${kind}`}>
+                      {catalog?.[kind].map(item => (
+                        <option key={item.id} value={item.name}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </datalist>
+                    {ingredient[kind] && !ingredient[kind]?.id && (
+                      <div className="mt-1 text-sm text-orange-300">
+                        Unmatched {kind}. Choose an existing match or{" "}
+                        <button
+                          type="button"
+                          disabled={!catalog || creating}
+                          onClick={() => void create(kind)}
+                          className="min-h-11 underline"
+                        >
+                          Create {kind} “{ingredient[kind]?.name}”
+                        </button>
+                        . New records are added to Mealie immediately.
+                      </div>
+                    )}
+                  </div>
                 ))}
-              </datalist>
-              {ingredient[kind] && !ingredient[kind]?.id && (
-                <div className="mt-1 text-sm text-orange-300">
-                  Unmatched {kind}. Choose an existing match or{" "}
-                  <button
-                    type="button"
-                    disabled={!catalog || creating}
-                    onClick={() => void create(kind)}
-                    className="min-h-11 underline"
-                  >
-                    Create {kind} “{ingredient[kind]?.name}”
-                  </button>
-                  .
-                </div>
-              )}
-            </div>
-          ))}
-          <label className="block text-sm">
-            Preparation / note
-            <input
-              value={ingredient.note ?? ""}
-              onChange={event =>
-                onChange({
-                  ...row,
-                  reviewed: false,
-                  needsReview: true,
-                  parsed: {
-                    ...row.parsed,
-                    ingredient: { ...ingredient, note: event.target.value },
-                  },
-                })
-              }
-              className="mt-1 min-h-11 w-full rounded-lg border border-gray-700 bg-gray-800 px-3 text-base"
-            />
-          </label>
-          {row.needsReview && (
-            <label className="flex min-h-11 items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={row.reviewed}
-                onChange={event => onChange({ ...row, reviewed: event.target.checked })}
-              />
-              I’ve checked this ingredient
-            </label>
-          )}
-        </>
-      )}
+                <label className="block text-sm">
+                  Preparation / note
+                  <input
+                    value={ingredient.note ?? ""}
+                    onChange={event =>
+                      onChange({
+                        ...row,
+                        parsed: {
+                          ...row.parsed,
+                          ingredient: { ...ingredient, note: event.target.value },
+                        },
+                      })
+                    }
+                    className="mt-1 min-h-11 w-full rounded-lg border border-gray-700 bg-gray-800 px-3 text-base"
+                  />
+                </label>
+              </>
+            )}
+          </div>
+        )}
+      </div>
       {error && (
         <p role="alert" className="text-sm text-red-300">
           {error}

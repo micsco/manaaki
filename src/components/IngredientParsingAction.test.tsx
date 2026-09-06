@@ -46,18 +46,21 @@ beforeEach(() => {
     unit: [{ id: "g", name: "g" }],
   })
 })
-it("requires review of uncertain results and saves corrected quantities only on confirmation", async () => {
+it("shows uncertainty without extra checkboxes and saves edits with one final action", async () => {
   const user = userEvent.setup()
   render(<IngredientParsingAction recipe={recipe} />)
   await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
   expect(await screen.findByText("Original: 275g diced lamb")).toBeVisible()
-  expect(screen.getByText(/60%/)).toBeVisible()
+  expect(screen.getByText("Double-check this suggestion")).toBeVisible()
+  expect(screen.getByText(/1 ingredient · Ready to save/)).toBeVisible()
   expect(parsing.saveReviewedIngredients).not.toHaveBeenCalled()
-  expect(screen.getByRole("button", { name: "Save reviewed ingredients" })).toBeDisabled()
+  expect(screen.getByRole("button", { name: "Save ingredients" })).toBeEnabled()
+  expect(screen.queryByRole("checkbox")).not.toBeInTheDocument()
+  expect(screen.queryByLabelText("Quantity")).not.toBeInTheDocument()
+  await user.click(screen.getByRole("button", { name: "Edit ingredient 1" }))
   await user.clear(screen.getByLabelText("Quantity"))
   await user.type(screen.getByLabelText("Quantity"), "250")
-  await user.click(screen.getByLabelText("I’ve checked this ingredient"))
-  await user.click(screen.getByRole("button", { name: "Save reviewed ingredients" }))
+  await user.click(screen.getByRole("button", { name: "Save ingredients" }))
   await waitFor(() =>
     expect(parsing.saveReviewedIngredients).toHaveBeenCalledWith(expect.anything(), [
       expect.objectContaining({ ingredient: expect.objectContaining({ quantity: 250 }) }),
@@ -78,8 +81,9 @@ it("allows keeping an original ingredient instead of accepting an uncertain sugg
   const user = userEvent.setup()
   render(<IngredientParsingAction recipe={recipe} />)
   await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
-  await user.click(await screen.findByLabelText("Keep original text"))
-  await user.click(screen.getByRole("button", { name: "Save reviewed ingredients" }))
+  await user.click(await screen.findByRole("button", { name: "Edit ingredient 1" }))
+  await user.click(screen.getByRole("button", { name: /^Keep original text$/ }))
+  await user.click(screen.getByRole("button", { name: "Save ingredients" }))
   await waitFor(() =>
     expect(parsing.saveReviewedIngredients).toHaveBeenCalledWith(expect.anything(), [null])
   )
@@ -99,25 +103,24 @@ it("blocks unmatched records even at high confidence and supports explicit creat
   const user = userEvent.setup()
   render(<IngredientParsingAction recipe={recipe} />)
   await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
-  await user.click(await screen.findByLabelText("I’ve checked this ingredient"))
-  expect(screen.getByRole("button", { name: "Save reviewed ingredients" })).toBeDisabled()
+  await screen.findByText(/Unmatched food/)
+  expect(screen.getByRole("button", { name: "Save ingredients" })).toBeDisabled()
   await user.click(screen.getByRole("button", { name: "Create food “new food”" }))
   await waitFor(() =>
     expect(catalog.createIngredientMatch).toHaveBeenCalledWith("food", "new food")
   )
   await waitFor(() => expect(screen.queryByText(/Unmatched food/)).not.toBeInTheDocument())
-  await user.click(screen.getByLabelText("I’ve checked this ingredient"))
-  expect(screen.getByRole("button", { name: "Save reviewed ingredients" })).toBeEnabled()
+  expect(screen.getByRole("button", { name: "Save ingredients" })).toBeEnabled()
 })
 it("offers existing matches without creating duplicates", async () => {
   const user = userEvent.setup()
   render(<IngredientParsingAction recipe={recipe} />)
   await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
-  const food = await screen.findByLabelText("Food")
+  await user.click(await screen.findByRole("button", { name: "Edit ingredient 1" }))
+  const food = screen.getByLabelText("Food")
   await user.clear(food)
   await user.type(food, "lamb")
-  await user.click(screen.getByLabelText("I’ve checked this ingredient"))
-  await user.click(screen.getByRole("button", { name: "Save reviewed ingredients" }))
+  await user.click(screen.getByRole("button", { name: "Save ingredients" }))
   expect(catalog.createIngredientMatch).not.toHaveBeenCalled()
   await waitFor(() =>
     expect(parsing.saveReviewedIngredients).toHaveBeenCalledWith(expect.anything(), [
@@ -176,8 +179,66 @@ it("allows high-confidence matched results at final save without claiming manual
   })
   render(<IngredientParsingAction recipe={recipe} />)
   await userEvent.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
-  expect(await screen.findByRole("button", { name: "Save reviewed ingredients" })).toBeEnabled()
+  expect(await screen.findByRole("button", { name: "Save ingredients" })).toBeEnabled()
   expect(screen.queryByLabelText("I’ve checked this ingredient")).not.toBeInTheDocument()
+  await userEvent.click(screen.getByRole("button", { name: "Edit ingredient 1" }))
   await userEvent.clear(screen.getByLabelText("Quantity"))
-  expect(screen.getByLabelText("I’ve checked this ingredient")).not.toBeChecked()
+  expect(screen.getByRole("button", { name: "Save ingredients" })).toBeDisabled()
+  expect(screen.queryByRole("checkbox")).not.toBeInTheDocument()
+})
+
+it("keeps unmatched originals in one action while retaining valid suggestions", async () => {
+  const unknown = {
+    ...suggestion,
+    input: "2 unknown herbs",
+    ingredient: { quantity: 2, food: { name: "unknown herbs" } },
+  }
+  vi.mocked(parsing.parseRecipeIngredients).mockResolvedValue({
+    recipe,
+    parsed: [suggestion, unknown],
+  })
+  const user = userEvent.setup()
+  render(<IngredientParsingAction recipe={recipe} />)
+  await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
+  await user.click(
+    await screen.findByRole("button", { name: "Keep originals for unmatched ingredients" })
+  )
+  await user.click(screen.getByRole("button", { name: "Save ingredients" }))
+  await waitFor(() =>
+    expect(parsing.saveReviewedIngredients).toHaveBeenCalledWith(expect.anything(), [
+      suggestion,
+      null,
+    ])
+  )
+})
+it("reuses a chosen match for repeated unresolved names", async () => {
+  const unknown = {
+    ...suggestion,
+    ingredient: { ...suggestion.ingredient, food: { name: "new food" } },
+  }
+  vi.mocked(parsing.parseRecipeIngredients).mockResolvedValue({
+    recipe,
+    parsed: [unknown, unknown],
+  })
+  vi.mocked(catalog.createIngredientMatch).mockResolvedValue({ id: "new", name: "new food" })
+  const user = userEvent.setup()
+  render(<IngredientParsingAction recipe={recipe} />)
+  await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
+  const buttons = await screen.findAllByRole("button", { name: "Create food “new food”" })
+  await user.click(buttons[0])
+  await waitFor(() =>
+    expect(screen.queryAllByRole("button", { name: "Create food “new food”" })).toHaveLength(0)
+  )
+  await user.click(screen.getByRole("button", { name: "Save ingredients" }))
+  await waitFor(() =>
+    expect(parsing.saveReviewedIngredients).toHaveBeenCalledWith(expect.anything(), [
+      expect.objectContaining({
+        ingredient: expect.objectContaining({ food: { id: "new", name: "new food" } }),
+      }),
+      expect.objectContaining({
+        ingredient: expect.objectContaining({ food: { id: "new", name: "new food" } }),
+      }),
+    ])
+  )
+  expect(catalog.createIngredientMatch).toHaveBeenCalledTimes(1)
 })
