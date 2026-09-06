@@ -60,7 +60,13 @@ export default defineConfig(({ mode }) => {
       emitVersionJson(buildSha),
       tailwindcss(),
       svgr(),
-      tanstackStart(),
+      tanstackStart({
+        spa: {
+          enabled: true,
+          maskPath: "/recipes",
+          prerender: { outputPath: "/offline-shell.html" },
+        },
+      }),
       // viteReact must come after tanstackStart
       viteReact(),
     ],

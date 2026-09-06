@@ -8,7 +8,7 @@ import {
   useRouter,
 } from "@tanstack/react-router"
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router"
-import type { ReactNode } from "react"
+import { useEffect, type ReactNode } from "react"
 
 import { AppShell } from "../components/AppShell"
 import { AppToasts } from "../components/AppToasts"
@@ -22,6 +22,7 @@ import { TimerProvider } from "../contexts/TimerContext"
 import { useVersionCheck } from "../hooks/useVersionCheck"
 import { queryClient } from "../lib/queryClient"
 import manaakiLogoUrl from "../manaaki.svg?url"
+import { registerOfflineSupport } from "../pwa/client"
 
 import "../styles/globals.css"
 
@@ -73,6 +74,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootComponent() {
   const router = useRouter()
   useVersionCheck(router)
+  useEffect(() => {
+    if (!import.meta.env.PROD) return
+    let cancelled = false
+    let cleanup: (() => void) | undefined
+    void registerOfflineSupport(() => {
+      void router.invalidate()
+      void queryClient.invalidateQueries()
+    })
+      .then(dispose => {
+        if (cancelled) dispose()
+        else cleanup = dispose
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+      cleanup?.()
+    }
+  }, [router])
 
   return (
     <RootDocument>

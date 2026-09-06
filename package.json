@@ -17,7 +17,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "vite build && node scripts/build-pwa.mjs",
     "prepare": "prek install --hook-type pre-commit --hook-type pre-push || true",
     "preview": "vite preview",
     "generate": "openapi-ts",
@@ -33,6 +33,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:pwa": "playwright test --config playwright.pwa.config.ts",
     "test:e2e:ui": "playwright test --ui",
     "test:doctor": "vitest doctor"
   },

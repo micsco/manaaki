@@ -6,6 +6,7 @@ import { useCurrentUser } from "../hooks/useCurrentUser"
 import ManaakiLogo from "../manaaki.svg?react"
 import { AboutModal } from "./AboutModal"
 import { AppNavigation } from "./AppNavigation"
+import { OfflineStatus } from "./OfflineStatus"
 import { UserMenu } from "./UserMenu"
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -46,6 +47,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
+      <OfflineStatus />
       <div id="app-content" tabIndex={-1} className="outline-none">
         {children}
       </div>

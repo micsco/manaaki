@@ -68,6 +68,7 @@ export function InstructionStep({ step, index, recipeId, className = "" }: Instr
             isChecked ? "text-gray-600" : "text-orange-500"
           }`}
           onClick={handleButtonClick}
+          aria-pressed={isChecked}
           aria-label={ariaLabel}
         >
           {stepNumber}.

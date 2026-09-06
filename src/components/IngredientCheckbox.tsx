@@ -123,6 +123,7 @@ export function IngredientCheckbox({
         type="button"
         className="flex w-full cursor-pointer items-baseline gap-3 py-3 text-left transition-colors hover:text-gray-200"
         onClick={handleToggle}
+        aria-pressed={isChecked}
         aria-label={`${ingredient}${isChecked ? ", checked" : ""}`}
       >
         <span

@@ -2,6 +2,7 @@ import { Menu } from "@base-ui/react/menu"
 import { mdiAccount, mdiInformationOutline, mdiLogout } from "@mdi/js"
 
 import { useCurrentUser } from "../hooks/useCurrentUser"
+import { clearCookingStorage } from "../pwa/client"
 import { loginStartHref } from "../utils/loginReturn"
 import { Icon } from "./Icon"
 
@@ -48,6 +49,7 @@ export function UserMenu({ onOpenAbout, returnTo = "/recipes" }: UserMenuProps) 
   const initials = extractInitials(user?.fullName, user?.username)
 
   async function signOut() {
+    clearCookingStorage()
     await fetch("/api/auth/logout", { method: "POST" })
     window.location.assign("/recipes")
   }
