@@ -272,7 +272,7 @@ export function ImportRecipeModal({
                     className="shrink-0 animate-spin text-orange-400"
                     aria-hidden={true}
                   />
-                  <span>Scraping recipe details… this may take a few seconds.</span>
+                  <span>Importing recipe and parsing ingredients… this may take a minute.</span>
                 </div>
               )}
 

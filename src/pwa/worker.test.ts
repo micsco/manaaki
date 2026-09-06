@@ -34,6 +34,7 @@ async function open(name: string) {
 async function request(
   path: string,
   options?: {
+    cache?: RequestCache
     method?: string
     navigate?: boolean
     body?: unknown
@@ -43,6 +44,7 @@ async function request(
   const pending: Promise<unknown>[] = []
   let response: Promise<Response> | undefined
   const req = new Request(`${origin}${path}`, {
+    cache: options?.cache,
     method: options?.method ?? "GET",
     headers: options?.headers,
     body: options?.body ? JSON.stringify(options.body) : undefined,
@@ -146,8 +148,8 @@ describe("offline service worker", () => {
     expect([...stores.keys()].some(key => key.startsWith("manaaki-data"))).toBe(false)
   })
 
-  it("does not intercept mutations, login callbacks, or unapproved APIs", async () => {
-    expect(await request("/api/recipes/soup", { method: "PUT" })).toBeUndefined()
+  it("does not intercept unrelated mutations, login callbacks, or unapproved APIs", async () => {
+    expect(await request("/api/recipes/create/url", { method: "POST" })).toBeUndefined()
     expect(await request("/api/auth/complete?code=secret", { navigate: true })).toBeUndefined()
     expect(await request("/api/users/self")).toBeUndefined()
   })
@@ -257,4 +259,33 @@ it("keeps the queue when the server rejects synchronization", async () => {
   await syncShopping()
   const cache = await open("manaaki-data-v1-user%3Aone")
   expect(await (await cache.match("/__manaaki_shopping_outbox__"))?.json()).toHaveLength(1)
+})
+
+it("fetches fresh recipe data for parsing even when an immutable response is cached", async () => {
+  await request("/api/auth/me")
+  await request("/api/recipes/soup")
+  fetchMock.mockClear()
+  await request("/api/recipes/soup", { cache: "reload" })
+  expect(fetchMock).toHaveBeenCalledWith(
+    expect.objectContaining({ url: `${origin}/api/recipes/soup` }),
+    expect.anything()
+  )
+  offline = true
+  await expect(request("/api/recipes/soup", { cache: "reload" })).rejects.toThrow()
+})
+it("invalidates recipe and list caches after a successful edit", async () => {
+  await request("/api/auth/me")
+  await request("/api/recipes/soup")
+  await request("/api/recipes")
+  const edited = await request("/api/recipes/soup", {
+    method: "PATCH",
+    body: { name: "New title" },
+  })
+  expect(edited?.ok).toBe(true)
+  fetchMock.mockClear()
+  await request("/api/recipes/soup")
+  expect(fetchMock).toHaveBeenCalledWith(
+    expect.objectContaining({ url: `${origin}/api/recipes/soup` }),
+    expect.anything()
+  )
 })

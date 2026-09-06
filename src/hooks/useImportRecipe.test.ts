@@ -4,11 +4,16 @@ import React from "react"
 import { describe, expect, it, vi } from "vitest"
 
 import * as sdk from "../api/generated/sdk.gen"
+import { parseRecipeIngredients } from "../api/recipeParsing"
+import { toastManager } from "../lib/toastManager"
 import { extractErrorMessage, useImportRecipe } from "./useImportRecipe"
 
 vi.mock("../api/generated/sdk.gen", () => ({
   parseRecipeUrlApiRecipesCreateUrlPost: vi.fn(),
 }))
+
+vi.mock("../api/recipeParsing", () => ({ parseRecipeIngredients: vi.fn() }))
+vi.mock("../lib/toastManager", () => ({ toastManager: { add: vi.fn() } }))
 
 function setup() {
   const queryClient = new QueryClient({
@@ -88,6 +93,7 @@ describe("useImportRecipe", () => {
         includeCategories: true,
       },
     })
+    expect(parseRecipeIngredients).toHaveBeenCalledWith("classic-guacamole")
     expect(outcome).toBe("classic-guacamole")
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["recipes"] })
   })
@@ -104,4 +110,20 @@ describe("useImportRecipe", () => {
       "Failed to scrape"
     )
   })
+})
+
+it("keeps a successful import when parsing fails and explains how to retry", async () => {
+  vi.mocked(sdk.parseRecipeUrlApiRecipesCreateUrlPost).mockResolvedValue({ data: "soup" } as never)
+  vi.mocked(parseRecipeIngredients).mockRejectedValueOnce(new Error("AI unavailable"))
+  const { wrapper } = setup()
+  const { result } = renderHook(() => useImportRecipe(), { wrapper })
+  await act(async () => {
+    expect(await result.current.mutateAsync({ url: "https://example.com/soup" })).toBe("soup")
+  })
+  expect(toastManager.add).toHaveBeenCalledWith(
+    expect.objectContaining({
+      title: "Recipe imported; ingredients need attention",
+      description: "AI unavailable",
+    })
+  )
 })

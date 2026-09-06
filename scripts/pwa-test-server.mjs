@@ -55,7 +55,35 @@ createServer(async (request, response) => {
       }
     if (url.pathname === "/api/recipes") data = { items: [recipe], total_pages: 1 }
     if (url.pathname.startsWith("/api/recipes/")) data = recipe
-    if (url.pathname === "/api/recipes/create/url" && request.method === "POST") data = recipe.slug
+    if (url.pathname === "/api/recipes/create/url" && request.method === "POST") {
+      recipe.recipeIngredient = [
+        {
+          quantity: 0,
+          note: "200g spaghetti",
+          display: "200g spaghetti",
+          referenceId: "fixture-ingredient",
+        },
+      ]
+      data = recipe.slug
+    }
+    if (url.pathname === "/api/parser/ingredients" && request.method === "POST")
+      data = [
+        {
+          input: "200g spaghetti",
+          ingredient: {
+            quantity: 200,
+            food: { name: "spaghetti" },
+            unit: { name: "g" },
+            display: "200g spaghetti",
+          },
+        },
+      ]
+    if (url.pathname === `/api/recipes/${id}` && request.method === "PATCH") {
+      let body = ""
+      for await (const chunk of request) body += chunk
+      Object.assign(recipe, JSON.parse(body))
+      data = recipe
+    }
     if (url.pathname === "/api/households/mealplans")
       data = {
         items: [

@@ -94,3 +94,18 @@ References: [Chrome share target guide](https://developer.chrome.com/docs/capabi
 The PWA tests simulate incoming share URLs in Chromium and WebKit, including
 review-before-import and reload. OS share-sheet registration still needs a
 physical installed-device check.
+
+## Import quality
+
+After a URL import, Manaaki asks Mealie’s OpenAI ingredient parser to structure
+unparsed ingredients and saves the result automatically. Existing foods, units,
+recipe references, ingredient headings, and instruction reference IDs are
+preserved. A parsing failure keeps the imported recipe and shows a warning;
+retry from Recipe actions → Review title and ingredients. The same dialog can
+correct a title supplied incorrectly by a source website’s recipe metadata.
+Mealie must have its AI provider configured. Manaaki does not silently substitute
+a different parser when the AI provider fails.
+
+Parsing reads fresh data and refuses to overwrite ingredients that changed while
+parsing was in progress. Successful recipe edits invalidate cached detail aliases
+and recipe lists so that old offline data does not hide the change.

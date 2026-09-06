@@ -5,6 +5,7 @@ import type { RecipeOutput } from "../api/generated/types.gen"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import { AddToShoppingListButton } from "./AddToShoppingListButton"
 import { Icon } from "./Icon"
+import { RecipeRepair } from "./RecipeRepair"
 
 export function RecipeActionsMenu({ recipe }: { recipe: RecipeOutput }) {
   const current = useCurrentUser()
@@ -22,6 +23,7 @@ export function RecipeActionsMenu({ recipe }: { recipe: RecipeOutput }) {
           <Popover.Popup className="z-40 rounded-2xl border border-gray-800 bg-gray-900 p-2 shadow-2xl">
             <Popover.Title className="sr-only">Recipe actions</Popover.Title>
             <AddToShoppingListButton recipe={recipe} />
+            <RecipeRepair recipe={recipe} />
           </Popover.Popup>
         </Popover.Positioner>
       </Popover.Portal>

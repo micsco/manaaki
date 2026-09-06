@@ -379,7 +379,8 @@ async function dataResponse(event: FetchEvent, group: string): Promise<Response>
   const cached = await cache.match(request)
   const immutable = group.startsWith("recipe:")
   const entry = cached ? (await readIndex(cache)).find(item => item.url === request.url) : undefined
-  if (immutable && cached && entry && Date.now() - entry.cachedAt < RECIPE_FRESH_MS) {
+  const reload = request.cache === "reload"
+  if (!reload && immutable && cached && entry && Date.now() - entry.cachedAt < RECIPE_FRESH_MS) {
     if (path.startsWith("/api/recipes/"))
       event.waitUntil(recordVisit(cache, group, epoch).catch(() => {}))
     return path.startsWith("/api/households/shopping/lists/")
@@ -388,7 +389,7 @@ async function dataResponse(event: FetchEvent, group: string): Promise<Response>
   }
   try {
     const response = await fetch(request, { signal: AbortSignal.timeout(5000) })
-    if (response.status >= 500 && cached)
+    if (response.status >= 500 && cached && !reload)
       return path.startsWith("/api/households/shopping/lists/")
         ? overlayChecks(cache, cached)
         : cached
@@ -407,7 +408,7 @@ async function dataResponse(event: FetchEvent, group: string): Promise<Response>
       ? overlayChecks(cache, response)
       : response
   } catch (error) {
-    if (cached) {
+    if (cached && !reload) {
       await notifyClients("OFFLINE_FALLBACK")
       return path.startsWith("/api/households/shopping/lists/")
         ? overlayChecks(cache, cached)
@@ -467,6 +468,40 @@ worker.addEventListener("fetch", event => {
     const queued = queueCheck(request)
     event.respondWith(queued)
     event.waitUntil(queued.then(() => syncChecks()).catch(() => {}))
+    return
+  }
+  if (["PATCH", "PUT"].includes(request.method) && /^\/api\/recipes\/[^/]+$/.test(url.pathname)) {
+    event.respondWith(
+      (async () => {
+        const response = await fetch(request)
+        if (response.ok) {
+          await (async () => {
+            const updated = await response.clone().json()
+            const scope = await identity()
+            if (!scope) return
+            const cache = await caches.open(`${dataPrefix}${encodeURIComponent(scope)}`)
+            const paths = new Set([
+              url.pathname,
+              `/api/recipes/${updated.id}`,
+              `/api/recipes/${updated.slug}`,
+            ])
+            await serialize(async () => {
+              for (const entry of await readIndex(cache)) {
+                const path = new URL(entry.url).pathname
+                let sameRecipe = false
+                if (updated.id && /^\/api\/recipes\/[^/]+$/.test(path)) {
+                  const cached = await cache.match(entry.url)
+                  sameRecipe = cached ? (await cached.json()).id === updated.id : false
+                }
+                if (sameRecipe || paths.has(path) || path === "/api/recipes")
+                  await cache.delete(entry.url)
+              }
+            })
+          })().catch(() => {})
+        }
+        return response
+      })()
+    )
     return
   }
   if (request.method !== "GET") return

@@ -254,7 +254,7 @@ describe("ImportRecipeModal", () => {
     render(<ImportRecipeModal open={true} onOpenChange={vi.fn()} />)
 
     expect(
-      screen.getByText(/scraping recipe details… this may take a few seconds/i)
+      screen.getByText(/importing recipe and parsing ingredients… this may take a minute/i)
     ).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /importing…/i })).toBeDisabled()
     expect(screen.getByRole("button", { name: /cancel/i })).toBeDisabled()

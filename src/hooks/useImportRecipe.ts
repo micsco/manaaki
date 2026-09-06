@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { parseRecipeUrlApiRecipesCreateUrlPost } from "../api/generated/sdk.gen"
+import { parseRecipeIngredients } from "../api/recipeParsing"
+import { toastManager } from "../lib/toastManager"
 
 export interface ImportRecipeVariables {
   url: string
@@ -64,6 +66,17 @@ export function useImportRecipe() {
         throw new Error(extractErrorMessage(response.error))
       }
 
+      try {
+        await parseRecipeIngredients(response.data)
+      } catch (error) {
+        toastManager.add({
+          title: "Recipe imported; ingredients need attention",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Retry ingredient parsing from Recipe actions.",
+        })
+      }
       return response.data
     },
     onSuccess: () => {

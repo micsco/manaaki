@@ -5,7 +5,10 @@ test("opens a shared social link, survives reload, and imports only after review
 }) => {
   const sharedUrl = "https://www.youtube.com/shorts/dinner?si=abc&feature=share"
   const imports: string[] = []
+  const parsers: string[] = []
   page.on("request", request => {
+    if (request.url().endsWith("/api/parser/ingredients") && request.method() === "POST")
+      parsers.push(request.postDataJSON().parser)
     if (request.url().endsWith("/api/recipes/create/url") && request.method() === "POST") {
       imports.push(request.postDataJSON().url)
     }
@@ -18,6 +21,7 @@ test("opens a shared social link, survives reload, and imports only after review
   await page.getByRole("button", { name: "Import Recipe", exact: true }).click()
   await expect(page.getByRole("heading", { name: "Pasta Carbonara", exact: true })).toBeVisible()
   expect(imports).toEqual([sharedUrl])
+  expect(parsers).toEqual(["openai"])
 })
 
 test("handles missing links and a second share without stale input", async ({ page }) => {
