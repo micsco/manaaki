@@ -1,8 +1,12 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import type { RecipeIngredientOutput, RecipeStep } from "../api/generated/types.gen"
 import { CookModeWrapper, render, screen } from "../test/render"
 import { IngredientsSection } from "./IngredientsSection"
+
+vi.mock("../hooks/useCurrentUser", () => ({
+  useCurrentUser: () => ({ user: { id: "user" }, isAnonymous: false }),
+}))
 
 const ingredients: RecipeIngredientOutput[] = [
   {
@@ -269,4 +273,16 @@ describe("IngredientsSection", () => {
       expect(screen.getAllByRole("button")).toHaveLength(3)
     })
   })
+})
+
+it("places the parsing prompt above unstructured ingredient text", () => {
+  render(
+    <IngredientsSection
+      ingredients={[{ note: "275g lamb", display: "275g lamb" }]}
+      recipeId="recipe"
+    />
+  )
+  const action = screen.getByRole("button", { name: "Parse ingredients with AI" })
+  const item = screen.getByRole("button", { name: /275g lamb/ })
+  expect(action.compareDocumentPosition(item) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 })

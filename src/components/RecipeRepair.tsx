@@ -4,8 +4,9 @@ import { useRouter } from "@tanstack/react-router"
 import { useState } from "react"
 
 import type { RecipeOutput } from "../api/generated/types.gen"
-import { parseRecipeIngredients, renameRecipe, unparsedIngredients } from "../api/recipeParsing"
+import { renameRecipe } from "../api/recipeParsing"
 import { useOnline } from "../pwa/useOnline"
+import { IngredientParsingAction } from "./IngredientParsingAction"
 
 export function RecipeRepair({ recipe }: { recipe: RecipeOutput }) {
   const [open, setOpen] = useState(false)
@@ -27,29 +28,20 @@ function RecipeRepairDialog({ recipe, onClose }: { recipe: RecipeOutput; onClose
   const [pending, setPending] = useState(false)
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
-  const [remaining, setRemaining] = useState(unparsedIngredients(recipe).length)
   const router = useRouter()
   const queryClient = useQueryClient()
   const online = useOnline()
-  async function update(action: "title" | "ingredients") {
+  async function update() {
     const slug = recipe.id || recipe.slug
     if (!slug || !online || pending) return
     setPending(true)
     setError("")
     setMessage("")
     try {
-      if (action === "title") await renameRecipe(slug, name)
-      else {
-        const saved = await parseRecipeIngredients(slug)
-        setRemaining(unparsedIngredients(saved).length)
-      }
+      await renameRecipe(slug, name)
       await queryClient.invalidateQueries({ queryKey: ["recipes"] })
       await router.invalidate()
-      setMessage(
-        action === "title"
-          ? "Title saved."
-          : "Ingredients parsed and saved. Review the quantities and matches in the recipe."
-      )
+      setMessage("Title saved.")
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Could not update the recipe.")
     } finally {
@@ -77,7 +69,7 @@ function RecipeRepairDialog({ recipe, onClose }: { recipe: RecipeOutput; onClose
             className="space-y-3"
             onSubmit={event => {
               event.preventDefault()
-              void update("title")
+              void update()
             }}
           >
             <label className="block text-sm" htmlFor="recipe-title">
@@ -97,18 +89,7 @@ function RecipeRepairDialog({ recipe, onClose }: { recipe: RecipeOutput; onClose
               Save title
             </button>
           </form>
-          <p className="text-sm">
-            {remaining
-              ? `${remaining} ingredients still need parsing.`
-              : "No unparsed ingredients found."}
-          </p>
-          <button
-            disabled={pending || !online || !remaining}
-            onClick={() => void update("ingredients")}
-            className="min-h-11 rounded-xl bg-orange-600 px-4 disabled:opacity-50"
-          >
-            Parse ingredients with AI
-          </button>
+          <IngredientParsingAction recipe={recipe} />
           {!online && <p role="status">Reconnect to update this recipe.</p>}
           {pending && <p role="status">Updating recipe…</p>}
           {message && <p role="status">{message}</p>}

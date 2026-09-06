@@ -18,7 +18,7 @@ export function unparsedIngredients(recipe: RecipeOutput) {
 
 export function mergeParsedIngredients(
   recipe: RecipeOutput,
-  parsed: ParsedIngredient[]
+  parsed: (ParsedIngredient | null)[]
 ): RecipeIngredientInput[] {
   const pending = unparsedIngredients(recipe)
   if (pending.length !== parsed.length)
@@ -26,6 +26,7 @@ export function mergeParsedIngredients(
   const replacements = new Map(
     pending.map((original, index) => {
       const result = parsed[index]
+      if (!result) return [original, original] as const
       const text = original.note?.trim() || original.display?.trim() || ""
       if (result.input && result.input.trim() !== text)
         throw new Error(
@@ -56,7 +57,7 @@ export async function parseRecipeIngredients(slug: string) {
   if (!loaded.data || loaded.error) throw new Error("Could not load ingredients for parsing.")
   const recipe = loaded.data
   const pending = unparsedIngredients(recipe)
-  if (!pending.length) return recipe
+  if (!pending.length) return { recipe, parsed: [] }
   const parsed = await parseIngredientsApiParserIngredientsPost({
     body: {
       parser: "openai",
@@ -67,7 +68,48 @@ export async function parseRecipeIngredients(slug: string) {
     throw new Error(
       "Ingredient parsing failed. Check Mealie’s AI provider configuration, then retry from Recipe actions."
     )
-  const ingredients = mergeParsedIngredients(recipe, parsed.data)
+  mergeParsedIngredients(recipe, parsed.data)
+  return {
+    recipe,
+    parsed: parsed.data.map((result, index) => ({
+      ...result,
+      input: result.input || pending[index].note?.trim() || pending[index].display?.trim() || "",
+    })),
+  }
+}
+
+export type IngredientReview = Awaited<ReturnType<typeof parseRecipeIngredients>>
+
+export function ingredientNeedsReview(parsed: ParsedIngredient) {
+  return (
+    (parsed.confidence?.average ?? 0) < 0.85 ||
+    Boolean(parsed.ingredient.food && !parsed.ingredient.food.id) ||
+    Boolean(parsed.ingredient.unit && !parsed.ingredient.unit.id)
+  )
+}
+
+export function ingredientReviewKey(userId: string, recipeId: string) {
+  return ["ingredientReview", userId, recipeId]
+}
+
+export async function saveReviewedIngredients(
+  review: IngredientReview,
+  parsed: (ParsedIngredient | null)[]
+) {
+  const { recipe } = review
+  const slug = recipe.id || recipe.slug
+  if (!slug) throw new Error("Recipe identifier is missing.")
+  for (const result of parsed) {
+    if (!result) continue
+    const { food, unit, quantity } = result.ingredient
+    if ((food && !food.id) || (unit && !unit.id))
+      throw new Error(
+        "Match or create each suggested food and unit before saving, or keep the original ingredient."
+      )
+    if (quantity != null && (!Number.isFinite(quantity) || quantity < 0))
+      throw new Error("Ingredient quantities must be valid, non-negative numbers.")
+  }
+  const ingredients = mergeParsedIngredients(recipe, parsed)
   const latest = await getOneApiRecipesSlugGet({
     path: { slug: recipe.id || slug },
     cache: "reload",

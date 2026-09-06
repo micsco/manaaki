@@ -3,6 +3,7 @@ import { useCookMode } from "../contexts/CookModeContext"
 import { useCookingStorage } from "../hooks/useCookingStorage"
 import { groupIngredients, scaleQuantity, servingsStorageKey } from "../utils/recipe"
 import { IngredientCheckbox } from "./IngredientCheckbox"
+import { IngredientParsingAction } from "./IngredientParsingAction"
 import { IngredientSectionHeader } from "./IngredientSectionHeader"
 import { ServingsSelect } from "./ui/ServingsSelect"
 
@@ -71,6 +72,9 @@ export function IngredientsSection({
           />
         )}
       </div>
+      {!isCookMode && (
+        <IngredientParsingAction recipe={{ id: recipeId, recipeIngredient: ingredients }} />
+      )}
       {hasSections ? (
         <div>
           {groups.map((group, gi) => (

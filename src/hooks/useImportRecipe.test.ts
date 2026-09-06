@@ -4,7 +4,7 @@ import React from "react"
 import { describe, expect, it, vi } from "vitest"
 
 import * as sdk from "../api/generated/sdk.gen"
-import { parseRecipeIngredients } from "../api/recipeParsing"
+import { ingredientReviewKey, parseRecipeIngredients } from "../api/recipeParsing"
 import { toastManager } from "../lib/toastManager"
 import { extractErrorMessage, useImportRecipe } from "./useImportRecipe"
 
@@ -12,7 +12,10 @@ vi.mock("../api/generated/sdk.gen", () => ({
   parseRecipeUrlApiRecipesCreateUrlPost: vi.fn(),
 }))
 
-vi.mock("../api/recipeParsing", () => ({ parseRecipeIngredients: vi.fn() }))
+vi.mock("../api/recipeParsing", async original => ({
+  ...(await original<typeof import("../api/recipeParsing")>()),
+  parseRecipeIngredients: vi.fn(),
+}))
 vi.mock("../lib/toastManager", () => ({ toastManager: { add: vi.fn() } }))
 
 function setup() {
@@ -75,7 +78,12 @@ describe("useImportRecipe", () => {
       data: "classic-guacamole",
     } as never)
 
+    vi.mocked(parseRecipeIngredients).mockResolvedValue({
+      recipe: { id: "new-id" },
+      parsed: [{ input: "1 cup flour", ingredient: { note: "1 cup flour" } }],
+    })
     const { queryClient, wrapper } = setup()
+    queryClient.setQueryData(["currentUser"], { user: { id: "user" } })
     const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries")
     const { result } = renderHook(() => useImportRecipe(), { wrapper })
 
@@ -94,6 +102,9 @@ describe("useImportRecipe", () => {
       },
     })
     expect(parseRecipeIngredients).toHaveBeenCalledWith("classic-guacamole")
+    expect(queryClient.getQueryData(ingredientReviewKey("user", "new-id"))).toEqual(
+      expect.objectContaining({ recipe: { id: "new-id" } })
+    )
     expect(outcome).toBe("classic-guacamole")
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["recipes"] })
   })

@@ -98,10 +98,12 @@ physical installed-device check.
 ## Import quality
 
 After a URL import, Manaaki asks Mealie’s OpenAI ingredient parser to structure
-unparsed ingredients and saves the result automatically. Existing foods, units,
+unparsed ingredients and prepares suggestions automatically. Suggestions are not
+saved until reviewed. Existing foods, units,
 recipe references, ingredient headings, and instruction reference IDs are
 preserved. A parsing failure keeps the imported recipe and shows a warning;
-retry from Recipe actions → Review title and ingredients. The same dialog can
+retry from the inline button above Ingredients, or Recipe actions → Review title
+and ingredients. The same dialog can
 correct a title supplied incorrectly by a source website’s recipe metadata.
 Mealie must have its AI provider configured. Manaaki does not silently substitute
 a different parser when the AI provider fails.
@@ -109,3 +111,18 @@ a different parser when the AI provider fails.
 Parsing reads fresh data and refuses to overwrite ingredients that changed while
 parsing was in progress. Successful recipe edits invalidate cached detail aliases
 and recipe lists so that old offline data does not hide the change.
+
+
+The review follows Mealie’s validation rules: confidence below 0.85 (including
+missing confidence) and suggested foods or units without IDs require attention.
+Compare the original text, edit quantities and notes, choose existing foods or
+units, or explicitly create missing records. New foods/units are added immediately
+when their Create button is pressed, as in Mealie; canceling the review does not
+remove those catalog records. Ingredient changes are applied only by Save reviewed
+ingredients. Keeping an original ingredient declines its suggestion. Suggestions
+are held in memory per signed-in user; reloading can require parsing again.
+
+Reviewed against Mealie commit
+[82387a2](https://github.com/mealie-recipes/mealie/blob/82387a281d6364b7e563bb9a93464eb662217193/frontend/app/composables/recipes/use-parse-ingredients-dialog.ts)
+and its
+[final ingredient review](https://github.com/mealie-recipes/mealie/blob/82387a281d6364b7e563bb9a93464eb662217193/frontend/app/components/Domain/Recipe/RecipePage/RecipePageParts/RecipeParseDialog/ParseDialogReview.vue).

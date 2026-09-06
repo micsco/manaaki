@@ -5,6 +5,9 @@ import * as parsing from "../api/recipeParsing"
 import { render, screen } from "../test/render"
 import { RecipeRepair } from "./RecipeRepair"
 
+vi.mock("./IngredientParsingAction", () => ({
+  IngredientParsingAction: () => <button>Parse ingredients with AI</button>,
+}))
 const invalidate = vi.fn()
 vi.mock("@tanstack/react-router", () => ({ useRouter: () => ({ invalidate }) }))
 vi.mock("../api/recipeParsing", async original => ({
@@ -19,10 +22,6 @@ const recipe = {
 }
 beforeEach(() => {
   vi.mocked(parsing.renameRecipe).mockResolvedValue(recipe)
-  vi.mocked(parsing.parseRecipeIngredients).mockResolvedValue({
-    ...recipe,
-    recipeIngredient: [{ quantity: 275, food: { name: "lamb" } }],
-  })
 })
 it("lets a signed-in user correct the title and parse an existing import", async () => {
   const user = userEvent.setup()
@@ -33,18 +32,6 @@ it("lets a signed-in user correct the title and parse an existing import", async
   await user.click(screen.getByRole("button", { name: "Save title" }))
   expect(await screen.findByText("Title saved.")).toBeVisible()
   expect(parsing.renameRecipe).toHaveBeenCalledWith("id", "One-pot lamb and orzo")
-  await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
-  expect(await screen.findByText(/Ingredients parsed and saved/)).toBeVisible()
-  expect(parsing.parseRecipeIngredients).toHaveBeenCalledWith("id")
-  expect(screen.getByRole("button", { name: "Parse ingredients with AI" })).toBeDisabled()
+  expect(screen.getByRole("button", { name: "Parse ingredients with AI" })).toBeVisible()
   expect(invalidate).toHaveBeenCalled()
-})
-it("keeps failed parsing retryable without closing the dialog", async () => {
-  vi.mocked(parsing.parseRecipeIngredients).mockRejectedValueOnce(new Error("AI unavailable"))
-  const user = userEvent.setup()
-  render(<RecipeRepair recipe={recipe} />)
-  await user.click(screen.getByRole("button", { name: "Review title and ingredients" }))
-  await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
-  expect(await screen.findByRole("alert")).toHaveTextContent("AI unavailable")
-  expect(screen.getByRole("button", { name: "Parse ingredients with AI" })).toBeEnabled()
 })

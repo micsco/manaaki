@@ -6,7 +6,10 @@ test("opens a shared social link, survives reload, and imports only after review
   const sharedUrl = "https://www.youtube.com/shorts/dinner?si=abc&feature=share"
   const imports: string[] = []
   const parsers: string[] = []
+  const updates: unknown[] = []
   page.on("request", request => {
+    if (request.method() === "PATCH" && request.url().includes("/api/recipes/"))
+      updates.push(request.postDataJSON())
     if (request.url().endsWith("/api/parser/ingredients") && request.method() === "POST")
       parsers.push(request.postDataJSON().parser)
     if (request.url().endsWith("/api/recipes/create/url") && request.method() === "POST") {
@@ -21,6 +24,28 @@ test("opens a shared social link, survives reload, and imports only after review
   await page.getByRole("button", { name: "Import Recipe", exact: true }).click()
   await expect(page.getByRole("heading", { name: "Pasta Carbonara", exact: true })).toBeVisible()
   expect(imports).toEqual([sharedUrl])
+  expect(parsers).toEqual(["openai"])
+  expect(updates).toEqual([])
+  await page.getByRole("button", { name: "Review parsed ingredients", exact: true }).click()
+  await expect(page.getByText("Original: 200g spaghetti")).toBeVisible()
+  await expect(page.getByRole("button", { name: "Save reviewed ingredients" })).toBeDisabled()
+  await page.getByRole("button", { name: "Cancel", exact: true }).click()
+  expect(updates).toEqual([])
+  await page.getByRole("button", { name: "Review parsed ingredients", exact: true }).click()
+  await page.getByLabel("I’ve checked this ingredient").check()
+  await page.screenshot({
+    path: `/tmp/manaaki-ingredient-review-${page.context().browser()?.browserType().name()}.png`,
+  })
+  await page.getByRole("button", { name: "Save reviewed ingredients" }).click()
+  await expect(page.getByRole("dialog", { name: "Review parsed ingredients" })).not.toBeVisible()
+  await expect(page.getByRole("button", { name: "Review parsed ingredients" })).not.toBeVisible()
+  expect(updates).toEqual([
+    expect.objectContaining({
+      recipeIngredient: [
+        expect.objectContaining({ quantity: 200, referenceId: "fixture-ingredient" }),
+      ],
+    }),
+  ])
   expect(parsers).toEqual(["openai"])
 })
 

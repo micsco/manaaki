@@ -16,8 +16,8 @@ const recipe = {
       referenceId: "one",
       display: "200g spaghetti",
       quantity: 200,
-      food: { name: "spaghetti" },
-      unit: { name: "g" },
+      food: { id: "food", name: "spaghetti" },
+      unit: { id: "unit", name: "g" },
     },
   ],
   recipeInstructions: [{ id: "step", text: "Cook for 10 minutes." }],
@@ -70,14 +70,17 @@ createServer(async (request, response) => {
       data = [
         {
           input: "200g spaghetti",
+          confidence: { average: 0.6 },
           ingredient: {
             quantity: 200,
-            food: { name: "spaghetti" },
-            unit: { name: "g" },
+            food: { id: "food", name: "spaghetti" },
+            unit: { id: "unit", name: "g" },
             display: "200g spaghetti",
           },
         },
       ]
+    if (url.pathname === "/api/foods") data = { items: [{ id: "food", name: "spaghetti" }] }
+    if (url.pathname === "/api/units") data = { items: [{ id: "unit", name: "g" }] }
     if (url.pathname === `/api/recipes/${id}` && request.method === "PATCH") {
       let body = ""
       for await (const chunk of request) body += chunk
