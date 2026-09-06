@@ -35,6 +35,13 @@ server item before updating it, preserving its other fields. Deleted items are
 removed from the queue. Permission failures retain the queue and show a sign-in
 message. Adding or deleting items requires a connection.
 
+Installation help lives in About Manaaki. Supported browsers expose a native
+Install button; Safari receives home-screen instructions. Installed apps hide
+that guidance. The manifest includes a stable identity, task shortcuts, and a
+mobile screenshot. Fonts ship with the app and are included in the offline shell.
+Mobile layouts respect safe areas, use larger touch targets, keep dialogs
+scrollable in short viewports, and honor reduced-motion preferences.
+
 ## Validation
 
 Run `pnpm check:fix`, `pnpm type-check`, `pnpm test`, `pnpm build`, then

@@ -57,7 +57,7 @@ export function ShoppingListItemRow({
             onClick={() => setExpanded(v => !v)}
             aria-label="Show recipes"
             aria-expanded={expanded}
-            className="flex size-10 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors hover:text-gray-300"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors hover:text-gray-300"
           >
             <Icon
               path={mdiChevronDown}
@@ -72,7 +72,7 @@ export function ShoppingListItemRow({
           onClick={onDelete}
           disabled={deleteDisabled}
           aria-label={`Remove ${label}`}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full text-gray-600 transition-colors hover:text-gray-300"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full text-gray-600 transition-colors hover:text-gray-300"
         >
           <Icon path={mdiClose} size={0.7} aria-hidden={true} />
         </button>

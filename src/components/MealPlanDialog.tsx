@@ -113,7 +113,7 @@ export function MealPlanDialog({
     >
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs" />
-        <Dialog.Popup className="fixed top-1/2 left-1/2 z-50 max-h-[90dvh] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-gray-800 bg-gray-900 p-6 text-gray-100 shadow-xl">
+        <Dialog.Popup className="fixed top-1/2 left-1/2 z-50 mobile-dialog max-h-[90dvh] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-gray-800 bg-gray-900 p-6 text-gray-100 shadow-xl">
           <Dialog.Title className="font-serif text-2xl font-bold">
             {entry ? "Edit planned meal" : "Add to meal plan"}
           </Dialog.Title>

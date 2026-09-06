@@ -110,3 +110,11 @@ describe("UserMenu", () => {
     expect(window.location.assign).toHaveBeenCalledWith("/recipes")
   })
 })
+
+it("lets anonymous users open installation guidance through About", async () => {
+  vi.spyOn(auth, "fetchCurrentUser").mockResolvedValue({ user: null, isAnonymous: true })
+  const onOpenAbout = vi.fn()
+  render(<UserMenu onOpenAbout={onOpenAbout} />, { wrapper })
+  await userEvent.click(await screen.findByRole("button", { name: "About Manaaki" }))
+  expect(onOpenAbout).toHaveBeenCalledOnce()
+})

@@ -102,3 +102,11 @@ describe("BuildShoppingListDialog", () => {
     expect(await screen.findByText(/nothing planned/i)).toBeInTheDocument()
   })
 })
+
+it("exposes a named dialog and dismisses with Escape", async () => {
+  const onClose = vi.fn()
+  render(<BuildShoppingListDialog open onClose={onClose} onBuilt={vi.fn()} />, { wrapper: wrap() })
+  expect(screen.getByRole("dialog", { name: "Build shopping list" })).toBeVisible()
+  await userEvent.keyboard("{Escape}")
+  expect(onClose).toHaveBeenCalledOnce()
+})

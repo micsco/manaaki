@@ -35,3 +35,21 @@ describe("manifest.webmanifest", () => {
     expect(icon).toBeDefined()
   })
 })
+
+it("has stable installation identity and shortcuts into the main mobile tasks", () => {
+  expect(manifest.id).toBe("/")
+  expect(manifest.scope).toBe("/")
+  expect(manifest.shortcuts.map((shortcut: { url: string }) => shortcut.url)).toEqual([
+    "/plan",
+    "/shopping",
+    "/recipes",
+  ])
+  expect(manifest.theme_color).toBe("#030712")
+})
+
+it("includes a portrait installation screenshot that exists in public assets", () => {
+  expect(manifest.screenshots[0].form_factor).toBe("narrow")
+  expect(
+    readFileSync(resolve(__dirname, "../../public", manifest.screenshots[0].src.slice(1))).length
+  ).toBeGreaterThan(0)
+})

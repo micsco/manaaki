@@ -26,7 +26,7 @@ export function ShoppingListView({ listId }: { listId: string }) {
   return (
     <div className="mx-auto max-w-2xl px-4 pb-24">
       <form
-        className="sticky top-0 z-10 flex gap-2 bg-gray-950 py-3"
+        className="sticky top-[env(safe-area-inset-top,0px)] z-10 flex gap-2 bg-gray-950 py-3"
         onSubmit={e => {
           e.preventDefault()
           if (!online || !draft.trim()) return

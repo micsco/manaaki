@@ -23,15 +23,20 @@ import { useVersionCheck } from "../hooks/useVersionCheck"
 import { queryClient } from "../lib/queryClient"
 import manaakiLogoUrl from "../manaaki.svg?url"
 import { registerOfflineSupport } from "../pwa/client"
+import { trackInstallation } from "../pwa/install"
+import { warmVisiblePage } from "../pwa/warmPage"
 
+import "@fontsource-variable/inter/wght.css"
+import "@fontsource-variable/jetbrains-mono/wght.css"
+import "@fontsource-variable/playfair-display/wght.css"
 import "../styles/globals.css"
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { name: "theme-color", content: "#1f2937" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "theme-color", content: "#030712" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
@@ -52,19 +57,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "manifest",
         href: "/manifest.webmanifest",
       },
-      {
-        rel: "preconnect",
-        href: "https://fonts.googleapis.com",
-      },
-      {
-        rel: "preconnect",
-        href: "https://fonts.gstatic.com",
-        crossOrigin: "anonymous",
-      },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:wght@700;800&display=swap",
-      },
     ],
   }),
   component: RootComponent,
@@ -74,6 +66,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootComponent() {
   const router = useRouter()
   useVersionCheck(router)
+  useEffect(() => trackInstallation(), [])
   useEffect(() => {
     if (!import.meta.env.PROD) return
     const refreshShopping = () => {
@@ -82,10 +75,7 @@ function RootComponent() {
     window.addEventListener("shopping-synced", refreshShopping)
     let cancelled = false
     let cleanup: (() => void) | undefined
-    void registerOfflineSupport(() => {
-      void router.invalidate()
-      void queryClient.invalidateQueries()
-    })
+    void registerOfflineSupport(() => warmVisiblePage(queryClient))
       .then(dispose => {
         if (cancelled) dispose()
         else cleanup = dispose
@@ -96,7 +86,7 @@ function RootComponent() {
       cancelled = true
       cleanup?.()
     }
-  }, [router])
+  }, [])
 
   return (
     <RootDocument>

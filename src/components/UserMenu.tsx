@@ -34,12 +34,24 @@ export function UserMenu({ onOpenAbout, returnTo = "/recipes" }: UserMenuProps) 
 
   if (current.isAnonymous) {
     return (
-      <a
-        href={loginStartHref(returnTo)}
-        className="inline-flex min-h-11 items-center rounded-lg px-3.5 py-1.5 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-800 focus:ring-2 focus:ring-orange-500 focus:outline-hidden"
-      >
-        Sign in
-      </a>
+      <div className="flex items-center gap-1">
+        {onOpenAbout && (
+          <button
+            type="button"
+            aria-label="About Manaaki"
+            onClick={onOpenAbout}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-gray-300 hover:bg-gray-800"
+          >
+            <Icon path={mdiInformationOutline} size={0.85} aria-hidden />
+          </button>
+        )}
+        <a
+          href={loginStartHref(returnTo)}
+          className="inline-flex min-h-11 items-center rounded-lg px-3.5 py-1.5 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-800 focus:ring-2 focus:ring-orange-500 focus:outline-hidden"
+        >
+          Sign in
+        </a>
+      </div>
     )
   }
 

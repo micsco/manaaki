@@ -189,7 +189,7 @@ export function RecipeFilterDrawer({
         <Drawer.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs" />
         <Drawer.Popup
           className={[
-            "fixed right-0 bottom-0 left-0 z-50 flex max-h-[85dvh] flex-col",
+            "pb-[env(safe-area-inset-bottom,0px)] fixed right-0 bottom-0 left-0 z-50 flex max-h-[85dvh] flex-col",
             "rounded-t-2xl border-gray-700 border-t bg-gray-900",
             "focus:outline-hidden",
           ].join(" ")}
@@ -201,14 +201,14 @@ export function RecipeFilterDrawer({
               Filter recipes
             </Drawer.Title>
             <Drawer.Close
-              className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-800 hover:text-gray-200 focus:ring-2 focus:ring-orange-500 focus:outline-hidden"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-800 hover:text-gray-200 focus:ring-2 focus:ring-orange-500 focus:outline-hidden"
               aria-label="Close filters"
             >
               <Icon path={mdiClose} size={0.7} aria-hidden={true} />
             </Drawer.Close>
           </div>
 
-          <div className="flex-1 space-y-6 overflow-y-auto px-5 pb-4">
+          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-5 pb-4">
             <FilterSection label="Equipment">
               {TOOL_OPTIONS.map(opt => (
                 <ToggleChip

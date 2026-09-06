@@ -17,7 +17,7 @@ export function AppNavigation({ mobile = false }: { mobile?: boolean }) {
       data-mobile-navigation={mobile || undefined}
       className={
         mobile
-          ? "fixed inset-x-0 bottom-0 z-30 border-t border-gray-800 bg-gray-950 pb-[env(safe-area-inset-bottom,0px)] md:hidden"
+          ? "fixed inset-x-0 bottom-0 z-30 border-t border-gray-800 bg-gray-950 safe-inline pb-[env(safe-area-inset-bottom,0px)] md:hidden"
           : "hidden items-center gap-5 md:flex"
       }
     >

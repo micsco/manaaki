@@ -34,6 +34,7 @@ describe("AboutModal", () => {
     render(<AboutModal open={true} onOpenChange={vi.fn()} />)
     expect(screen.getByRole("dialog")).toBeInTheDocument()
     expect(screen.getByText("About Manaaki")).toBeInTheDocument()
+    expect(screen.getByRole("region", { name: "Install Manaaki" })).toBeInTheDocument()
   })
 
   it("shows a description of Manaaki", () => {

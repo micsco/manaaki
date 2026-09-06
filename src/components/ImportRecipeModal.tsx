@@ -126,7 +126,7 @@ export function ImportRecipeModal({ open, onOpenChange }: ImportRecipeModalProps
     <Dialog.Root open={open} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs" />
-        <Dialog.Popup className="fixed top-1/2 left-1/2 z-50 max-h-[90vh] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-gray-800 bg-gray-900 p-6 shadow-xl focus:outline-hidden">
+        <Dialog.Popup className="fixed top-1/2 left-1/2 z-50 mobile-dialog max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-gray-800 bg-gray-900 p-6 shadow-xl focus:outline-hidden">
           <div className="flex items-center justify-between pb-4">
             <Dialog.Title className="flex items-center gap-2.5 text-xl font-semibold text-gray-100">
               <Icon path={mdiBookPlus} size={0.8} className="text-orange-500" aria-hidden={true} />

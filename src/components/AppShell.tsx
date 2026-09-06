@@ -21,8 +21,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div
       className={
         signedIn
-          ? "min-h-dvh bg-gray-950 pb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:pb-0"
-          : "min-h-dvh bg-gray-950"
+          ? "min-h-dvh bg-gray-950 app-safe-area pb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:pb-0"
+          : "min-h-dvh bg-gray-950 app-safe-area"
       }
     >
       <a
