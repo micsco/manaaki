@@ -76,6 +76,10 @@ function RootComponent() {
   useVersionCheck(router)
   useEffect(() => {
     if (!import.meta.env.PROD) return
+    const refreshShopping = () => {
+      void queryClient.invalidateQueries({ queryKey: ["shopping"] })
+    }
+    window.addEventListener("shopping-synced", refreshShopping)
     let cancelled = false
     let cleanup: (() => void) | undefined
     void registerOfflineSupport(() => {
@@ -88,6 +92,7 @@ function RootComponent() {
       })
       .catch(() => {})
     return () => {
+      window.removeEventListener("shopping-synced", refreshShopping)
       cancelled = true
       cleanup?.()
     }

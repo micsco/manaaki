@@ -27,6 +27,14 @@ the foreground.
 Updates wait for an explicit Update action. Navigation never forces a reload.
 The worker retains two previous app-shell versions to support already-open tabs.
 
+Shopping check-offs are queued automatically in account-scoped storage, with a
+visible pending-sync count. Reopening, reconnecting, or returning to the app
+retries synchronization; an open app also retries every 30 seconds while changes
+are pending. The most recent local checked state wins. Sync reads the latest
+server item before updating it, preserving its other fields. Deleted items are
+removed from the queue. Permission failures retain the queue and show a sign-in
+message. Adding or deleting items requires a connection.
+
 ## Validation
 
 Run `pnpm check:fix`, `pnpm type-check`, `pnpm test`, `pnpm build`, then

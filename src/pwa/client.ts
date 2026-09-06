@@ -1,3 +1,4 @@
+import { receiveShoppingStatus } from "./shoppingSync"
 import { setServerReachable } from "./useOnline"
 
 export function clearCookingStorage() {
@@ -30,15 +31,31 @@ export async function applyAppUpdate() {
 
 export async function registerOfflineSupport(onFirstControl: () => void) {
   if (!("serviceWorker" in navigator)) return () => {}
+  let pendingChecks = 0
   let controlled = !!navigator.serviceWorker.controller
+  const sendSync = () => {
+    const controller = navigator.serviceWorker.controller
+    // eslint-disable-next-line unicorn/require-post-message-target-origin -- ServiceWorker.postMessage has no targetOrigin argument
+    controller?.postMessage({ type: "SHOPPING_STATUS" })
+    // eslint-disable-next-line unicorn/require-post-message-target-origin -- ServiceWorker.postMessage has no targetOrigin argument
+    controller?.postMessage({ type: "SYNC_SHOPPING" })
+  }
   const onController = () => {
+    sendSync()
     if (!controlled) onFirstControl()
     controlled = true
   }
   const onMessage = (event: MessageEvent) => {
     if (event.data?.type === "OFFLINE_FALLBACK") setServerReachable(false)
     if (event.data?.type === "SERVER_REACHABLE") setServerReachable(true)
-    if (event.data?.type === "ACCOUNT_CHANGED") clearCookingStorage()
+    if (event.data?.type === "SHOPPING_SYNC") {
+      pendingChecks = event.data.pending
+      receiveShoppingStatus(event.data.pending, event.data.blocked)
+    }
+    if (event.data?.type === "ACCOUNT_CHANGED") {
+      clearCookingStorage()
+      receiveShoppingStatus(0)
+    }
   }
   navigator.serviceWorker.addEventListener("controllerchange", onController)
   navigator.serviceWorker.addEventListener("message", onMessage)
@@ -51,8 +68,16 @@ export async function registerOfflineSupport(onFirstControl: () => void) {
   const onUpdate = () => registration.installing?.addEventListener("statechange", onInstalled)
   registration.addEventListener("updatefound", onUpdate)
   offerUpdate()
+  sendSync()
+  const retry = window.setInterval(() => {
+    if (pendingChecks > 0 && navigator.onLine) sendSync()
+  }, 30_000)
+  window.addEventListener("online", sendSync)
   const check = () => {
-    if (document.visibilityState === "visible") void registration.update().catch(() => {})
+    if (document.visibilityState === "visible") {
+      sendSync()
+      void registration.update().catch(() => {})
+    }
   }
   document.addEventListener("visibilitychange", check)
   void navigator.storage?.persist?.().catch(() => {})
@@ -60,6 +85,8 @@ export async function registerOfflineSupport(onFirstControl: () => void) {
     navigator.serviceWorker.removeEventListener("controllerchange", onController)
     navigator.serviceWorker.removeEventListener("message", onMessage)
     registration.removeEventListener("updatefound", onUpdate)
+    window.clearInterval(retry)
+    window.removeEventListener("online", sendSync)
     document.removeEventListener("visibilitychange", check)
   }
 }

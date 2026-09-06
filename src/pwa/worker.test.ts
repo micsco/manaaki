@@ -31,10 +31,22 @@ async function open(name: string) {
   return stores.get(name)!
 }
 
-async function request(path: string, options?: { method?: string; navigate?: boolean }) {
+async function request(
+  path: string,
+  options?: {
+    method?: string
+    navigate?: boolean
+    body?: unknown
+    headers?: Record<string, string>
+  }
+) {
   const pending: Promise<unknown>[] = []
   let response: Promise<Response> | undefined
-  const req = new Request(`${origin}${path}`, { method: options?.method ?? "GET" })
+  const req = new Request(`${origin}${path}`, {
+    method: options?.method ?? "GET",
+    headers: options?.headers,
+    body: options?.body ? JSON.stringify(options.body) : undefined,
+  })
   if (options?.navigate) Object.defineProperty(req, "mode", { value: "navigate" })
   listeners.get("fetch")?.({
     request: req,
@@ -157,4 +169,92 @@ describe("offline service worker", () => {
     offline = true
     await expect(request("/api/households/shopping/lists")).rejects.toThrow()
   })
+})
+
+async function seedShopping() {
+  await request("/api/auth/me")
+  fetchMock.mockResolvedValueOnce(
+    Response.json({
+      id: "list",
+      listItems: [{ id: "item", shoppingListId: "list", checked: false, display: "Eggs" }],
+    })
+  )
+  await request("/api/households/shopping/lists/list")
+}
+
+async function checkItem(checked: boolean) {
+  return request("/api/households/shopping/items/item", {
+    method: "PUT",
+    headers: { "X-Manaaki-Offline-Action": "shopping-check" },
+    body: { shoppingListId: "list", checked },
+  })
+}
+
+async function syncShopping() {
+  const pending: Promise<unknown>[] = []
+  listeners.get("message")?.({
+    data: { type: "SYNC_SHOPPING" },
+    waitUntil: (promise: Promise<unknown>) => pending.push(promise),
+  })
+  await Promise.all(pending)
+}
+
+it("persists offline check-offs and overlays them on the cached list", async () => {
+  await seedShopping()
+  offline = true
+  expect((await checkItem(true))?.status).toBe(202)
+  expect(await (await request("/api/households/shopping/lists/list"))?.json()).toMatchObject({
+    listItems: [{ checked: true }],
+  })
+  expect((await checkItem(false))?.status).toBe(202)
+  expect(await (await request("/api/households/shopping/lists/list"))?.json()).toMatchObject({
+    listItems: [{ checked: false }],
+  })
+})
+
+it("replays the desired check while preserving the latest server fields", async () => {
+  await seedShopping()
+  offline = true
+  await checkItem(true)
+  offline = false
+  fetchMock.mockImplementation(async (input: string | Request, init?: RequestInit) => {
+    if (absolute(input).endsWith("/api/auth/me"))
+      return Response.json({ user: { id: account }, isAnonymous: false })
+    if (init?.method === "PUT") return Response.json({ updatedItems: [] })
+    return Response.json({
+      id: "item",
+      shoppingListId: "list",
+      checked: false,
+      display: "Free-range eggs",
+      quantity: 12,
+    })
+  })
+  await syncShopping()
+  const update = fetchMock.mock.calls.find(call => call[1]?.method === "PUT")
+  expect(JSON.parse(update?.[1]?.body as string)).toMatchObject({
+    checked: true,
+    display: "Free-range eggs",
+    quantity: 12,
+  })
+  offline = true
+  const cache = await open("manaaki-data-v1-user%3Aone")
+  expect(await (await cache.match("/__manaaki_shopping_outbox__"))?.json()).toEqual([])
+  expect(await (await cache.match("/api/households/shopping/lists/list"))?.json()).toMatchObject({
+    listItems: [{ checked: true }],
+  })
+})
+
+it("keeps the queue when the server rejects synchronization", async () => {
+  await seedShopping()
+  offline = true
+  await checkItem(true)
+  offline = false
+  fetchMock.mockImplementation(async (input: string | Request) =>
+    absolute(input).endsWith("/api/auth/me")
+      ? Response.json({ user: { id: account }, isAnonymous: false })
+      : new Response(null, { status: 403 })
+  )
+  await syncShopping()
+  const cache = await open("manaaki-data-v1-user%3Aone")
+  expect(await (await cache.match("/__manaaki_shopping_outbox__"))?.json()).toHaveLength(1)
 })

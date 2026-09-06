@@ -41,6 +41,7 @@ export function useToggleItem(listId: string) {
 
     // Call SDK synchronously so the call is visible to tests immediately
     updateOneApiHouseholdsShoppingItemsItemIdPut({
+      headers: { "X-Manaaki-Offline-Action": "shopping-check" },
       path: { item_id: item.id },
       body: itemUpdateFromOutput(item, { checked: !item.checked }),
     })

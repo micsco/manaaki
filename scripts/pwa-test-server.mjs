@@ -69,6 +69,8 @@ createServer(async (request, response) => {
       }
     if (url.pathname === "/api/households/shopping/lists")
       data = { items: [{ id: "list", name: "Shopping" }] }
+    if (url.pathname === "/api/households/shopping/items/item")
+      data = { id: "item", shoppingListId: "list", display: "Spaghetti", checked }
     if (url.pathname === "/api/households/shopping/items/item" && request.method === "PUT") {
       let body = ""
       for await (const chunk of request) body += chunk

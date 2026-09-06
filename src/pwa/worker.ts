@@ -1,3 +1,5 @@
+import type { ShoppingListItemOutOutput } from "../api/generated/types.gen"
+import { itemUpdateFromOutput } from "../utils/shopping"
 import { cacheGroup, evictionCandidates, RECIPE_FRESH_MS, type CacheEntry } from "./cachePolicy"
 
 declare const __PRECACHE__: string[]
@@ -42,10 +44,10 @@ function serialize<T>(operation: () => Promise<T>): Promise<T> {
   return next
 }
 
-async function notifyClients(type: string) {
+async function notifyClients(type: string, data: Record<string, unknown> = {}) {
   for (const client of await worker.clients.matchAll()) {
     // eslint-disable-next-line unicorn/require-post-message-target-origin -- Client.postMessage has no targetOrigin argument
-    client.postMessage({ type })
+    client.postMessage({ type, ...data })
   }
 }
 
@@ -60,14 +62,14 @@ async function clearPrivateData() {
   await notifyClients("ACCOUNT_CHANGED")
 }
 
-async function identityResponse(): Promise<Response> {
+async function identityResponse(allowOffline = true): Promise<Response> {
   const cache = await caches.open(sessionCache)
   let response: Response
   try {
     response = await fetch(identityUrl, { cache: "no-store", signal: AbortSignal.timeout(5000) })
   } catch {
     const cached = await cache.match(identityUrl)
-    if (cached) {
+    if (cached && allowOffline) {
       await notifyClients("OFFLINE_FALLBACK")
       return cached
     }
@@ -76,7 +78,7 @@ async function identityResponse(): Promise<Response> {
   if (!response.ok) {
     if (response.status >= 500) {
       const cached = await cache.match(identityUrl)
-      if (cached) {
+      if (cached && allowOffline) {
         await notifyClients("OFFLINE_FALLBACK")
         return cached
       }
@@ -116,6 +118,143 @@ function identity(): Promise<string | null> {
     })
     .catch(() => null)
   return identityPromise
+}
+
+interface PendingCheck {
+  id: string
+  listId: string
+  checked: boolean
+  revision: string
+}
+const outboxUrl = "/__manaaki_shopping_outbox__"
+let syncing: Promise<void> | undefined
+
+async function readOutbox(cache: Cache): Promise<PendingCheck[]> {
+  const response = await cache.match(outboxUrl)
+  return response ? response.json() : []
+}
+
+async function reportOutbox(cache: Cache, blocked = false) {
+  await notifyClients("SHOPPING_SYNC", { pending: (await readOutbox(cache)).length, blocked })
+}
+
+async function overlayChecks(cache: Cache, response: Response): Promise<Response> {
+  const checks = await readOutbox(cache)
+  if (!checks.length || !response.ok) return response
+  const list = await response.clone().json()
+  if (!Array.isArray(list.listItems)) return response
+  list.listItems = list.listItems.map((item: ShoppingListItemOutOutput) => {
+    const pending = checks.find(
+      check => check.id === item.id && check.listId === item.shoppingListId
+    )
+    return pending ? { ...item, checked: pending.checked } : item
+  })
+  return Response.json(list)
+}
+
+async function queueCheck(request: Request): Promise<Response> {
+  const scope = await identity()
+  if (!scope || scope.startsWith("anonymous:")) return fetch(request)
+  const epoch = generation
+  const cache = await caches.open(`${dataPrefix}${encodeURIComponent(scope)}`)
+  const body = await request.clone().json()
+  const id = new URL(request.url).pathname.split("/").at(-1)!
+  if (typeof body.checked !== "boolean" || typeof body.shoppingListId !== "string")
+    return fetch(request)
+  const listUrl = `/api/households/shopping/lists/${encodeURIComponent(body.shoppingListId)}`
+  const stored = await cache.match(listUrl)
+  const list = stored ? await stored.json() : null
+  const item = list?.listItems?.find((entry: ShoppingListItemOutOutput) => entry.id === id)
+  if (!item) return fetch(request)
+  await serialize(async () => {
+    if (epoch !== generation) throw new Error("Account changed")
+    const pending = await readOutbox(cache)
+    await cache.put(
+      outboxUrl,
+      Response.json(
+        pending
+          .filter(check => check.id !== id)
+          .concat({
+            id,
+            listId: body.shoppingListId,
+            checked: body.checked,
+            revision: crypto.randomUUID(),
+          })
+      )
+    )
+  })
+  await reportOutbox(cache)
+  return Response.json({ updatedItems: [{ ...item, checked: body.checked }] }, { status: 202 })
+}
+
+async function flushChecks() {
+  const verified = await identityResponse(false)
+  if (!verified.ok) return
+  const scope = await identity()
+  if (!scope || scope.startsWith("anonymous:")) return
+  const epoch = generation
+  const cache = await caches.open(`${dataPrefix}${encodeURIComponent(scope)}`)
+  const pending = await readOutbox(cache)
+  for (const check of pending) {
+    if (epoch !== generation) return
+    const url = `/api/households/shopping/items/${encodeURIComponent(check.id)}`
+    const response = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(5000) })
+    if ([401, 403].includes(response.status)) {
+      await reportOutbox(cache, true)
+      return
+    }
+    if (!response.ok && response.status !== 404) return
+    if (response.ok) {
+      const current: ShoppingListItemOutOutput = await response.json()
+      if (current.shoppingListId !== check.listId) {
+        await reportOutbox(cache, true)
+        return
+      }
+      if (epoch !== generation) return
+      if (current.checked !== check.checked) {
+        const updated = await fetch(url, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(itemUpdateFromOutput(current, { checked: check.checked })),
+          signal: AbortSignal.timeout(5000),
+        })
+        if (!updated.ok) {
+          await reportOutbox(cache, updated.status < 500)
+          return
+        }
+      }
+    }
+    if (epoch !== generation) return
+    await serialize(async () => {
+      if (epoch !== generation) return
+      const next = await readOutbox(cache)
+      const listUrl = `/api/households/shopping/lists/${encodeURIComponent(check.listId)}`
+      const stored = await cache.match(listUrl)
+      if (stored) {
+        const list = await stored.json()
+        list.listItems = (list.listItems ?? []).flatMap((item: ShoppingListItemOutOutput) => {
+          if (item.id !== check.id) return [item]
+          return response.status === 404 ? [] : [{ ...item, checked: check.checked }]
+        })
+        await cache.put(listUrl, Response.json(list))
+      }
+      await cache.put(
+        outboxUrl,
+        Response.json(next.filter(entry => entry.revision !== check.revision))
+      )
+    })
+  }
+  await reportOutbox(cache)
+  if ((await readOutbox(cache)).length) await flushChecks()
+}
+
+function syncChecks() {
+  syncing ??= flushChecks()
+    .catch(() => {})
+    .finally(() => {
+      syncing = undefined
+    })
+  return syncing
 }
 
 async function readIndex(cache: Cache): Promise<CacheEntry[]> {
@@ -243,11 +382,16 @@ async function dataResponse(event: FetchEvent, group: string): Promise<Response>
   if (immutable && cached && entry && Date.now() - entry.cachedAt < RECIPE_FRESH_MS) {
     if (path.startsWith("/api/recipes/"))
       event.waitUntil(recordVisit(cache, group, epoch).catch(() => {}))
-    return cached
+    return path.startsWith("/api/households/shopping/lists/")
+      ? overlayChecks(cache, cached)
+      : cached
   }
   try {
     const response = await fetch(request, { signal: AbortSignal.timeout(5000) })
-    if (response.status >= 500 && cached) return cached
+    if (response.status >= 500 && cached)
+      return path.startsWith("/api/households/shopping/lists/")
+        ? overlayChecks(cache, cached)
+        : cached
     if (response.ok) {
       const copy = response.clone()
       const related = response.clone()
@@ -259,11 +403,15 @@ async function dataResponse(event: FetchEvent, group: string): Promise<Response>
     } else if ([401, 403, 404].includes(response.status)) {
       event.waitUntil(serialize(() => cache.delete(request)))
     }
-    return response
+    return path.startsWith("/api/households/shopping/lists/")
+      ? overlayChecks(cache, response)
+      : response
   } catch (error) {
     if (cached) {
       await notifyClients("OFFLINE_FALLBACK")
-      return cached
+      return path.startsWith("/api/households/shopping/lists/")
+        ? overlayChecks(cache, cached)
+        : cached
     }
     throw error
   }
@@ -286,6 +434,17 @@ worker.addEventListener("activate", event => {
 })
 
 worker.addEventListener("message", event => {
+  if (event.data?.type === "SYNC_SHOPPING") event.waitUntil(syncChecks())
+  if (event.data?.type === "SHOPPING_STATUS") {
+    event.waitUntil(
+      identity()
+        .then(async scope => {
+          if (scope)
+            await reportOutbox(await caches.open(`${dataPrefix}${encodeURIComponent(scope)}`))
+        })
+        .catch(() => {})
+    )
+  }
   if (event.data?.type === "ACTIVATE_UPDATE") event.waitUntil(worker.skipWaiting())
   if (event.data?.type === "CLEAR_PRIVATE_DATA") {
     event.waitUntil(clearPrivateData().then(() => event.ports[0]?.postMessage({ ok: true })))
@@ -298,6 +457,16 @@ worker.addEventListener("fetch", event => {
   if (url.origin !== worker.location.origin) return
   if (url.pathname === "/api/auth/logout" && request.method === "POST") {
     event.respondWith(clearPrivateData().then(() => fetch(request)))
+    return
+  }
+  if (
+    request.method === "PUT" &&
+    /^\/api\/households\/shopping\/items\/[^/]+$/.test(url.pathname) &&
+    request.headers.get("X-Manaaki-Offline-Action") === "shopping-check"
+  ) {
+    const queued = queueCheck(request)
+    event.respondWith(queued)
+    event.waitUntil(queued.then(() => syncChecks()).catch(() => {}))
     return
   }
   if (request.method !== "GET") return

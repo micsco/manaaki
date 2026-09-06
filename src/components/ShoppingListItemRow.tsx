@@ -11,11 +11,13 @@ export function ShoppingListItemRow({
   onToggle,
   onDelete,
   disabled,
+  deleteDisabled,
 }: {
   item: ShoppingListItemOutOutput
   onToggle: () => void
   onDelete: () => void
   disabled?: boolean
+  deleteDisabled?: boolean
 }) {
   const checked = item.checked ?? false
   const label = item.display ?? item.note ?? "Item"
@@ -30,6 +32,7 @@ export function ShoppingListItemRow({
           type="button"
           disabled={disabled}
           onClick={onToggle}
+          aria-pressed={checked}
           aria-label={`${label}${checked ? ", checked" : ""}`}
           className="flex min-h-12 flex-1 cursor-pointer items-center gap-3 py-3 text-left transition-colors hover:text-gray-200 disabled:opacity-60"
         >
@@ -67,6 +70,7 @@ export function ShoppingListItemRow({
         <button
           type="button"
           onClick={onDelete}
+          disabled={deleteDisabled}
           aria-label={`Remove ${label}`}
           className="flex size-10 shrink-0 items-center justify-center rounded-full text-gray-600 transition-colors hover:text-gray-300"
         >

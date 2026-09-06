@@ -86,4 +86,23 @@ test("reopens the cached shopping list offline", async ({
   await page.reload({ waitUntil: "load" })
   await expect(page.getByRole("button", { name: /^Spaghetti/ })).toBeVisible()
   await expect(page.getByRole("status").filter({ hasText: "You’re offline" })).toBeVisible()
+  const item = page.getByRole("button", { name: /^Spaghetti/ })
+  const checked = (await item.getAttribute("aria-pressed")) === "true"
+  await item.click()
+  await expect(item).toHaveAttribute("aria-pressed", String(!checked))
+  await expect(page.getByRole("status").filter({ hasText: "saved on this device" })).toBeVisible()
+  await page.reload({ waitUntil: "load" })
+  await expect(page.getByRole("button", { name: /^Spaghetti/ })).toHaveAttribute(
+    "aria-pressed",
+    String(!checked)
+  )
+  if (browserName === "webkit") {
+    await request.get("/__network?offline=false")
+    await page.evaluate(() => window.dispatchEvent(new Event("online")))
+  } else await context.setOffline(false)
+  await expect(
+    page.getByRole("status").filter({ hasText: "saved on this device" })
+  ).not.toBeVisible()
+  const serverItem = await request.get("/api/households/shopping/items/item")
+  expect((await serverItem.json()).checked).toBe(!checked)
 })
