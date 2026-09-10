@@ -4,9 +4,16 @@ export const weatherLocation = {
   longitude: -0.01,
   timezone: "Europe/London",
 }
-export const weatherCacheKey = "manaaki-weather-lewisham-v1"
+export const weatherCacheKey = "manaaki-weather-lewisham-v2"
 export const weatherCacheTtl = 6 * 60 * 60 * 1000
 export const weatherMaxAge = 48 * 60 * 60 * 1000
+
+export type DinnerForecast = {
+  temperature: number
+  code: number
+  rain: number | null
+  isDay: boolean
+}
 
 export type DailyForecast = {
   date: string
@@ -14,6 +21,7 @@ export type DailyForecast = {
   high: number
   low: number
   rain: number | null
+  dinner?: DinnerForecast
 }
 export type WeatherSnapshot = { version: 1; fetchedAt: number; days: DailyForecast[] }
 
@@ -22,6 +30,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 function isNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value)
+}
+function isDinner(value: unknown): value is DinnerForecast {
+  return (
+    isRecord(value) &&
+    isNumber(value.temperature) &&
+    isNumber(value.code) &&
+    typeof value.isDay === "boolean" &&
+    (value.rain === null || (isNumber(value.rain) && value.rain >= 0 && value.rain <= 100))
+  )
 }
 function isDay(value: unknown): value is DailyForecast {
   return (
@@ -32,6 +49,7 @@ function isDay(value: unknown): value is DailyForecast {
     isNumber(value.high) &&
     isNumber(value.low) &&
     value.low <= value.high &&
+    (value.dinner === undefined || isDinner(value.dinner)) &&
     (value.rain === null || (isNumber(value.rain) && value.rain >= 0 && value.rain <= 100))
   )
 }
@@ -44,9 +62,24 @@ export function normalizeForecast(value: unknown): DailyForecast[] {
     const field = daily[key]
     return Array.isArray(field) && isNumber(field[index]) ? field[index] : null
   }
+  const hourly = isRecord(value.hourly) ? value.hourly : {}
+  const hourlyTimes = Array.isArray(hourly.time) ? hourly.time : []
+  const hourlyNumber = (key: string, index: number) => {
+    const field = hourly[key]
+    return Array.isArray(field) && isNumber(field[index]) ? field[index] : null
+  }
   return daily.time.flatMap((date, index) => {
+    const dinnerIndex = hourlyTimes.indexOf(`${date}T19:00`)
+    const daylight = hourlyNumber("is_day", dinnerIndex)
+    const dinner = {
+      temperature: hourlyNumber("temperature_2m", dinnerIndex),
+      code: hourlyNumber("weather_code", dinnerIndex),
+      rain: hourlyNumber("precipitation_probability", dinnerIndex),
+      isDay: daylight === 1,
+    }
     const day = {
       date,
+      ...(isDinner(dinner) && (daylight === 0 || daylight === 1) ? { dinner } : {}),
       code: numberAt("weather_code", index),
       high: numberAt("temperature_2m_max", index),
       low: numberAt("temperature_2m_min", index),
@@ -85,6 +118,7 @@ export async function loadWeather(): Promise<WeatherSnapshot> {
     timezone: weatherLocation.timezone,
     forecast_days: "16",
     temperature_unit: "celsius",
+    hourly: "temperature_2m,weather_code,precipitation_probability,is_day",
     daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max",
   })
   const controller = new AbortController()

@@ -1,0 +1,16 @@
+QWeather Icons
+Copyright (c) 2021 QWeather 和风天气
+
+Artwork: Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+
+Creator and catalogue: https://icons.qweather.com/en/
+Source: https://github.com/qwd/Icons/tree/v1.8.0
+Pinned commit: f0af44ef6cbed12fbaccb1b00723fbddc44dc0ef
+
+Manaaki includes these outline icons:
+100, 102, 103, 104, 150, 151, 153, 300, 302, 305, 309, 313, 350, 406,
+456, 499, 501, 999.
+
+Adaptations: SVG path data extracted into a bundled subset, sized and coloured
+with the surrounding interface. Original path geometry is unchanged.

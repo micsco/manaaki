@@ -13,7 +13,7 @@ const serverMinute = () => 0
 export function useWeather() {
   const now = useSyncExternalStore(subscribeClock, currentMinute, serverMinute)
   const query = useQuery({
-    queryKey: ["weather", "lewisham-v1"],
+    queryKey: ["weather", "lewisham-v2"],
     queryFn: loadWeather,
     enabled: now !== 0,
     staleTime: 5 * 60 * 1000,

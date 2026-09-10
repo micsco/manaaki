@@ -119,3 +119,47 @@ it("describes showers, freezing rain and unknown codes accurately", () => {
   expect(weatherCondition(99)).toBe("Thunderstorms")
   expect(weatherCondition(-1)).toBe("Conditions unavailable")
 })
+
+it.each(["2026-07-10", "2026-12-10"])(
+  "selects 19:00 London-local time for %s without a browser timezone conversion",
+  date => {
+    const result = normalizeForecast({
+      daily: { ...response.daily, time: [date] },
+      hourly: {
+        time: [`${date}T18:00`, `${date}T19:00`, `${date}T20:00`],
+        temperature_2m: [20, 18, 16],
+        weather_code: [3, 2, 0],
+        precipitation_probability: [50, 10, 0],
+        is_day: [1, 0, 0],
+      },
+    })
+    expect(result[0].dinner).toEqual({ temperature: 18, code: 2, rain: 10, isDay: false })
+  }
+)
+it("preserves the daily forecast when the dinner hour is missing or incomplete", () => {
+  for (const hourly of [
+    {},
+    { time: ["2026-09-10T18:00"], temperature_2m: [20] },
+    { time: ["2026-09-10T19:00"], temperature_2m: [null], weather_code: [2], is_day: [1] },
+  ]) {
+    expect(normalizeForecast({ ...response, hourly })).toEqual([day])
+  }
+})
+it("keeps dinner weather when hourly rain probability is missing", () => {
+  const result = normalizeForecast({
+    ...response,
+    hourly: { time: [`${day.date}T19:00`], temperature_2m: [18], weather_code: [2], is_day: [1] },
+  })
+  expect(result[0].dinner).toEqual({ temperature: 18, code: 2, rain: null, isDay: true })
+})
+it("rejects corrupted dinner data in the browser cache", () => {
+  localStorage.setItem(
+    weatherCacheKey,
+    JSON.stringify({
+      version: 1,
+      fetchedAt: Date.now(),
+      days: [{ ...day, dinner: { temperature: "warm" } }],
+    })
+  )
+  expect(readWeatherCache()).toBeNull()
+})

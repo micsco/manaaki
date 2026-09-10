@@ -15,6 +15,7 @@ it("shows conditions, temperatures and a zero rain chance", () => {
   expect(screen.getByLabelText("Daily weather")).toHaveTextContent("Partly cloudy")
   expect(screen.getByText("High 21°C")).toBeInTheDocument()
   expect(screen.getByText("0% chance of rain")).toBeInTheDocument()
+  expect(screen.queryByRole("img")).not.toBeInTheDocument()
 })
 it("does not describe missing rain data as dry", () => {
   render(
@@ -43,6 +44,10 @@ it("labels saved forecasts and their London update time", () => {
   )
   expect(screen.getByText(/Saved forecast/)).toHaveTextContent("London time")
   expect(screen.getByText(/Refresh unavailable/)).toBeInTheDocument()
+  expect(screen.getByRole("link", { name: "QWeather icons" })).toHaveAttribute(
+    "href",
+    "/weather-icons-license.txt"
+  )
   expect(screen.getByRole("link", { name: "Open-Meteo" })).toHaveAttribute(
     "href",
     "https://open-meteo.com/"
@@ -71,4 +76,34 @@ it("shows a loading status", () => {
     />
   )
   expect(screen.getByRole("status")).toHaveTextContent("Loading forecast")
+})
+
+it("distinguishes dinner conditions from the overall daily forecast", () => {
+  render(
+    <MealPlanDayWeather
+      available
+      forecast={{
+        date: "2026-09-10",
+        code: 3,
+        high: 21,
+        low: 12,
+        rain: 70,
+        dinner: { temperature: 18, code: 0, rain: 10, isDay: false },
+      }}
+    />
+  )
+  expect(screen.getByLabelText("Daily weather")).toHaveTextContent("Cloudy")
+  expect(screen.getByLabelText("Daily weather")).toHaveTextContent("High 21°C")
+  expect(screen.getByLabelText("Weather around 7pm")).toHaveTextContent(
+    "Around 7pmClear18°C10% chance of rain"
+  )
+})
+it("does not invent dinner conditions when hourly data is missing", () => {
+  render(
+    <MealPlanDayWeather
+      available
+      forecast={{ date: "2026-09-10", code: 3, high: 21, low: 12, rain: 70 }}
+    />
+  )
+  expect(screen.queryByLabelText("Weather around 7pm")).not.toBeInTheDocument()
 })
