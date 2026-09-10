@@ -9,11 +9,8 @@ import { configureApiClient } from "../api/client"
 import type { RecipeSummary } from "../api/generated/types.gen"
 import { Icon } from "../components/Icon"
 import { ImportRecipeModal } from "../components/ImportRecipeModal"
-import {
-  RecipeCardInfoBadges,
-  RecipeCardTimeBadge,
-  RecipeCardToolBadges,
-} from "../components/RecipeCardMeta"
+import { RecipeCardInfoBadges, RecipeCardToolBadges } from "../components/RecipeCardMeta"
+import { RecipeCardTimingBadges } from "../components/RecipeCardTimingBadges"
 import { RecipeFilterDrawer } from "../components/RecipeFilterDrawer"
 import { FilterBar, FilterPills } from "../components/RecipeFilters"
 import { Card } from "../components/ui"
@@ -82,12 +79,6 @@ function RecipeImage({ recipe }: { recipe: RecipeSummary }) {
         <div className="h-full w-full bg-gray-800" aria-hidden="true" />
       )}
       <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent" />
-      <div className="absolute top-0 left-0 p-2">
-        <RecipeCardTimeBadge recipe={recipe} />
-      </div>
-      <div className="absolute top-0 right-0 p-2">
-        <RecipeCardToolBadges recipe={recipe} />
-      </div>
       <div className="absolute right-0 bottom-0 left-0 px-3 pb-2.5">
         <div className="flex items-end justify-between gap-2">
           <h2 className="line-clamp-2 text-base leading-tight font-bold text-balance text-white drop-shadow-sm">
@@ -104,7 +95,7 @@ function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
   const posthog = usePostHog()
 
   return (
-    <Card hover className="overflow-hidden">
+    <Card hover className="relative overflow-hidden">
       {recipe.id && recipe.slug ? (
         <Link
           to={recipeUrl(recipe.id, recipe.slug)}
@@ -123,6 +114,10 @@ function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
       ) : (
         <RecipeImage recipe={recipe} />
       )}
+      <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-1.5 p-2">
+        <RecipeCardTimingBadges recipe={recipe} />
+        <RecipeCardToolBadges recipe={recipe} />
+      </div>
     </Card>
   )
 }

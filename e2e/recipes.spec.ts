@@ -111,6 +111,40 @@ test.describe("Recipe list", () => {
     await expect(page.getByRole("heading", { name: /mushroom risotto/i })).toBeVisible()
   })
 
+  for (const width of [390, 1280]) {
+    test(`calorie badge explains the count without navigating at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 844 })
+      await page.route(`/api/recipes/${RECIPE_1_ID}`, route =>
+        route.fulfill({
+          json: {
+            ...mockRecipeDetail,
+            nutrition: { calories: "450" },
+            settings: { showNutrition: true },
+          },
+        })
+      )
+      await page.route(`/api/recipes/${RECIPE_2_ID}`, route =>
+        route.fulfill({ json: { nutrition: null } })
+      )
+      await page.goto("/recipes")
+      const badge = page.getByRole("button", { name: "450 calories per serving" })
+      await expect(badge).toHaveText("450")
+      const time = page.getByText("PT30M", { exact: true })
+      await expect(time).toBeVisible()
+      const badgeBox = await badge.boundingBox()
+      const timeBox = await time.boundingBox()
+      expect(badgeBox!.x).toBeGreaterThan(timeBox!.x)
+      expect(Math.abs(badgeBox!.y - timeBox!.y)).toBeLessThan(4)
+      await badge.click()
+      await expect(page.getByRole("dialog")).toHaveText("450 calories per serving")
+      await expect(page).toHaveURL(/\/recipes$/)
+      await page.keyboard.press("Escape")
+      await expect(page.getByRole("dialog")).not.toBeVisible()
+      await page.getByRole("link", { name: /pasta carbonara/i }).click()
+      await expect(page).toHaveURL(new RegExp(RECIPE_1_ENCODED))
+    })
+  }
+
   test("shows recipe count", async ({ page }) => {
     await page.goto("/recipes")
     await expect(page.getByText(/2 recipes/i)).toBeVisible()
