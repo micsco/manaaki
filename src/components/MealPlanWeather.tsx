@@ -82,13 +82,16 @@ export function MealPlanDayWeather({
 }) {
   if (!forecast)
     return available ? (
-      <p className="text-xs text-gray-400">Forecast not available for this date.</p>
+      <p className="text-xs text-gray-400 lg:text-right">Forecast not available for this date.</p>
     ) : null
   return (
-    <details className="group/weather text-sm text-gray-300">
-      <summary className="flex min-h-11 cursor-pointer list-none items-start gap-2 rounded-sm hover:text-white [&::-webkit-details-marker]:hidden">
+    <details className="group/weather text-sm text-gray-300 lg:text-right">
+      <summary className="flex min-h-11 cursor-pointer list-none items-start gap-2 rounded-sm hover:text-white lg:justify-end [&::-webkit-details-marker]:hidden">
         <span className="block min-w-0 space-y-1">
-          <span aria-label="Daily weather" className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span
+            aria-label="Daily weather"
+            className="flex flex-wrap items-center gap-x-2 gap-y-1 lg:justify-end"
+          >
             <WeatherConditionIcon code={forecast.code} />
             <span>{weatherCondition(forecast.code)}</span>
             <span className="whitespace-nowrap">
