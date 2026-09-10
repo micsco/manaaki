@@ -52,8 +52,14 @@ server {
     }
 
     location /assets/ {
+        try_files $uri @missing_asset;
         expires 1y;
         add_header Cache-Control "public, immutable";
+    }
+
+    location @missing_asset {
+        add_header Cache-Control "no-store" always;
+        return 404;
     }
 
     location = /version.json {

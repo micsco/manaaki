@@ -65,6 +65,9 @@ COPY --from=build /usr/local/bin/node /usr/local/bin/node
 # variables like $host and $uri. docker-entrypoint.sh handles substitution with
 # an explicit variable allowlist.
 COPY nginx.conf.template /etc/nginx/conf-templates/nginx.conf.template
+COPY scripts/test-nginx-cache.mjs /tmp/test-nginx-cache.mjs
+RUN node /tmp/test-nginx-cache.mjs /etc/nginx/conf-templates/nginx.conf.template && \
+    rm /tmp/test-nginx-cache.mjs
 # (mealie-proxy-headers template removed — the node BFF owns Mealie auth)
 
 COPY --chmod=755 docker-entrypoint.sh /docker-entrypoint.sh
