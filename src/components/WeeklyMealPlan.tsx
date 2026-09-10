@@ -8,10 +8,12 @@ import type { ReadPlanEntry } from "../api/generated/types.gen"
 import { mealPlanQueryOptions, todayIsoDateString, toIsoDateString } from "../hooks/useMealPlan"
 import { parsePlanDate } from "../utils/navigation"
 import { encodeRecipeId, recipeImageUrl, recipeUrl } from "../utils/recipe"
+import { useWeather } from "../weather/useWeather"
 import { BuildShoppingListDialog } from "./BuildShoppingListDialog"
 import { Icon } from "./Icon"
 import { MealPlanDialog, mealTypes } from "./MealPlanDialog"
 import { entryTitle } from "./MealPlanEntryCard"
+import { MealPlanDayWeather, MealPlanWeatherStatus } from "./MealPlanWeather"
 import { RecipeCardTimeBadge, RecipeCardToolBadges } from "./RecipeCardMeta"
 
 const planDateParser = createParser({ parse: parsePlanDate, serialize: value => value })
@@ -23,6 +25,7 @@ const controlClass =
 
 export function WeeklyMealPlan() {
   const navigate = useNavigate()
+  const weather = useWeather()
   const [startDate, setStartDate] = useQueryState(
     "date",
     planDateParser.withDefault(todayIsoDateString()).withOptions({ history: "push" })
@@ -118,6 +121,7 @@ export function WeeklyMealPlan() {
             </label>
           )}
         </div>
+        <MealPlanWeatherStatus weather={weather} />
         <div className="mb-1">
           <button
             type="button"
@@ -188,6 +192,10 @@ export function WeeklyMealPlan() {
                   )}
                 </div>
                 <div>
+                  <MealPlanDayWeather
+                    forecast={weather.snapshot?.days.find(day => day.date === date)}
+                    available={Boolean(weather.snapshot)}
+                  />
                   {entries.length ? (
                     <div className="grid gap-x-6 gap-y-4 lg:grid-cols-2">
                       {entries.map(entry => (

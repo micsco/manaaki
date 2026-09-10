@@ -7,6 +7,19 @@ import { todayIsoDateString } from "../hooks/useMealPlan"
 import { render, screen, waitFor, within } from "../test/render"
 import { WeeklyMealPlan } from "./WeeklyMealPlan"
 
+vi.mock("../weather/useWeather", () => ({
+  useWeather: () => ({
+    snapshot: {
+      version: 1,
+      fetchedAt: Date.now(),
+      days: [{ date: todayIsoDateString(), code: 3, high: 21, low: 12, rain: 40 }],
+    },
+    isPending: false,
+    isFetching: false,
+    refresh: vi.fn(),
+  }),
+}))
+
 vi.mock("../api/generated/sdk.gen", () => ({ getAllApiHouseholdsMealplansGet: vi.fn() }))
 vi.mock("./MealPlanDialog", () => ({
   mealTypes: ["breakfast", "lunch", "dinner", "side", "snack", "drink", "dessert"],
@@ -65,6 +78,8 @@ it("shows every meal type, multiple dinners, images and recipe-free notes", asyn
   expect(screen.getByRole("heading", { name: "Soup" })).toBeInTheDocument()
   expect(screen.getByRole("heading", { name: "Toast" })).toBeInTheDocument()
   expect(screen.getByText("Early start")).toBeInTheDocument()
+  expect(screen.getByLabelText("Daily weather")).toHaveTextContent("High 21°C")
+  expect(screen.getByText("Weather · Lewisham SE13")).toBeInTheDocument()
   expect(screen.getAllByRole("button", { name: /^Add meal for / })).toHaveLength(6)
   const salad = within(screen.getByRole("heading", { name: "Salad" }).closest("article")!)
   expect(salad.getByText("30m")).toBeInTheDocument()
