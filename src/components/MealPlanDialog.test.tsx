@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
   createOneApiHouseholdsMealplansPost,
+  deleteOneApiHouseholdsMealplansItemIdDelete,
   getAllApiHouseholdsMealplansGet,
   getAllApiRecipesGet,
   updateOneApiHouseholdsMealplansItemIdPut,
@@ -17,6 +18,7 @@ vi.mock("../weather/useWeather", () => ({ useWeather: vi.fn() }))
 
 vi.mock("../api/generated/sdk.gen", () => ({
   createOneApiHouseholdsMealplansPost: vi.fn(),
+  deleteOneApiHouseholdsMealplansItemIdDelete: vi.fn(),
   getAllApiHouseholdsMealplansGet: vi.fn(),
   getAllApiRecipesGet: vi.fn(),
   updateOneApiHouseholdsMealplansItemIdPut: vi.fn(),
@@ -33,6 +35,7 @@ const entry: ReadPlanEntry = {
   text: "Use greens first",
 }
 beforeEach(() => {
+  vi.mocked(deleteOneApiHouseholdsMealplansItemIdDelete).mockResolvedValue({} as never)
   vi.mocked(useWeather).mockReturnValue({
     snapshot: undefined,
     isStale: false,
@@ -272,4 +275,97 @@ it("keeps dates selectable without weather or existing meals", async () => {
   expect(await screen.findByText("No other meals planned.")).toBeVisible()
   expect(screen.queryByText(/\d+ meals? planned/)).not.toBeInTheDocument()
   expect(screen.getByRole("button", { name: "Add meal" })).toBeEnabled()
+})
+
+describe("meal removal", () => {
+  it("does not offer removal when adding a meal", () => {
+    render(<MealPlanDialog date={entry.date} onClose={vi.fn()} />)
+    expect(screen.queryByRole("button", { name: "Remove from plan" })).not.toBeInTheDocument()
+  })
+
+  it("confirms the saved meal and date and lets the user keep their edits", async () => {
+    const user = userEvent.setup()
+    render(<MealPlanDialog date={entry.date} entry={entry} onClose={vi.fn()} />)
+    await user.type(screen.getByLabelText(/Planning note/), " tomorrow")
+    if (!screen.queryByLabelText("Day"))
+      await user.click(screen.getByRole("button", { name: "Another date" }))
+    await user.clear(screen.getByLabelText("Day"))
+    await user.type(screen.getByLabelText("Day"), "2026-09-08")
+    await user.click(screen.getByRole("button", { name: "Remove from plan" }))
+    expect(screen.getByRole("dialog")).toHaveAccessibleName("Remove planned meal?")
+    expect(screen.getByRole("button", { name: "Keep meal" })).toHaveFocus()
+    expect(screen.getByRole("dialog")).toHaveAccessibleDescription(
+      "Salad · Sunday 6 September · lunch"
+    )
+    expect(deleteOneApiHouseholdsMealplansItemIdDelete).not.toHaveBeenCalled()
+    await user.click(screen.getByRole("button", { name: "Keep meal" }))
+    expect(screen.getByLabelText(/Planning note/)).toHaveValue("Use greens first tomorrow")
+    expect(screen.getByLabelText("Day")).toHaveValue("2026-09-08")
+    expect(deleteOneApiHouseholdsMealplansItemIdDelete).not.toHaveBeenCalled()
+  })
+
+  it.each([entry, { ...entry, recipeId: null, title: "Eating out" }])(
+    "removes only the confirmed entry and refreshes the plan: $title",
+    async plannedMeal => {
+      const user = userEvent.setup()
+      const close = vi.fn()
+      render(<MealPlanDialog date={entry.date} entry={plannedMeal} onClose={close} />)
+      await screen.findByText("No other meals planned.")
+      await user.click(screen.getByRole("button", { name: "Remove from plan" }))
+      vi.mocked(getAllApiHouseholdsMealplansGet).mockClear()
+      await user.click(screen.getByRole("button", { name: "Confirm removal" }))
+      await waitFor(() => expect(close).toHaveBeenCalledOnce())
+      expect(deleteOneApiHouseholdsMealplansItemIdDelete).toHaveBeenCalledExactlyOnceWith({
+        path: { item_id: 12 },
+      })
+      expect(getAllApiHouseholdsMealplansGet).toHaveBeenCalled()
+      expect(updateOneApiHouseholdsMealplansItemIdPut).not.toHaveBeenCalled()
+      expect(createOneApiHouseholdsMealplansPost).not.toHaveBeenCalled()
+    }
+  )
+
+  it.each(["api", "network"])("allows retry after a %s failure", async failure => {
+    if (failure === "api") {
+      vi.mocked(deleteOneApiHouseholdsMealplansItemIdDelete).mockResolvedValueOnce({
+        error: { detail: "failed" },
+      } as never)
+    } else {
+      vi.mocked(deleteOneApiHouseholdsMealplansItemIdDelete).mockRejectedValueOnce(
+        new Error("Offline")
+      )
+    }
+    const user = userEvent.setup()
+    const close = vi.fn()
+    render(<MealPlanDialog date={entry.date} entry={entry} onClose={close} />)
+    await user.click(screen.getByRole("button", { name: "Remove from plan" }))
+    await user.click(screen.getByRole("button", { name: "Confirm removal" }))
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Couldn't remove this meal. Please try again."
+    )
+    expect(close).not.toHaveBeenCalled()
+    await user.click(screen.getByRole("button", { name: "Confirm removal" }))
+    await waitFor(() => expect(close).toHaveBeenCalledOnce())
+  })
+
+  it("blocks duplicate removal and dismissal while the request is pending", async () => {
+    let finish!: (value: never) => void
+    vi.mocked(deleteOneApiHouseholdsMealplansItemIdDelete).mockImplementationOnce(
+      () =>
+        new Promise(resolve => {
+          finish = resolve
+        }) as never
+    )
+    const user = userEvent.setup()
+    const close = vi.fn()
+    render(<MealPlanDialog date={entry.date} entry={entry} onClose={close} />)
+    await user.click(screen.getByRole("button", { name: "Remove from plan" }))
+    await user.dblClick(screen.getByRole("button", { name: "Confirm removal" }))
+    expect(screen.getByRole("button", { name: "Removing…" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Keep meal" })).toBeDisabled()
+    await user.keyboard("{Escape}")
+    expect(close).not.toHaveBeenCalled()
+    expect(deleteOneApiHouseholdsMealplansItemIdDelete).toHaveBeenCalledOnce()
+    finish({} as never)
+    await waitFor(() => expect(close).toHaveBeenCalledOnce())
+  })
 })
