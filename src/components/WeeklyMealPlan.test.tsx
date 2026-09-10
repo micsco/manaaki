@@ -79,7 +79,7 @@ it("shows every meal type, multiple dinners, images and recipe-free notes", asyn
   expect(screen.getByRole("heading", { name: "Toast" })).toBeInTheDocument()
   expect(screen.getByText("Early start")).toBeInTheDocument()
   expect(screen.getByLabelText("Daily weather")).toHaveTextContent("High 21°C")
-  expect(screen.getByText("Weather · Lewisham SE13")).toBeInTheDocument()
+  expect(screen.getByText(/Weather · Lewisham SE13/)).toBeInTheDocument()
   expect(screen.getAllByRole("button", { name: /^Add meal for / })).toHaveLength(6)
   const salad = within(screen.getByRole("heading", { name: "Salad" }).closest("article")!)
   expect(salad.getByText("30m")).toBeInTheDocument()
@@ -121,7 +121,7 @@ it("navigates weeks without leaving previous entries under new dates", async () 
       <WeeklyMealPlan />
     </NuqsTestingAdapter>
   )
-  await screen.findAllByText("Nothing planned yet.")
+  await screen.findAllByRole("button", { name: /^Add meal for / })
   expect(screen.queryByLabelText("Start date")).not.toBeInTheDocument()
   await user.click(screen.getByRole("button", { name: "Choose another date…" }))
   const original = todayIsoDateString()
@@ -188,7 +188,7 @@ it("loads recent meals on demand and adjusts the original planned date", async (
       <WeeklyMealPlan />
     </NuqsTestingAdapter>
   )
-  await screen.findAllByText("Nothing planned yet.")
+  await screen.findAllByRole("button", { name: /^Add meal for / })
   expect(screen.queryByRole("heading", { name: "Leftover curry" })).not.toBeInTheDocument()
   expect(getAllApiHouseholdsMealplansGet).toHaveBeenCalledTimes(1)
   await user.click(screen.getByRole("button", { name: /Recent meals/ }))

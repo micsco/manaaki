@@ -5,7 +5,7 @@ import { render, screen } from "../test/render"
 import { weatherCacheTtl } from "../weather/forecast"
 import { MealPlanDayWeather, MealPlanWeatherStatus } from "./MealPlanWeather"
 
-it("shows conditions, temperatures and a zero rain chance", () => {
+it("keeps the daily range visible and discloses a zero rain chance", async () => {
   render(
     <MealPlanDayWeather
       available
@@ -13,8 +13,10 @@ it("shows conditions, temperatures and a zero rain chance", () => {
     />
   )
   expect(screen.getByLabelText("Daily weather")).toHaveTextContent("Partly cloudy")
-  expect(screen.getByText("High 21°C")).toBeInTheDocument()
-  expect(screen.getByText("0% chance of rain")).toBeInTheDocument()
+  expect(screen.getByText(/High 21°C/)).toBeInTheDocument()
+  expect(screen.getByText(/peak hourly chance of rain 0%/)).not.toBeVisible()
+  await userEvent.setup().click(screen.getByLabelText("Daily weather"))
+  expect(screen.getByText(/peak hourly chance of rain 0%/)).toBeVisible()
   expect(screen.queryByRole("img")).not.toBeInTheDocument()
 })
 it("does not describe missing rain data as dry", () => {
@@ -30,7 +32,7 @@ it("explains dates missing from the forecast", () => {
   render(<MealPlanDayWeather available />)
   expect(screen.getByText("Forecast not available for this date.")).toBeInTheDocument()
 })
-it("labels saved forecasts and their London update time", () => {
+it("keeps stale status visible and discloses update time and credits", async () => {
   render(
     <MealPlanWeatherStatus
       weather={{
@@ -42,7 +44,10 @@ it("labels saved forecasts and their London update time", () => {
       }}
     />
   )
-  expect(screen.getByText(/Saved forecast/)).toHaveTextContent("London time")
+  expect(screen.getByText(/Saved forecast/)).toBeVisible()
+  expect(screen.getByText(/Updated/)).not.toBeVisible()
+  await userEvent.setup().click(screen.getByText(/Weather · Lewisham/))
+  expect(screen.getByText(/Updated/)).toHaveTextContent("London time")
   expect(screen.getByText(/Refresh unavailable/)).toBeInTheDocument()
   expect(screen.getByRole("link", { name: "QWeather icons" })).toHaveAttribute(
     "href",
@@ -78,7 +83,7 @@ it("shows a loading status", () => {
   expect(screen.getByRole("status")).toHaveTextContent("Loading forecast")
 })
 
-it("distinguishes dinner conditions from the overall daily forecast", () => {
+it("leads with daily conditions and keeps evening detail on demand", async () => {
   render(
     <MealPlanDayWeather
       available
@@ -94,9 +99,10 @@ it("distinguishes dinner conditions from the overall daily forecast", () => {
   )
   expect(screen.getByLabelText("Daily weather")).toHaveTextContent("Cloudy")
   expect(screen.getByLabelText("Daily weather")).toHaveTextContent("High 21°C")
-  expect(screen.getByLabelText("Weather around 7pm")).toHaveTextContent(
-    "Around 7pmClear18°C10% chance of rain"
-  )
+  expect(screen.getByLabelText("Weather around 7pm")).toHaveTextContent("7pm: 18°C · Rain 10%")
+  expect(screen.getByText(/Around 7pm: Clear/)).not.toBeVisible()
+  await userEvent.setup().click(screen.getByLabelText("Daily weather"))
+  expect(screen.getByText(/Around 7pm: Clear/)).toBeVisible()
 })
 it("does not invent dinner conditions when hourly data is missing", () => {
   render(

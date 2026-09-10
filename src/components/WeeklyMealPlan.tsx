@@ -121,7 +121,6 @@ export function WeeklyMealPlan() {
             </label>
           )}
         </div>
-        <MealPlanWeatherStatus weather={weather} />
         <div className="mb-1">
           <button
             type="button"
@@ -168,36 +167,28 @@ export function WeeklyMealPlan() {
               <section
                 key={date}
                 aria-label={dateLabel(date, { weekday: "long", day: "numeric", month: "long" })}
-                className="relative grid gap-3 border-t border-gray-800 py-4 md:grid-cols-[80px_minmax(0,1fr)] md:gap-5"
+                className="grid gap-3 border-t border-gray-800 py-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-x-8"
               >
-                <div className="flex items-center gap-3 md:block">
+                <div className="flex flex-wrap items-center gap-3">
                   <h2 className="text-sm font-semibold tracking-widest text-gray-400 uppercase">
                     {dateLabel(date, { weekday: "short" })}
                   </h2>
-                  <p className="text-sm text-gray-300 md:mt-1">
+                  <p className="text-sm text-gray-300">
                     {dateLabel(date, { day: "numeric", month: "short" })}
                   </p>
                   {date === todayIsoDateString() && (
-                    <p className="text-xs text-orange-400 md:mt-1">Today</p>
-                  )}
-                  {entries.length === 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setEditing({ date })}
-                      className="ml-auto min-h-11 text-sm text-gray-400 underline decoration-gray-700 underline-offset-4 hover:text-white md:absolute md:top-4 md:right-0 md:ml-0"
-                      aria-label={`Add meal for ${dateLabel(date, { weekday: "long", day: "numeric", month: "long" })}`}
-                    >
-                      Add meal
-                    </button>
+                    <p className="text-xs text-orange-400">Today</p>
                   )}
                 </div>
-                <div>
+                <div className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1">
                   <MealPlanDayWeather
                     forecast={weather.snapshot?.days.find(day => day.date === date)}
                     available={Boolean(weather.snapshot)}
                   />
+                </div>
+                <div className="min-w-0 lg:col-start-1">
                   {entries.length ? (
-                    <div className="grid gap-x-6 gap-y-4 lg:grid-cols-2">
+                    <div className="grid gap-4">
                       {entries.map(entry => (
                         <MealStory
                           key={entry.id}
@@ -207,13 +198,21 @@ export function WeeklyMealPlan() {
                       ))}
                     </div>
                   ) : (
-                    <p className="py-2 text-sm text-gray-500 md:py-3">Nothing planned yet.</p>
+                    <button
+                      type="button"
+                      onClick={() => setEditing({ date })}
+                      className="min-h-11 text-sm text-orange-400 hover:text-orange-300"
+                      aria-label={`Add meal for ${dateLabel(date, { weekday: "long", day: "numeric", month: "long" })}`}
+                    >
+                      + Add meal
+                    </button>
                   )}
                 </div>
               </section>
             )
           })
         )}
+        <MealPlanWeatherStatus weather={weather} />
       </div>
       {editing && (
         <MealPlanDialog
