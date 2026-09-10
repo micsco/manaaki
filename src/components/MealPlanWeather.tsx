@@ -90,7 +90,7 @@ export function MealPlanDayWeather({
         <span className="block min-w-0 space-y-1">
           <span
             aria-label="Daily weather"
-            className="flex flex-wrap items-center gap-x-2 gap-y-1 lg:justify-end"
+            className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] lg:justify-end [&>svg]:size-5"
           >
             <WeatherConditionIcon code={forecast.code} />
             <span>{weatherCondition(forecast.code)}</span>
