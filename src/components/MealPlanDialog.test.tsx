@@ -9,7 +9,7 @@ import {
 } from "../api/generated/sdk.gen"
 import type { ReadPlanEntry } from "../api/generated/types.gen"
 import { toIsoDateString } from "../hooks/useMealPlan"
-import { render, screen, waitFor } from "../test/render"
+import { render, screen, waitFor, within } from "../test/render"
 import { useWeather } from "../weather/useWeather"
 import { MealPlanDialog } from "./MealPlanDialog"
 
@@ -250,6 +250,10 @@ it("shows each day's high and planned count, and updates the selected forecast",
     name: next.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" }),
   })
   expect(tomorrowButton).toHaveAccessibleDescription("Clear · High 24° · 1 meal planned")
+  expect(within(todayButton).queryByText("21°")).not.toBeInTheDocument()
+  expect(within(todayButton).getByText("2", { exact: true })).toBeVisible()
+  expect(screen.getByText("21°", { exact: true })).toBeVisible()
+  expect(screen.queryByText("High 21°", { exact: true })).not.toBeInTheDocument()
   expect(screen.getByLabelText("Selected day weather")).toHaveTextContent("Cloudy · High 21°C")
   await userEvent.setup().click(tomorrowButton)
   expect(screen.getByLabelText("Selected day weather")).toHaveTextContent("Clear · High 24°C")

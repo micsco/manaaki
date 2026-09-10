@@ -146,52 +146,57 @@ export function MealPlanDialog({
                   const count = weekPlan.data?.filter(item => item.date === day.date).length ?? 0
                   const descriptionId = `plan-day-${day.date}`
                   return (
-                    <button
-                      key={day.date}
-                      type="button"
-                      aria-label={day.fullLabel}
-                      aria-describedby={descriptionId}
-                      aria-pressed={date === day.date}
-                      onClick={() => {
-                        setDate(day.date)
-                        setCustomDate(false)
-                      }}
-                      className={`flex min-h-16 flex-col items-center rounded-lg border px-1 py-2 text-center transition-colors ${date === day.date ? "border-orange-500 bg-orange-950 text-orange-200" : "border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-500"}`}
-                    >
-                      <span className="block text-xs font-semibold">{day.label}</span>
-                      <span className="mt-1 block text-xs">{day.detail}</span>
-                      <span id={descriptionId} className="sr-only">
-                        {[
-                          forecast
-                            ? `${weatherCondition(forecast.code)} · High ${Math.round(forecast.high)}°`
-                            : "",
-                          count > 0 ? `${count} ${count === 1 ? "meal" : "meals"} planned` : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </span>
+                    <div key={day.date} className="flex min-w-0 flex-col gap-2">
+                      <button
+                        type="button"
+                        aria-label={day.fullLabel}
+                        aria-describedby={descriptionId}
+                        aria-pressed={date === day.date}
+                        onClick={() => {
+                          setDate(day.date)
+                          setCustomDate(false)
+                        }}
+                        className={`flex min-h-16 flex-1 flex-col items-center rounded-lg border px-1 py-2 text-center transition-colors ${date === day.date ? "border-orange-500 bg-orange-950 text-orange-200" : "border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-500"}`}
+                      >
+                        <span className="block text-xs font-semibold">{day.label}</span>
+                        <span className="mt-1 block text-xs">{day.detail}</span>
+                        <span id={descriptionId} className="sr-only">
+                          {[
+                            forecast
+                              ? `${weatherCondition(forecast.code)} · High ${Math.round(forecast.high)}°`
+                              : "",
+                            count > 0 ? `${count} ${count === 1 ? "meal" : "meals"} planned` : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                        <span
+                          aria-hidden="true"
+                          className="mt-2 flex flex-col items-center gap-1 text-xs"
+                        >
+                          {count > 0 && (
+                            <span className="inline-flex items-center gap-1">
+                              <Icon path={mdiSilverwareForkKnife} size={0.55} aria-hidden />
+                              <span aria-hidden>{count}</span>
+                              <span className="sr-only">
+                                {count} {count === 1 ? "meal" : "meals"} planned
+                              </span>
+                            </span>
+                          )}
+                        </span>
+                      </button>
                       <span
                         aria-hidden="true"
-                        className="mt-2 flex flex-col items-center gap-1 text-xs"
+                        className="flex min-h-5 items-center justify-center gap-1 text-xs text-gray-400 [&>svg]:size-4"
                       >
                         {forecast && (
-                          <span className="flex flex-wrap items-center justify-center gap-1 [&>svg]:size-4">
+                          <>
                             <WeatherConditionIcon code={forecast.code} />
-                            <span className="sr-only">{weatherCondition(forecast.code)} · </span>
-                            <span>High {Math.round(forecast.high)}°</span>
-                          </span>
-                        )}
-                        {count > 0 && (
-                          <span className="inline-flex items-center gap-1">
-                            <Icon path={mdiSilverwareForkKnife} size={0.55} aria-hidden />
-                            <span aria-hidden>{count}</span>
-                            <span className="sr-only">
-                              {count} {count === 1 ? "meal" : "meals"} planned
-                            </span>
-                          </span>
+                            <span>{Math.round(forecast.high)}°</span>
+                          </>
                         )}
                       </span>
-                    </button>
+                    </div>
                   )
                 })}
               </div>
