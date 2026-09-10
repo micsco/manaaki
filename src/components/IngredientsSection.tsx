@@ -46,6 +46,10 @@ export function IngredientsSection({
   const { isCookMode } = useCookMode()
   const groups = groupIngredients(ingredients, steps)
   const hasSections = groups.some(g => g.title !== null)
+  const hasParsedIngredients = ingredients.some(
+    ingredient =>
+      ingredient.food || ingredient.unit || ingredient.quantity || ingredient.referencedRecipe
+  )
 
   const hasServings = defaultServings != null && defaultServings > 0
   const [servings, setServings] = useCookingStorage(
@@ -72,7 +76,7 @@ export function IngredientsSection({
           />
         )}
       </div>
-      {!isCookMode && (
+      {!isCookMode && !hasParsedIngredients && (
         <IngredientParsingAction recipe={{ id: recipeId, recipeIngredient: ingredients }} />
       )}
       {hasSections ? (

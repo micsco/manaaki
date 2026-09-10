@@ -286,3 +286,25 @@ it("places the parsing prompt above unstructured ingredient text", () => {
   const item = screen.getByRole("button", { name: /275g lamb/ })
   expect(action.compareDocumentPosition(item) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 })
+
+it.each<RecipeIngredientOutput>([
+  { food: { name: "salt" } },
+  { unit: { name: "teaspoon" } },
+  { quantity: 2 },
+  { referencedRecipe: { id: "dressing" } },
+])("hides the inline parsing prompt when an ingredient is structured: %j", ingredient => {
+  render(<IngredientsSection ingredients={[{ note: "275g lamb" }, ingredient]} recipeId="recipe" />)
+  expect(
+    screen.queryByRole("button", { name: "Parse ingredients with AI" })
+  ).not.toBeInTheDocument()
+})
+
+it("keeps the parsing prompt for unparsed ingredients alongside empty section rows", () => {
+  render(
+    <IngredientsSection
+      ingredients={[{ title: "Salad" }, { quantity: 0, note: "275g lamb" }]}
+      recipeId="recipe"
+    />
+  )
+  expect(screen.getByRole("button", { name: "Parse ingredients with AI" })).toBeVisible()
+})

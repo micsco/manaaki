@@ -8,6 +8,7 @@ import { useCurrentUser } from "../hooks/useCurrentUser"
 import { useOnline } from "../pwa/useOnline"
 import { render, screen, waitFor } from "../test/render"
 import { IngredientParsingAction } from "./IngredientParsingAction"
+import { RecipeRepair } from "./RecipeRepair"
 
 const invalidate = vi.fn()
 vi.mock("@tanstack/react-router", () => ({ useRouter: () => ({ invalidate }) }))
@@ -46,6 +47,22 @@ beforeEach(() => {
     unit: [{ id: "g", name: "g" }],
   })
 })
+it("keeps manual parsing available for a partially parsed recipe through recipe review", async () => {
+  const user = userEvent.setup()
+  render(
+    <RecipeRepair
+      recipe={{
+        ...recipe,
+        recipeIngredient: [...recipe.recipeIngredient, { food: { name: "salt" } }],
+      }}
+    />
+  )
+  await user.click(screen.getByRole("button", { name: "Review title and ingredients" }))
+  await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
+  expect(await screen.findByText("Original: 275g diced lamb")).toBeVisible()
+  expect(parsing.parseRecipeIngredients).toHaveBeenCalledWith("recipe")
+})
+
 it("shows uncertainty without extra checkboxes and saves edits with one final action", async () => {
   const user = userEvent.setup()
   render(<IngredientParsingAction recipe={recipe} />)
