@@ -85,6 +85,15 @@ test("meal weather fits mobile and desktop, reuses its cache and handles future 
     true
   )
   await page.screenshot({ path: "/tmp/manaaki-weather-mobile.png", fullPage: true })
+  await page.getByRole("button", { name: "Adjust plan for Slow Cooker Thai Red Curry" }).click()
+  await expect(page.getByLabel("Selected day weather")).toContainText("High 21°C")
+  await expect(
+    page.getByRole("button", { name: "Thursday 10 September", exact: true })
+  ).toHaveAccessibleDescription(/1 meal planned/)
+  const dialog = page.getByRole("dialog")
+  expect(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
+  await page.screenshot({ path: "/tmp/manaaki-plan-picker-mobile.png" })
+  await page.getByRole("button", { name: "Cancel", exact: true }).click()
   await page.reload({ waitUntil: "load" })
   await expect(page.getByLabel("Daily weather")).toContainText("High 21°C")
   expect(weatherRequests).toBe(1)

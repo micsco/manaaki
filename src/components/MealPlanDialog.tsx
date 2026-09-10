@@ -1,4 +1,5 @@
 import { Dialog } from "@base-ui/react/dialog"
+import { mdiSilverwareForkKnife } from "@mdi/js"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
@@ -11,7 +12,11 @@ import { mealPlanQueryOptions, toIsoDateString } from "../hooks/useMealPlan"
 import { recipeListQueryOptions } from "../hooks/useRecipeList"
 import { toastManager } from "../lib/toastManager"
 import { recipeImageUrl } from "../utils/recipe"
+import { weatherCondition, weatherLocation } from "../weather/forecast"
+import { useWeather } from "../weather/useWeather"
+import { Icon } from "./Icon"
 import { entryTitle } from "./MealPlanEntryCard"
+import { WeatherConditionIcon } from "./WeatherConditionIcon"
 
 export const mealTypes: PlanEntryType[] = [
   "breakfast",
@@ -37,6 +42,7 @@ export function MealPlanDialog({
   onClose: () => void
 }) {
   const qc = useQueryClient()
+  const weather = useWeather()
   const [date, setDate] = useState(initialDate)
   const [quickDays] = useState(() =>
     Array.from({ length: 7 }, (_, offset) => {
@@ -72,8 +78,10 @@ export function MealPlanDialog({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const plan = useQuery({ ...mealPlanQueryOptions(date, date), enabled: Boolean(date) })
+  const weekPlan = useQuery(mealPlanQueryOptions(quickDays[0].date, quickDays[6].date))
+  const selectedForecast = weather.snapshot?.days.find(day => day.date === date)
   const recipes = useQuery({ ...recipeListQueryOptions, enabled: !recipe && !entry && !noteOnly })
-  const existing = (plan.data ?? []).filter(item => item.id !== entry?.id)
+  const existing = (plan.data ?? []).filter(item => item.date === date && item.id !== entry?.id)
   const choices = (recipes.data ?? []).filter(item =>
     item.name?.toLowerCase().includes(search.toLowerCase())
   )
@@ -131,23 +139,96 @@ export function MealPlanDialog({
             <fieldset className="space-y-3">
               <legend className="mb-2 text-sm font-semibold text-gray-300">Day</legend>
               <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
-                {quickDays.map(day => (
-                  <button
-                    key={day.date}
-                    type="button"
-                    aria-label={day.fullLabel}
-                    aria-pressed={date === day.date}
-                    onClick={() => {
-                      setDate(day.date)
-                      setCustomDate(false)
-                    }}
-                    className={`min-h-16 rounded-lg border px-1 py-2 text-center transition-colors ${date === day.date ? "border-orange-500 bg-orange-950 text-orange-200" : "border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-500"}`}
-                  >
-                    <span className="block text-xs font-semibold">{day.label}</span>
-                    <span className="mt-1 block text-xs">{day.detail}</span>
-                  </button>
-                ))}
+                {quickDays.map(day => {
+                  const forecast = weather.snapshot?.days.find(
+                    forecast => forecast.date === day.date
+                  )
+                  const count = weekPlan.data?.filter(item => item.date === day.date).length ?? 0
+                  const descriptionId = `plan-day-${day.date}`
+                  return (
+                    <button
+                      key={day.date}
+                      type="button"
+                      aria-label={day.fullLabel}
+                      aria-describedby={descriptionId}
+                      aria-pressed={date === day.date}
+                      onClick={() => {
+                        setDate(day.date)
+                        setCustomDate(false)
+                      }}
+                      className={`flex min-h-16 flex-col items-center rounded-lg border px-1 py-2 text-center transition-colors ${date === day.date ? "border-orange-500 bg-orange-950 text-orange-200" : "border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-500"}`}
+                    >
+                      <span className="block text-xs font-semibold">{day.label}</span>
+                      <span className="mt-1 block text-xs">{day.detail}</span>
+                      <span id={descriptionId} className="sr-only">
+                        {[
+                          forecast
+                            ? `${weatherCondition(forecast.code)} · High ${Math.round(forecast.high)}°`
+                            : "",
+                          count > 0 ? `${count} ${count === 1 ? "meal" : "meals"} planned` : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="mt-2 flex flex-col items-center gap-1 text-xs"
+                      >
+                        {forecast && (
+                          <span className="flex flex-wrap items-center justify-center gap-1 [&>svg]:size-4">
+                            <WeatherConditionIcon code={forecast.code} />
+                            <span className="sr-only">{weatherCondition(forecast.code)} · </span>
+                            <span>High {Math.round(forecast.high)}°</span>
+                          </span>
+                        )}
+                        {count > 0 && (
+                          <span className="inline-flex items-center gap-1">
+                            <Icon path={mdiSilverwareForkKnife} size={0.55} aria-hidden />
+                            <span aria-hidden>{count}</span>
+                            <span className="sr-only">
+                              {count} {count === 1 ? "meal" : "meals"} planned
+                            </span>
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
+              <p
+                aria-live="polite"
+                aria-label="Selected day weather"
+                className="text-xs text-gray-400"
+              >
+                {selectedForecast ? (
+                  <>
+                    {weatherCondition(selectedForecast.code)} · High{" "}
+                    {Math.round(selectedForecast.high)}°C · {weatherLocation.name}
+                    {weather.isStale ? " · Saved forecast" : ""}
+                  </>
+                ) : weather.isPending ? (
+                  "Loading weather…"
+                ) : (
+                  "Forecast unavailable for this date."
+                )}
+              </p>
+              {weekPlan.isPending && (
+                <p role="status" className="text-xs text-gray-400">
+                  Checking planned meals…
+                </p>
+              )}
+              {weekPlan.isError && (
+                <p className="text-xs text-gray-400">
+                  Couldn't check planned meals for the week.{" "}
+                  <button
+                    type="button"
+                    onClick={() => weekPlan.refetch()}
+                    className="min-h-11 underline"
+                  >
+                    Retry
+                  </button>
+                </p>
+              )}
               <button
                 type="button"
                 aria-expanded={customDate}

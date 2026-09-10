@@ -10,7 +10,10 @@ import {
 import type { ReadPlanEntry } from "../api/generated/types.gen"
 import { toIsoDateString } from "../hooks/useMealPlan"
 import { render, screen, waitFor } from "../test/render"
+import { useWeather } from "../weather/useWeather"
 import { MealPlanDialog } from "./MealPlanDialog"
+
+vi.mock("../weather/useWeather", () => ({ useWeather: vi.fn() }))
 
 vi.mock("../api/generated/sdk.gen", () => ({
   createOneApiHouseholdsMealplansPost: vi.fn(),
@@ -30,6 +33,13 @@ const entry: ReadPlanEntry = {
   text: "Use greens first",
 }
 beforeEach(() => {
+  vi.mocked(useWeather).mockReturnValue({
+    snapshot: undefined,
+    isStale: false,
+    isPending: false,
+    isFetching: false,
+    refresh: vi.fn(),
+  })
   vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({
     data: { items: [entry] },
   } as never)
@@ -193,4 +203,69 @@ it("preserves an existing uncommon type and a date beyond the next week", () => 
   )
   expect(screen.getByLabelText("Day")).toHaveValue("2030-01-01")
   expect(screen.getByLabelText("Other meal type")).toHaveValue("breakfast")
+})
+
+it("shows each day's high and planned count, and updates the selected forecast", async () => {
+  const today = toIsoDateString(new Date())
+  const next = new Date()
+  next.setDate(next.getDate() + 1)
+  const tomorrow = toIsoDateString(next)
+  vi.mocked(useWeather).mockReturnValue({
+    snapshot: {
+      version: 1,
+      fetchedAt: Date.now(),
+      days: [
+        { date: today, high: 21, low: 10, code: 3, rain: 20 },
+        { date: tomorrow, high: 24, low: 14, code: 0, rain: 0 },
+      ],
+    },
+    isStale: false,
+    isPending: false,
+    isFetching: false,
+    refresh: vi.fn(),
+  })
+  vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({
+    data: {
+      items: [
+        { ...entry, id: 1, date: today },
+        { ...entry, id: 2, date: today },
+        { ...entry, id: 3, date: tomorrow },
+      ],
+    },
+  } as never)
+  render(
+    <MealPlanDialog date={today} recipe={{ id: "peppers", name: "Peppers" }} onClose={vi.fn()} />
+  )
+  const todayButton = screen.getByRole("button", {
+    name: new Date().toLocaleDateString("en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    }),
+  })
+  await waitFor(() =>
+    expect(todayButton).toHaveAccessibleDescription("Cloudy · High 21° · 2 meals planned")
+  )
+  const tomorrowButton = screen.getByRole("button", {
+    name: next.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" }),
+  })
+  expect(tomorrowButton).toHaveAccessibleDescription("Clear · High 24° · 1 meal planned")
+  expect(screen.getByLabelText("Selected day weather")).toHaveTextContent("Cloudy · High 21°C")
+  await userEvent.setup().click(tomorrowButton)
+  expect(screen.getByLabelText("Selected day weather")).toHaveTextContent("Clear · High 24°C")
+  expect(screen.queryByText(/Low /)).not.toBeInTheDocument()
+})
+it("keeps dates selectable without weather or existing meals", async () => {
+  vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({ data: { items: [] } } as never)
+  render(
+    <MealPlanDialog
+      date={toIsoDateString(new Date())}
+      recipe={{ id: "peppers" }}
+      onClose={vi.fn()}
+    />
+  )
+  expect(screen.getByLabelText("Selected day weather")).toHaveTextContent("Forecast unavailable")
+  expect(await screen.findByText("No other meals planned.")).toBeVisible()
+  expect(screen.queryByText(/\d+ meals? planned/)).not.toBeInTheDocument()
+  expect(screen.getByRole("button", { name: "Add meal" })).toBeEnabled()
 })
