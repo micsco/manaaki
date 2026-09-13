@@ -25,7 +25,7 @@ function ToastList() {
               <Toast.Title className="mb-0.5 text-sm leading-5 font-semibold text-gray-100" />
               <Toast.Description className="text-sm leading-5 text-gray-400" />
               {toast.actionProps && (
-                <Toast.Action className="mt-3 inline-flex h-8 items-center justify-center rounded-lg bg-orange-600 px-3 text-sm font-medium text-white transition-colors hover:bg-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:outline-hidden" />
+                <Toast.Action className="mt-3 inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-orange-600 px-3 text-sm font-medium text-white transition-[background-color,transform] hover:bg-orange-700 focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-orange-300 active:scale-95 active:bg-orange-800 disabled:pointer-events-none" />
               )}
               <Toast.Close
                 className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-800 hover:text-gray-300"

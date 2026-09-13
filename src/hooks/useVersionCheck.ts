@@ -27,6 +27,31 @@ export function useVersionCheck(_router: AnyRouter) {
   useEffect(() => {
     lastInteractionRef.current = Date.now()
     const currentSha = import.meta.env.VITE_BUILD_GIT_SHORT_SHA as string | undefined
+    let updating = false
+    const startUpdate = async () => {
+      if (updating) return
+      updating = true
+      toastManager.update(UPDATE_TOAST_ID, {
+        title: "Updating app…",
+        description: "Please wait. The app will reload when the update is ready.",
+        actionProps: { children: "Updating…", disabled: true, "aria-busy": true },
+      })
+      try {
+        await applyAppUpdate()
+      } catch {
+        updating = false
+        toastManager.update(UPDATE_TOAST_ID, {
+          title: "Update couldn’t start",
+          description: "Please try again.",
+          actionProps: {
+            children: "Try again",
+            disabled: false,
+            "aria-busy": false,
+            onClick: () => void startUpdate(),
+          },
+        })
+      }
+    }
     const showUpdate = () => {
       if (toastShownRef.current) return
       toastShownRef.current = true
@@ -38,9 +63,7 @@ export function useVersionCheck(_router: AnyRouter) {
         priority: "low",
         actionProps: {
           children: "Update",
-          onClick: () => {
-            void applyAppUpdate()
-          },
+          onClick: () => void startUpdate(),
         },
       })
     }
