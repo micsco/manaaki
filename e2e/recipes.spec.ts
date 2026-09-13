@@ -167,6 +167,40 @@ test.describe("Recipe list", () => {
 })
 
 test.describe("Recipe detail", () => {
+  for (const width of [320, 390, 480, 1280]) {
+    test(`keeps the recipe toolbar on one row at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 844 })
+      await page.route("/api/auth/me", route =>
+        route.fulfill({
+          json: { user: { id: "fixture-user", fullName: "Fixture Cook" }, isAnonymous: false },
+        })
+      )
+      await page.route("/api/recipes?*", route => route.fulfill({ json: mockRecipeList }))
+      await page.goto(RECIPE_1_URL)
+      const back = page.getByRole("link", { name: "All recipes", exact: true })
+      const controls = [
+        back,
+        page.getByRole("button", { name: "Recipe actions", exact: true }),
+        page.getByRole("button", { name: "Copy recipe link", exact: true }),
+        page.getByRole("link", { name: "Previous recipe", exact: true }),
+        page.getByRole("link", { name: "Next recipe", exact: true }),
+      ]
+      for (const control of controls) await expect(control).toBeVisible()
+      await page.evaluate(() => document.fonts.ready)
+      const backBox = (await back.boundingBox())!
+      let previousRight = 0
+      for (const control of controls) {
+        const box = (await control.boundingBox())!
+        expect(Math.abs(box.y - backBox.y)).toBeLessThan(1)
+        expect(box.width).toBeGreaterThanOrEqual(44)
+        expect(box.height).toBeGreaterThanOrEqual(44)
+        expect(box.x).toBeGreaterThanOrEqual(previousRight)
+        expect(box.x + box.width).toBeLessThanOrEqual(width)
+        previousRight = box.x + box.width
+      }
+    })
+  }
+
   test.beforeEach(async ({ page }) => {
     await page.route(`/api/recipes/${RECIPE_1_ID}`, route =>
       route.fulfill({
