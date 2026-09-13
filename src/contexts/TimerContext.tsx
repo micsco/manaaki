@@ -1,4 +1,3 @@
-import { usePostHog } from "@posthog/react"
 import {
   createContext,
   type ReactNode,
@@ -12,6 +11,7 @@ import {
 
 import { startKitchenAlarm, stopKitchenAlarm } from "../utils/audio"
 import { persistTimers, restoreTimers } from "../utils/timerStorage"
+import { usePostHog } from "./AnalyticsContext"
 
 const subscribeHydration = () => () => {}
 

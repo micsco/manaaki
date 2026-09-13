@@ -7,10 +7,10 @@ import {
   mdiLoading,
   mdiLockOutline,
 } from "@mdi/js"
-import { usePostHog } from "@posthog/react"
 import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 
+import { usePostHog } from "../contexts/AnalyticsContext"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import { useImportRecipe } from "../hooks/useImportRecipe"
 import { toastManager } from "../lib/toastManager"

@@ -43,7 +43,7 @@
   --color-card-border: #334155;
 
   --font-sans: "Inter Variable", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono Variable", monospace;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --font-serif: "Playfair Display Variable", Georgia, serif;
 
   --background-image-gradient-radial: radial-gradient(var(--tw-gradient-stops));

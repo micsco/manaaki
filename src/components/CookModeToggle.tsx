@@ -1,6 +1,6 @@
 import { mdiChefHat } from "@mdi/js"
-import { usePostHog } from "@posthog/react"
 
+import { usePostHog } from "../contexts/AnalyticsContext"
 import { useCookMode } from "../contexts/CookModeContext"
 import { Icon } from "./Icon"
 

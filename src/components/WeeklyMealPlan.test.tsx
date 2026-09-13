@@ -22,8 +22,11 @@ vi.mock("../weather/useWeather", () => ({
 
 vi.mock("../api/generated/sdk.gen", () => ({ getAllApiHouseholdsMealplansGet: vi.fn() }))
 vi.mock("./MealPlanDialog", () => ({
-  mealTypes: ["breakfast", "lunch", "dinner", "side", "snack", "drink", "dessert"],
-  MealPlanDialog: ({ date }: { date: string }) => <div role="dialog">{date}</div>,
+  MealPlanDialog: ({ date }: { date: string }) => (
+    <div role="dialog" aria-label="Plan meal">
+      {date}
+    </div>
+  ),
 }))
 vi.mock("./BuildShoppingListDialog", () => ({
   BuildShoppingListDialog: ({ onClose }: { onClose: () => void }) => (
@@ -101,7 +104,7 @@ it("shows every meal type, multiple dinners, images and recipe-free notes", asyn
   edit.focus()
   expect(edit).toHaveFocus()
   await user.keyboard("{Enter}")
-  expect(screen.getByRole("dialog")).toHaveTextContent(date)
+  expect(await screen.findByRole("dialog", { name: "Plan meal" })).toHaveTextContent(date)
 })
 it("offers recovery when the plan fails to load", async () => {
   vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({ error: {} } as never)
@@ -148,7 +151,7 @@ it("keeps a dated add action available on every empty day", async () => {
   await user.click(actions[6])
   const date = new Date(`${todayIsoDateString()}T00:00:00`)
   date.setDate(date.getDate() + 6)
-  expect(screen.getByRole("dialog")).toHaveTextContent(
+  expect(await screen.findByRole("dialog", { name: "Plan meal" })).toHaveTextContent(
     `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
   )
 })
@@ -170,7 +173,7 @@ it("opens and closes shopping from the page action outside date navigation", asy
     within(dates).queryByRole("button", { name: "Build shopping list" })
   ).not.toBeInTheDocument()
   await user.click(screen.getByRole("button", { name: "Build shopping list" }))
-  expect(screen.getByRole("dialog", { name: "Build shopping list" })).toBeInTheDocument()
+  expect(await screen.findByRole("dialog", { name: "Build shopping list" })).toBeInTheDocument()
   await user.click(screen.getByRole("button", { name: "Cancel" }))
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
 })
@@ -194,7 +197,7 @@ it("loads recent meals on demand and adjusts the original planned date", async (
   await user.click(screen.getByRole("button", { name: /Recent meals/ }))
   expect(await screen.findByRole("heading", { name: "Leftover curry" })).toBeInTheDocument()
   await user.click(screen.getByRole("button", { name: "Adjust plan for Leftover curry" }))
-  expect(screen.getByRole("dialog")).toHaveTextContent(previous)
+  expect(await screen.findByRole("dialog", { name: "Plan meal" })).toHaveTextContent(previous)
 })
 it("shows a useful empty state for recent meals", async () => {
   vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({ data: { items: [] } } as never)

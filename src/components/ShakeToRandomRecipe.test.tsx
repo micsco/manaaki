@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { MotionPermissionState } from "../hooks/useMotionPermission"
+import { useRecipeList } from "../hooks/useRecipeList"
 import { render } from "../test/render"
 import { ShakeToRandomRecipe } from "./ShakeToRandomRecipe"
 
@@ -47,7 +48,7 @@ vi.mock("@tanstack/react-router", async importOriginal => {
   return { ...actual, useNavigate: () => mockNavigate }
 })
 
-vi.mock("@posthog/react", () => ({
+vi.mock("../contexts/AnalyticsContext", () => ({
   usePostHog: () => ({ capture: mockCapture }),
 }))
 
@@ -60,6 +61,17 @@ describe("ShakeToRandomRecipe", () => {
   afterEach(() => {
     vi.useRealTimers()
   })
+
+  it.each(["unavailable", "prompt", "denied"] as const)(
+    "does not load recipes when motion permission is %s",
+    state => {
+      permissionState = state
+      vi.mocked(useRecipeList).mockClear()
+      render(<ShakeToRandomRecipe />)
+      expect(useRecipeList).not.toHaveBeenCalled()
+      expect(shakeCallback).toBeNull()
+    }
+  )
 
   describe("when permission is unavailable (desktop)", () => {
     it("renders nothing", () => {

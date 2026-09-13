@@ -28,7 +28,11 @@ vi.mock("@tanstack/react-router", () => ({
 vi.mock("../hooks/useCurrentUser", () => ({ useCurrentUser: vi.fn() }))
 vi.mock("./AboutModal", () => ({
   AboutModal: ({ open }: { open: boolean }) =>
-    open ? <div role="dialog">About Manaaki</div> : null,
+    open ? (
+      <div role="dialog" aria-label="About Manaaki">
+        About Manaaki
+      </div>
+    ) : null,
 }))
 vi.mock("../manaaki.svg?react", () => ({ default: () => null }))
 
@@ -117,7 +121,9 @@ it("keeps About in the account menu", async () => {
   )
   await user.click(screen.getByRole("button", { name: /user menu/i }))
   await user.click(await screen.findByRole("menuitem", { name: "About Manaaki" }))
-  expect(screen.getByRole("dialog")).toHaveTextContent("About Manaaki")
+  expect(await screen.findByRole("dialog", { name: "About Manaaki" })).toHaveTextContent(
+    "About Manaaki"
+  )
 })
 
 function NavigationHarness({ children }: { children: ReactNode }) {

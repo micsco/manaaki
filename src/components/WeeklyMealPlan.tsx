@@ -6,12 +6,12 @@ import { useState } from "react"
 
 import type { ReadPlanEntry } from "../api/generated/types.gen"
 import { mealPlanQueryOptions, todayIsoDateString, toIsoDateString } from "../hooks/useMealPlan"
+import { mealTypes } from "../utils/mealTypes"
 import { parsePlanDate } from "../utils/navigation"
 import { encodeRecipeId, recipeImageUrl, recipeUrl } from "../utils/recipe"
 import { useWeather } from "../weather/useWeather"
-import { BuildShoppingListDialog } from "./BuildShoppingListDialog"
 import { Icon } from "./Icon"
-import { MealPlanDialog, mealTypes } from "./MealPlanDialog"
+import { LazyBuildShoppingListDialog, LazyMealPlanDialog } from "./LazyDialogs"
 import { entryTitle } from "./MealPlanEntryCard"
 import { MealPlanDayWeather, MealPlanWeatherStatus } from "./MealPlanWeather"
 import { RecipeCardTimeBadge, RecipeCardToolBadges } from "./RecipeCardMeta"
@@ -215,14 +215,14 @@ export function WeeklyMealPlan() {
         <MealPlanWeatherStatus weather={weather} />
       </div>
       {editing && (
-        <MealPlanDialog
+        <LazyMealPlanDialog
           date={editing.date}
           entry={editing.entry}
           onClose={() => setEditing(null)}
         />
       )}
       {shopping && (
-        <BuildShoppingListDialog
+        <LazyBuildShoppingListDialog
           open
           onClose={() => setShopping(false)}
           onBuilt={({ listId, partial }) => {

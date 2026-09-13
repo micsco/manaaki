@@ -1,8 +1,8 @@
 import { Drawer } from "@base-ui/react/drawer"
 import { mdiClose } from "@mdi/js"
-import { usePostHog } from "@posthog/react"
 import type { ReactNode } from "react"
 
+import { usePostHog } from "../contexts/AnalyticsContext"
 import {
   PROTEIN_OPTIONS,
   TIME_BUCKETS,

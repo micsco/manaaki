@@ -1,10 +1,10 @@
 import { Dialog } from "@base-ui/react/dialog"
 import { mdiCheck, mdiLinkVariant, mdiShareVariant } from "@mdi/js"
-import { usePostHog } from "@posthog/react"
 import { useHydrated } from "@tanstack/react-router"
 import { useState } from "react"
 
 import type { RecipeOutput } from "../api/generated/types.gen"
+import { usePostHog } from "../contexts/AnalyticsContext"
 import { Icon } from "./Icon"
 import { Button } from "./ui/Button"
 

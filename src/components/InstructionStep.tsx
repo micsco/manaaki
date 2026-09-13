@@ -1,8 +1,8 @@
 import { mdiCheck } from "@mdi/js"
-import { usePostHog } from "@posthog/react"
 import { type MouseEvent, useCallback, useMemo } from "react"
 
 import type { RecipeStep } from "../api/generated/types.gen"
+import { usePostHog } from "../contexts/AnalyticsContext"
 import { useCookingStorage } from "../hooks/useCookingStorage"
 import { stepStorageKey } from "../utils/recipe"
 import { parseStepSegments } from "../utils/timer"

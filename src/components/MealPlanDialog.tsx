@@ -12,6 +12,7 @@ import type { PlanEntryType, ReadPlanEntry } from "../api/generated/types.gen"
 import { mealPlanQueryOptions, toIsoDateString } from "../hooks/useMealPlan"
 import { recipeListQueryOptions } from "../hooks/useRecipeList"
 import { toastManager } from "../lib/toastManager"
+import { mealTypes } from "../utils/mealTypes"
 import { recipeImageUrl } from "../utils/recipe"
 import { weatherCondition, weatherLocation } from "../weather/forecast"
 import { useWeather } from "../weather/useWeather"
@@ -19,15 +20,6 @@ import { Icon } from "./Icon"
 import { entryTitle } from "./MealPlanEntryCard"
 import { WeatherConditionIcon } from "./WeatherConditionIcon"
 
-export const mealTypes: PlanEntryType[] = [
-  "breakfast",
-  "lunch",
-  "dinner",
-  "side",
-  "snack",
-  "drink",
-  "dessert",
-]
 const fieldClass =
   "w-full rounded-lg border border-gray-700 bg-gray-800 p-3 text-base text-gray-100"
 

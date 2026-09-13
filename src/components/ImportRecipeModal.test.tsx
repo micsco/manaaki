@@ -22,7 +22,7 @@ vi.mock("@tanstack/react-router", async importOriginal => {
   }
 })
 
-vi.mock("@posthog/react", () => ({
+vi.mock("../contexts/AnalyticsContext", () => ({
   usePostHog: () => ({
     capture: mockCapture,
   }),

@@ -1,5 +1,4 @@
-import { usePostHog } from "@posthog/react"
-
+import { usePostHog } from "../contexts/AnalyticsContext"
 import { TIME_BUCKETS, type TimeBucket } from "../hooks/useRecipeFilters"
 
 interface TimeBucketSegmentProps {

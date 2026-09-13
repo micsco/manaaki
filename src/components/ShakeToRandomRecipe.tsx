@@ -1,8 +1,8 @@
 import { mdiShuffle } from "@mdi/js"
-import { usePostHog } from "@posthog/react"
 import { useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { usePostHog } from "../contexts/AnalyticsContext"
 import { useMotionPermissionContext } from "../contexts/MotionPermissionContext"
 import { useRecipeList } from "../hooks/useRecipeList"
 import { useShakeDetection } from "../hooks/useShakeDetection"
@@ -15,6 +15,11 @@ type PickedRecipe = { id: string; slug: string; name: string; image: unknown }
 
 export function ShakeToRandomRecipe() {
   const { state: permissionState } = useMotionPermissionContext()
+  if (permissionState !== "granted") return null
+  return <EnabledShakeToRandomRecipe />
+}
+
+function EnabledShakeToRandomRecipe() {
   const [active, setActive] = useState(false)
   const [pickedRecipe, setPickedRecipe] = useState<PickedRecipe | null>(null)
   const [imageFailed, setImageFailed] = useState(false)
@@ -80,9 +85,9 @@ export function ShakeToRandomRecipe() {
     }
   }, [])
 
-  useShakeDetection({ onShake: handleShake, enabled: permissionState === "granted" })
+  useShakeDetection({ onShake: handleShake, enabled: true })
 
-  if (permissionState !== "granted" || !active || !pickedRecipe) return null
+  if (!active || !pickedRecipe) return null
 
   const imgSrc = recipeImageUrl(pickedRecipe.id, "min-original", pickedRecipe.image)
 

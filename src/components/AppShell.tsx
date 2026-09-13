@@ -4,8 +4,8 @@ import { useState, type ReactNode } from "react"
 import { useCookMode } from "../contexts/CookModeContext"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import ManaakiLogo from "../manaaki.svg?react"
-import { AboutModal } from "./AboutModal"
 import { AppNavigation } from "./AppNavigation"
+import { LazyAboutModal } from "./LazyDialogs"
 import { OfflineStatus } from "./OfflineStatus"
 import { UserMenu } from "./UserMenu"
 
@@ -52,7 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {children}
       </div>
       {signedIn && <AppNavigation mobile />}
-      <AboutModal open={aboutOpen} onOpenChange={setAboutOpen} />
+      <LazyAboutModal open={aboutOpen} onOpenChange={setAboutOpen} />
     </div>
   )
 }

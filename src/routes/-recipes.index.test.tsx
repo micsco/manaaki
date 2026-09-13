@@ -245,7 +245,7 @@ describe("RecipeList loading state", () => {
     render(<RecipeListWrapper />)
     await user.click(screen.getByRole("button", { name: /import recipe/i }))
     expect(screen.getByRole("dialog")).toBeInTheDocument()
-    expect(screen.getByText("Import Recipe")).toBeInTheDocument()
+    expect(await screen.findByText("Import Recipe")).toBeInTheDocument()
   })
 
   it("shows the search bar while loading", () => {

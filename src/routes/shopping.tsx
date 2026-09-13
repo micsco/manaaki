@@ -3,7 +3,7 @@ import { useState } from "react"
 
 import { fetchCurrentUser } from "../api/auth"
 import { configureApiClient } from "../api/client"
-import { BuildShoppingListDialog } from "../components/BuildShoppingListDialog"
+import { LazyBuildShoppingListDialog } from "../components/LazyDialogs"
 import { ShoppingListHistory } from "../components/ShoppingListHistory"
 import { ShoppingListView } from "../components/ShoppingListView"
 import { useCurrentShoppingList } from "../hooks/useShoppingList"
@@ -64,7 +64,7 @@ function ShoppingPage() {
         <p className="mx-auto max-w-2xl px-4 py-10 text-gray-500">Loading…</p>
       )}
       <ShoppingListHistory currentId={current?.id} />
-      <BuildShoppingListDialog
+      <LazyBuildShoppingListDialog
         open={buildOpen}
         onClose={() => setBuildOpen(false)}
         onBuilt={({ listId, partial }) => {

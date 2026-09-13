@@ -1,5 +1,4 @@
 import { mdiBookPlus, mdiPotSteam } from "@mdi/js"
-import { usePostHog } from "@posthog/react"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useHydrated } from "@tanstack/react-router"
@@ -8,12 +7,13 @@ import { useState } from "react"
 import { configureApiClient } from "../api/client"
 import type { RecipeSummary } from "../api/generated/types.gen"
 import { Icon } from "../components/Icon"
-import { ImportRecipeModal } from "../components/ImportRecipeModal"
+import { LazyImportRecipeModal } from "../components/LazyDialogs"
 import { RecipeCardInfoBadges, RecipeCardToolBadges } from "../components/RecipeCardMeta"
 import { RecipeCardTimingBadges } from "../components/RecipeCardTimingBadges"
 import { RecipeFilterDrawer } from "../components/RecipeFilterDrawer"
 import { FilterBar, FilterPills } from "../components/RecipeFilters"
 import { Card } from "../components/ui"
+import { usePostHog } from "../contexts/AnalyticsContext"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import { useRecipeFilters } from "../hooks/useRecipeFilters"
 import { recipeListQueryOptions } from "../hooks/useRecipeList"
@@ -333,7 +333,7 @@ function RecipeList() {
         onClearAll={handleClearAll}
       />
 
-      <ImportRecipeModal open={importOpen} onOpenChange={setImportOpen} />
+      <LazyImportRecipeModal open={importOpen} onOpenChange={setImportOpen} />
     </main>
   )
 }

@@ -1,3 +1,5 @@
+import { mkdir, writeFile } from "node:fs/promises"
+import { dirname } from "node:path"
 import process from "node:process"
 
 import { expect, test } from "@playwright/test"
@@ -31,6 +33,28 @@ for (const route of routes) {
         downloadThroughput: 200_000,
         uploadThroughput: 93_750,
       })
+      if (!process.env.PERF_BASE_URL) {
+        await page.addInitScript(() => {
+          localStorage.setItem(
+            "manaaki-weather-lewisham-v2",
+            JSON.stringify({
+              version: 1,
+              fetchedAt: Date.now(),
+              days: Array.from({ length: 16 }, (_, offset) => {
+                const date = new Date()
+                date.setDate(date.getDate() + offset)
+                return {
+                  date: date.toISOString().slice(0, 10),
+                  code: 3,
+                  high: 20,
+                  low: 12,
+                  rain: 10,
+                }
+              }),
+            })
+          )
+        })
+      }
       await page.addInitScript(() => {
         const metrics = { lcp: 0, longTaskMs: 0 }
         Object.assign(window, { startupMetrics: metrics })
@@ -94,12 +118,14 @@ for (const route of routes) {
       }
       await context.close()
     }
+    const output = testInfo.outputPath(`${route.name}-startup.json`)
+    await mkdir(dirname(output), { recursive: true })
+    await writeFile(
+      output,
+      JSON.stringify({ source: process.env.PERF_BASE_URL ? "live" : "fixture", samples }, null, 2)
+    )
     await testInfo.attach(`${route.name}-startup.json`, {
-      body: JSON.stringify(
-        { source: process.env.PERF_BASE_URL ? "live" : "fixture", samples },
-        null,
-        2
-      ),
+      path: output,
       contentType: "application/json",
     })
     console.table(

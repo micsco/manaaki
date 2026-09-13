@@ -42,6 +42,14 @@ createServer(async (request, response) => {
     return
   }
   response.setHeader("Cache-Control", "no-store")
+  if (process.env.PERFORMANCE_TEST === "1" && url.pathname.startsWith("/ingest/")) {
+    response.setHeader(
+      "Content-Type",
+      url.pathname.endsWith(".js") ? "text/javascript" : "application/json"
+    )
+    response.end(url.pathname.endsWith(".js") ? "" : "{}")
+    return
+  }
   if (url.pathname.startsWith("/api/media/")) {
     response.setHeader("Content-Type", "image/png")
     response.end(await readFile(resolve(root, "manaaki-192.png")))

@@ -1,6 +1,6 @@
 import { mdiClose, mdiMagnify, mdiTune } from "@mdi/js"
-import { usePostHog } from "@posthog/react"
 
+import { usePostHog } from "../contexts/AnalyticsContext"
 import { PROTEIN_OPTIONS, TOOL_OPTIONS } from "../hooks/useRecipeFilters"
 import { Icon } from "./Icon"
 

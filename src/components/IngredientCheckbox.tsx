@@ -1,5 +1,4 @@
 import { mdiCheck } from "@mdi/js"
-import { usePostHog } from "@posthog/react"
 import { useCallback } from "react"
 
 import type {
@@ -8,6 +7,7 @@ import type {
   IngredientFoodOutput,
   IngredientUnitOutput,
 } from "../api/generated/types.gen"
+import { usePostHog } from "../contexts/AnalyticsContext"
 import { useCookingStorage } from "../hooks/useCookingStorage"
 import { formatQuantity, ingredientStorageKey } from "../utils/recipe"
 import { Icon } from "./Icon"

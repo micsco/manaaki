@@ -1,4 +1,3 @@
-import { PostHogProvider } from "@posthog/react"
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import {
   createRootRouteWithContext,
@@ -15,6 +14,7 @@ import { AppToasts } from "../components/AppToasts"
 import { BuildInfo } from "../components/BuildInfo"
 import { KitchenTimerHUD } from "../components/KitchenTimerHUD"
 import { ShakeToRandomRecipe } from "../components/ShakeToRandomRecipe"
+import { AnalyticsProvider, AnalyticsPageViews } from "../contexts/AnalyticsContext"
 import { CookModeProvider } from "../contexts/CookModeContext"
 import { MotionPermissionProvider } from "../contexts/MotionPermissionContext"
 import { NavigationProvider } from "../contexts/NavigationContext"
@@ -27,7 +27,6 @@ import { trackInstallation } from "../pwa/install"
 import { warmVisiblePage } from "../pwa/warmPage"
 
 import "@fontsource-variable/inter/wght.css"
-import "@fontsource-variable/jetbrains-mono/wght.css"
 import "@fontsource-variable/playfair-display/wght.css"
 import "../styles/globals.css"
 
@@ -90,17 +89,9 @@ function RootComponent() {
 
   return (
     <RootDocument>
-      <PostHogProvider
-        apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN}
-        options={{
-          api_host: "/ingest",
-          ui_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
-          defaults: "2025-05-24",
-          capture_exceptions: true,
-          debug: import.meta.env.DEV,
-        }}
-      >
-        <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <AnalyticsProvider>
+          <AnalyticsPageViews />
           <MotionPermissionProvider>
             <NuqsAdapter>
               <CookModeProvider>
@@ -116,8 +107,8 @@ function RootComponent() {
             </NuqsAdapter>
             <ShakeToRandomRecipe />
           </MotionPermissionProvider>
-        </QueryClientProvider>
-      </PostHogProvider>
+        </AnalyticsProvider>
+      </QueryClientProvider>
     </RootDocument>
   )
 }

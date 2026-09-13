@@ -1,6 +1,5 @@
-import { usePostHog } from "@posthog/react"
-
 import type { RecipeOutput } from "../api/generated/types.gen"
+import { usePostHog } from "../contexts/AnalyticsContext"
 import { useGroupSlug } from "../hooks/useGroupSlug"
 import { displayDomain, mealieRecipeUrl } from "../utils/recipe"
 import { MealieLogo } from "./MealieLogo"

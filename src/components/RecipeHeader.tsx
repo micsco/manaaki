@@ -5,10 +5,10 @@ import {
   mdiStarCircleOutline,
   mdiTimerOutline,
 } from "@mdi/js"
-import { usePostHog } from "@posthog/react"
 import { Link } from "@tanstack/react-router"
 
 import type { RecipeOutput } from "../api/generated/types.gen"
+import { usePostHog } from "../contexts/AnalyticsContext"
 import type { RecipeNavItem } from "../hooks/useRecipeNav"
 import { formatTime, recipeUrl } from "../utils/recipe"
 import { AddToMealPlanButton } from "./AddToMealPlanButton"
