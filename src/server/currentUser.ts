@@ -2,10 +2,13 @@ import { getLoggedInUserApiUsersSelfGet, type UserOut } from "../api/generated"
 import { readonlyToken } from "./env"
 import { createMealieClient } from "./mealieClient"
 import { readSessionToken } from "./session"
+import { measureServerTiming } from "./timing"
 
 async function getUser(token: string): Promise<UserOut | null> {
   const client = createMealieClient(token)
-  const result = await getLoggedInUserApiUsersSelfGet({ client, throwOnError: false })
+  const result = await measureServerTiming("identity", () =>
+    getLoggedInUserApiUsersSelfGet({ client, throwOnError: false })
+  )
   if (result.data) return result.data
   if (result.response?.status === 401) return null
   throw new Error("Failed to resolve current user")

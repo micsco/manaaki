@@ -1,6 +1,8 @@
 import { readFile } from "node:fs/promises"
 import { createServer } from "node:http"
 import { extname, resolve, sep } from "node:path"
+import process from "node:process"
+import { gzipSync } from "node:zlib"
 
 const root = resolve("dist/client")
 const id = "00000000-0000-4000-8000-000000000001"
@@ -141,6 +143,19 @@ createServer(async (request, response) => {
         ".woff2": "font/woff2",
       }[extname(file)] ?? "application/json"
     )
+    if (process.env.PERFORMANCE_TEST === "1") {
+      if (url.pathname.startsWith("/assets/"))
+        response.setHeader("Cache-Control", "public, max-age=31536000, immutable")
+      if (
+        /\.(html|js|css|svg)$/.test(file) &&
+        request.headers["accept-encoding"]?.includes("gzip")
+      ) {
+        response.setHeader("Content-Encoding", "gzip")
+        response.setHeader("Vary", "Accept-Encoding")
+        response.end(gzipSync(content))
+        return
+      }
+    }
     response.end(content)
   } catch {
     response.writeHead(404).end()

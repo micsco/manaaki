@@ -14,6 +14,7 @@ import {
   isSecureRequest,
   readSessionToken,
 } from "./session"
+import { measureServerTiming } from "./timing"
 
 // Tokens minted before Mealie 3.25 carry no iat, so fall back to a final-hour window.
 const LEGACY_REFRESH_WINDOW_SECONDS = 60 * 60
@@ -73,37 +74,41 @@ function forward(request: Request, token: string, pathWithQuery: string): Promis
   const transport = isHttps ? httpsRequest : httpRequest
   const hasBody = request.method !== "GET" && request.method !== "HEAD"
 
-  return new Promise((resolve, reject) => {
-    const upstream = transport(
-      {
-        protocol: base.protocol,
-        hostname: base.hostname,
-        port: base.port || (isHttps ? 443 : 80),
-        method: request.method,
-        path: pathWithQuery,
-        headers: upstreamHeaders(request, token),
-      },
-      res => {
-        const headers = buildResponseHeaders(res)
-        const status = res.statusCode ?? 502
-        const noBody = status === 204 || status === 304 || request.method === "HEAD"
-        resolve(
-          new Response(noBody ? null : (Readable.toWeb(res) as ReadableStream), {
-            status,
-            statusText: res.statusMessage,
-            headers,
-          })
+  return measureServerTiming(
+    "mealie",
+    () =>
+      new Promise<Response>((resolve, reject) => {
+        const upstream = transport(
+          {
+            protocol: base.protocol,
+            hostname: base.hostname,
+            port: base.port || (isHttps ? 443 : 80),
+            method: request.method,
+            path: pathWithQuery,
+            headers: upstreamHeaders(request, token),
+          },
+          res => {
+            const headers = buildResponseHeaders(res)
+            const status = res.statusCode ?? 502
+            const noBody = status === 204 || status === 304 || request.method === "HEAD"
+            resolve(
+              new Response(noBody ? null : (Readable.toWeb(res) as ReadableStream), {
+                status,
+                statusText: res.statusMessage,
+                headers,
+              })
+            )
+          }
         )
-      }
-    )
-    upstream.on("error", reject)
-    if (hasBody && request.body) {
-      // @ts-expect-error ReadableStream<Uint8Array> is compatible but types diverge
-      Readable.fromWeb(request.body).pipe(upstream)
-    } else {
-      upstream.end()
-    }
-  })
+        upstream.on("error", reject)
+        if (hasBody && request.body) {
+          // @ts-expect-error ReadableStream<Uint8Array> is compatible but types diverge
+          Readable.fromWeb(request.body).pipe(upstream)
+        } else {
+          upstream.end()
+        }
+      })
+  )
 }
 
 function isPastRefreshPoint({ exp, iat }: JwtTiming, now: number): boolean {
@@ -119,10 +124,12 @@ async function resolveSessionToken(token: string): Promise<SessionToken> {
   if (!isPastRefreshPoint(timing, now)) return { state: "valid", token }
 
   try {
-    const res = await fetch(`${mealieInternalUrl()}/api/auth/refresh`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const res = await measureServerTiming("session_refresh", () =>
+      fetch(`${mealieInternalUrl()}/api/auth/refresh`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      })
+    )
     if (res.status === 401) return { state: "invalid" }
     if (!res.ok) return { state: "valid", token }
     const body = (await res.json()) as { access_token?: string }

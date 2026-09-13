@@ -1,5 +1,5 @@
 import { client } from "./generated/client.gen"
-import { retryingFetch } from "./retryingFetch"
+import { timedFetch } from "./timedFetch"
 
 const isServer = typeof window === "undefined"
 let configured = false
@@ -10,7 +10,7 @@ export function configureApiClient() {
   }
   client.setConfig({
     baseUrl: isServer ? (globalThis.process?.env?.MEALIE_INTERNAL_URL ?? "") : "",
-    fetch: retryingFetch,
+    fetch: timedFetch,
     // Server-side SSR of PUBLIC pages uses the constant read-only token.
     // The browser sends relative /api requests; the BFF attaches the per-user
     // or read-only token from the session cookie. Never a per-user token here.

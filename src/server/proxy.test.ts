@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
 import { handleApiProxy } from "./proxy"
 import { buildSessionSetCookie, unsealSession } from "./session"
+import { withServerTiming } from "./timing"
 
 // ---------------------------------------------------------------------------
 // Minimal local upstream server
@@ -97,6 +98,21 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await new Promise<void>(resolve => server.close(() => resolve()))
+})
+
+it("reports upstream and refresh durations while preserving refreshed cookies", async () => {
+  setPathResponse("/api/auth/refresh", { body: JSON.stringify({ access_token: farFutureJwt() }) })
+  const cookie = buildSessionSetCookie(nearExpiryJwt(), true).split(";")[0]
+  const result = await withServerTiming(async () => ({
+    response: await handleApiProxy(
+      new Request("https://app/api/recipes", { headers: { cookie, "x-forwarded-proto": "https" } })
+    ),
+  }))
+  expect(result.response.headers.get("Server-Timing")).toMatch(
+    /session_refresh;dur=[\d.]+, mealie;dur=[\d.]+, app;dur=[\d.]+/
+  )
+  expect(result.response.headers.get("Set-Cookie")).toBeTruthy()
+  expect(await result.response.text()).toBe("{}")
 })
 
 // ---------------------------------------------------------------------------

@@ -1,12 +1,12 @@
 import { createClient, createConfig } from "../api/generated/client"
-import { retryingFetch } from "../api/retryingFetch"
+import { timedFetch } from "../api/timedFetch"
 import { mealieInternalUrl } from "./env"
 
 export function createMealieClient(token: string) {
   return createClient(
     createConfig({
       baseUrl: mealieInternalUrl(),
-      fetch: retryingFetch,
+      fetch: timedFetch,
       headers: { Authorization: `Bearer ${token}` },
     })
   )

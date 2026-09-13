@@ -4,6 +4,7 @@ import { getLoggedInUserApiUsersSelfGet, type UserOut } from "../api/generated"
 import { resolveCurrentUser } from "./currentUser"
 import { createMealieClient } from "./mealieClient"
 import { buildSessionSetCookie } from "./session"
+import { withServerTiming } from "./timing"
 
 vi.mock("../api/generated", () => ({
   getLoggedInUserApiUsersSelfGet: vi.fn(),
@@ -43,6 +44,17 @@ describe("resolveCurrentUser", () => {
     })
     expect(mockCreateMealieClient).toHaveBeenCalledWith("user-token")
     expect(mockGetLoggedInUser).toHaveBeenCalledTimes(1)
+  })
+
+  it("measures identity resolution without putting account details in headers", async () => {
+    mockGetLoggedInUser.mockResolvedValueOnce({ data: authenticatedUser } as never)
+    const result = await withServerTiming(async () => ({
+      response: Response.json(await resolveCurrentUser(requestWithSession("user-token"))),
+    }))
+    expect(result.response.headers.get("Server-Timing")).toMatch(
+      /^identity;dur=[\d.]+, app;dur=[\d.]+$/
+    )
+    expect(await result.response.json()).toEqual({ user: authenticatedUser, isAnonymous: false })
   })
 
   it("falls back to the read-only identity when the session is invalid", async () => {
