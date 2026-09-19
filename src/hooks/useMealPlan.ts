@@ -2,6 +2,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query"
 
 import { getAllApiHouseholdsMealplansGet } from "../api/generated/sdk.gen"
 import type { ReadPlanEntry } from "../api/generated/types.gen"
+import { liveQueryOptions } from "../lib/liveQueryOptions"
 
 export function mealPlanQueryOptions(startDate: string, endDate: string) {
   return queryOptions({
@@ -13,7 +14,7 @@ export function mealPlanQueryOptions(startDate: string, endDate: string) {
       if (!response.data) throw new Error("Failed to load meal plan")
       return response.data.items.slice().sort((a, b) => a.date.localeCompare(b.date))
     },
-    staleTime: 5 * 60_000,
+    ...liveQueryOptions,
   })
 }
 

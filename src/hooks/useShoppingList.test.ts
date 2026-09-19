@@ -48,3 +48,28 @@ describe("useCurrentShoppingList", () => {
     expect(sdk.getAllApiHouseholdsShoppingListsGet).not.toHaveBeenCalled()
   })
 })
+
+it("preserves the current list when a refresh fails", async () => {
+  vi.mocked(sdk.getAllApiHouseholdsShoppingListsGet).mockResolvedValue({
+    data: { items: [{ id: "saved", name: "Shop" }] },
+  } as never)
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const { currentListQueryOptions, shoppingHistoryQueryOptions } = await import("./useShoppingList")
+  await client.fetchQuery(currentListQueryOptions)
+  await client.fetchQuery(shoppingHistoryQueryOptions(1))
+  vi.mocked(sdk.getAllApiHouseholdsShoppingListsGet).mockResolvedValue({
+    error: "Unavailable",
+  } as never)
+  await client.invalidateQueries()
+  await expect(client.fetchQuery(currentListQueryOptions)).rejects.toThrow(
+    "Failed to load shopping lists"
+  )
+  await expect(client.fetchQuery(shoppingHistoryQueryOptions(1))).rejects.toThrow(
+    "Failed to load shopping history"
+  )
+  expect(client.getQueryData(currentListQueryOptions.queryKey)).toMatchObject({ id: "saved" })
+  expect(client.getQueryData(shoppingHistoryQueryOptions(1).queryKey)).toEqual([
+    { id: "saved", name: "Shop" },
+  ])
+  client.clear()
+})

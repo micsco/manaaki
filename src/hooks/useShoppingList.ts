@@ -7,6 +7,7 @@ import {
   type ShoppingListOut,
   type ShoppingListSummary,
 } from "../api/generated"
+import { liveQueryOptions } from "../lib/liveQueryOptions"
 
 export const currentListQueryOptions = queryOptions({
   queryKey: ["shopping", "current"],
@@ -19,9 +20,10 @@ export const currentListQueryOptions = queryOptions({
         perPage: 1,
       },
     })
-    return res.data?.items?.[0] ?? null
+    if (!res.data) throw new Error("Failed to load shopping lists")
+    return res.data.items?.[0] ?? null
   },
-  staleTime: 60_000,
+  ...liveQueryOptions,
 })
 
 export function useCurrentShoppingList(options?: {
@@ -38,7 +40,7 @@ export function shoppingListDetailQueryOptions(id: string) {
       if (!res.data) throw new Error("Failed to load shopping list")
       return res.data
     },
-    staleTime: 60_000,
+    ...liveQueryOptions,
   })
 }
 
@@ -59,8 +61,9 @@ export function shoppingHistoryQueryOptions(page: number) {
           perPage: 30,
         },
       })
-      return res.data?.items ?? []
+      if (!res.data) throw new Error("Failed to load shopping history")
+      return res.data.items ?? []
     },
-    staleTime: 60_000,
+    ...liveQueryOptions,
   })
 }

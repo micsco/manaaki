@@ -42,6 +42,28 @@ mobile screenshot. Fonts ship with the app and are included in the offline shell
 Mobile layouts respect safe areas, use larger touch targets, keep dialogs
 scrollable in short viewports, and honor reduced-motion preferences.
 
+## Refreshing data
+
+Use **Refresh** in the header to reload the current data without restarting the
+app or losing the selected date, filters, or cooking progress. The button stays
+busy until active plan and list queries finish, and reports failures so you
+can retry. Cached plan and list queries for other pages are marked stale and refresh in the
+background when opened. Cached data stays visible during refresh. Recipe details
+keep their existing long-lived offline cache and are not invalidated by Refresh.
+
+Meal plans and shopping lists refresh every minute while their queries are in
+use and the app is visible. After 30 seconds, returning to the app or opening a
+page also refreshes them. Reconnecting always refreshes these queries. Background
+polling is disabled; after an offline attempt polling pauses until another
+refresh trigger. Existing offline fallback and queued shopping check-offs remain
+in place. The recipe list refreshes every 30 minutes while visible and whenever the app
+returns to the foreground. Successful imports invalidate the recipe list immediately,
+even during that 30-minute window. Individual recipes
+are not polled. Weather retains its five-minute interval.
+
+Data refresh is separate from the existing **Update** prompt for a new app version.
+There is no custom pull-to-refresh gesture.
+
 ## Validation
 
 Run `pnpm check:fix`, `pnpm type-check`, `pnpm test`, `pnpm build`, then

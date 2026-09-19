@@ -25,6 +25,7 @@ vi.mock("@tanstack/react-router", () => ({
     </a>
   ),
 }))
+vi.mock("./RefreshButton", () => ({ RefreshButton: () => <button>Refresh data</button> }))
 vi.mock("../hooks/useCurrentUser", () => ({ useCurrentUser: vi.fn() }))
 vi.mock("./AboutModal", () => ({
   AboutModal: ({ open }: { open: boolean }) =>
@@ -62,6 +63,7 @@ it("provides the same labelled destinations and account on regular pages", () =>
     ).toEqual(["Plan", "Recipes", "Shopping"])
     expect(within(nav).getByRole("link", { name: "Plan" })).toHaveAttribute("aria-current", "page")
   }
+  expect(screen.getByRole("button", { name: "Refresh data" })).toBeInTheDocument()
   expect(screen.getByRole("button", { name: /user menu for mike scott/i })).toBeInTheDocument()
   expect(screen.getByRole("link", { name: "Skip to content" })).toHaveAttribute(
     "href",

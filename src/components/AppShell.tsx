@@ -7,6 +7,7 @@ import ManaakiLogo from "../manaaki.svg?react"
 import { AppNavigation } from "./AppNavigation"
 import { LazyAboutModal } from "./LazyDialogs"
 import { OfflineStatus } from "./OfflineStatus"
+import { RefreshButton } from "./RefreshButton"
 import { UserMenu } from "./UserMenu"
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -42,7 +43,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             Manaaki
           </Link>
           {signedIn && <AppNavigation />}
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-1">
+            <RefreshButton />
             <UserMenu onOpenAbout={() => setAboutOpen(true)} returnTo={location.href} />
           </div>
         </div>

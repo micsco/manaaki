@@ -1,10 +1,11 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { QueryClient, QueryClientProvider, QueryObserver } from "@tanstack/react-query"
 import { act, renderHook } from "@testing-library/react"
 import React from "react"
 import { describe, expect, it, vi } from "vitest"
 
 import * as sdk from "../api/generated/sdk.gen"
 import { ingredientReviewKey, parseRecipeIngredients } from "../api/recipeParsing"
+import { recipeListRefreshOptions } from "../lib/liveQueryOptions"
 import { toastManager } from "../lib/toastManager"
 import { extractErrorMessage, useImportRecipe } from "./useImportRecipe"
 
@@ -137,4 +138,30 @@ it("keeps a successful import when parsing fails and explains how to retry", asy
       description: "AI unavailable",
     })
   )
+})
+
+it("refreshes an active recipe list after import even when its 30-minute cache is fresh", async () => {
+  vi.mocked(sdk.parseRecipeUrlApiRecipesCreateUrlPost).mockResolvedValue({
+    data: "new-recipe",
+  } as never)
+  vi.mocked(parseRecipeIngredients).mockResolvedValue({ recipe: { id: "new-recipe" }, parsed: [] })
+  const { queryClient, wrapper } = setup()
+  const key = ["recipes", "list"]
+  queryClient.setQueryData(key, ["existing"])
+  const fetchList = vi.fn().mockResolvedValue(["existing", "new-recipe"])
+  const observer = new QueryObserver(queryClient, {
+    ...recipeListRefreshOptions,
+    queryKey: key,
+    queryFn: fetchList,
+  })
+  const unsubscribe = observer.subscribe(() => {})
+  expect(fetchList).not.toHaveBeenCalled()
+  const { result } = renderHook(() => useImportRecipe(), { wrapper })
+  await act(async () => {
+    await result.current.mutateAsync({ url: "https://example.com/new-recipe" })
+  })
+  expect(fetchList).toHaveBeenCalledTimes(1)
+  expect(queryClient.getQueryData(key)).toEqual(["existing", "new-recipe"])
+  unsubscribe()
+  queryClient.clear()
 })

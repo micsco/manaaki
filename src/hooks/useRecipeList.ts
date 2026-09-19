@@ -2,6 +2,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query"
 
 import { getAllApiRecipesGet } from "../api/generated/sdk.gen"
 import type { RecipeSummary } from "../api/generated/types.gen"
+import { recipeListRefreshOptions } from "../lib/liveQueryOptions"
 
 const PAGE_SIZE = 50
 const BASE_QUERY = { perPage: PAGE_SIZE, orderBy: "dateAdded", orderDirection: "desc" } as const
@@ -35,7 +36,7 @@ export const recipeListQueryOptions = queryOptions({
     return [...first.items, ...rest.flatMap(p => p.items)]
   },
   retry: shouldRetryRecipeList,
-  staleTime: 60_000,
+  ...recipeListRefreshOptions,
 })
 
 export function useRecipeList(): RecipeSummary[] {
