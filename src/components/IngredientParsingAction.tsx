@@ -402,36 +402,23 @@ function IngredientReviewRow({
                 </label>
                 {(["unit", "food"] as const).map(kind => (
                   <div key={kind}>
-                    <label className="block text-sm">
-                      {kind === "food" ? "Food" : "Unit"}
-                      <input
-                        list={`${id}-${kind}`}
-                        value={ingredient[kind]?.name ?? ""}
-                        onChange={event => {
-                          const name = event.target.value
-                          const match = catalog?.[kind].find(
-                            item => item.name.toLowerCase() === name.trim().toLowerCase()
-                          )
-                          onChange({
-                            ...row,
-                            parsed: {
-                              ...row.parsed,
-                              ingredient: {
-                                ...ingredient,
-                                [kind]: name.trim() ? (match ?? { name }) : null,
-                              },
-                            },
-                          })
-                        }}
-                        className="mt-1 min-h-11 w-full rounded-lg border border-gray-700 bg-gray-800 px-3 text-base"
-                      />
-                    </label>
                     <IngredientSuggestions
                       id={`${id}-${kind}`}
+                      label={kind === "food" ? "Food" : "Unit"}
                       items={catalog?.[kind] ?? []}
-                      query={ingredient[kind]?.name ?? ""}
+                      value={ingredient[kind]}
                       userId={userId}
+                      disabled={disabled || creating}
                       popularityEnabled={kind === "food" && !disabled}
+                      onChange={match =>
+                        onChange({
+                          ...row,
+                          parsed: {
+                            ...row.parsed,
+                            ingredient: { ...ingredient, [kind]: match },
+                          },
+                        })
+                      }
                     />
                     {ingredient[kind] && !ingredient[kind]?.id && (
                       <div className="mt-1 text-sm text-orange-300">

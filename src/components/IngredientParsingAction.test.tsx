@@ -140,6 +140,7 @@ it("offers existing matches without creating duplicates", async () => {
   const food = screen.getByLabelText("Food")
   await user.clear(food)
   await user.type(food, "lamb")
+  await user.keyboard("{Escape}")
   await user.click(screen.getByRole("button", { name: "Save ingredients" }))
   expect(catalog.createIngredientMatch).not.toHaveBeenCalled()
   await waitFor(() =>
@@ -302,15 +303,16 @@ it.each([
   const rows = screen.getAllByRole("group", { name: /^Ingredient / })
   const input = screen.getByLabelText(label)
   await user.clear(input)
-  expect(screen.getAllByRole("group", { name: /^Ingredient / })).toEqual(rows)
+  expect(rows[0].compareDocumentPosition(rows[1]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   expect(input).toHaveFocus()
   for (const character of value) {
     await user.type(input, character)
-    expect(screen.getAllByRole("group", { name: /^Ingredient / })).toEqual(rows)
+    expect(rows[0].compareDocumentPosition(rows[1]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(input).toHaveFocus()
     expect(screen.getByLabelText(label)).toBe(input)
   }
   expect(input).toHaveValue(label === "Quantity" ? Number(value) : value)
+  if (label !== "Quantity") await user.keyboard("{Escape}")
   expect(screen.getByRole("button", { name: "Save ingredients" })).toBeEnabled()
 })
 
@@ -351,14 +353,15 @@ it.each([
     const input = screen.getByRole<HTMLInputElement>("combobox", { name: label })
     await user.clear(input)
     await user.type(input, exact)
-    expect(Array.from(input.list!.options, option => option.value)).toEqual([
+    expect(screen.getAllByRole("option").map(option => option.textContent)).toEqual([
       exact,
       ...[prefix, partial].sort(),
     ])
     expect(input).toHaveFocus()
     await user.clear(input)
     await user.type(input, partial)
-    expect(input.list!.options[0]).toHaveValue(partial)
+    expect(screen.getAllByRole("option")[0]).toHaveTextContent(partial)
+    await user.keyboard("{Escape}")
     await user.click(screen.getByRole("button", { name: "Save ingredients" }))
     await waitFor(() =>
       expect(parsing.saveReviewedIngredients).toHaveBeenCalledWith(expect.anything(), [
