@@ -3,7 +3,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
 
 import type { IngredientMatch } from "../api/ingredientCatalog"
-import { loadFoodRecipeCount } from "../api/ingredientPopularity"
+import {
+  ingredientPopularitySnapshot,
+  prefetchFoodPopularity,
+} from "../api/ingredientPopularityCache"
 import { rankIngredientMatches } from "../utils/ingredientMatches"
 
 export function IngredientSuggestions({
@@ -46,27 +49,8 @@ export function IngredientSuggestions({
       foodIds.length > 0,
     staleTime: 5 * 60 * 1000,
     queryFn: async ({ signal }) => {
-      const counts: Record<string, number> = {}
-      const pending = [...foodIds]
-      await Promise.all(
-        Array.from({ length: Math.min(4, pending.length) }, async () => {
-          let foodId: string | undefined
-          while (!signal.aborted && (foodId = pending.shift())) {
-            const currentId = foodId
-            try {
-              counts[currentId] = await client.fetchQuery({
-                queryKey: ["ingredientRecipeCount", userId, currentId],
-                queryFn: ({ signal }) => loadFoodRecipeCount(currentId, signal),
-                staleTime: 5 * 60 * 1000,
-                retry: false,
-              })
-            } catch {
-              continue
-            }
-          }
-        })
-      )
-      return counts
+      await prefetchFoodPopularity(client, userId, foodIds, signal)
+      return true
     },
   })
   const suggestions = useMemo(
@@ -77,13 +61,7 @@ export function IngredientSuggestions({
     [items, query, recipeCounts, normalized]
   )
   function captureRanking() {
-    const counts: Record<string, number> = {}
-    for (const [key, count] of client.getQueriesData<number>({
-      queryKey: ["ingredientRecipeCount", userId],
-    })) {
-      if (typeof key[2] === "string" && typeof count === "number") counts[key[2]] = count
-    }
-    setRecipeCounts(counts)
+    setRecipeCounts(ingredientPopularitySnapshot(client, userId))
   }
   return (
     <Combobox.Root<IngredientMatch>

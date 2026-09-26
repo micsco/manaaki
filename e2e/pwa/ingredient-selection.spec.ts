@@ -76,3 +76,49 @@ for (const selection of ["keyboard", "pointer", "touch"] as const) {
     })
   })
 }
+
+test("shows prefetched popularity on the first visit and reuses it after reload", async ({
+  page,
+}) => {
+  const foods = [
+    { id: "lime", name: "lime" },
+    { id: "finger", name: "finger lime" },
+    { id: "juice", name: "lime juice" },
+  ]
+  let countRequests = 0
+  await page.route("**/api/foods?*", route => route.fulfill({ json: { items: foods } }))
+  await page.route("**/api/parser/ingredients", route =>
+    route.fulfill({
+      json: [
+        {
+          input: "200g spaghetti",
+          confidence: { average: 1 },
+          ingredient: { quantity: 1, food: foods[0] },
+        },
+      ],
+    })
+  )
+  await page.route("**/api/recipes?*", async route => {
+    const food = new URL(route.request().url()).searchParams.get("foods")
+    if (!food) return route.continue()
+    countRequests++
+    await route.fulfill({ json: { items: [], total: food === "juice" ? 20 : 1 } })
+  })
+  for (let visit = 0; visit < 2; visit++) {
+    await page.goto("/share?url=https://example.com/recipe")
+    await page.getByRole("button", { name: "Import Recipe", exact: true }).click()
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const counts = localStorage.getItem("manaaki:ingredient-popularity:v1:fixture-user")
+          return counts ? Object.keys(JSON.parse(counts)).length : 0
+        })
+      )
+      .toBe(3)
+    await page.getByRole("button", { name: "Review parsed ingredients", exact: true }).click()
+    await page.getByRole("button", { name: "Edit ingredient 1" }).click()
+    await page.getByRole("combobox", { name: "Food" }).click()
+    await expect(page.getByRole("option")).toHaveText(["lime", "lime juice", "finger lime"])
+    expect(countRequests).toBe(3)
+  }
+})

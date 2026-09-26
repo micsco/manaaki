@@ -5,6 +5,7 @@ import { beforeEach, expect, it, vi } from "vitest"
 
 import type { IngredientMatch } from "../api/ingredientCatalog"
 import { loadFoodRecipeCount } from "../api/ingredientPopularity"
+import { prefetchFoodPopularity } from "../api/ingredientPopularityCache"
 import { render, screen, waitFor } from "../test/render"
 import { IngredientSuggestions } from "./IngredientSuggestions"
 
@@ -148,5 +149,24 @@ it.each([
   { popularityEnabled: true, name: "l" },
 ])("avoids count requests for disabled or broad searches: %s", overrides => {
   render(<Editor {...overrides} />)
+  expect(loadFoodRecipeCount).not.toHaveBeenCalled()
+})
+
+it("uses persisted popularity on first focus after a reload", async () => {
+  await prefetchFoodPopularity(new QueryClient(), "user", ["lime", "juice", "finger"])
+  vi.mocked(loadFoodRecipeCount).mockClear()
+  const client = new QueryClient()
+  const user = userEvent.setup()
+  render(
+    <QueryClientProvider client={client}>
+      <Editor />
+    </QueryClientProvider>
+  )
+  await user.click(screen.getByRole("combobox", { name: "Food" }))
+  expect(screen.getAllByRole("option").map(option => option.textContent)).toEqual([
+    "lime",
+    "lime juice",
+    "finger lime",
+  ])
   expect(loadFoodRecipeCount).not.toHaveBeenCalled()
 })

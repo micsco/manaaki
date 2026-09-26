@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { beforeEach, expect, it, vi } from "vitest"
 
 import * as catalog from "../api/ingredientCatalog"
+import { loadFoodRecipeCount } from "../api/ingredientPopularity"
 import * as parsing from "../api/recipeParsing"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import { useOnline } from "../pwa/useOnline"
@@ -372,3 +373,21 @@ it.each([
     )
   }
 )
+
+it("warms popularity counts before an ingredient editor opens", async () => {
+  vi.mocked(catalog.loadIngredientCatalog).mockResolvedValue({
+    food: [
+      { id: "lamb", name: "lamb" },
+      { id: "mince", name: "lamb mince" },
+      { id: "apple", name: "apple" },
+    ],
+    unit: [],
+  })
+  const user = userEvent.setup()
+  render(<IngredientParsingAction recipe={recipe} />)
+  await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
+  await screen.findByRole("button", { name: "Edit ingredient 1" })
+  await waitFor(() => expect(loadFoodRecipeCount).toHaveBeenCalledTimes(2))
+  expect(loadFoodRecipeCount).toHaveBeenCalledWith("mince", expect.any(AbortSignal))
+  expect(screen.queryByRole("combobox")).not.toBeInTheDocument()
+})

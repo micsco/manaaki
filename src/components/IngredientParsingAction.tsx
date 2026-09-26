@@ -1,7 +1,7 @@
 import { Dialog } from "@base-ui/react/dialog"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "@tanstack/react-router"
-import { useId, useState } from "react"
+import { useEffect, useId, useState } from "react"
 
 import type { ParsedIngredient, RecipeOutput } from "../api/generated/types.gen"
 import {
@@ -9,6 +9,7 @@ import {
   loadIngredientCatalog,
   type IngredientCatalog,
 } from "../api/ingredientCatalog"
+import { prefetchIngredientPopularity } from "../api/ingredientPopularityCache"
 import {
   ingredientNeedsReview,
   ingredientReviewKey,
@@ -33,6 +34,14 @@ export function IngredientParsingAction({ recipe }: { recipe: RecipeOutput }) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState("")
   const online = useOnline()
+  useEffect(() => {
+    if (prepared && online && userId && !current?.isAnonymous)
+      void prefetchIngredientPopularity(
+        queryClient,
+        userId,
+        prepared.parsed.map(item => item.ingredient.food?.name ?? "")
+      )
+  }, [prepared, online, userId, current?.isAnonymous, queryClient])
   const count = unparsedIngredients(recipe).length
   if (!current || current.isAnonymous || !userId || !recipeId || !count) return null
   async function start() {

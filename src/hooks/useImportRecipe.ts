@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import type { CurrentUser } from "../api/auth"
 import { parseRecipeUrlApiRecipesCreateUrlPost } from "../api/generated/sdk.gen"
+import { prefetchIngredientPopularity } from "../api/ingredientPopularityCache"
 import { ingredientReviewKey, parseRecipeIngredients } from "../api/recipeParsing"
 import { toastManager } from "../lib/toastManager"
 
@@ -70,11 +71,17 @@ export function useImportRecipe() {
       try {
         const review = await parseRecipeIngredients(response.data)
         const userId = queryClient.getQueryData<CurrentUser>(["currentUser"])?.user?.id
-        if (userId && review.parsed.length)
+        if (userId && review.parsed.length) {
           queryClient.setQueryData(
             ingredientReviewKey(userId, review.recipe.id || response.data),
             review
           )
+          void prefetchIngredientPopularity(
+            queryClient,
+            userId,
+            review.parsed.map(item => item.ingredient.food?.name ?? "")
+          )
+        }
       } catch (error) {
         toastManager.add({
           title: "Recipe imported; ingredients need attention",

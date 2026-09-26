@@ -4,6 +4,7 @@ import React from "react"
 import { describe, expect, it, vi } from "vitest"
 
 import * as sdk from "../api/generated/sdk.gen"
+import { prefetchIngredientPopularity } from "../api/ingredientPopularityCache"
 import { ingredientReviewKey, parseRecipeIngredients } from "../api/recipeParsing"
 import { recipeListRefreshOptions } from "../lib/liveQueryOptions"
 import { toastManager } from "../lib/toastManager"
@@ -13,6 +14,9 @@ vi.mock("../api/generated/sdk.gen", () => ({
   parseRecipeUrlApiRecipesCreateUrlPost: vi.fn(),
 }))
 
+vi.mock("../api/ingredientPopularityCache", () => ({
+  prefetchIngredientPopularity: vi.fn().mockResolvedValue(undefined),
+}))
 vi.mock("../api/recipeParsing", async original => ({
   ...(await original<typeof import("../api/recipeParsing")>()),
   parseRecipeIngredients: vi.fn(),
@@ -81,7 +85,9 @@ describe("useImportRecipe", () => {
 
     vi.mocked(parseRecipeIngredients).mockResolvedValue({
       recipe: { id: "new-id" },
-      parsed: [{ input: "1 cup flour", ingredient: { note: "1 cup flour" } }],
+      parsed: [
+        { input: "1 cup flour", ingredient: { food: { name: "flour" }, note: "1 cup flour" } },
+      ],
     })
     const { queryClient, wrapper } = setup()
     queryClient.setQueryData(["currentUser"], { user: { id: "user" } })
@@ -107,6 +113,7 @@ describe("useImportRecipe", () => {
       expect.objectContaining({ recipe: { id: "new-id" } })
     )
     expect(outcome).toBe("classic-guacamole")
+    expect(prefetchIngredientPopularity).toHaveBeenCalledWith(queryClient, "user", ["flour"])
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["recipes"] })
   })
 
