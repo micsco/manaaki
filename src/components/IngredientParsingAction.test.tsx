@@ -19,6 +19,9 @@ vi.mock("../api/recipeParsing", async original => ({
   parseRecipeIngredients: vi.fn(),
   saveReviewedIngredients: vi.fn(),
 }))
+vi.mock("../api/ingredientPopularity", () => ({
+  loadFoodRecipeCount: vi.fn().mockResolvedValue(0),
+}))
 vi.mock("../api/ingredientCatalog", () => ({
   loadIngredientCatalog: vi.fn(),
   createIngredientMatch: vi.fn(),
@@ -329,3 +332,40 @@ it("keeps rows in place when switching between originals and parsed suggestions"
   expect(screen.getByLabelText("Quantity")).toBeVisible()
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument()
 })
+
+it.each([
+  ["Food", "food", "lime", "lime juice", "finger lime"],
+  ["Unit", "unit", "cup", "cupful", "metric cup"],
+] as const)(
+  "ranks exact %s suggestions first as the query changes",
+  async (label, kind, exact, prefix, partial) => {
+    vi.mocked(catalog.loadIngredientCatalog).mockResolvedValue({
+      food: [],
+      unit: [],
+      [kind]: [partial, prefix, exact].map(name => ({ id: name, name })),
+    })
+    const user = userEvent.setup()
+    render(<IngredientParsingAction recipe={recipe} />)
+    await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
+    await user.click(await screen.findByRole("button", { name: "Edit ingredient 1" }))
+    const input = screen.getByRole<HTMLInputElement>("combobox", { name: label })
+    await user.clear(input)
+    await user.type(input, exact)
+    expect(Array.from(input.list!.options, option => option.value)).toEqual([
+      exact,
+      ...[prefix, partial].sort(),
+    ])
+    expect(input).toHaveFocus()
+    await user.clear(input)
+    await user.type(input, partial)
+    expect(input.list!.options[0]).toHaveValue(partial)
+    await user.click(screen.getByRole("button", { name: "Save ingredients" }))
+    await waitFor(() =>
+      expect(parsing.saveReviewedIngredients).toHaveBeenCalledWith(expect.anything(), [
+        expect.objectContaining({
+          ingredient: expect.objectContaining({ [kind]: { id: partial, name: partial } }),
+        }),
+      ])
+    )
+  }
+)

@@ -20,6 +20,7 @@ import {
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import { useOnline } from "../pwa/useOnline"
 import { formatQuantity } from "../utils/recipe"
+import { IngredientSuggestions } from "./IngredientSuggestions"
 
 export function IngredientParsingAction({ recipe }: { recipe: RecipeOutput }) {
   const current = useCurrentUser()
@@ -235,6 +236,7 @@ function IngredientReviewDialog({
                 <IngredientReviewRow
                   key={row.id}
                   row={row}
+                  userId={userId}
                   index={index}
                   catalog={catalogQuery.data}
                   disabled={!online}
@@ -281,6 +283,7 @@ function IngredientReviewDialog({
 }
 
 function IngredientReviewRow({
+  userId,
   row,
   index,
   catalog,
@@ -289,6 +292,7 @@ function IngredientReviewRow({
   onCreated,
 }: {
   row: ReviewRow
+  userId: string
   index: number
   catalog?: IngredientCatalog
   disabled: boolean
@@ -422,13 +426,13 @@ function IngredientReviewRow({
                         className="mt-1 min-h-11 w-full rounded-lg border border-gray-700 bg-gray-800 px-3 text-base"
                       />
                     </label>
-                    <datalist id={`${id}-${kind}`}>
-                      {catalog?.[kind].map(item => (
-                        <option key={item.id} value={item.name}>
-                          {item.name}
-                        </option>
-                      ))}
-                    </datalist>
+                    <IngredientSuggestions
+                      id={`${id}-${kind}`}
+                      items={catalog?.[kind] ?? []}
+                      query={ingredient[kind]?.name ?? ""}
+                      userId={userId}
+                      popularityEnabled={kind === "food" && !disabled}
+                    />
                     {ingredient[kind] && !ingredient[kind]?.id && (
                       <div className="mt-1 text-sm text-orange-300">
                         Unmatched {kind}. Choose an existing match or{" "}
