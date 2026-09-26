@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import userEvent from "@testing-library/user-event"
 import React from "react"
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import * as sdk from "../api/generated/sdk.gen"
 import type { RecipeSummary } from "../api/generated/types.gen"
@@ -11,7 +11,7 @@ import {
   RecipeCardToolBadges,
 } from "../components/RecipeCardMeta"
 import { useCurrentUser } from "../hooks/useCurrentUser"
-import { render, screen } from "../test/render"
+import { render, screen, waitFor } from "../test/render"
 import { Route } from "./recipes.index"
 
 vi.mock("../hooks/useCurrentUser", () => ({
@@ -29,6 +29,8 @@ vi.mock("../contexts/MotionPermissionContext", () => ({
 
 vi.mock("../api/generated/sdk.gen", () => ({
   getAllApiRecipesGet: vi.fn(),
+  getAllApiRecipesTimelineEventsGet: vi.fn(),
+  getAllApiHouseholdsMealplansGet: vi.fn(),
 }))
 
 vi.mock("../manaaki.svg?react", () => ({
@@ -297,4 +299,101 @@ it("hides import for visitors", () => {
   mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
   render(<RecipeListWrapper />)
   expect(screen.queryByRole("button", { name: /import recipe/i })).not.toBeInTheDocument()
+})
+
+vi.mock("@tanstack/react-router", async importOriginal => ({
+  ...(await importOriginal<typeof import("@tanstack/react-router")>()),
+  Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
+    <a href={to}>{children}</a>
+  ),
+}))
+
+describe("household cooking suggestions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockGetAll.mockResolvedValue({ data: { items: [baseRecipe], total_pages: 1 } } as never)
+    vi.mocked(sdk.getAllApiHouseholdsMealplansGet).mockResolvedValue({
+      data: { items: [] },
+    } as never)
+    vi.mocked(sdk.getAllApiRecipesTimelineEventsGet).mockResolvedValue({
+      data: {
+        items: [1, 2].map(daysAgo => {
+          const date = new Date()
+          date.setDate(date.getDate() - daysAgo)
+          return {
+            id: String(daysAgo),
+            recipeId: baseRecipe.id,
+            householdId: "home",
+            subject: "Mike made this for dinner",
+            eventType: "info",
+            timestamp: date.toISOString(),
+          }
+        }),
+      },
+    } as never)
+  })
+
+  it("does not request private history for anonymous visitors", async () => {
+    vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true })
+    render(<RecipeListWrapper />)
+    expect(await screen.findByRole("heading", { name: "Banana Bread" })).toBeInTheDocument()
+    expect(sdk.getAllApiRecipesTimelineEventsGet).not.toHaveBeenCalled()
+    expect(sdk.getAllApiHouseholdsMealplansGet).not.toHaveBeenCalled()
+    expect(screen.queryByRole("list", { name: "Recently popular" })).not.toBeInTheDocument()
+  })
+
+  it("shows discovery for signed-in users and hides it while searching", async () => {
+    vi.mocked(useCurrentUser).mockReturnValue({
+      user: { id: "user", householdId: "home" },
+      isAnonymous: false,
+    } as never)
+    render(<RecipeListWrapper />)
+    expect(await screen.findByRole("list", { name: "Recently popular" })).toBeInTheDocument()
+    const user = userEvent.setup()
+    await user.type(screen.getByRole("searchbox", { name: /search recipes/i }), "banana")
+    expect(screen.queryByRole("list", { name: "Recently popular" })).not.toBeInTheDocument()
+    await user.clear(screen.getByRole("searchbox", { name: /search recipes/i }))
+    expect(await screen.findByRole("list", { name: "Recently popular" })).toBeInTheDocument()
+    expect(sdk.getAllApiRecipesTimelineEventsGet).toHaveBeenCalledTimes(1)
+  })
+
+  it("discards the previous household snapshot on account changes and logout", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const RecipeList = Route.options.component as React.ComponentType
+    const view = () => (
+      <QueryClientProvider client={client}>
+        <RecipeList />
+      </QueryClientProvider>
+    )
+    vi.mocked(useCurrentUser).mockReturnValue({
+      user: { id: "user", householdId: "home" },
+      isAnonymous: false,
+    } as never)
+    const { rerender } = render(view())
+    expect(await screen.findByRole("list", { name: "Recently popular" })).toBeInTheDocument()
+    vi.mocked(sdk.getAllApiRecipesTimelineEventsGet).mockReturnValue(
+      new Promise(() => undefined) as never
+    )
+    vi.mocked(useCurrentUser).mockReturnValue({
+      user: { id: "other", householdId: "other-home" },
+      isAnonymous: false,
+    } as never)
+    rerender(view())
+    expect(screen.queryByRole("list", { name: "Recently popular" })).not.toBeInTheDocument()
+    await waitFor(() =>
+      expect(sdk.getAllApiRecipesTimelineEventsGet).toHaveBeenCalledWith(
+        expect.objectContaining({
+          query: expect.objectContaining({ queryFilter: 'household_id = "other-home"' }),
+        })
+      )
+    )
+    vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true })
+    rerender(view())
+    expect(
+      screen.queryByRole("status", { name: "Loading cooking suggestions" })
+    ).not.toBeInTheDocument()
+    expect(screen.queryByRole("list", { name: "Recently popular" })).not.toBeInTheDocument()
+    expect(sdk.getAllApiRecipesTimelineEventsGet).toHaveBeenCalledTimes(2)
+    client.clear()
+  })
 })

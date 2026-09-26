@@ -1,23 +1,20 @@
 import { mdiBookPlus, mdiPotSteam } from "@mdi/js"
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 import { useHydrated } from "@tanstack/react-router"
 import { useState } from "react"
 
 import { configureApiClient } from "../api/client"
-import type { RecipeSummary } from "../api/generated/types.gen"
 import { Icon } from "../components/Icon"
 import { LazyImportRecipeModal } from "../components/LazyDialogs"
-import { RecipeCardInfoBadges, RecipeCardToolBadges } from "../components/RecipeCardMeta"
-import { RecipeCardTimingBadges } from "../components/RecipeCardTimingBadges"
+import { RecipeCard } from "../components/RecipeCard"
+import { RecipeDiscovery } from "../components/RecipeDiscovery"
 import { RecipeFilterDrawer } from "../components/RecipeFilterDrawer"
 import { FilterBar, FilterPills } from "../components/RecipeFilters"
 import { Card } from "../components/ui"
-import { usePostHog } from "../contexts/AnalyticsContext"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import { useRecipeFilters } from "../hooks/useRecipeFilters"
 import { recipeListQueryOptions } from "../hooks/useRecipeList"
-import { recipeImageUrl, recipeUrl } from "../utils/recipe"
 
 export const Route = createFileRoute("/recipes/")({
   head: () => {
@@ -60,67 +57,6 @@ export const Route = createFileRoute("/recipes/")({
   component: RecipeList,
   pendingComponent: RecipeListSkeleton,
 })
-
-function RecipeImage({ recipe }: { recipe: RecipeSummary }) {
-  const [failed, setFailed] = useState(false)
-  const img = recipeImageUrl(recipe.id, "min-original", recipe.image)
-
-  return (
-    <div className="relative h-48 w-full">
-      {img && !failed ? (
-        <img
-          src={img}
-          alt={recipe.name ?? ""}
-          className="h-full w-full object-cover"
-          loading="lazy"
-          onError={() => setFailed(true)}
-        />
-      ) : (
-        <div className="h-full w-full bg-gray-800" aria-hidden="true" />
-      )}
-      <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent" />
-      <div className="absolute right-0 bottom-0 left-0 px-3 pb-2.5">
-        <div className="flex items-end justify-between gap-2">
-          <h2 className="line-clamp-2 text-base leading-tight font-bold text-balance text-white drop-shadow-sm">
-            {recipe.name}
-          </h2>
-          <RecipeCardInfoBadges recipe={recipe} />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
-  const posthog = usePostHog()
-
-  return (
-    <Card hover className="relative overflow-hidden">
-      {recipe.id && recipe.slug ? (
-        <Link
-          to={recipeUrl(recipe.id, recipe.slug)}
-          className="block rounded-lg focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-950 focus:outline-hidden"
-          onClick={() =>
-            posthog.capture("recipe_card_clicked", {
-              recipe_id: recipe.id,
-              recipe_name: recipe.name,
-              recipe_rating: recipe.rating,
-              recipe_total_time: recipe.totalTime,
-            })
-          }
-        >
-          <RecipeImage recipe={recipe} />
-        </Link>
-      ) : (
-        <RecipeImage recipe={recipe} />
-      )}
-      <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-1.5 p-2">
-        <RecipeCardTimingBadges recipe={recipe} />
-        <RecipeCardToolBadges recipe={recipe} />
-      </div>
-    </Card>
-  )
-}
 
 function RecipeListEndMarker() {
   return (
@@ -276,6 +212,17 @@ function RecipeList() {
             />
           )}
         </div>
+
+        {isMounted && !isError && current?.user && !current.isAnonymous && (
+          <RecipeDiscovery
+            key={`${current.user.id}:${current.user.householdId}`}
+            userId={current.user.id}
+            householdId={current.user.householdId}
+            recipes={recipes}
+            recipesReady={!showSkeleton && !isError}
+            hidden={isFiltered}
+          />
+        )}
 
         {showSkeleton ? (
           <div

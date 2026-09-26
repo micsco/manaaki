@@ -28,3 +28,13 @@ describe("isAnonymousAllowed", () => {
     expect(isAnonymousAllowed("GET", "/api/auth/oauthcallback")).toBe(false)
   })
 })
+
+it.each([
+  "/api/recipes/timeline",
+  "/api/recipes/timeline/events",
+  "/api/recipes/timeline/events/123/image",
+  "/api/recipes/%74imeline/events",
+  "/api/recipes/%bad",
+])("keeps cooking history private: %s", path => {
+  expect(isAnonymousAllowed("GET", path)).toBe(false)
+})
