@@ -380,13 +380,10 @@ describe("household cooking suggestions", () => {
     } as never)
     rerender(view())
     expect(screen.queryByRole("list", { name: "Recently popular" })).not.toBeInTheDocument()
-    await waitFor(() =>
-      expect(sdk.getAllApiRecipesTimelineEventsGet).toHaveBeenCalledWith(
-        expect.objectContaining({
-          query: expect.objectContaining({ queryFilter: 'household_id = "other-home"' }),
-        })
-      )
-    )
+    await waitFor(() => expect(sdk.getAllApiRecipesTimelineEventsGet).toHaveBeenCalledTimes(2))
+    expect(
+      client.getQueryCache().findAll({ queryKey: ["recipeDiscovery", "other", "other-home"] })
+    ).toHaveLength(1)
     vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true })
     rerender(view())
     expect(

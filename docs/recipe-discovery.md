@@ -30,3 +30,12 @@ History and the next 14 days of meal plans load concurrently, in pages of 500. A
 The in-memory query cache is scoped by user, household and local date, stays fresh for 15 minutes, and expires after 24 hours without observers. There are no per-recipe requests, polling, focus refreshes, or persistent cooking-history storage. Once both the recipe catalogue and discovery data are ready, the component captures a snapshot for the visit. Cache updates cannot reorder visible cards. A later visit can adopt refreshed results; changing accounts remounts the snapshot immediately.
 
 Loading placeholders reserve space initially. A failed discovery request offers its own retry while the ordinary recipe catalogue remains available.
+
+## Mealie 3.28.0 compatibility
+
+Timeline history is group-authorised. Mealie 3.28.0 rejects a `household_id`
+query filter with HTTP 400 because that field is an association. Requests omit
+that filter; each page is immediately filtered by the returned `householdId`
+before it enters the household-scoped cache. This also keeps other households'
+records out of rankings. The checked-in release schema and real-client contract
+test cover the request shape; the browser fixture rejects the unsupported filter.

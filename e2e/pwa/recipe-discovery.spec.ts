@@ -49,6 +49,12 @@ test("shows household rows, keeps them out of search, and opens a recipe", async
   )
   await page.route("**/api/recipes/timeline/events?*", route => {
     historyRequests++
+    if (new URL(route.request().url()).searchParams.has("queryFilter")) {
+      return route.fulfill({
+        status: 400,
+        json: { detail: "Cannot filter on household association" },
+      })
+    }
     return route.fulfill({ json: { items: cookingHistory(), total_pages: 1 } })
   })
   await page.route("**/api/households/mealplans?*", route =>
@@ -64,6 +70,7 @@ test("shows household rows, keeps them out of search, and opens a recipe", async
       },
     })
   )
+  await page.route(`**/api/recipes/${recipes[0].id}`, route => route.fulfill({ json: recipes[0] }))
   await page.goto("/recipes", { waitUntil: "load" })
   const recent = page.getByRole("list", { name: "Recently popular" })
   await expect(recent.getByRole("link", { name: "Soup" })).toBeVisible()

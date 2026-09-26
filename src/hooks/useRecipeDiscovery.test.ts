@@ -47,9 +47,12 @@ it("loads every history and plan page, scopes the cache and reuses fresh data", 
   expect(result.plannedIds).toEqual(["one", "two"])
   expect(getAllApiRecipesTimelineEventsGet).toHaveBeenCalledWith(
     expect.objectContaining({
-      query: expect.objectContaining({ page: 2, queryFilter: 'household_id = "home"' }),
+      query: expect.objectContaining({ page: 2 }),
     })
   )
+  for (const [request] of vi.mocked(getAllApiRecipesTimelineEventsGet).mock.calls) {
+    expect(request?.query).not.toHaveProperty("queryFilter")
+  }
   expect(getAllApiHouseholdsMealplansGet).toHaveBeenCalledWith(
     expect.objectContaining({
       query: expect.objectContaining({ page: 2, start_date: "2026-09-26", end_date: "2026-10-09" }),

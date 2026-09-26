@@ -21,7 +21,6 @@ export function recipeDiscoveryQueryOptions(userId: string, householdId: string,
               perPage: 500,
               orderBy: "timestamp",
               orderDirection: "desc",
-              queryFilter: `household_id = "${householdId}"`,
             },
             signal,
           })
