@@ -259,7 +259,7 @@ it("reuses a chosen match for repeated unresolved names", async () => {
   )
   expect(catalog.createIngredientMatch).toHaveBeenCalledTimes(1)
 })
-it("groups attention first while saving ingredients in their original order", async () => {
+it("displays and saves mixed-confidence ingredients in their original order", async () => {
   const user = userEvent.setup()
   const ready = { ...suggestion, input: "Ready ingredient", confidence: { average: 1 } }
   vi.mocked(parsing.parseRecipeIngredients).mockResolvedValue({
@@ -268,19 +268,11 @@ it("groups attention first while saving ingredients in their original order", as
   })
   render(<IngredientParsingAction recipe={recipe} />)
   await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
-  const attentionHeading = await screen.findByRole("heading", { name: "Needs attention (1)" })
-  const readyHeading = screen.getByRole("heading", { name: "Ready to save (1)" })
-  const attentionRow = screen.getByRole("group", { name: "Ingredient 2" })
-  const readyRow = screen.getByRole("group", { name: "Ingredient 1" })
-  expect(
-    attentionHeading.compareDocumentPosition(attentionRow) & Node.DOCUMENT_POSITION_FOLLOWING
-  ).toBeTruthy()
-  expect(
-    attentionRow.compareDocumentPosition(readyHeading) & Node.DOCUMENT_POSITION_FOLLOWING
-  ).toBeTruthy()
-  expect(
-    readyHeading.compareDocumentPosition(readyRow) & Node.DOCUMENT_POSITION_FOLLOWING
-  ).toBeTruthy()
+  await screen.findByRole("group", { name: "Ingredient 1" })
+  expect(screen.getAllByRole("group", { name: /^Ingredient / })).toEqual([
+    screen.getByRole("group", { name: "Ingredient 1" }),
+    screen.getByRole("group", { name: "Ingredient 2" }),
+  ])
   await user.click(screen.getByRole("button", { name: "Save ingredients" }))
   await waitFor(() =>
     expect(parsing.saveReviewedIngredients).toHaveBeenCalledWith(expect.anything(), [
@@ -289,32 +281,51 @@ it("groups attention first while saving ingredients in their original order", as
     ])
   )
 })
-it("retains the editor and focus when an invalid amount moves a ready row into attention", async () => {
+
+it.each([
+  ["Quantity", "250"],
+  ["Food", "lamb"],
+  ["Unit", "g"],
+])("keeps row order and input focus while editing %s", async (label, value) => {
+  const user = userEvent.setup()
+  const ready = { ...suggestion, confidence: { average: 1 } }
+  vi.mocked(parsing.parseRecipeIngredients).mockResolvedValue({
+    recipe,
+    parsed: [ready, ready, ready],
+  })
+  render(<IngredientParsingAction recipe={recipe} />)
+  await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
+  await user.click(await screen.findByRole("button", { name: "Edit ingredient 2" }))
+  const rows = screen.getAllByRole("group", { name: /^Ingredient / })
+  const input = screen.getByLabelText(label)
+  await user.clear(input)
+  expect(screen.getAllByRole("group", { name: /^Ingredient / })).toEqual(rows)
+  expect(input).toHaveFocus()
+  for (const character of value) {
+    await user.type(input, character)
+    expect(screen.getAllByRole("group", { name: /^Ingredient / })).toEqual(rows)
+    expect(input).toHaveFocus()
+    expect(screen.getByLabelText(label)).toBe(input)
+  }
+  expect(input).toHaveValue(label === "Quantity" ? Number(value) : value)
+  expect(screen.getByRole("button", { name: "Save ingredients" })).toBeEnabled()
+})
+
+it("keeps rows in place when switching between originals and parsed suggestions", async () => {
   const user = userEvent.setup()
   vi.mocked(parsing.parseRecipeIngredients).mockResolvedValue({
     recipe,
-    parsed: [{ ...suggestion, confidence: { average: 1 } }],
+    parsed: [suggestion, suggestion],
   })
   render(<IngredientParsingAction recipe={recipe} />)
   await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
   await user.click(await screen.findByRole("button", { name: "Edit ingredient 1" }))
-  const quantity = screen.getByLabelText("Quantity")
-  await user.clear(quantity)
-  expect(screen.getByRole("heading", { name: "Needs attention (1)" })).toBeVisible()
-  expect(quantity).toHaveFocus()
-  await user.type(quantity, "250")
-  expect(screen.getByRole("heading", { name: "Ready to save (1)" })).toBeVisible()
-  expect(quantity).toHaveFocus()
-  expect(quantity).toHaveValue(250)
-})
-it("moves retained originals into the ready group without an acknowledgement checkbox", async () => {
-  const user = userEvent.setup()
-  render(<IngredientParsingAction recipe={recipe} />)
-  await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
-  expect(await screen.findByRole("heading", { name: "Needs attention (1)" })).toBeVisible()
-  await user.click(screen.getByRole("button", { name: "Edit ingredient 1" }))
+  const rows = screen.getAllByRole("group", { name: /^Ingredient / })
   await user.click(screen.getByRole("button", { name: /^Keep original text$/ }))
-  expect(screen.getByRole("heading", { name: "Ready to save (1)" })).toBeVisible()
-  expect(screen.queryByRole("heading", { name: /Needs attention/ })).not.toBeInTheDocument()
+  expect(screen.getByText("Keeping original")).toBeVisible()
+  expect(screen.getAllByRole("group", { name: /^Ingredient / })).toEqual(rows)
+  await user.click(screen.getByRole("button", { name: "Use parsed suggestion" }))
+  expect(screen.getAllByRole("group", { name: /^Ingredient / })).toEqual(rows)
+  expect(screen.getByLabelText("Quantity")).toBeVisible()
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument()
 })
