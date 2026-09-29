@@ -103,6 +103,28 @@ describe("BuildShoppingListDialog", () => {
   })
 })
 
+it("queries the plan from today's date for the picked number of days", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] })
+  vi.setSystemTime(new Date(2026, 5, 28, 21, 30))
+  const options = vi.spyOn(planHook, "mealPlanQueryOptions").mockReturnValue({
+    queryKey: ["mealplan", "today"],
+    queryFn: async () => [],
+  } as never)
+  try {
+    render(<BuildShoppingListDialog open onClose={vi.fn()} onBuilt={vi.fn()} />, {
+      wrapper: wrap(),
+    })
+    expect(options).not.toHaveBeenCalledWith("2026-06-28", expect.any(String))
+
+    await userEvent.click(screen.getByRole("button", { name: /next 4 days/i }))
+
+    expect(options).toHaveBeenLastCalledWith("2026-06-28", "2026-07-01")
+  } finally {
+    vi.useRealTimers()
+    options.mockRestore()
+  }
+})
+
 it("exposes a named dialog and dismisses with Escape", async () => {
   const onClose = vi.fn()
   render(<BuildShoppingListDialog open onClose={onClose} onBuilt={vi.fn()} />, { wrapper: wrap() })

@@ -10,6 +10,10 @@ import { computeRecipeIncrement, gatherPlanRecipes, shoppingDayRange } from "../
 
 const DAY_OPTIONS = [3, 4, 5, 7]
 
+function shoppingDayRangeFromToday(days: number) {
+  return shoppingDayRange(new Date(), days)
+}
+
 type Row = {
   recipeId: string
   name: string
@@ -33,7 +37,7 @@ export function BuildShoppingListDialog({
   const [building, setBuilding] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const range = useMemo(() => (days ? shoppingDayRange(new Date(), days) : null), [days])
+  const [range, setRange] = useState<ReturnType<typeof shoppingDayRangeFromToday> | null>(null)
   const { data: entries } = useQuery({
     ...mealPlanQueryOptions(range?.start ?? "", range?.end ?? ""),
     enabled: Boolean(range),
@@ -58,6 +62,7 @@ export function BuildShoppingListDialog({
     setRows(null)
     setError(null)
     setDays(n)
+    setRange(shoppingDayRangeFromToday(n))
   }
 
   async function confirm() {

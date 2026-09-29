@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:24.20.0-alpine3.24 AS build
+FROM node:24.21.0-alpine3.24 AS build
 WORKDIR /app
 RUN corepack enable pnpm && apk add --no-cache git
 
@@ -55,7 +55,7 @@ RUN --mount=type=secret,id=POSTHOG_CLI_API_KEY,required=false \
 
 RUN pnpm prune --prod --ignore-scripts
 
-FROM nginx:1.30.4-alpine3.24 AS serve
+FROM nginx:1.30.5-alpine3.24 AS serve
 
 RUN apk add --no-cache libstdc++
 COPY --from=build /usr/local/bin/node /usr/local/bin/node
