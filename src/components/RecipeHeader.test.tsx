@@ -13,6 +13,7 @@ vi.mock("../hooks/useShoppingList", () => ({
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import type { RecipeNavItem } from "../hooks/useRecipeNav"
+import { takeRecipeNavigation } from "../lib/recipeTransition"
 import { render, screen } from "../test/render"
 import { encodeRecipeId } from "../utils/recipe"
 import { RecipeHeader } from "./RecipeHeader"
@@ -140,4 +141,25 @@ it("keeps recipe photography and exposes planning to signed-in readers", () => {
   render(<RecipeHeader recipe={minimalRecipe} img="/salad.webp" />)
   expect(screen.getByRole("img", { name: "Banana Bread" })).toHaveAttribute("src", "/salad.webp")
   expect(screen.getByRole("button", { name: "Add to meal plan" })).toBeInTheDocument()
+})
+
+it("records the slide direction when a neighbouring recipe is opened", () => {
+  render(
+    <RecipeHeader
+      recipe={minimalRecipe}
+      img={null}
+      prevRecipe={prevRecipe}
+      nextRecipe={nextRecipe}
+    />
+  )
+  screen
+    .getByRole("link", { name: "Next recipe" })
+    .addEventListener("click", event => event.preventDefault())
+  screen.getByRole("link", { name: "Next recipe" }).click()
+  expect(takeRecipeNavigation(nextRecipe.id)).toBe("next")
+  screen
+    .getByRole("link", { name: "Previous recipe" })
+    .addEventListener("click", event => event.preventDefault())
+  screen.getByRole("link", { name: "Previous recipe" }).click()
+  expect(takeRecipeNavigation(prevRecipe.id)).toBe("prev")
 })

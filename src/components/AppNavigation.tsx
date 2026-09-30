@@ -15,6 +15,7 @@ export function AppNavigation({ mobile = false }: { mobile?: boolean }) {
     <nav
       aria-label="Main navigation"
       data-mobile-navigation={mobile || undefined}
+      data-view-transition-persist={mobile ? "app-navigation" : undefined}
       className={
         mobile
           ? "fixed inset-x-0 bottom-0 z-30 border-t border-gray-800 bg-gray-950 safe-inline pb-[env(safe-area-inset-bottom,0px)] md:hidden"

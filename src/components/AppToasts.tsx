@@ -14,7 +14,10 @@ function ToastList() {
   const { toasts } = Toast.useToastManager()
   return (
     <Toast.Portal>
-      <Toast.Viewport className="fixed right-4 bottom-[calc(var(--app-navigation-height,0px)+env(safe-area-inset-bottom,0px)+1rem)] z-50 flex w-72 flex-col sm:right-6">
+      <Toast.Viewport
+        data-view-transition-persist="app-toasts"
+        className="fixed right-4 bottom-[calc(var(--app-navigation-height,0px)+env(safe-area-inset-bottom,0px)+1rem)] z-50 flex w-72 flex-col sm:right-6"
+      >
         {toasts.map(toast => (
           <Toast.Root
             key={toast.id}

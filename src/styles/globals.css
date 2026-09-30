@@ -378,3 +378,66 @@
     scroll-behavior: auto !important;
   }
 }
+
+@keyframes recipe-slide-out {
+  to {
+    opacity: 0;
+    translate: var(--recipe-slide-offset) 0;
+  }
+}
+@keyframes recipe-slide-in {
+  from {
+    opacity: 0;
+    translate: var(--recipe-slide-offset) 0;
+  }
+}
+::view-transition-old(.recipe-slide-to-left),
+::view-transition-old(.recipe-slide-to-right) {
+  animation: 180ms cubic-bezier(0.4, 0, 1, 1) both recipe-slide-out;
+}
+::view-transition-new(.recipe-slide-from-right),
+::view-transition-new(.recipe-slide-from-left) {
+  animation: 280ms cubic-bezier(0, 0, 0.2, 1) 60ms both recipe-slide-in;
+}
+::view-transition-old(.recipe-slide-to-left),
+::view-transition-new(.recipe-slide-from-left) {
+  --recipe-slide-offset: -20%;
+}
+::view-transition-old(.recipe-slide-to-right),
+::view-transition-new(.recipe-slide-from-right) {
+  --recipe-slide-offset: 20%;
+}
+:root:active-view-transition-type(recipe-prev, recipe-next) {
+  [data-view-transition-persist="app-navigation"] {
+    view-transition-name: app-navigation;
+  }
+  [data-view-transition-persist="kitchen-timers"] {
+    view-transition-name: kitchen-timers;
+  }
+  [data-view-transition-persist="app-toasts"] {
+    view-transition-name: app-toasts;
+  }
+}
+::view-transition-group(app-navigation),
+::view-transition-group(kitchen-timers),
+::view-transition-group(app-toasts) {
+  z-index: 1;
+  animation: none;
+}
+::view-transition-old(app-navigation),
+::view-transition-old(kitchen-timers),
+::view-transition-old(app-toasts) {
+  display: none;
+}
+::view-transition-new(app-navigation),
+::view-transition-new(kitchen-timers),
+::view-transition-new(app-toasts) {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

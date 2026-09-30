@@ -8,9 +8,11 @@ import type { RecipeOutput } from "../api/generated/types.gen"
 import { KitchenLayout } from "../components/KitchenLayout"
 import { RecipeBody } from "../components/RecipeBody"
 import { RecipeHeader } from "../components/RecipeHeader"
+import { RecipeTransition, useDisplayedRecipe } from "../components/RecipeTransition"
 import { usePostHog } from "../contexts/AnalyticsContext"
 import { useCookMode } from "../contexts/CookModeContext"
 import { useRecipeNav } from "../hooks/useRecipeNav"
+import { markRecipeNavigation } from "../lib/recipeTransition"
 import { decodeRecipeId, recipeImageUrl, recipeUrl } from "../utils/recipe"
 
 async function loader({ params }: { params: { id: string; slug: string } }): Promise<RecipeOutput> {
@@ -71,7 +73,7 @@ export const Route = createFileRoute("/recipes/$id/$slug")({
 })
 
 function RecipeDetail() {
-  const recipe = Route.useLoaderData()
+  const recipe = useDisplayedRecipe(Route.useLoaderData())
   const { isCookMode } = useCookMode()
   const img = recipeImageUrl(recipe.id, "original", recipe.image)
   const navigate = useNavigate()
@@ -98,6 +100,7 @@ function RecipeDetail() {
         to_recipe_id: prevRecipe.id,
         to_recipe_name: prevRecipe.name,
       })
+      markRecipeNavigation(prevRecipe.id, "prev")
       void navigate({ to: recipeUrl(prevRecipe.id, prevRecipe.slug) })
     }
   })
@@ -112,16 +115,19 @@ function RecipeDetail() {
         to_recipe_id: nextRecipe.id,
         to_recipe_name: nextRecipe.name,
       })
+      markRecipeNavigation(nextRecipe.id, "next")
       void navigate({ to: recipeUrl(nextRecipe.id, nextRecipe.slug) })
     }
   })
 
   return (
-    <KitchenLayout title={recipe.name ?? undefined}>
-      {!isCookMode && (
-        <RecipeHeader recipe={recipe} img={img} prevRecipe={prevRecipe} nextRecipe={nextRecipe} />
-      )}
-      <RecipeBody recipe={recipe} img={img} />
-    </KitchenLayout>
+    <RecipeTransition recipeId={recipe.id}>
+      <KitchenLayout title={recipe.name ?? undefined}>
+        {!isCookMode && (
+          <RecipeHeader recipe={recipe} img={img} prevRecipe={prevRecipe} nextRecipe={nextRecipe} />
+        )}
+        <RecipeBody recipe={recipe} img={img} />
+      </KitchenLayout>
+    </RecipeTransition>
   )
 }

@@ -10,6 +10,7 @@ import { Link } from "@tanstack/react-router"
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { usePostHog } from "../contexts/AnalyticsContext"
 import type { RecipeNavItem } from "../hooks/useRecipeNav"
+import { markRecipeNavigation } from "../lib/recipeTransition"
 import { formatTime, recipeUrl } from "../utils/recipe"
 import { AddToMealPlanButton } from "./AddToMealPlanButton"
 import { CookModeToggle } from "./CookModeToggle"
@@ -96,7 +97,8 @@ export function RecipeHeader({
                   to={recipeUrl(prevRecipe.id, prevRecipe.slug)}
                   aria-label="Previous recipe"
                   className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-black/40 p-2.5 text-white backdrop-blur-xs transition-colors hover:bg-black/60"
-                  onClick={() =>
+                  onClick={() => {
+                    markRecipeNavigation(prevRecipe.id, "prev")
                     posthog.capture("recipe_navigated", {
                       direction: "prev",
                       method: "click",
@@ -105,7 +107,7 @@ export function RecipeHeader({
                       to_recipe_id: prevRecipe.id,
                       to_recipe_name: prevRecipe.name,
                     })
-                  }
+                  }}
                 >
                   <Icon path={mdiChevronLeft} size={0.75} aria-hidden={true} />
                 </Link>
@@ -119,7 +121,8 @@ export function RecipeHeader({
                   to={recipeUrl(nextRecipe.id, nextRecipe.slug)}
                   aria-label="Next recipe"
                   className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-black/40 p-2.5 text-white backdrop-blur-xs transition-colors hover:bg-black/60"
-                  onClick={() =>
+                  onClick={() => {
+                    markRecipeNavigation(nextRecipe.id, "next")
                     posthog.capture("recipe_navigated", {
                       direction: "next",
                       method: "click",
@@ -128,7 +131,7 @@ export function RecipeHeader({
                       to_recipe_id: nextRecipe.id,
                       to_recipe_name: nextRecipe.name,
                     })
-                  }
+                  }}
                 >
                   <Icon path={mdiChevronRight} size={0.75} aria-hidden={true} />
                 </Link>
