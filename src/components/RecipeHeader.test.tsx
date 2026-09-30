@@ -176,7 +176,7 @@ it("shows arrow key hints for keyboard users beside the recipe navigation", () =
   const hint = screen.getByTestId("recipe-nav-hotkey-hint")
   expect(hint).toHaveTextContent("←→")
   expect(hint).toHaveAttribute("aria-hidden", "true")
-  expect(hint).toHaveClass("hidden", "any-pointer-fine:inline-flex")
+  expect(hint).toHaveClass("hidden", "sm:any-pointer-fine:inline-flex")
   expect(screen.getByRole("link", { name: "Previous recipe" })).toHaveAttribute(
     "aria-keyshortcuts",
     "ArrowLeft"

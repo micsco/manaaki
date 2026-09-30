@@ -96,7 +96,7 @@ export function RecipeHeader({
               <span
                 aria-hidden="true"
                 data-testid="recipe-nav-hotkey-hint"
-                className="hidden items-center gap-1 rounded-full bg-black/40 px-2.5 py-1.5 font-sans text-xs text-white/70 backdrop-blur-xs any-pointer-fine:inline-flex"
+                className="hidden items-center gap-1 rounded-full bg-black/40 px-2.5 py-1.5 font-sans text-xs text-white/70 backdrop-blur-xs sm:any-pointer-fine:inline-flex"
               >
                 <kbd className="font-sans">{recipeNavHotkeyLabels.prev}</kbd>
                 <kbd className="font-sans">{recipeNavHotkeyLabels.next}</kbd>
