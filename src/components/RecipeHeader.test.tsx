@@ -163,3 +163,31 @@ it("records the slide direction when a neighbouring recipe is opened", () => {
   screen.getByRole("link", { name: "Previous recipe" }).click()
   expect(takeRecipeNavigation(prevRecipe.id)).toBe("prev")
 })
+
+it("shows arrow key hints for keyboard users beside the recipe navigation", () => {
+  render(
+    <RecipeHeader
+      recipe={minimalRecipe}
+      img={null}
+      prevRecipe={prevRecipe}
+      nextRecipe={nextRecipe}
+    />
+  )
+  const hint = screen.getByTestId("recipe-nav-hotkey-hint")
+  expect(hint).toHaveTextContent("←→")
+  expect(hint).toHaveAttribute("aria-hidden", "true")
+  expect(hint).toHaveClass("hidden", "any-pointer-fine:inline-flex")
+  expect(screen.getByRole("link", { name: "Previous recipe" })).toHaveAttribute(
+    "aria-keyshortcuts",
+    "ArrowLeft"
+  )
+  expect(screen.getByRole("link", { name: "Next recipe" })).toHaveAttribute(
+    "aria-keyshortcuts",
+    "ArrowRight"
+  )
+})
+
+it("omits the hints when there is nowhere to navigate", () => {
+  render(<RecipeHeader recipe={minimalRecipe} img={null} />)
+  expect(screen.queryByTestId("recipe-nav-hotkey-hint")).not.toBeInTheDocument()
+})

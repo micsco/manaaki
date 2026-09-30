@@ -10,6 +10,7 @@ import { Link } from "@tanstack/react-router"
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { usePostHog } from "../contexts/AnalyticsContext"
 import type { RecipeNavItem } from "../hooks/useRecipeNav"
+import { recipeNavHotkeyLabels, recipeNavHotkeys } from "../lib/recipeHotkeys"
 import { markRecipeNavigation } from "../lib/recipeTransition"
 import { formatTime, recipeUrl } from "../utils/recipe"
 import { AddToMealPlanButton } from "./AddToMealPlanButton"
@@ -92,10 +93,19 @@ export function RecipeHeader({
           <ShareRecipeButton recipe={recipe} />
           {(prevRecipe || nextRecipe) && (
             <>
+              <span
+                aria-hidden="true"
+                data-testid="recipe-nav-hotkey-hint"
+                className="hidden items-center gap-1 rounded-full bg-black/40 px-2.5 py-1.5 font-sans text-xs text-white/70 backdrop-blur-xs any-pointer-fine:inline-flex"
+              >
+                <kbd className="font-sans">{recipeNavHotkeyLabels.prev}</kbd>
+                <kbd className="font-sans">{recipeNavHotkeyLabels.next}</kbd>
+              </span>
               {prevRecipe ? (
                 <Link
                   to={recipeUrl(prevRecipe.id, prevRecipe.slug)}
                   aria-label="Previous recipe"
+                  aria-keyshortcuts={recipeNavHotkeys.prev}
                   className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-black/40 p-2.5 text-white backdrop-blur-xs transition-colors hover:bg-black/60"
                   onClick={() => {
                     markRecipeNavigation(prevRecipe.id, "prev")
@@ -120,6 +130,7 @@ export function RecipeHeader({
                 <Link
                   to={recipeUrl(nextRecipe.id, nextRecipe.slug)}
                   aria-label="Next recipe"
+                  aria-keyshortcuts={recipeNavHotkeys.next}
                   className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-black/40 p-2.5 text-white backdrop-blur-xs transition-colors hover:bg-black/60"
                   onClick={() => {
                     markRecipeNavigation(nextRecipe.id, "next")

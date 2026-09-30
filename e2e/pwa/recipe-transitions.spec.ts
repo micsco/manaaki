@@ -109,3 +109,12 @@ test("skips the slide when reduced motion is preferred", async ({ page }) => {
   expect((await recordedTransitions(page)).filter(Boolean)).toEqual([])
   expect(errors).toEqual([])
 })
+
+test("keeps keyboard hints off touch-only phones", async ({ page }) => {
+  const errors = await openRecipe(page, "Soup")
+  const hasFinePointer = await page.evaluate(() => matchMedia("(any-pointer: fine)").matches)
+  const hint = page.getByTestId("recipe-nav-hotkey-hint")
+  if (hasFinePointer) await expect(hint).toBeVisible()
+  else await expect(hint).toBeHidden()
+  expect(errors).toEqual([])
+})

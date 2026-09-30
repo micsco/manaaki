@@ -12,6 +12,7 @@ import { RecipeTransition, useDisplayedRecipe } from "../components/RecipeTransi
 import { usePostHog } from "../contexts/AnalyticsContext"
 import { useCookMode } from "../contexts/CookModeContext"
 import { useRecipeNav } from "../hooks/useRecipeNav"
+import { recipeNavHotkeys } from "../lib/recipeHotkeys"
 import { markRecipeNavigation } from "../lib/recipeTransition"
 import { decodeRecipeId, recipeImageUrl, recipeUrl } from "../utils/recipe"
 
@@ -90,35 +91,43 @@ function RecipeDetail() {
     })
   }, [recipe.id, recipe.name, recipe.rating, recipe.totalTime, img, posthog])
 
-  useHotkey("ArrowLeft", () => {
-    if (!isCookMode && prevRecipe) {
-      posthog.capture("recipe_navigated", {
-        direction: "prev",
-        method: "keyboard",
-        from_recipe_id: recipe.id,
-        from_recipe_name: recipe.name,
-        to_recipe_id: prevRecipe.id,
-        to_recipe_name: prevRecipe.name,
-      })
-      markRecipeNavigation(prevRecipe.id, "prev")
-      void navigate({ to: recipeUrl(prevRecipe.id, prevRecipe.slug) })
-    }
-  })
+  useHotkey(
+    recipeNavHotkeys.prev,
+    () => {
+      if (!isCookMode && prevRecipe) {
+        posthog.capture("recipe_navigated", {
+          direction: "prev",
+          method: "keyboard",
+          from_recipe_id: recipe.id,
+          from_recipe_name: recipe.name,
+          to_recipe_id: prevRecipe.id,
+          to_recipe_name: prevRecipe.name,
+        })
+        markRecipeNavigation(prevRecipe.id, "prev")
+        void navigate({ to: recipeUrl(prevRecipe.id, prevRecipe.slug) })
+      }
+    },
+    { enabled: !isCookMode && !!prevRecipe, meta: { name: "Previous recipe" } }
+  )
 
-  useHotkey("ArrowRight", () => {
-    if (!isCookMode && nextRecipe) {
-      posthog.capture("recipe_navigated", {
-        direction: "next",
-        method: "keyboard",
-        from_recipe_id: recipe.id,
-        from_recipe_name: recipe.name,
-        to_recipe_id: nextRecipe.id,
-        to_recipe_name: nextRecipe.name,
-      })
-      markRecipeNavigation(nextRecipe.id, "next")
-      void navigate({ to: recipeUrl(nextRecipe.id, nextRecipe.slug) })
-    }
-  })
+  useHotkey(
+    recipeNavHotkeys.next,
+    () => {
+      if (!isCookMode && nextRecipe) {
+        posthog.capture("recipe_navigated", {
+          direction: "next",
+          method: "keyboard",
+          from_recipe_id: recipe.id,
+          from_recipe_name: recipe.name,
+          to_recipe_id: nextRecipe.id,
+          to_recipe_name: nextRecipe.name,
+        })
+        markRecipeNavigation(nextRecipe.id, "next")
+        void navigate({ to: recipeUrl(nextRecipe.id, nextRecipe.slug) })
+      }
+    },
+    { enabled: !isCookMode && !!nextRecipe, meta: { name: "Next recipe" } }
+  )
 
   return (
     <RecipeTransition recipeId={recipe.id}>
