@@ -4,3 +4,5 @@ overrides:
 allowBuilds:
   core-js: false
   protobufjs: false
+
+autoDedupe: true

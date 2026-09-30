@@ -74,6 +74,16 @@ Regression coverage includes shared storage updates, changing storage keys, stab
 - Renamed the placeholder Deploy workflow to Production build validation (`production-build.yml`) and removed its simulated deployment messages with explicit user approval. Actual deployment is managed by Dokploy.
 - Docker execution remains unverified because no Docker daemon is available. Image tags were verified against official manifests; entrypoint shell syntax passes. Existing process supervision and the secret-gated PostHog CLI step remain unchanged.
 
+## pnpm 12 tooling follow-up
+
+Checked on pnpm 12.8.1, the version pinned by `packageManager`:
+
+- The lockfile already records `packageManagerDependencies` (pnpm 12.8.1 and its per-platform `@pnpm/exe.*` binaries), so no change was needed.
+- pnpm 12 rejects unrecognised `pnpm-workspace.yaml` settings when the pinned version matches the running one. A deliberately misspelt key fails installation as expected; the existing `overrides`, `allowBuilds` and new `autoDedupe` settings are all accepted, so nothing needed fixing.
+- Enabled `autoDedupe`. Its first install removed a duplicate lru-cache 11.5.2 from jsdom in favour of the already-present 11.5.3. `pnpm dedupe --check` and frozen installs pass.
+- `.pnpmfile.cjs` still runs under the native binary: temporarily changing its TypeScript version changed the resolved openapi-ts dependency and `pnpmfileChecksum`, and a frozen install with the stale lockfile failed with `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`.
+- Docker: Node 24.21 bundles Corepack 0.36, which runs pnpm 11+ through the package's `bin/pnpm.mjs` wrapper. Corepack installs no optional dependencies, so the wrapper downloads and signature-checks the native binary on first use and keeps it in the Corepack cache for later `RUN` steps. Alpine selects `@pnpm/exe.linux-x64-musl`, which is a static-pie executable with no extra library requirements. A fresh-cache `corepack enable pnpm` run reproduced this download and a frozen install locally; the Docker image itself remains unverified because no daemon is available. Builds with `COREPACK_ENABLE_NETWORK=0` would fail, so the build stage needs registry access, as it already does for dependencies.
+
 ## Final verification
 
 On Node 24.20.0 / pnpm 12.3.4, against the current checkout including published navigation changes:
