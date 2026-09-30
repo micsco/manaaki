@@ -84,6 +84,11 @@ Checked on pnpm 12.8.1, the version pinned by `packageManager`:
 - `.pnpmfile.cjs` still runs under the native binary: temporarily changing its TypeScript version changed the resolved openapi-ts dependency and `pnpmfileChecksum`, and a frozen install with the stale lockfile failed with `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`.
 - Docker: Node 24.21 bundles Corepack 0.36, which runs pnpm 11+ through the package's `bin/pnpm.mjs` wrapper. Corepack installs no optional dependencies, so the wrapper downloads and signature-checks the native binary on first use and keeps it in the Corepack cache for later `RUN` steps. Alpine selects `@pnpm/exe.linux-x64-musl`, which is a static-pie executable with no extra library requirements. A fresh-cache `corepack enable pnpm` run reproduced this download and a frozen install locally; the Docker image itself remains unverified because no daemon is available. Builds with `COREPACK_ENABLE_NETWORK=0` would fail, so the build stage needs registry access, as it already does for dependencies.
 
+## Reviewed, not adopted
+
+- **Vite 8.3 top-level `tsconfig`** is not a replacement for `resolve.tsconfigPaths: true`. It only chooses which tsconfig file the transform and bundler read. In a probe project with a `paths` alias, both settings built, but only `resolve.tsconfigPaths` resolved the alias in the dev server, so the existing option stays.
+- **posthog-js object-form `capture_pageview`** (`{ path, search, hash }`) only chooses which history changes make the SDK send its own pageviews; it adds no separate path/search/hash properties. Manaaki deliberately keeps `capture_pageview: false` and sends router pageviews through the buffered client, which queues them with their original URL and timestamp until the deferred SDK loads (see `performance-testing.md`). Turning on SDK pageviews would duplicate those events or lose the queued startup pageview, so posthog-js stays pinned at 1.427.2 with the current configuration.
+
 ## Final verification
 
 On Node 24.20.0 / pnpm 12.3.4, against the current checkout including published navigation changes:
