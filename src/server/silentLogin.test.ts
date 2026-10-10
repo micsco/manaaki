@@ -74,13 +74,64 @@ describe("silent attempt marker", () => {
 })
 
 describe("safeReturnPath", () => {
+  const origin = "https://manaaki.micsco.nz"
+  const resolvedOrigin = (candidate: string) => new URL(safeReturnPath(candidate), origin).origin
+
   it("keeps same-origin absolute paths and falls back to /recipes otherwise", () => {
     expect(safeReturnPath("/plan?week=2")).toBe("/plan?week=2")
+    expect(safeReturnPath("/shopping?list=abc&partial=true#items")).toBe(
+      "/shopping?list=abc&partial=true#items"
+    )
     expect(safeReturnPath("https://evil.example/x")).toBe("/recipes")
     expect(safeReturnPath("//evil.example/x")).toBe("/recipes")
     expect(safeReturnPath("/\\evil.example")).toBe("/recipes")
+    expect(safeReturnPath("recipes")).toBe("/recipes")
     expect(safeReturnPath(null)).toBe("/recipes")
     expect(safeReturnPath("")).toBe("/recipes")
+  })
+
+  it.each([
+    ["a tab before the second slash", "/\t/evil.example"],
+    ["a tab before a backslash", "/\t\\evil.example"],
+    ["a newline before the second slash", "/\n/evil.example"],
+    ["a carriage return before the second slash", "/\r/evil.example"],
+    ["a leading tab", "\t//evil.example"],
+    ["a tab inside the scheme-relative slashes", "/\t/\t/evil.example"],
+    ["a dot segment that collapses to a double slash", "/.//evil.example"],
+    ["a parent segment that collapses to a double slash", "/..//evil.example"],
+    ["a backslash after a dot segment", "/.\\/evil.example"],
+    ["a backslash deeper in the path", "/recipes\\..\\..\\/evil.example"],
+  ])("never leaves the site when the path has %s", (_description, candidate) => {
+    expect(resolvedOrigin(candidate)).toBe(origin)
+  })
+
+  it("rejects control characters and backslashes outright instead of repairing them", () => {
+    expect(safeReturnPath("/plan\t")).toBe("/recipes")
+    expect(safeReturnPath("/plan\u0000")).toBe("/recipes")
+    expect(safeReturnPath("/plan\u007f")).toBe("/recipes")
+    expect(safeReturnPath("/plan\\week")).toBe("/recipes")
+  })
+
+  it("returns the normalised path, not the raw input", () => {
+    expect(safeReturnPath("/recipes/../plan")).toBe("/plan")
+    expect(safeReturnPath("/plan?note=a b")).toBe("/plan?note=a%20b")
+  })
+
+  it("keeps percent-encoded characters encoded", () => {
+    expect(safeReturnPath("/%09/evil.example")).toBe("/%09/evil.example")
+    expect(resolvedOrigin("/%2F%2Fevil.example")).toBe(origin)
+  })
+
+  it("never returns to an API endpoint", () => {
+    expect(safeReturnPath("/api/auth/oauth?silent=1&returnTo=%2Fplan")).toBe("/recipes")
+    expect(safeReturnPath("/api")).toBe("/recipes")
+    expect(safeReturnPath("/recipes/../api/auth/logout")).toBe("/recipes")
+    expect(safeReturnPath("/apiary")).toBe("/apiary")
+  })
+
+  it("rejects paths too long to fit in the login attempt cookie", () => {
+    expect(safeReturnPath(`/plan?week=${"1".repeat(2048)}`)).toBe("/recipes")
+    expect(safeReturnPath(`/plan?week=${"1".repeat(1000)}`)).toBe(`/plan?week=${"1".repeat(1000)}`)
   })
 })
 

@@ -3,7 +3,7 @@ import * as http from "node:http"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
 import { beginNativeLogin } from "../server/nativeOidc"
-import { unsealSession } from "../server/session"
+import { sealJson, unsealSession } from "../server/session"
 import { buildKnownDeviceSetCookie, readKnownDevice } from "../server/silentLogin"
 import { completeHandler } from "./api.auth.complete"
 
@@ -133,6 +133,39 @@ describe("completeHandler", () => {
     expect(cookies.find(c => c.startsWith("__Host-manaaki_oidc="))).toContain("Max-Age=0")
     expect(upstreamPaths).not.toContain("/api/auth/oauth/native/token")
   })
+
+  it("keeps a refused silent attempt on this site when returnTo disguises another host", async () => {
+    const { state, cookie } = await startedLogin("?silent=1&returnTo=%2F%09%2Fevil.example")
+
+    const res = await completeHandler(completeRequest(state, cookie, "error=login_required"))
+
+    expect(res.status).toBe(302)
+    expect(res.headers.get("location")).toBe("/recipes")
+  })
+
+  it.each([
+    ["a refused silent attempt", "error=login_required"],
+    ["a completed login", "code=abc"],
+  ])(
+    "ignores a disguised returnTo already sealed into the attempt cookie on %s",
+    async (_case, query) => {
+      const sealedAttempt = sealJson({
+        state: "known-state",
+        nonce: "nonce",
+        codeVerifier: "verifier",
+        redirectUri: "https://manaaki.micsco.nz/login",
+        returnTo: "/\t/evil.example",
+        silent: true,
+      })
+
+      const res = await completeHandler(
+        completeRequest("known-state", `__Host-manaaki_oidc=${sealedAttempt}`, query)
+      )
+
+      expect(res.status).toBe(302)
+      expect(res.headers.get("location")).toBe("/recipes")
+    }
+  )
 
   it("sends a refused interactive attempt to the login error state", async () => {
     const { state, cookie } = await startedLogin()

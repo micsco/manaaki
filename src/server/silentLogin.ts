@@ -4,6 +4,10 @@ import { isSecureRequest, readSessionToken, sealJson, unsealJson } from "./sessi
 const KNOWN_DEVICE_MAX_AGE_SECONDS = 365 * 24 * 60 * 60
 const SILENT_ATTEMPT_MAX_AGE_SECONDS = 600
 const DEFAULT_RETURN_PATH = "/recipes"
+const RETURN_PATH_BASE = "https://return-path.invalid"
+const MAX_RETURN_PATH_LENGTH = 2048
+// eslint-disable-next-line no-control-regex -- browsers drop tabs and newlines from a redirect target, which turns "/<tab>/host" into "//host"
+const CONTROL_CHARACTER_OR_BACKSLASH = /[\u0000-\u001f\u007f\\]/
 
 export type KnownDevice = { email: string }
 
@@ -60,11 +64,19 @@ export function hasRecentSilentAttempt(request: Request): boolean {
   )
 }
 
+function resolveOnSite(candidate: string): string | null {
+  if (!candidate.startsWith("/") || candidate.length > MAX_RETURN_PATH_LENGTH) return null
+  if (CONTROL_CHARACTER_OR_BACKSLASH.test(candidate)) return null
+  if (!URL.canParse(candidate, RETURN_PATH_BASE)) return null
+  const resolved = new URL(candidate, RETURN_PATH_BASE)
+  if (resolved.origin !== RETURN_PATH_BASE) return null
+  if (resolved.pathname.startsWith("//")) return null
+  if (resolved.pathname === "/api" || resolved.pathname.startsWith("/api/")) return null
+  return resolved.pathname + resolved.search + resolved.hash
+}
+
 export function safeReturnPath(candidate: string | null | undefined): string {
-  if (!candidate) return DEFAULT_RETURN_PATH
-  if (!candidate.startsWith("/")) return DEFAULT_RETURN_PATH
-  if (candidate.startsWith("//") || candidate.startsWith("/\\")) return DEFAULT_RETURN_PATH
-  return candidate
+  return (candidate && resolveOnSite(candidate)) || DEFAULT_RETURN_PATH
 }
 
 function isPageRequest(request: Request, pathname: string): boolean {

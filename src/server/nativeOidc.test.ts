@@ -180,6 +180,8 @@ describe("beginNativeLogin", () => {
     expect(attemptFrom(same)?.returnTo).toBe("/plan?week=2")
     const foreign = await beginNativeLogin(startRequest("?returnTo=https%3A%2F%2Fevil.example"))
     expect(attemptFrom(foreign)?.returnTo).toBe("/recipes")
+    const disguised = await beginNativeLogin(startRequest("?returnTo=%2F%09%2Fevil.example"))
+    expect(attemptFrom(disguised)?.returnTo).toBe("/recipes")
   })
 
   it("runs a silent attempt with prompt=none, the known email as login_hint, and a loop-guard marker", async () => {
