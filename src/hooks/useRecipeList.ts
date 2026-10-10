@@ -14,7 +14,7 @@ export class RecipeListError extends Error {
 }
 
 export function shouldRetryRecipeList(failureCount: number, error: unknown): boolean {
-  return !(error instanceof RecipeListError && error.status === 401) && failureCount < 3
+  return !(error instanceof RecipeListError && error.status === 401) && failureCount < 1
 }
 
 async function fetchPage(page: number) {

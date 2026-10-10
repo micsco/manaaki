@@ -150,14 +150,13 @@ describe("recipeListQueryOptions", () => {
     expect(retry(0, error as Error)).toBe(false)
   })
 
-  it("retries transient recipe failures up to three times", async () => {
+  it("retries a transient recipe failure once so a struggling server is not hammered", async () => {
     const error = await recipeFailure(503)
     const retry = recipeListQueryOptions.retry
 
     expect(retry).toBeTypeOf("function")
     if (typeof retry !== "function") throw new Error("Expected retry function")
     expect(retry(0, error as Error)).toBe(true)
-    expect(retry(2, error as Error)).toBe(true)
-    expect(retry(3, error as Error)).toBe(false)
+    expect(retry(1, error as Error)).toBe(false)
   })
 })

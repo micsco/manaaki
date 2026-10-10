@@ -1,9 +1,15 @@
 const RETRYABLE_METHODS = new Set(["GET", "HEAD", "OPTIONS"])
-const MAX_ATTEMPTS = 3
+const MAX_ATTEMPTS = 2
 const BASE_DELAY_MS = 500
 
-function isRetryableResponse(response: Response): boolean {
-  return response.status === 429 || response.status >= 500
+type Fetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+
+function isNetworkFailure(error: unknown): boolean {
+  return error instanceof TypeError
+}
+
+export function requestMethod(input: RequestInfo | URL, init?: RequestInit): string {
+  return (init?.method ?? (input instanceof Request ? input.method : "GET")).toUpperCase()
 }
 
 function backoffDelay(attempt: number): number {
@@ -12,42 +18,21 @@ function backoffDelay(attempt: number): number {
   return exponential + jitter
 }
 
-type FetchResult = { ok: true; response: Response } | { ok: false; error: unknown }
-
-async function attemptFetch(input: RequestInfo | URL, init?: RequestInit): Promise<FetchResult> {
-  try {
-    const response = await fetch(input, init)
-    return { ok: true, response }
-  } catch (error) {
-    return { ok: false, error }
-  }
-}
-
 export async function retryingFetch(
   input: RequestInfo | URL,
-  init?: RequestInit
+  init?: RequestInit,
+  send: Fetch = fetch
 ): Promise<Response> {
-  const method = (init?.method ?? "GET").toUpperCase()
-  const shouldRetry = RETRYABLE_METHODS.has(method)
+  const attempts = RETRYABLE_METHODS.has(requestMethod(input, init)) ? MAX_ATTEMPTS : 1
 
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+  for (let attempt = 0; ; attempt++) {
     if (attempt > 0) {
       await new Promise(resolve => setTimeout(resolve, backoffDelay(attempt - 1)))
     }
-
-    const result = await attemptFetch(input, init)
-
-    if (!result.ok) {
-      if (!shouldRetry || attempt === MAX_ATTEMPTS - 1) throw result.error
-      continue
+    try {
+      return await send(input, init)
+    } catch (error) {
+      if (attempt === attempts - 1 || !isNetworkFailure(error)) throw error
     }
-
-    if (shouldRetry && isRetryableResponse(result.response) && attempt < MAX_ATTEMPTS - 1) {
-      continue
-    }
-
-    return result.response
   }
-
-  throw new Error("retryingFetch: exhausted all attempts")
 }
