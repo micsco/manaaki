@@ -2,6 +2,7 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto"
 
 import { parseCookie, serializeCookie } from "./cookies"
 import { mealieInternalUrl } from "./env"
+import { mealieFetch } from "./mealieUpstream"
 import { isSecureRequest, sealJson, unsealJson } from "./session"
 import { buildSilentAttemptMarkerCookie, readKnownDevice, safeReturnPath } from "./silentLogin"
 
@@ -31,7 +32,7 @@ function attemptCookieOptions(secure: boolean, maxAge: number) {
 }
 
 async function fetchProviderConfig(): Promise<ProviderConfig> {
-  const res = await fetch(`${mealieInternalUrl()}/api/auth/oauth/native/config`)
+  const res = await mealieFetch(`${mealieInternalUrl()}/api/auth/oauth/native/config`)
   if (!res.ok) throw new Error(`OIDC provider config unavailable: ${res.status}`)
   return (await res.json()) as ProviderConfig
 }
@@ -134,7 +135,7 @@ export async function completeNativeLogin(request: Request): Promise<string> {
   if (!attempt) throw new Error("No login attempt in progress")
   if (!equalStates(attempt.state, state)) throw new Error("OIDC state mismatch")
 
-  const res = await fetch(`${mealieInternalUrl()}/api/auth/oauth/native/token`, {
+  const res = await mealieFetch(`${mealieInternalUrl()}/api/auth/oauth/native/token`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

@@ -7,6 +7,14 @@ import { Readable } from "node:stream"
 import { isAnonymousAllowed } from "./allowlist"
 import { mealieInternalUrl, readonlyToken } from "./env"
 import {
+  isMealieOverloaded,
+  mealieFetch,
+  MealieTimeoutError,
+  mealieTimeoutMs,
+  MealieUnreachableError,
+  upstreamFailureResponse,
+} from "./mealieUpstream"
+import {
   buildClearSessionCookie,
   buildSessionSetCookie,
   decodeJwtTiming,
@@ -88,9 +96,11 @@ function forward(request: Request, token: string, pathWithQuery: string): Promis
             headers: upstreamHeaders(request, token),
           },
           res => {
+            clearTimeout(responseDeadline)
             const headers = buildResponseHeaders(res)
             const status = res.statusCode ?? 502
             const noBody = status === 204 || status === 304 || request.method === "HEAD"
+            if (noBody) res.resume()
             resolve(
               new Response(noBody ? null : (Readable.toWeb(res) as ReadableStream), {
                 status,
@@ -100,7 +110,21 @@ function forward(request: Request, token: string, pathWithQuery: string): Promis
             )
           }
         )
-        upstream.on("error", reject)
+        const responseDeadline = setTimeout(
+          () => upstream.destroy(new MealieTimeoutError("Mealie did not answer in time")),
+          mealieTimeoutMs(request.method)
+        )
+        const abandon = () => upstream.destroy(new Error("Client disconnected"))
+        if (request.signal.aborted) abandon()
+        else request.signal.addEventListener("abort", abandon, { once: true })
+        upstream.on("error", error => {
+          clearTimeout(responseDeadline)
+          reject(
+            error instanceof MealieTimeoutError || request.signal.aborted
+              ? error
+              : new MealieUnreachableError("Mealie could not be reached", { cause: error })
+          )
+        })
         if (hasBody && request.body) {
           // @ts-expect-error ReadableStream<Uint8Array> is compatible but types diverge
           Readable.fromWeb(request.body).pipe(upstream)
@@ -125,7 +149,7 @@ async function resolveSessionToken(token: string): Promise<SessionToken> {
 
   try {
     const res = await measureServerTiming("session_refresh", () =>
-      fetch(`${mealieInternalUrl()}/api/auth/refresh`, {
+      mealieFetch(`${mealieInternalUrl()}/api/auth/refresh`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -136,7 +160,8 @@ async function resolveSessionToken(token: string): Promise<SessionToken> {
     return typeof body.access_token === "string"
       ? { state: "refreshed", token: body.access_token }
       : { state: "valid", token }
-  } catch {
+  } catch (error) {
+    if (isMealieOverloaded(error)) throw error
     return { state: "valid", token }
   }
 }
@@ -173,6 +198,17 @@ async function recoverInvalidSession(
 }
 
 export async function handleApiProxy(request: Request): Promise<Response> {
+  try {
+    return await proxyToMealie(request)
+  } catch (error) {
+    if (request.signal.aborted) return new Response(null, { status: 499 })
+    const failure = upstreamFailureResponse(error)
+    if (failure) return failure
+    throw error
+  }
+}
+
+async function proxyToMealie(request: Request): Promise<Response> {
   const url = new URL(request.url)
   const pathWithQuery = url.pathname + url.search
   const userToken = readSessionToken(request)

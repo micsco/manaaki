@@ -12,7 +12,11 @@ it("times server fetches without changing the request or exposing its credential
     headers: { Authorization: "Bearer private-token" },
   })
   const result = await withServerTiming(async () => ({ response: await timedFetch(request) }))
-  expect(fetch).toHaveBeenCalledWith(request, undefined)
+  expect(fetch).toHaveBeenCalledTimes(1)
+  const [input, init] = fetch.mock.calls[0]
+  expect(input).toBe(request)
+  expect(Object.keys(init ?? {})).toEqual(["signal"])
+  expect(init?.signal).toBeInstanceOf(AbortSignal)
   expect(result.response.headers.get("Server-Timing")).toMatch(
     /^mealie;dur=[\d.]+, app;dur=[\d.]+$/
   )
