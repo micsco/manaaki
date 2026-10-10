@@ -1,6 +1,7 @@
 import { getLoggedInUserApiUsersSelfGet, type UserOut } from "../api/generated"
 import { readonlyToken } from "./env"
 import { createMealieClient } from "./mealieClient"
+import { isMealieOverloaded } from "./mealieUpstream"
 import { readSessionToken } from "./session"
 import { measureServerTiming } from "./timing"
 
@@ -11,6 +12,7 @@ async function getUser(token: string): Promise<UserOut | null> {
   )
   if (result.data) return result.data
   if (result.response?.status === 401) return null
+  if (isMealieOverloaded(result.error)) throw result.error
   throw new Error("Failed to resolve current user")
 }
 

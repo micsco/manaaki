@@ -6,12 +6,15 @@ import { Readable } from "node:stream"
 
 import { isAnonymousAllowed } from "./allowlist"
 import { mealieInternalUrl, readonlyToken } from "./env"
+import type { MealieSlot } from "./mealieLimiter"
 import {
+  acquireMealieSlot,
   isMealieOverloaded,
   mealieFetch,
   MealieTimeoutError,
   mealieTimeoutMs,
   MealieUnreachableError,
+  releaseAfterFailure,
   upstreamFailureResponse,
 } from "./mealieUpstream"
 import {
@@ -76,7 +79,26 @@ function buildResponseHeaders(incoming: http.IncomingMessage): Headers {
   return headers
 }
 
-function forward(request: Request, token: string, pathWithQuery: string): Promise<Response> {
+const DATABASE_FREE_PATH_PREFIX = "/api/media/"
+
+async function forward(request: Request, token: string, pathWithQuery: string): Promise<Response> {
+  const slot = pathWithQuery.startsWith(DATABASE_FREE_PATH_PREFIX)
+    ? null
+    : await acquireMealieSlot(request.signal)
+  try {
+    return await send(request, token, pathWithQuery, slot)
+  } catch (error) {
+    if (slot) releaseAfterFailure(slot, error)
+    throw error
+  }
+}
+
+function send(
+  request: Request,
+  token: string,
+  pathWithQuery: string,
+  slot: MealieSlot | null
+): Promise<Response> {
   const base = new URL(mealieInternalUrl())
   const isHttps = base.protocol === "https:"
   const transport = isHttps ? httpsRequest : httpRequest
@@ -97,6 +119,7 @@ function forward(request: Request, token: string, pathWithQuery: string): Promis
           },
           res => {
             clearTimeout(responseDeadline)
+            slot?.release()
             const headers = buildResponseHeaders(res)
             const status = res.statusCode ?? 502
             const noBody = status === 204 || status === 304 || request.method === "HEAD"

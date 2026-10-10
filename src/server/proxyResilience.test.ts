@@ -3,6 +3,7 @@ import type { AddressInfo } from "node:net"
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
+import { mealieFetch } from "./mealieUpstream"
 import { handleApiProxy } from "./proxy"
 import { buildSessionSetCookie } from "./session"
 
@@ -24,6 +25,7 @@ function startServer(): Promise<void> {
         if (!res.writableEnded) closedEarly.push(url)
       })
       const respond = () => {
+        if (res.headersSent || res.destroyed) return
         const status = req.method === "DELETE" ? 204 : 200
         res.writeHead(status, { "content-type": "application/json" })
         res.end(status === 204 ? undefined : "{}")
@@ -75,12 +77,18 @@ beforeEach(async () => {
   process.env.MEALIE_READONLY_TOKEN = "ro-token"
   process.env.MEALIE_READ_TIMEOUT_MS = "60"
   process.env.MEALIE_WRITE_TIMEOUT_MS = "400"
+  process.env.MEALIE_STALLED_SLOT_HOLD_MS = "1"
   await startServer()
 })
 
 afterEach(async () => {
   delete process.env.MEALIE_READ_TIMEOUT_MS
   delete process.env.MEALIE_WRITE_TIMEOUT_MS
+  delete process.env.MEALIE_STALLED_SLOT_HOLD_MS
+  delete process.env.MEALIE_CONCURRENCY_LIMIT
+  delete process.env.MEALIE_QUEUE_TIMEOUT_MS
+  for (const request of held.splice(0)) request.respond()
+  await new Promise(resolve => setTimeout(resolve, 10))
   server.closeAllConnections()
   await new Promise<void>(resolve => server.close(() => resolve()))
 })
@@ -192,5 +200,155 @@ describe("handleApiProxy responses without a body", () => {
     }
 
     expect(connections).toBe(1)
+  })
+})
+
+describe("handleApiProxy concurrency towards Mealie", () => {
+  beforeEach(() => {
+    process.env.MEALIE_CONCURRENCY_LIMIT = "2"
+    process.env.MEALIE_READ_TIMEOUT_MS = "2000"
+    process.env.MEALIE_QUEUE_TIMEOUT_MS = "2000"
+  })
+
+  it("never has more than the limit in flight, and serves the rest as slots free up", async () => {
+    holdResponses = true
+    const responses = Array.from({ length: 5 }, (_, index) =>
+      handleApiProxy(anonymousGet(`/api/recipes/recipe-${index}`))
+    )
+    await until(() => held.length === 2)
+    await new Promise(resolve => setTimeout(resolve, 40))
+    expect(seen).toHaveLength(2)
+
+    let peak = held.length
+    while (seen.length < 5 || held.length > 0) {
+      peak = Math.max(peak, held.length)
+      held.shift()?.respond()
+      await new Promise(resolve => setTimeout(resolve, 5))
+    }
+
+    expect((await Promise.all(responses)).map(response => response.status)).toEqual([
+      200, 200, 200, 200, 200,
+    ])
+    expect(peak).toBe(2)
+    expect(seen).toEqual([0, 1, 2, 3, 4].map(index => `/api/recipes/recipe-${index}`))
+  })
+
+  it("lets images through while every slot is taken, since they need no database", async () => {
+    holdResponses = true
+    const blocked = [0, 1].map(index => handleApiProxy(anonymousGet(`/api/recipes/r${index}`)))
+    await until(() => held.length === 2)
+    const image = "/api/media/recipes/78789bca-e281-4dcd-a4a1-bb504aebe39f/images/original.webp"
+
+    const pending = handleApiProxy(anonymousGet(image))
+    await until(() => held.some(request => request.url === image))
+    held.find(request => request.url === image)?.respond()
+
+    expect((await pending).status).toBe(200)
+    for (const request of held.splice(0)) request.respond()
+    await Promise.all(blocked)
+  })
+
+  it("answers 503 with Retry-After when no slot frees up within the queue timeout", async () => {
+    process.env.MEALIE_QUEUE_TIMEOUT_MS = "50"
+    holdResponses = true
+    const blocked = [0, 1].map(index => handleApiProxy(anonymousGet(`/api/recipes/r${index}`)))
+    await until(() => held.length === 2)
+
+    const res = await handleApiProxy(anonymousGet("/api/recipes/late"))
+
+    expect(res.status).toBe(503)
+    expect(res.headers.get("retry-after")).toBe("2")
+    expect(res.headers.get("cache-control")).toBe("no-store")
+    expect(seen).not.toContain("/api/recipes/late")
+    for (const request of held.splice(0)) request.respond()
+    await Promise.all(blocked)
+  })
+
+  it("counts server-side Mealie calls against the same limit as proxied ones", async () => {
+    process.env.MEALIE_QUEUE_TIMEOUT_MS = "50"
+    holdResponses = true
+    const blocked = [0, 1].map(index => handleApiProxy(anonymousGet(`/api/recipes/r${index}`)))
+    await until(() => held.length === 2)
+
+    await expect(
+      mealieFetch(`${process.env.MEALIE_INTERNAL_URL}/api/users/self`)
+    ).rejects.toMatchObject({ name: "MealieBusyError" })
+
+    expect(seen).not.toContain("/api/users/self")
+    for (const request of held.splice(0)) request.respond()
+    await Promise.all(blocked)
+  })
+
+  it("frees the slot when a server-side call fails or is answered", async () => {
+    process.env.MEALIE_CONCURRENCY_LIMIT = "1"
+    process.env.MEALIE_QUEUE_TIMEOUT_MS = "50"
+    const url = `${process.env.MEALIE_INTERNAL_URL}/api/users/self`
+
+    expect((await mealieFetch(url)).status).toBe(200)
+    await expect(mealieFetch("http://127.0.0.1:1/api/users/self")).rejects.toBeInstanceOf(TypeError)
+
+    expect((await mealieFetch(url)).status).toBe(200)
+  })
+
+  it("frees the slot when a proxied request fails before it is sent", async () => {
+    process.env.MEALIE_CONCURRENCY_LIMIT = "1"
+    process.env.MEALIE_QUEUE_TIMEOUT_MS = "50"
+    const internalUrl = process.env.MEALIE_INTERNAL_URL
+    delete process.env.MEALIE_INTERNAL_URL
+    await expect(handleApiProxy(anonymousGet("/api/recipes/unsent"))).rejects.toThrow(
+      "MEALIE_INTERNAL_URL"
+    )
+    process.env.MEALIE_INTERNAL_URL = internalUrl
+
+    expect((await handleApiProxy(anonymousGet("/api/recipes/next"))).status).toBe(200)
+  })
+
+  it("drops a queued request whose browser goes away before it reaches Mealie", async () => {
+    holdResponses = true
+    const blocked = [0, 1].map(index => handleApiProxy(anonymousGet(`/api/recipes/r${index}`)))
+    await until(() => held.length === 2)
+    const browser = new AbortController()
+    const queued = handleApiProxy(anonymousGet("/api/recipes/queued", { signal: browser.signal }))
+
+    browser.abort()
+
+    expect((await queued).status).toBe(499)
+    for (const request of held.splice(0)) request.respond()
+    await Promise.all(blocked)
+    expect(seen).not.toContain("/api/recipes/queued")
+  })
+
+  it("keeps a timed-out request's slot occupied while Mealie may still be working on it", async () => {
+    process.env.MEALIE_CONCURRENCY_LIMIT = "1"
+    process.env.MEALIE_READ_TIMEOUT_MS = "40"
+    process.env.MEALIE_QUEUE_TIMEOUT_MS = "40"
+    process.env.MEALIE_STALLED_SLOT_HOLD_MS = "250"
+    holdResponses = true
+    expect((await handleApiProxy(anonymousGet("/api/recipes/stuck"))).status).toBe(504)
+    holdResponses = false
+
+    const duringHold = await handleApiProxy(anonymousGet("/api/recipes/during-hold"))
+    await new Promise(resolve => setTimeout(resolve, 260))
+    const afterHold = await handleApiProxy(anonymousGet("/api/recipes/after-hold"))
+
+    expect(duringHold.status).toBe(503)
+    expect(seen).not.toContain("/api/recipes/during-hold")
+    expect(afterHold.status).toBe(200)
+  })
+
+  it("holds the slot after a server-side call times out too", async () => {
+    process.env.MEALIE_CONCURRENCY_LIMIT = "1"
+    process.env.MEALIE_READ_TIMEOUT_MS = "40"
+    process.env.MEALIE_QUEUE_TIMEOUT_MS = "40"
+    process.env.MEALIE_STALLED_SLOT_HOLD_MS = "250"
+    holdResponses = true
+    const url = `${process.env.MEALIE_INTERNAL_URL}/api/users/self`
+    await expect(mealieFetch(url)).rejects.toMatchObject({ name: "MealieTimeoutError" })
+    holdResponses = false
+
+    await expect(mealieFetch(url)).rejects.toMatchObject({ name: "MealieBusyError" })
+    await new Promise(resolve => setTimeout(resolve, 260))
+
+    expect((await mealieFetch(url)).status).toBe(200)
   })
 })

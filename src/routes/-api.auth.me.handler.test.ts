@@ -59,4 +59,32 @@ describe("meHandler", () => {
     expect(res.headers.get("Cache-Control")).toBe("private, no-store")
     vi.restoreAllMocks()
   })
+
+  it("answers 504 when Mealie does not answer the identity lookup in time", async () => {
+    process.env.MEALIE_READ_TIMEOUT_MS = "20"
+    process.env.MEALIE_STALLED_SLOT_HOLD_MS = "1"
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      (_input, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => reject(init.signal?.reason), { once: true })
+        })
+    )
+
+    const res = await meHandler(new Request("https://app/api/auth/me"))
+
+    expect(res.status).toBe(504)
+    expect(res.headers.get("Cache-Control")).toBe("no-store")
+    delete process.env.MEALIE_READ_TIMEOUT_MS
+    delete process.env.MEALIE_STALLED_SLOT_HOLD_MS
+    vi.restoreAllMocks()
+  })
+
+  it("still fails loudly on an identity error that is not Mealie being overloaded", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 500 }))
+
+    await expect(meHandler(new Request("https://app/api/auth/me"))).rejects.toThrow(
+      "Failed to resolve current user"
+    )
+    vi.restoreAllMocks()
+  })
 })

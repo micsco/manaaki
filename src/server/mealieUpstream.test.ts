@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { MealieBusyError } from "./mealieLimiter"
 import {
   mealieFetch,
   MealieTimeoutError,
@@ -13,6 +14,7 @@ function hangingFetch() {
     (_input, init) =>
       new Promise<Response>((_resolve, reject) => {
         const signal = init?.signal
+        if (signal?.aborted) reject(signal.reason)
         signal?.addEventListener("abort", () => reject(signal.reason), { once: true })
       })
   )
@@ -21,11 +23,13 @@ function hangingFetch() {
 beforeEach(() => {
   process.env.MEALIE_READ_TIMEOUT_MS = "30"
   process.env.MEALIE_WRITE_TIMEOUT_MS = "200"
+  process.env.MEALIE_STALLED_SLOT_HOLD_MS = "1"
 })
 
 afterEach(() => {
   delete process.env.MEALIE_READ_TIMEOUT_MS
   delete process.env.MEALIE_WRITE_TIMEOUT_MS
+  delete process.env.MEALIE_STALLED_SLOT_HOLD_MS
   vi.restoreAllMocks()
 })
 
@@ -111,6 +115,14 @@ describe("mealieFetch", () => {
 })
 
 describe("upstreamFailureResponse", () => {
+  it("maps a full queue to an uncacheable 503 that says when to come back", () => {
+    const response = upstreamFailureResponse(new MealieBusyError("busy"))
+
+    expect(response?.status).toBe(503)
+    expect(response?.headers.get("retry-after")).toBe("2")
+    expect(response?.headers.get("cache-control")).toBe("no-store")
+  })
+
   it("maps a timeout to an uncacheable 504", () => {
     const response = upstreamFailureResponse(new MealieTimeoutError("slow"))
 

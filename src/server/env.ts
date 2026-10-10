@@ -18,3 +18,7 @@ function positiveInteger(name: string, fallback: number): number {
 export const mealieReadTimeoutMs = (): number => positiveInteger("MEALIE_READ_TIMEOUT_MS", 15_000)
 export const mealieWriteTimeoutMs = (): number =>
   positiveInteger("MEALIE_WRITE_TIMEOUT_MS", 120_000)
+export const mealieConcurrencyLimit = (): number => positiveInteger("MEALIE_CONCURRENCY_LIMIT", 6)
+export const mealieQueueTimeoutMs = (): number => positiveInteger("MEALIE_QUEUE_TIMEOUT_MS", 10_000)
+export const mealieStalledSlotHoldMs = (): number =>
+  positiveInteger("MEALIE_STALLED_SLOT_HOLD_MS", 30_000)
