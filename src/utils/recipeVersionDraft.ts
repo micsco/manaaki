@@ -230,7 +230,7 @@ export function blockingChecks(checks: DraftCheck[]): DraftCheck[] {
 export type DraftMetrics = {
   model: string
   thinkingLevel: string
-  connectMs: number
+  firstChunkMs: number | null
   inputTokens: number
   outputTokens: number
   thinkingTokens: number
@@ -242,7 +242,8 @@ export type DraftMetrics = {
 }
 
 export type DraftProgressEvent =
-  | { type: "progress"; stage: "thinking" | "checking" }
+  | { type: "progress"; stage: "thinking"; thought?: string }
+  | { type: "progress"; stage: "checking" }
   | { type: "progress"; stage: "writing"; steps: number }
 
 export type DraftStreamEvent =

@@ -112,7 +112,7 @@ describe.skipIf(!hasKey)("recipe version drafts (live Gemini)", () => {
     console.table(checks.map(({ level, message }) => ({ level, message })))
     console.info(draft.steps.map((step, index) => `${index + 1}. ${step}`).join("\n"))
     console.info(
-      `First token ${usage.firstTokenMs ?? "–"} ms, total ${usage.modelMs} ms, ${usage.thinkingTokens} thinking tokens. Tokens so far: ${inputTokens} in, ${outputTokens} out`
+      `First chunk ${usage.firstChunkMs ?? "–"} ms, first token ${usage.firstTokenMs ?? "–"} ms, total ${usage.modelMs} ms, ${usage.thinkingTokens} thinking tokens. Tokens so far: ${inputTokens} in, ${outputTokens} out`
     )
     expect(blockingChecks(checks)).toEqual([])
   })

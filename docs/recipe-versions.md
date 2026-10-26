@@ -54,7 +54,9 @@ Each draft records how the model performed, without any recipe text:
 
 - The server logs one `recipe_version_draft` JSON line per draft (Dokploy logs) with
   the outcome, model, input, output and thinking tokens, the time to load the recipe
-  from Mealie, time to the model's first token, model time, checks time and total
+  from Mealie, time to Gemini's first streamed chunk (`firstChunkMs`, usually a thought
+  summary, so roughly connection plus reading the prompt), time to the first word of
+  the draft (`firstTokenMs`), model time, checks time and total
   time, plus the number of blocking checks and warnings and the confidence. Failures
   log the status and the reason.
 - PostHog gets `recipe_version_draft_requested`, `_received` (with the same timings
@@ -78,8 +80,9 @@ The server needs `GEMINI_API_KEY` in its runtime environment (never a `VITE_`
 variable). `GEMINI_MODEL` (default `gemini-3.8-flash`) and
 `RECIPE_VERSION_DRAFTS_PER_HOUR` (default 10) are optional. `GEMINI_THINKING_LEVEL`
 (`minimal`, `low`, `medium` or `high`) sets how much Gemini thinks before writing;
-unset, the model's default applies. The level and the time to connect to Gemini are
-logged with each draft. Before changing the
+unset, the model's default applies. The level is logged with each draft. Gemini
+also streams short thought summaries, and the progress panel shows the latest one
+under "Planning the new method". Before changing the
 prompt or model, run `pnpm eval:recipe-versions` with a key in `.env`. The design
 is in `docs/superpowers/specs/2026-10-26-ai-recipe-versions-design.md`.
 

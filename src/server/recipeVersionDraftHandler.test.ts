@@ -82,7 +82,7 @@ beforeEach(() => {
       thinkingTokens: 3,
       model: "gemini-3.8-flash",
       thinkingLevel: "medium",
-      connectMs: 30,
+      firstChunkMs: 30,
       firstTokenMs: 40,
       modelMs: 50,
     },
@@ -143,7 +143,7 @@ describe("recipeVersionDraftHandler", () => {
       outcome: "ok",
       model: "gemini-3.8-flash",
       thinkingLevel: "medium",
-      connectMs: 30,
+      firstChunkMs: 30,
       firstTokenMs: 40,
     })
   })
@@ -264,7 +264,7 @@ describe("recipeVersionDraftHandler", () => {
             thinkingTokens: 0,
             model: "m",
             thinkingLevel: "default",
-            connectMs: 1,
+            firstChunkMs: 1,
             firstTokenMs: 1,
             modelMs: 2,
           },

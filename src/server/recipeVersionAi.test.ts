@@ -8,6 +8,7 @@ import {
   type DraftRequestRecipe,
   generateRecipeVersionDraft,
   stepsWritten,
+  summariseThought,
 } from "./recipeVersionAi"
 
 const generateContentStream = vi.hoisted(() => vi.fn())
@@ -97,20 +98,24 @@ describe("generateRecipeVersionDraft", () => {
   it("leaves the thinking level to the model unless GEMINI_THINKING_LEVEL is set", async () => {
     generateContentStream.mockImplementation(async () => streamed(reply()))
     const unset = await generateRecipeVersionDraft(recipe, "airFryer", "")
-    expect(generateContentStream.mock.calls[0][0].config.thinkingConfig).toBeUndefined()
+    expect(generateContentStream.mock.calls[0][0].config.thinkingConfig).toEqual({
+      includeThoughts: true,
+    })
     expect(unset.usage.thinkingLevel).toBe("default")
 
     process.env.GEMINI_THINKING_LEVEL = "Medium"
     const medium = await generateRecipeVersionDraft(recipe, "airFryer", "")
     expect(generateContentStream.mock.calls[1][0].config.thinkingConfig).toEqual({
+      includeThoughts: true,
       thinkingLevel: "MEDIUM",
     })
     expect(medium.usage.thinkingLevel).toBe("medium")
-    expect(medium.usage.connectMs).toBeGreaterThanOrEqual(0)
 
     process.env.GEMINI_THINKING_LEVEL = "extreme"
     await generateRecipeVersionDraft(recipe, "airFryer", "")
-    expect(generateContentStream.mock.calls[2][0].config.thinkingConfig).toBeUndefined()
+    expect(generateContentStream.mock.calls[2][0].config.thinkingConfig).toEqual({
+      includeThoughts: true,
+    })
   })
 
   it("uses GEMINI_MODEL when set", async () => {
@@ -164,6 +169,69 @@ describe("streaming progress", () => {
     )
     expect(steps.at(-1)).toBe(goodAirFryerDraft.steps.length)
     expect(steps).toEqual([...steps].sort((a, b) => a - b))
+  })
+})
+
+describe("thought summaries", () => {
+  it("streams each thought summary's heading and times the first chunk", async () => {
+    const thoughtChunk = (text: string) => ({
+      text: undefined,
+      candidates: [{ content: { parts: [{ text, thought: true }] } }],
+    })
+    generateContentStream.mockImplementation(async () =>
+      streamOf(
+        thoughtChunk("**Checking the drawer capacity**\n\nFour thighs fit in one zone."),
+        thoughtChunk("\n\n**Converting oven times to the air fryer**"),
+        reply()
+      )
+    )
+    const progress: unknown[] = []
+    const result = await generateRecipeVersionDraft(recipe, "airFryer", "", undefined, event =>
+      progress.push(event)
+    )
+    expect(progress).toContainEqual({ stage: "thinking", thought: "Checking the drawer capacity" })
+    expect(progress).toContainEqual({
+      stage: "thinking",
+      thought: "Converting oven times to the air fryer",
+    })
+    expect(result.draft).toEqual(goodAirFryerDraft)
+    expect(result.usage.firstChunkMs).toBeLessThanOrEqual(result.usage.firstTokenMs ?? 0)
+  })
+})
+
+describe("thought summaries split across chunks", () => {
+  it("waits for a whole heading, shows the latest one and doesn't repeat itself", async () => {
+    const thoughtChunk = (text: string) => ({
+      text: undefined,
+      candidates: [{ content: { parts: [{ text, thought: true }] } }],
+    })
+    generateContentStream.mockImplementation(async () =>
+      streamOf(
+        thoughtChunk("**Checking the drawer"),
+        thoughtChunk(" capacity**\n\nFour thighs fit"),
+        thoughtChunk(" in one zone."),
+        thoughtChunk("\n\n**Converting the times**"),
+        reply()
+      )
+    )
+    const thoughts: string[] = []
+    await generateRecipeVersionDraft(recipe, "airFryer", "", undefined, event => {
+      if (event.stage === "thinking" && event.thought) thoughts.push(event.thought)
+    })
+    expect(thoughts).toEqual(["Checking the drawer capacity", "Converting the times"])
+  })
+})
+
+describe("summariseThought", () => {
+  it("prefers the bold heading, strips markdown and caps the length", () => {
+    expect(summariseThought("**Planning the zones**\nDetails")).toBe("Planning the zones")
+    expect(summariseThought("\n# Working out *timings*\nmore")).toBe("Working out timings")
+    expect(summariseThought("  \n ")).toBeNull()
+    expect(summariseThought("**Half a head")).toBeNull()
+    expect(summariseThought("**First**\n\ntext **Second**")).toBe("Second")
+    const long = summariseThought("word ".repeat(60))
+    expect(long?.length).toBeLessThanOrEqual(140)
+    expect(long?.endsWith("…")).toBe(true)
   })
 })
 
