@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { RecipeOutput } from "../api/generated/types.gen"
 import * as api from "../api/recipeVersions"
 import { goodAirFryerDraft, ovenSource } from "../test/fixtures/recipeVersionDrafts"
-import { render, screen, within } from "../test/render"
+import { act, render, screen, within } from "../test/render"
 import { RecipeVersionPage } from "./RecipeVersionPage"
 
 const navigate = vi.fn()
@@ -83,7 +83,8 @@ describe("RecipeVersionPage", () => {
       recipe.id,
       "airFryer",
       "two batches",
-      expect.any(AbortSignal)
+      expect.any(AbortSignal),
+      expect.any(Function)
     )
     expect(await screen.findByText("All automated checks passed.")).toBeVisible()
     await user.click(screen.getByRole("button", { name: "Save new version" }))
@@ -240,4 +241,30 @@ it("says which household appliance the draft is written for", () => {
   expect(
     screen.getByText("Written for your Ninja Foodi MAX Dual Zone Air Fryer (AF400UK).")
   ).toBeInTheDocument()
+})
+
+it("shows each drafting stage as the AI works", async () => {
+  let report: (event: unknown) => void = () => {}
+  vi.mocked(api.requestRecipeVersionDraft).mockImplementation(
+    (_id, _target, _notes, _signal, onProgress) =>
+      new Promise(() => {
+        report = event => onProgress?.(event as never)
+      })
+  )
+  const user = userEvent.setup()
+  render(<RecipeVersionPage recipe={recipe} />)
+  await user.click(screen.getByRole("button", { name: "Create draft" }))
+  const stages = screen.getByRole("list", { name: "Drafting progress" })
+  expect(within(stages).getByText("Reading the recipe").closest("li")).toHaveAttribute(
+    "aria-current",
+    "step"
+  )
+  act(() => report({ type: "progress", stage: "writing", steps: 3 }))
+  expect(
+    within(stages)
+      .getByText(/Writing the steps/)
+      .closest("li")
+  ).toHaveAttribute("aria-current", "step")
+  expect(within(stages).getByText("· 3 so far")).toBeInTheDocument()
+  expect(screen.getByText(/Usually 20–60 seconds/)).toBeInTheDocument()
 })

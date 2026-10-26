@@ -1,5 +1,12 @@
 import { encodeRecipeId } from "../utils/recipe"
-import type { DraftCheck, DraftSource, RecipeVersionDraft } from "../utils/recipeVersionDraft"
+import type {
+  DraftCheck,
+  DraftMetrics,
+  DraftProgressEvent,
+  DraftSource,
+  DraftStreamEvent,
+  RecipeVersionDraft,
+} from "../utils/recipeVersionDraft"
 import {
   COOKING_METHOD_LABELS,
   cookingMethod,
@@ -20,7 +27,12 @@ import type {
   RecipeTool,
 } from "./generated/types.gen"
 
-export type DraftResponse = { draft: RecipeVersionDraft; checks: DraftCheck[]; source: DraftSource }
+export type DraftResponse = {
+  draft: RecipeVersionDraft
+  checks: DraftCheck[]
+  source: DraftSource
+  metrics?: DraftMetrics
+}
 
 const toolSlugByMethod = new Map(METHOD_TOOL_SLUGS)
 const methodToolSlugs = new Set(toolSlugByMethod.values())
@@ -46,11 +58,22 @@ export class RecipeVersionUpdateError extends Error {
   }
 }
 
+const STREAM_STOPPED = "The draft stopped before it finished. Try again."
+
+function parseStreamEvent(line: string): DraftStreamEvent {
+  try {
+    return JSON.parse(line) as DraftStreamEvent
+  } catch {
+    throw new Error(STREAM_STOPPED)
+  }
+}
+
 export async function requestRecipeVersionDraft(
   recipeId: string,
   target: CookingMethod,
   notes: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  onProgress: (event: DraftProgressEvent) => void = () => {}
 ): Promise<DraftResponse> {
   const response = await fetch("/api/manaaki/recipe-versions/draft", {
     method: "POST",
@@ -59,15 +82,36 @@ export async function requestRecipeVersionDraft(
     body: JSON.stringify({ recipeId, target, notes }),
     signal,
   })
-  const body: unknown = await response.json().catch(() => null)
-  if (!response.ok) {
+  if (!response.ok || !response.body) {
+    const body: unknown = await response.json().catch(() => null)
     const message =
       body && typeof body === "object" && "error" in body && typeof body.error === "string"
         ? body.error
         : "Couldn't create a draft. Try again."
     throw new Error(message)
   }
-  return body as DraftResponse
+  const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
+  let buffered = ""
+  for (;;) {
+    const { value, done } = await reader.read()
+    buffered += value ?? ""
+    const lines = buffered.split("\n")
+    buffered = done ? "" : (lines.pop() ?? "")
+    for (const line of lines) {
+      if (!line.trim()) continue
+      const event = parseStreamEvent(line)
+      if (event.type === "progress") onProgress(event)
+      else if (event.type === "error") throw new Error(event.error)
+      else
+        return {
+          draft: event.draft,
+          checks: event.checks,
+          source: event.source,
+          metrics: event.metrics,
+        }
+    }
+    if (done) throw new Error(STREAM_STOPPED)
+  }
 }
 
 export function recipeLink(recipe: { id: string; slug: string }): string {

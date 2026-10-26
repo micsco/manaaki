@@ -1,4 +1,4 @@
-import { FinishReason, GoogleGenAI } from "@google/genai"
+import { FinishReason, type GenerateContentResponseUsageMetadata, GoogleGenAI } from "@google/genai"
 import { z } from "zod"
 
 import { describeAppliance, householdAppliance } from "../utils/householdAppliances"
@@ -197,19 +197,51 @@ export function buildPrompt(
     .join("\n")
 }
 
-export type DraftUsage = { inputTokens: number; outputTokens: number; model: string }
+export type DraftUsage = {
+  inputTokens: number
+  outputTokens: number
+  thinkingTokens: number
+  model: string
+  firstTokenMs: number | null
+  modelMs: number
+}
+
+export type DraftProgress = { stage: "thinking" } | { stage: "writing"; steps: number }
+
+export function stepsWritten(partialJson: string): number {
+  const opening = /"steps"\s*:\s*\[/.exec(partialJson)
+  if (!opening) return 0
+  let count = 0
+  let inString = false
+  let escaped = false
+  for (const char of partialJson.slice(opening.index + opening[0].length)) {
+    if (inString) {
+      if (escaped) escaped = false
+      else if (char === "\\") escaped = true
+      else if (char === '"') {
+        inString = false
+        count++
+      }
+    } else if (char === '"') inString = true
+    else if (char === "]") break
+  }
+  return count
+}
 
 export async function generateRecipeVersionDraft(
   recipe: DraftRequestRecipe,
   target: CookingMethod,
   notes: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  onProgress: (progress: DraftProgress) => void = () => {}
 ): Promise<{ draft: RecipeVersionDraft; usage: DraftUsage }> {
   const apiKey = geminiApiKey()
   if (!apiKey) throw new AiNotConfiguredError()
   const model = geminiModel()
   const ai = new GoogleGenAI({ apiKey })
-  const response = await ai.models.generateContent({
+  const startedAt = performance.now()
+  onProgress({ stage: "thinking" })
+  const stream = await ai.models.generateContentStream({
     model,
     contents: buildPrompt(recipe, target, notes),
     config: {
@@ -221,13 +253,31 @@ export async function generateRecipeVersionDraft(
     },
   })
 
-  const blocked = response.promptFeedback?.blockReason
+  let text = ""
+  let firstTokenMs: number | null = null
+  let blocked: string | undefined
+  let finish: FinishReason | undefined
+  let usage: GenerateContentResponseUsageMetadata | undefined
+  let reportedSteps = -1
+  for await (const chunk of stream) {
+    blocked = chunk.promptFeedback?.blockReason ?? blocked
+    finish = chunk.candidates?.[0]?.finishReason ?? finish
+    usage = chunk.usageMetadata ?? usage
+    const piece = chunk.text ?? ""
+    if (!piece) continue
+    firstTokenMs ??= Math.round(performance.now() - startedAt)
+    text += piece
+    const steps = stepsWritten(text)
+    if (steps !== reportedSteps) {
+      reportedSteps = steps
+      onProgress({ stage: "writing", steps })
+    }
+  }
+
   if (blocked) throw new AiDraftError("The AI declined this recipe.", blocked)
-  const finish = response.candidates?.[0]?.finishReason
   if (finish && finish !== FinishReason.STOP) {
     throw new AiDraftError("The AI stopped before finishing the draft.", finish)
   }
-  const text = response.text
   if (!text) throw new AiDraftError("The AI returned an empty draft.")
 
   let json: unknown
@@ -243,9 +293,12 @@ export async function generateRecipeVersionDraft(
   return {
     draft: parsed.data,
     usage: {
-      inputTokens: response.usageMetadata?.promptTokenCount ?? 0,
-      outputTokens: response.usageMetadata?.candidatesTokenCount ?? 0,
+      inputTokens: usage?.promptTokenCount ?? 0,
+      outputTokens: usage?.candidatesTokenCount ?? 0,
+      thinkingTokens: usage?.thoughtsTokenCount ?? 0,
       model,
+      firstTokenMs,
+      modelMs: Math.round(performance.now() - startedAt),
     },
   }
 }

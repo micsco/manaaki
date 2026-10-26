@@ -45,6 +45,22 @@ new method on Manaaki's server. Nothing is saved until you review it:
   times show the original value, and the original ingredient list marks changed
   and removed lines.
 
+While Gemini works, the page shows the stage it has reached (reading the recipe,
+planning, writing the steps with a running count, running the checks) and the time
+so far. The server streams these as newline-delimited JSON events from Gemini's
+streaming API.
+
+Each draft records how the model performed, without any recipe text:
+
+- The server logs one `recipe_version_draft` JSON line per draft (Dokploy logs) with
+  the outcome, model, input, output and thinking tokens, the time to load the recipe
+  from Mealie, time to the model's first token, model time, checks time and total
+  time, plus the number of blocking checks and warnings and the confidence. Failures
+  log the status and the reason.
+- PostHog gets `recipe_version_draft_requested`, `_received` (with the same timings
+  and tokens plus the time the cook waited), `_failed` (with the error message) and
+  `_cancelled`, then `recipe_version_saved` or `recipe_version_save_failed`.
+
 Save duplicates the recipe in Mealie, applies the reviewed name, description, steps,
 times and tool, keeps the original notes and adds any new ones, then links the two recipes both ways through `extras` and
 adds a note to each.

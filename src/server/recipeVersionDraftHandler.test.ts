@@ -62,6 +62,13 @@ function mealieReturns(status: number, body: unknown = recipe) {
 
 const valid = { recipeId: RECIPE_ID, target: "airFryer" }
 
+async function events(response: Response) {
+  return (await response.text())
+    .split("\n")
+    .filter(Boolean)
+    .map(line => JSON.parse(line))
+}
+
 beforeEach(() => {
   process.env.MEALIE_INTERNAL_URL = "http://mealie:9000"
   process.env.SESSION_SECRET = "unit-test-secret"
@@ -69,7 +76,14 @@ beforeEach(() => {
   resetDraftRateLimit()
   vi.mocked(generateRecipeVersionDraft).mockResolvedValue({
     draft: goodAirFryerDraft,
-    usage: { inputTokens: 1, outputTokens: 2, model: "gemini-3.8-flash" },
+    usage: {
+      inputTokens: 1,
+      outputTokens: 2,
+      thinkingTokens: 3,
+      model: "gemini-3.8-flash",
+      firstTokenMs: 40,
+      modelMs: 50,
+    },
   })
   vi.spyOn(console, "info").mockImplementation(() => {})
 })
@@ -85,15 +99,28 @@ describe("recipeVersionDraftHandler", () => {
     const response = await post({ ...valid, notes: "small basket" })
     expect(response.status).toBe(200)
     expect(response.headers.get("cache-control")).toBe("private, no-store")
-    const body = await response.json()
+    expect(response.headers.get("content-type")).toContain("application/x-ndjson")
+    const sent = await events(response)
+    expect(sent.map(event => event.stage ?? event.type)).toEqual(["checking", "result"])
+    const body = sent.at(-1)
     expect(body.draft).toEqual(goodAirFryerDraft)
+    expect(body.metrics).toMatchObject({
+      model: "gemini-3.8-flash",
+      inputTokens: 1,
+      outputTokens: 2,
+      thinkingTokens: 3,
+      firstTokenMs: 40,
+      modelMs: 50,
+    })
+    expect(body.metrics.totalMs).toBeGreaterThanOrEqual(0)
+    expect(body.metrics.mealieMs).toBeGreaterThanOrEqual(0)
     expect(Array.isArray(body.checks)).toBe(true)
     expect(body.source.ingredients).toEqual([
       { text: "4 large baking potatoes", quantity: 4 },
       { text: "[Potatoes] 2 tbsp olive oil", quantity: 2 },
     ])
-    const sent = new Request(fetchSpy.mock.calls[0][0])
-    expect(sent.url).toContain(`/api/recipes/${RECIPE_ID}`)
+    const mealieRequest = new Request(fetchSpy.mock.calls[0][0])
+    expect(mealieRequest.url).toContain(`/api/recipes/${RECIPE_ID}`)
     const [draftRecipe, target, notes] = vi.mocked(generateRecipeVersionDraft).mock.calls[0]
     expect(target).toBe("airFryer")
     expect(notes).toBe("small basket")
@@ -104,11 +131,13 @@ describe("recipeVersionDraftHandler", () => {
   it("never echoes the API key or recipe text in logs", async () => {
     mealieReturns(200)
     const info = vi.mocked(console.info)
-    await post(valid)
+    await (await post(valid)).text()
     const logged = info.mock.calls.flat().join(" ")
     expect(logged).not.toContain("super-secret-gemini-key")
     expect(logged).not.toContain("olive oil")
     expect(logged).toContain("recipe_version_draft")
+    const entry = JSON.parse(String(info.mock.calls.at(-1)?.[0]))
+    expect(entry).toMatchObject({ outcome: "ok", model: "gemini-3.8-flash", firstTokenMs: 40 })
   })
 
   it("requires a session", async () => {
@@ -180,7 +209,64 @@ describe("recipeVersionDraftHandler", () => {
         signal: controller.signal,
       })
     )
-    expect(response.status).toBe(504)
+    expect((await events(response)).at(-1)).toMatchObject({ type: "error", status: 504 })
+  })
+
+  it("stops quietly when the cook leaves mid-draft", async () => {
+    mealieReturns(200)
+    let leave: () => void = () => {}
+    const left = new Promise<void>(resolve => {
+      leave = resolve
+    })
+    let abortedWhenLeft: boolean | undefined
+    vi.mocked(generateRecipeVersionDraft).mockImplementation(
+      async (_recipe, _target, _notes, signal, onProgress) => {
+        onProgress?.({ stage: "thinking" })
+        await left
+        abortedWhenLeft = signal?.aborted
+        onProgress?.({ stage: "writing", steps: 1 })
+        throw new DOMException("aborted", "AbortError")
+      }
+    )
+    const response = await post(valid)
+    const reader = response.body!.getReader()
+    expect(JSON.parse(new TextDecoder().decode((await reader.read()).value))).toEqual({
+      type: "progress",
+      stage: "thinking",
+    })
+    await reader.cancel()
+    leave()
+    await vi.waitFor(() =>
+      expect(vi.mocked(console.info).mock.calls.flat().join(" ")).toContain('"status":504')
+    )
+    expect(abortedWhenLeft).toBe(true)
+  })
+
+  it("streams the model's progress before the result", async () => {
+    mealieReturns(200)
+    vi.mocked(generateRecipeVersionDraft).mockImplementation(
+      async (_recipe, _target, _notes, _signal, onProgress) => {
+        onProgress?.({ stage: "thinking" })
+        onProgress?.({ stage: "writing", steps: 2 })
+        return {
+          draft: goodAirFryerDraft,
+          usage: {
+            inputTokens: 1,
+            outputTokens: 2,
+            thinkingTokens: 0,
+            model: "m",
+            firstTokenMs: 1,
+            modelMs: 2,
+          },
+        }
+      }
+    )
+    const sent = await events(await post(valid))
+    expect(sent.slice(0, 3)).toEqual([
+      { type: "progress", stage: "thinking" },
+      { type: "progress", stage: "writing", steps: 2 },
+      { type: "progress", stage: "checking" },
+    ])
   })
 
   it("frees the draft allowance an hour later", async () => {
@@ -206,10 +292,10 @@ describe("recipeVersionDraftHandler", () => {
   ])("maps %o to %i", async (failure, status, message) => {
     mealieReturns(200)
     vi.mocked(generateRecipeVersionDraft).mockRejectedValue(failure)
-    const response = await post(valid)
-    expect(response.status).toBe(status)
-    const body = await response.json()
+    const sent = await events(await post(valid))
+    const body = sent.at(-1)
+    expect(body).toMatchObject({ type: "error", status })
     expect(body.error).toMatch(message)
-    expect(JSON.stringify(body)).not.toContain("super-secret-gemini-key")
+    expect(JSON.stringify(sent)).not.toContain("super-secret-gemini-key")
   })
 })

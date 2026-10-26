@@ -202,7 +202,78 @@ describe("saveRecipeVersion", () => {
   })
 })
 
+function ndjson(events: unknown[], { chunkSize = 7, truncate = false } = {}) {
+  const text = events.map(event => `${JSON.stringify(event)}\n`).join("")
+  const body = truncate ? text.slice(0, -10) : text
+  const encoder = new TextEncoder()
+  return new Response(
+    new ReadableStream({
+      start(controller) {
+        for (let i = 0; i < body.length; i += chunkSize)
+          controller.enqueue(encoder.encode(body.slice(i, i + chunkSize)))
+        controller.close()
+      },
+    }),
+    { headers: { "content-type": "application/x-ndjson" } }
+  )
+}
+
 describe("requestRecipeVersionDraft", () => {
+  it("reports progress from the stream and returns the result with its metrics", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      ndjson([
+        { type: "progress", stage: "thinking" },
+        { type: "progress", stage: "writing", steps: 2 },
+        { type: "progress", stage: "checking" },
+        {
+          type: "result",
+          draft: goodAirFryerDraft,
+          checks: [],
+          source: {},
+          metrics: { modelMs: 9 },
+        },
+      ])
+    )
+    const progress = vi.fn()
+    const result = await requestRecipeVersionDraft(ORIGINAL_ID, "airFryer", "", undefined, progress)
+    expect(progress.mock.calls.map(([event]) => event.stage)).toEqual([
+      "thinking",
+      "writing",
+      "checking",
+    ])
+    expect(result.draft).toEqual(goodAirFryerDraft)
+    expect(result.metrics).toEqual({ modelMs: 9 })
+  })
+
+  it("throws the streamed error message", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      ndjson([
+        { type: "progress", stage: "thinking" },
+        { type: "error", status: 504, error: "The AI took too long. Try again." },
+      ])
+    )
+    await expect(requestRecipeVersionDraft(ORIGINAL_ID, "airFryer", "")).rejects.toThrow(
+      "The AI took too long. Try again."
+    )
+  })
+
+  it("fails clearly when the stream ends without a result", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      ndjson(
+        [
+          { type: "progress", stage: "thinking" },
+          { type: "progress", stage: "checking" },
+        ],
+        {
+          truncate: true,
+        }
+      )
+    )
+    await expect(requestRecipeVersionDraft(ORIGINAL_ID, "airFryer", "")).rejects.toThrow(
+      /stopped before it finished/
+    )
+  })
+
   afterEach(() => vi.restoreAllMocks())
 
   it("surfaces the server's error message", async () => {
@@ -217,7 +288,9 @@ describe("requestRecipeVersionDraft", () => {
   it("posts the recipe, target and notes", async () => {
     const fetchSpy = vi
       .spyOn(globalThis, "fetch")
-      .mockResolvedValue(Response.json({ draft: goodAirFryerDraft, checks: [], source: {} }))
+      .mockResolvedValue(
+        ndjson([{ type: "result", draft: goodAirFryerDraft, checks: [], source: {}, metrics: {} }])
+      )
     await requestRecipeVersionDraft(ORIGINAL_ID, "airFryer", "batches")
     const [url, init] = fetchSpy.mock.calls[0]
     expect(url).toBe("/api/manaaki/recipe-versions/draft")

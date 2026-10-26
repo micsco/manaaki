@@ -17,20 +17,26 @@ import { useRecipeList } from "../hooks/useRecipeList"
 import { useOnline } from "../pwa/useOnline"
 import { householdAppliance } from "../utils/householdAppliances"
 import { encodeRecipeId, recipeUrl } from "../utils/recipe"
-import { blockingChecks, checkDraft, type RecipeVersionDraft } from "../utils/recipeVersionDraft"
+import {
+  blockingChecks,
+  checkDraft,
+  type DraftProgressEvent,
+  type RecipeVersionDraft,
+} from "../utils/recipeVersionDraft"
 import {
   COOKING_METHOD_LABELS,
   cookingMethod,
   type CookingMethod,
   VERSION_EXTRAS_KEYS,
 } from "../utils/recipeVersions"
+import { RecipeVersionProgress } from "./RecipeVersionProgress"
 import { CheckList, DraftEditor, OriginalPanel, type ReviewState } from "./RecipeVersionReview"
 
 const METHODS: CookingMethod[] = ["oven", "airFryer", "slowCooker"]
 
 type Step =
   | { kind: "choose" }
-  | { kind: "drafting" }
+  | { kind: "drafting"; startedAt: number }
   | { kind: "review"; response: DraftResponse }
   | { kind: "saving"; response: DraftResponse }
   | { kind: "unlinked"; recipe: SavedRecipeRef }
@@ -98,6 +104,7 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
   const [pendingCopy, setPendingCopy] = useState<SavedRecipeRef | null>(null)
   const posthog = usePostHog()
   const [view, setView] = useState<View>("both")
+  const [progress, setProgress] = useState<DraftProgressEvent | null>(null)
   const leaving = useRef(false)
   const appliance = target ? householdAppliance(target) : null
   const backTo = recipe.id && recipe.slug ? recipeUrl(recipe.id, recipe.slug) : "/recipes"
@@ -129,10 +136,18 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
     const controller = new AbortController()
     abort.current = controller
     setError("")
-    setStep({ kind: "drafting" })
+    const startedAt = Date.now()
+    setProgress(null)
+    setStep({ kind: "drafting", startedAt })
     posthog.capture("recipe_version_draft_requested", { target })
     try {
-      const result = await requestRecipeVersionDraft(recipe.id, target, notes, controller.signal)
+      const result = await requestRecipeVersionDraft(
+        recipe.id,
+        target,
+        notes,
+        controller.signal,
+        setProgress
+      )
       if (controller.signal.aborted) return
       setReview(initialReview(result))
       setStep({ kind: "review", response: result })
@@ -141,12 +156,34 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
         blocking: blockingChecks(result.checks).length,
         warnings: result.checks.length - blockingChecks(result.checks).length,
         confidence: result.draft.confidence,
+        steps: result.draft.steps.length,
+        ingredient_changes: result.draft.ingredientChanges.length,
+        client_ms: Date.now() - startedAt,
+        model: result.metrics?.model,
+        input_tokens: result.metrics?.inputTokens,
+        output_tokens: result.metrics?.outputTokens,
+        thinking_tokens: result.metrics?.thinkingTokens,
+        mealie_ms: result.metrics?.mealieMs,
+        first_token_ms: result.metrics?.firstTokenMs,
+        model_ms: result.metrics?.modelMs,
+        server_ms: result.metrics?.totalMs,
       })
     } catch (failure) {
-      if (controller.signal.aborted) return
-      setError(failure instanceof Error ? failure.message : "Couldn't create a draft.")
+      if (controller.signal.aborted) {
+        posthog.capture("recipe_version_draft_cancelled", {
+          target,
+          client_ms: Date.now() - startedAt,
+        })
+        return
+      }
+      const message = failure instanceof Error ? failure.message : "Couldn't create a draft."
+      setError(message)
       setStep({ kind: "choose" })
-      posthog.capture("recipe_version_draft_failed", { target })
+      posthog.capture("recipe_version_draft_failed", {
+        target,
+        error: message,
+        client_ms: Date.now() - startedAt,
+      })
     }
   }
 
@@ -291,9 +328,7 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
               )}
             </div>
             {step.kind === "drafting" && (
-              <p role="status" className="text-sm text-gray-400">
-                Drafting the new method. This usually takes 10–30 seconds.
-              </p>
+              <RecipeVersionProgress progress={progress} startedAt={step.startedAt} />
             )}
             {!target && (
               <p role="status" className="text-sm text-gray-400">

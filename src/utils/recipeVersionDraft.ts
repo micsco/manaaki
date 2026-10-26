@@ -51,7 +51,7 @@ const TEMPERATURE_RANGES: Partial<Record<CookingMethod, [number, number]>> = {
 }
 
 const APPLIANCE_WORDS: Record<CookingMethod, RegExp> = {
-  airFryer: /\bair[- ]?fr(y|ier|yer)/i,
+  airFryer: /\bair[- ]?fr(y|ier|yer)|\bzone [12]\b|\bdrawers?\b|\bcrisper plates?\b/i,
   oven: /\boven\b/i,
   slowCooker: /\b(slow[- ]?cook(er)?|crock[- ]?pot|possiblecooker)\b/i,
 }
@@ -64,6 +64,9 @@ const SOURCE_SETUP: Record<CookingMethod, RegExp> = {
 
 const DONENESS =
   /\b(cooked through|no longer pink|juices run clear|internal temperature|core temperature|\d{2,3}\s*°?\s*[CF]\s*(inside|internal))/i
+
+const FOOD_TEMPERATURE =
+  /\b(internal|core|centre|center|thermometer|reach(es|ed)?)\b(\W+\w+){0,3}\W*$/i
 
 const MARKUP = /<\/?[a-z][^>]*>|javascript:|\bdata:[a-z]+\//i
 
@@ -166,6 +169,8 @@ export function checkDraft(
   if (FAHRENHEIT.test(text)) warn("fahrenheit", "The method uses Fahrenheit; use °C.")
   if (range) {
     for (const match of text.matchAll(CELSIUS)) {
+      const before = text.slice(Math.max(0, (match.index ?? 0) - 60), match.index)
+      if (FOOD_TEMPERATURE.test(before)) continue
       const value = Number(match[1] ?? match[2])
       if (value < range[0] || value > range[1]) {
         warn(
@@ -221,3 +226,30 @@ export function checkDraft(
 export function blockingChecks(checks: DraftCheck[]): DraftCheck[] {
   return checks.filter(check => check.level === "block")
 }
+
+export type DraftMetrics = {
+  model: string
+  inputTokens: number
+  outputTokens: number
+  thinkingTokens: number
+  mealieMs: number
+  firstTokenMs: number | null
+  modelMs: number
+  checksMs: number
+  totalMs: number
+}
+
+export type DraftProgressEvent =
+  | { type: "progress"; stage: "thinking" | "checking" }
+  | { type: "progress"; stage: "writing"; steps: number }
+
+export type DraftStreamEvent =
+  | DraftProgressEvent
+  | {
+      type: "result"
+      draft: RecipeVersionDraft
+      checks: DraftCheck[]
+      source: DraftSource
+      metrics: DraftMetrics
+    }
+  | { type: "error"; status: number; error: string }

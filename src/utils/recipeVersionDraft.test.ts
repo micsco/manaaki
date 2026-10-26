@@ -108,6 +108,35 @@ describe("checkDraft", () => {
     expect(checks.find(check => check.id === id)?.level).toBe("warn")
   })
 
+  it.each([
+    "Cook until the chicken reaches an internal temperature of 75°C.",
+    "Check the core temperature is 75°C with a thermometer.",
+  ])("doesn't treat a food temperature as an appliance setting: %s", step => {
+    const draft = draftWith({ steps: [...goodAirFryerDraft.steps, step] })
+    expect(ids(draft)).not.toContain("temperature-range")
+  })
+
+  it("still checks an appliance temperature written after a doneness phrase", () => {
+    const draft = draftWith({
+      steps: [
+        ...goodAirFryerDraft.steps,
+        "Air fry until the chicken reaches 75°C inside, then crisp everything at 260°C for 5 minutes.",
+      ],
+    })
+    expect(ids(draft)).toContain("temperature-range")
+  })
+
+  it("counts zones and drawers as mentioning the air fryer", () => {
+    const draft = draftWith({
+      steps: [
+        "Divide the potatoes between both drawers.",
+        "Zone 1: Roast at 190°C for 25 minutes, then check the chicken is cooked through.",
+        "Serve.",
+      ],
+    })
+    expect(ids(draft)).not.toContain("target-missing")
+  })
+
   it("accepts Max Crisp at 240°C", () => {
     const draft = draftWith({
       steps: [...goodAirFryerDraft.steps, "Zone 2: Max Crisp the chips at 240°C for 20 minutes."],
