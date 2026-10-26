@@ -1,6 +1,8 @@
 import { parseAsBoolean, useQueryState } from "nuqs"
 import { createContext, type ReactNode, useCallback, useContext, useEffect } from "react"
 
+import { useHoldAppUpdate } from "../pwa/updateHolds"
+
 interface CookModeContextType {
   isCookMode: boolean
   toggleCookMode: () => void
@@ -22,6 +24,8 @@ interface CookModeProviderProps {
 
 export function CookModeProvider({ children }: CookModeProviderProps) {
   const [isCookMode, setIsCookMode] = useQueryState("cook", parseAsBoolean.withDefault(false))
+
+  useHoldAppUpdate(isCookMode, "cooking", "in-place")
 
   const toggleCookMode = useCallback(() => {
     void setIsCookMode(prev => !prev)

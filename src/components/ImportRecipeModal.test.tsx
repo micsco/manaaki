@@ -1,10 +1,12 @@
 import { screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import * as currentUserHook from "../hooks/useCurrentUser"
 import * as importRecipeHook from "../hooks/useImportRecipe"
+import { readDraft, writeDraft } from "../hooks/usePersistentDraft"
 import { toastManager } from "../lib/toastManager"
+import { resetUpdateHoldsForTesting, updateBlockers } from "../pwa/updateHolds"
 import * as onlineHook from "../pwa/useOnline"
 import { render } from "../test/render"
 import { ImportRecipeModal, normalizeRecipeUrl } from "./ImportRecipeModal"
@@ -259,5 +261,89 @@ describe("ImportRecipeModal", () => {
     expect(screen.getByRole("button", { name: /importing…/i })).toBeDisabled()
     expect(screen.getByRole("button", { name: /cancel/i })).toBeDisabled()
     expect(screen.getByLabelText(/recipe url/i)).toBeDisabled()
+  })
+
+  describe("draft persistence", () => {
+    afterEach(() => resetUpdateHoldsForTesting())
+
+    it("keeps a typed link through a reload", async () => {
+      const user = userEvent.setup()
+      const first = render(<ImportRecipeModal open onOpenChange={vi.fn()} />)
+      await user.type(screen.getByLabelText(/recipe url/i), "https://example.com/stew")
+      first.unmount()
+
+      render(<ImportRecipeModal open onOpenChange={vi.fn()} />)
+      expect(screen.getByLabelText(/recipe url/i)).toHaveValue("https://example.com/stew")
+    })
+
+    it("forgets the link after a successful import", async () => {
+      const user = userEvent.setup()
+      mockMutateAsync.mockResolvedValue("stew")
+      render(<ImportRecipeModal open onOpenChange={vi.fn()} />)
+      await user.type(screen.getByLabelText(/recipe url/i), "https://example.com/stew")
+      await user.click(screen.getByRole("button", { name: /import recipe/i }))
+
+      await waitFor(() => expect(mockNavigate).toHaveBeenCalled())
+      expect(readDraft("import-recipe:url")).toBeNull()
+    })
+
+    it("forgets the link when cancelled", async () => {
+      const user = userEvent.setup()
+      render(<ImportRecipeModal open onOpenChange={vi.fn()} />)
+      await user.type(screen.getByLabelText(/recipe url/i), "https://example.com/stew")
+      await user.click(screen.getByRole("button", { name: /cancel/i }))
+
+      expect(readDraft("import-recipe:url")).toBeNull()
+    })
+
+    it("prefers a newly shared link over an older draft", () => {
+      writeDraft("import-recipe:url", "https://example.com/old")
+      render(
+        <ImportRecipeModal
+          open
+          shared
+          initialUrl="https://example.com/new"
+          onOpenChange={vi.fn()}
+        />
+      )
+      expect(screen.getByLabelText(/recipe url/i)).toHaveValue("https://example.com/new")
+    })
+
+    it("keeps edits to a shared link through a reload of the same share", async () => {
+      const user = userEvent.setup()
+      const shared = "https://example.com/new"
+      const first = render(
+        <ImportRecipeModal open shared initialUrl={shared} onOpenChange={vi.fn()} />
+      )
+      await user.type(screen.getByLabelText(/recipe url/i), "?print")
+      first.unmount()
+
+      render(<ImportRecipeModal open shared initialUrl={shared} onOpenChange={vi.fn()} />)
+      expect(screen.getByLabelText(/recipe url/i)).toHaveValue("https://example.com/new?print")
+    })
+
+    it("holds app updates and stays open while importing", async () => {
+      const user = userEvent.setup()
+      const onOpenChange = vi.fn()
+      vi.spyOn(importRecipeHook, "useImportRecipe").mockReturnValue({
+        mutateAsync: mockMutateAsync,
+        reset: mockReset,
+        isPending: true,
+        error: null,
+      } as never)
+      writeDraft("import-recipe:url", "https://example.com/stew")
+
+      render(<ImportRecipeModal open onOpenChange={onOpenChange} />)
+      expect(updateBlockers("navigation")).toContain("importing-recipe")
+
+      await user.keyboard("{Escape}")
+      expect(onOpenChange).not.toHaveBeenCalled()
+      expect(readDraft("import-recipe:url")).toEqual({ value: "https://example.com/stew" })
+    })
+
+    it("marks the dialog safe to reload because its link and open state are kept", () => {
+      render(<ImportRecipeModal open onOpenChange={vi.fn()} />)
+      expect(screen.getByRole("dialog").closest("[data-update-safe]")).not.toBeNull()
+    })
   })
 })

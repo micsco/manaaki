@@ -163,6 +163,72 @@ describe("RecipeTabsMobile", () => {
     expect(screen.getByText("Chicken")).toBeInTheDocument()
   })
 
+  it("restores the Method tab after the component remounts", async () => {
+    const user = userEvent.setup()
+    const { unmount } = render(
+      <Wrapper>
+        <RecipeTabsMobile ingredients={ingredients} instructions={instructions} recipeId="r1" />
+      </Wrapper>
+    )
+    await user.click(screen.getByRole("tab", { name: /method/i }))
+    unmount()
+
+    render(
+      <Wrapper>
+        <RecipeTabsMobile ingredients={ingredients} instructions={instructions} recipeId="r1" />
+      </Wrapper>
+    )
+    expect(screen.getByRole("tab", { name: /method/i })).toHaveAttribute("aria-selected", "true")
+    expect(screen.getByRole("tabpanel")).toHaveTextContent("Boil water.")
+  })
+
+  it("remembers the selected tab separately for each recipe", async () => {
+    const user = userEvent.setup()
+    const { unmount } = render(
+      <Wrapper>
+        <RecipeTabsMobile ingredients={ingredients} instructions={instructions} recipeId="r1" />
+      </Wrapper>
+    )
+    await user.click(screen.getByRole("tab", { name: /method/i }))
+    unmount()
+
+    render(
+      <Wrapper>
+        <RecipeTabsMobile ingredients={ingredients} instructions={instructions} recipeId="r2" />
+      </Wrapper>
+    )
+    expect(screen.getByRole("tab", { name: /ingredients/i })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    )
+  })
+
+  it("falls back to Ingredients when the remembered tab is no longer available", async () => {
+    const user = userEvent.setup()
+    const { unmount } = render(
+      <Wrapper>
+        <RecipeTabsMobile
+          ingredients={ingredients}
+          instructions={instructions}
+          description="A tasty dish."
+          recipeId="r1"
+        />
+      </Wrapper>
+    )
+    await user.click(screen.getByRole("tab", { name: /description/i }))
+    unmount()
+
+    render(
+      <Wrapper>
+        <RecipeTabsMobile ingredients={ingredients} instructions={instructions} recipeId="r1" />
+      </Wrapper>
+    )
+    expect(screen.getByRole("tab", { name: /ingredients/i })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    )
+  })
+
   it("has a tablist with an accessible label", () => {
     render(
       <Wrapper>

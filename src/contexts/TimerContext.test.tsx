@@ -9,6 +9,7 @@ vi.mock("../utils/audio", () => ({
   startKitchenAlarm: vi.fn(),
   stopKitchenAlarm: vi.fn(),
   isKitchenAlarmActive: vi.fn().mockReturnValue(false),
+  unlockAudioOnFirstGesture: vi.fn(),
 }))
 
 describe("TimerContext", () => {
@@ -293,4 +294,34 @@ it("completes a restored timer that expired while the app was closed", async () 
   expect(second.result.current.getTimer("expired")?.status).toBe("completed")
   second.unmount()
   vi.useRealTimers()
+})
+
+it("arms the audio unlock when a running timer is restored after a reload", async () => {
+  vi.useFakeTimers()
+  const first = renderHook(() => useTimer(), { wrapper: TimerProvider })
+  await act(async () => {
+    vi.runAllTicks()
+  })
+  act(() => first.result.current.startTimer({ id: "reloaded", label: "Oven", totalSeconds: 600 }))
+  first.unmount()
+  vi.mocked(audioModule.unlockAudioOnFirstGesture).mockClear()
+
+  const second = renderHook(() => useTimer(), { wrapper: TimerProvider })
+  await act(async () => {
+    vi.runAllTicks()
+  })
+
+  expect(audioModule.unlockAudioOnFirstGesture).toHaveBeenCalled()
+  second.unmount()
+  vi.useRealTimers()
+})
+
+it("does not arm the audio unlock when there are no active timers", async () => {
+  localStorage.clear()
+  vi.mocked(audioModule.unlockAudioOnFirstGesture).mockClear()
+  const { unmount } = renderHook(() => useTimer(), { wrapper: TimerProvider })
+  await act(async () => {})
+
+  expect(audioModule.unlockAudioOnFirstGesture).not.toHaveBeenCalled()
+  unmount()
 })

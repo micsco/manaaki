@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer"
 import { readFile } from "node:fs/promises"
 import { createServer } from "node:http"
 import { extname, resolve, sep } from "node:path"
@@ -29,11 +30,17 @@ const recipe = {
 }
 let checked = false
 let disconnected = false
+let release = 0
 
 createServer(async (request, response) => {
   const url = new URL(request.url, "http://localhost:4174")
   if (url.pathname === "/__network") {
     disconnected = url.searchParams.get("offline") === "true"
+    response.end("ok")
+    return
+  }
+  if (url.pathname === "/__release") {
+    release++
     response.end("ok")
     return
   }
@@ -138,7 +145,11 @@ createServer(async (request, response) => {
   }
   try {
     const file = extname(path) ? path : resolve(root, "offline-shell.html")
-    const content = await readFile(file)
+    const built = await readFile(file)
+    const content =
+      url.pathname === "/sw.js" && release > 0
+        ? Buffer.concat([built, Buffer.from(`\nself.manaakiTestRelease = ${release}\n`)])
+        : built
     response.setHeader(
       "Content-Type",
       {

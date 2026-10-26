@@ -78,6 +78,100 @@ describe("useMotionPermission", () => {
     })
   })
 
+  describe("remembering a previous grant across reloads", () => {
+    const GRANTED_STORAGE_KEY = "manaaki:motion-granted"
+
+    it("remembers that the user granted permission", async () => {
+      defineDeviceMotionEvent(() => Promise.resolve("granted"))
+      const { result } = renderHook(() => useMotionPermission())
+      await act(() => result.current.request())
+      expect(localStorage.getItem(GRANTED_STORAGE_KEY)).toBe("true")
+    })
+
+    it("re-requests permission on the first click when previously granted", async () => {
+      localStorage.setItem(GRANTED_STORAGE_KEY, "true")
+      const requestPermission = vi.fn(() => Promise.resolve("granted" as const))
+      defineDeviceMotionEvent(requestPermission)
+      const { result } = renderHook(() => useMotionPermission())
+      expect(result.current.state).toBe("prompt")
+
+      await act(async () => {
+        document.body.click()
+      })
+
+      expect(requestPermission).toHaveBeenCalledTimes(1)
+      expect(result.current.state).toBe("granted")
+    })
+
+    it("re-requests permission on the first touchend when previously granted", async () => {
+      localStorage.setItem(GRANTED_STORAGE_KEY, "true")
+      const requestPermission = vi.fn(() => Promise.resolve("granted" as const))
+      defineDeviceMotionEvent(requestPermission)
+      renderHook(() => useMotionPermission())
+
+      await act(async () => {
+        document.body.dispatchEvent(new Event("touchend", { bubbles: true }))
+      })
+
+      expect(requestPermission).toHaveBeenCalledTimes(1)
+    })
+
+    it("only re-requests once across several gestures", async () => {
+      localStorage.setItem(GRANTED_STORAGE_KEY, "true")
+      const requestPermission = vi.fn(() => Promise.resolve("granted" as const))
+      defineDeviceMotionEvent(requestPermission)
+      renderHook(() => useMotionPermission())
+
+      await act(async () => {
+        document.body.dispatchEvent(new Event("touchend", { bubbles: true }))
+        document.body.click()
+      })
+      await act(async () => {
+        document.body.click()
+      })
+
+      expect(requestPermission).toHaveBeenCalledTimes(1)
+    })
+
+    it("does not request permission on click when it was never granted", async () => {
+      const requestPermission = vi.fn(() => Promise.resolve("granted" as const))
+      defineDeviceMotionEvent(requestPermission)
+      const { result } = renderHook(() => useMotionPermission())
+
+      await act(async () => {
+        document.body.click()
+      })
+
+      expect(requestPermission).not.toHaveBeenCalled()
+      expect(result.current.state).toBe("prompt")
+    })
+
+    it("forgets the grant when the re-request is denied", async () => {
+      localStorage.setItem(GRANTED_STORAGE_KEY, "true")
+      defineDeviceMotionEvent(() => Promise.resolve("denied"))
+      const { result } = renderHook(() => useMotionPermission())
+
+      await act(async () => {
+        document.body.click()
+      })
+
+      expect(result.current.state).toBe("denied")
+      expect(localStorage.getItem(GRANTED_STORAGE_KEY)).toBeNull()
+    })
+
+    it("stops listening for gestures when unmounted", async () => {
+      localStorage.setItem(GRANTED_STORAGE_KEY, "true")
+      const requestPermission = vi.fn(() => Promise.resolve("granted" as const))
+      defineDeviceMotionEvent(requestPermission)
+      const { unmount } = renderHook(() => useMotionPermission())
+      unmount()
+
+      document.body.click()
+
+      expect(requestPermission).not.toHaveBeenCalled()
+    })
+  })
+
   describe("when DeviceMotionEvent is absent (desktop browser)", () => {
     beforeEach(() => removeDeviceMotionEvent())
 

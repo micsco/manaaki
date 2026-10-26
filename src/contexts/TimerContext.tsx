@@ -9,7 +9,8 @@ import {
   useSyncExternalStore,
 } from "react"
 
-import { startKitchenAlarm, stopKitchenAlarm } from "../utils/audio"
+import { useHoldAppUpdate } from "../pwa/updateHolds"
+import { startKitchenAlarm, stopKitchenAlarm, unlockAudioOnFirstGesture } from "../utils/audio"
 import { persistTimers, restoreTimers } from "../utils/timerStorage"
 import { usePostHog } from "./AnalyticsContext"
 
@@ -88,6 +89,13 @@ export function TimerProvider({
   useEffect(() => {
     if (restored) persistTimers(timers)
   }, [timers, restored])
+  useHoldAppUpdate(isAlarmRinging || timers.some(timer => timer.status === "running"), "timer")
+  const awaitingAlarm = timers.some(
+    timer => timer.status === "running" || timer.status === "completed"
+  )
+  useEffect(() => {
+    if (awaitingAlarm) unlockAudioOnFirstGesture()
+  }, [awaitingAlarm])
   const posthog = usePostHog()
   const posthogRef = useRef(posthog)
   useEffect(() => {

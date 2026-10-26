@@ -1,6 +1,9 @@
 let sharedAudioContext: AudioContext | null = null
 let alarmIntervalId: ReturnType<typeof setInterval> | null = null
 let alarmTimeoutId: ReturnType<typeof setTimeout> | null = null
+let disarmGestureUnlock: (() => void) | null = null
+
+const UNLOCK_GESTURES = ["click", "touchend", "keydown"] as const
 
 export function isKitchenAlarmActive(): boolean {
   return alarmIntervalId !== null
@@ -8,6 +11,7 @@ export function isKitchenAlarmActive(): boolean {
 
 export function resetAudioContextForTesting(): void {
   stopKitchenAlarm()
+  disarmGestureUnlock?.()
   sharedAudioContext = null
 }
 
@@ -29,6 +33,29 @@ function getAudioContext(): AudioContext | null {
   }
 
   return sharedAudioContext
+}
+
+export function unlockAudioOnFirstGesture(): void {
+  if (typeof window === "undefined" || disarmGestureUnlock) return
+  if (sharedAudioContext?.state === "running") return
+
+  const unlock = () => {
+    disarmGestureUnlock?.()
+    const context = getAudioContext()
+    if (context?.state === "suspended") {
+      context.resume().catch(() => undefined)
+    }
+  }
+
+  for (const gesture of UNLOCK_GESTURES) {
+    window.addEventListener(gesture, unlock, { capture: true, once: true })
+  }
+  disarmGestureUnlock = () => {
+    for (const gesture of UNLOCK_GESTURES) {
+      window.removeEventListener(gesture, unlock, { capture: true })
+    }
+    disarmGestureUnlock = null
+  }
 }
 
 function playTone(

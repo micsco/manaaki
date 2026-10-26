@@ -14,12 +14,13 @@ import { AppToasts } from "../components/AppToasts"
 import { BuildInfo } from "../components/BuildInfo"
 import { KitchenTimerHUD } from "../components/KitchenTimerHUD"
 import { ShakeToRandomRecipe } from "../components/ShakeToRandomRecipe"
-import { AnalyticsProvider, AnalyticsPageViews } from "../contexts/AnalyticsContext"
+import { AnalyticsProvider, AnalyticsPageViews, usePostHog } from "../contexts/AnalyticsContext"
 import { CookModeProvider } from "../contexts/CookModeContext"
 import { MotionPermissionProvider } from "../contexts/MotionPermissionContext"
 import { NavigationProvider } from "../contexts/NavigationContext"
 import { TimerProvider } from "../contexts/TimerContext"
-import { useVersionCheck } from "../hooks/useVersionCheck"
+import { useAutoUpdate } from "../hooks/useAutoUpdate"
+import { pruneExpiredDrafts } from "../hooks/usePersistentDraft"
 import { queryClient } from "../lib/queryClient"
 import manaakiLogoUrl from "../manaaki.svg?url"
 import { registerOfflineSupport } from "../pwa/client"
@@ -62,10 +63,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   notFoundComponent: NotFound,
 })
 
+function AutoUpdate() {
+  useAutoUpdate(useRouter(), usePostHog())
+  return null
+}
+
 function RootComponent() {
   const router = useRouter()
-  useVersionCheck(router)
   useEffect(() => trackInstallation(), [])
+  useEffect(() => pruneExpiredDrafts(), [])
   useEffect(() => {
     if (!import.meta.env.PROD) return
     const refreshShopping = () => {
@@ -97,6 +103,7 @@ function RootComponent() {
       <QueryClientProvider client={queryClient}>
         <AnalyticsProvider>
           <AnalyticsPageViews />
+          <AutoUpdate />
           <MotionPermissionProvider>
             <NuqsAdapter>
               <CookModeProvider>

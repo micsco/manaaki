@@ -24,7 +24,26 @@ include elapsed time while away. Browser suspension can delay alarms until the
 app is active again. Screen wake lock is reacquired when cooking mode returns to
 the foreground.
 
-Updates wait for an explicit Update action. Navigation never forces a reload.
+New app versions apply automatically at a safe moment, without a prompt:
+
+- at launch, if the update is found before the first tap;
+- on the next move to a different page, which becomes a full load of that page
+  (search and filter changes on the same page don't count);
+- after a minute in the background, or on return after five minutes away;
+- after ten minutes without interaction on screen.
+
+Updates wait while something would be lost or interrupted: a save or other write in
+flight, an AI draft being written, text typed in the last 90 seconds, a running or
+ringing timer, and (for in-place reloads only) an open dialog or cooking mode.
+Components opt in with `useHoldAppUpdate`; writes through the API client are held
+automatically. If an update has been held for 12 hours, a quiet **Update** prompt
+appears instead.
+
+Unfinished text in forms and the AI recipe-version review are saved as drafts
+(`usePersistentDraft`, 24-hour expiry, cleared on sign-out), so a reload brings them
+back. A missing lazy-loaded file after a deploy triggers one reload to fetch the new
+build, and a reload-loop guard stops repeats on the same build. Each applied update
+is reported to PostHog as `app_updated` with its trigger and how long it was held.
 The worker retains two previous app-shell versions to support already-open tabs.
 
 Shopping check-offs are queued automatically in account-scoped storage, with a
@@ -61,7 +80,7 @@ returns to the foreground. Successful imports invalidate the recipe list immedia
 even during that 30-minute window. Individual recipes
 are not polled. Weather retains its five-minute interval.
 
-Data refresh is separate from the existing **Update** prompt for a new app version.
+Data refresh is separate from app version updates.
 There is no custom pull-to-refresh gesture.
 
 ## Validation
@@ -89,7 +108,7 @@ The entry point is `/share?url=<encoded URL>`; `text` and `title` are also accep
 It uses GET because receiving a share only opens a form. No recipe is created on
 navigation or reload. The precached shell can open this page offline after an
 online visit. The original shared link stays in the page URL across reloads;
-importing requires connectivity. Edits to the input are not persisted on reload.
+importing requires connectivity. Edits to the input are saved as a draft and survive a reload.
 
 Safari on iOS does not support PWA share targets. A Shortcuts share-sheet action
 can use the same entry point without an API token:
@@ -143,7 +162,8 @@ Compare the original text, edit quantities and notes, choose existing foods or
 units, or explicitly create missing records. New foods/units are added immediately
 when their Create button is pressed, as in Mealie; canceling the review does not
 remove those catalog records. Ingredient changes are applied only by Save ingredients. Keeping an original ingredient declines its suggestion. Suggestions
-are held in memory per signed-in user; reloading can require parsing again.
+and review edits are saved as a per-user draft, so a reload reopens them without
+parsing again; the draft is dropped if the recipe's ingredients change.
 
 Reviewed against Mealie commit
 [82387a2](https://github.com/mealie-recipes/mealie/blob/82387a281d6364b7e563bb9a93464eb662217193/frontend/app/composables/recipes/use-parse-ingredients-dialog.ts)

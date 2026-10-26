@@ -1,8 +1,10 @@
 // src/components/ShoppingListView.tsx
 import { useState } from "react"
 
+import { usePersistentDraft } from "../hooks/usePersistentDraft"
 import { useShoppingListDetail } from "../hooks/useShoppingList"
 import { useAddManualItem, useDeleteItem, useToggleItem } from "../hooks/useShoppingMutations"
+import { trackPendingWrite } from "../pwa/updateHolds"
 import { useOnline } from "../pwa/useOnline"
 import { groupItemsByAisle } from "../utils/shopping"
 import { ShoppingListItemRow } from "./ShoppingListItemRow"
@@ -15,7 +17,9 @@ export function ShoppingListView({ listId }: { listId: string }) {
   const { add } = useAddManualItem(listId)
   const { remove } = useDeleteItem(listId)
   const online = useOnline()
-  const [draft, setDraft] = useState("")
+  const [draft, setDraft] = usePersistentDraft(`shopping-list:${listId}:new-item`, "")
+  const [adding, setAdding] = useState(false)
+  const [addError, setAddError] = useState("")
 
   if (isLoading || !list) return <p className="p-6 text-gray-500">Loading…</p>
 
@@ -23,34 +27,55 @@ export function ShoppingListView({ listId }: { listId: string }) {
   const groups = groupItemsByAisle(items, list.labelSettings ?? [])
   const allChecked = items.length > 0 && items.every(i => i.checked)
 
+  async function addDraft() {
+    const submitted = draft
+    if (!online || adding || !submitted.trim()) return
+    setAdding(true)
+    setAddError("")
+    try {
+      await trackPendingWrite(() => add(submitted))
+      setDraft(current => (current === submitted ? "" : current))
+    } catch {
+      setAddError("Couldn’t add that item. Try again.")
+    } finally {
+      setAdding(false)
+    }
+  }
+
   return (
     <div className="mx-auto max-w-2xl px-4 pb-24">
       <form
         className="sticky top-[env(safe-area-inset-top,0px)] z-10 flex gap-2 bg-gray-950 py-3"
         onSubmit={e => {
           e.preventDefault()
-          if (!online || !draft.trim()) return
-          void add(draft)
-          setDraft("")
+          void addDraft()
         }}
       >
         <input
           disabled={!online}
           value={draft}
-          onChange={e => setDraft(e.target.value)}
+          onChange={e => {
+            setDraft(e.target.value)
+            if (addError) setAddError("")
+          }}
           placeholder="Add an item…"
           aria-label="Add an item"
           className="flex-1 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-gray-100"
         />
         <button
           type="submit"
-          disabled={!online || !draft.trim()}
+          disabled={!online || adding || !draft.trim()}
           className="rounded-lg bg-orange-600 px-4 py-2 font-medium text-white hover:bg-orange-500"
         >
           Add
         </button>
       </form>
 
+      {addError && (
+        <p role="alert" className="py-2 text-sm text-red-300">
+          {addError}
+        </p>
+      )}
       {!online && (
         <p className="py-2 text-sm text-gray-400">
           Check items off while offline. Adding and removing items needs a connection.

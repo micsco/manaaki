@@ -1,31 +1,84 @@
 import { afterEach, expect, it, vi } from "vitest"
 
-import { applyAppUpdate, clearCookingStorage, registerOfflineSupport } from "./client"
+import { resetAppUpdateForTesting, updatePendingSince } from "./appUpdate"
+import { clearCookingStorage, registerOfflineSupport } from "./client"
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  vi.unstubAllGlobals()
+  resetAppUpdateForTesting()
+})
 
 it("clears app-owned private progress without affecting unrelated storage", () => {
   localStorage.setItem("manaaki:cooking:v1:step", "true")
+  localStorage.setItem("manaaki:draft:v1:note", "{}")
   localStorage.setItem("unrelated", "keep")
   clearCookingStorage()
   expect(localStorage.getItem("manaaki:cooking:v1:step")).toBeNull()
+  expect(localStorage.getItem("manaaki:draft:v1:note")).toBeNull()
   expect(localStorage.getItem("unrelated")).toBe("keep")
 })
 
-it("activates a waiting worker only after the user applies the update", async () => {
-  const postMessage = vi.fn()
-  const addEventListener = vi.fn()
+it("marks an update as pending when a new worker is waiting", async () => {
+  const registration = {
+    active: {},
+    waiting: {},
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    update: vi.fn(),
+  }
   vi.stubGlobal("navigator", {
+    onLine: true,
     serviceWorker: {
-      getRegistration: async () => ({ waiting: { postMessage } }),
-      addEventListener,
+      controller: { postMessage: vi.fn() },
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      register: async () => registration,
     },
   })
-  await applyAppUpdate()
-  expect(postMessage).toHaveBeenCalledWith({ type: "ACTIVATE_UPDATE" })
-  expect(addEventListener).toHaveBeenCalledWith("controllerchange", expect.any(Function), {
-    once: true,
+  const cleanup = await registerOfflineSupport(vi.fn())
+  expect(updatePendingSince()).not.toBeNull()
+  cleanup()
+})
+
+it("marks an update as pending when another tab switched this one to a new worker", async () => {
+  const listeners = new Map<string, () => void>()
+  const registration = { addEventListener: vi.fn(), removeEventListener: vi.fn(), update: vi.fn() }
+  vi.stubGlobal("navigator", {
+    onLine: true,
+    serviceWorker: {
+      controller: { postMessage: vi.fn() },
+      addEventListener: (type: string, listener: () => void) => listeners.set(type, listener),
+      removeEventListener: vi.fn(),
+      register: async () => registration,
+    },
   })
+  const firstControl = vi.fn()
+  const cleanup = await registerOfflineSupport(firstControl)
+  expect(updatePendingSince()).toBeNull()
+  listeners.get("controllerchange")?.()
+  expect(updatePendingSince()).not.toBeNull()
+  expect(firstControl).not.toHaveBeenCalled()
+  cleanup()
+})
+
+it("does not treat the first install as an update", async () => {
+  const listeners = new Map<string, () => void>()
+  const registration = { addEventListener: vi.fn(), removeEventListener: vi.fn(), update: vi.fn() }
+  vi.stubGlobal("navigator", {
+    onLine: true,
+    serviceWorker: {
+      controller: null,
+      addEventListener: (type: string, listener: () => void) => listeners.set(type, listener),
+      removeEventListener: vi.fn(),
+      register: async () => registration,
+    },
+  })
+  const firstControl = vi.fn()
+  const cleanup = await registerOfflineSupport(firstControl)
+  listeners.get("controllerchange")?.()
+  expect(firstControl).toHaveBeenCalledTimes(1)
+  expect(updatePendingSince()).toBeNull()
+  cleanup()
 })
 
 it("gracefully skips browsers without service workers", async () => {

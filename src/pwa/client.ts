@@ -1,33 +1,22 @@
+import { forgetAllDrafts } from "../hooks/usePersistentDraft"
+import { isApplyingAppUpdate, markUpdatePending } from "./appUpdate"
 import { receiveShoppingStatus } from "./shoppingSync"
 import { setServerReachable } from "./useOnline"
+
+const PRIVATE_PREFIXES = ["manaaki:cooking:", "manaaki:shopping:"]
 
 export function clearCookingStorage() {
   try {
     for (const key of Object.keys(localStorage)) {
-      if (key.startsWith("manaaki:cooking:") || key.startsWith("manaaki:shopping:"))
-        localStorage.removeItem(key)
+      if (PRIVATE_PREFIXES.some(prefix => key.startsWith(prefix))) localStorage.removeItem(key)
     }
     window.dispatchEvent(new Event("cooking-storage"))
     window.dispatchEvent(new Event("shopping-sync"))
   } catch {}
+  forgetAllDrafts()
 }
 
-export async function applyAppUpdate() {
-  if (!("serviceWorker" in navigator)) {
-    window.location.reload()
-    return
-  }
-  const registration = await navigator.serviceWorker.getRegistration()
-  if (!registration?.waiting) {
-    window.location.reload()
-    return
-  }
-  navigator.serviceWorker.addEventListener("controllerchange", () => window.location.reload(), {
-    once: true,
-  })
-  // eslint-disable-next-line unicorn/require-post-message-target-origin -- ServiceWorker.postMessage has no targetOrigin argument
-  registration.waiting.postMessage({ type: "ACTIVATE_UPDATE" })
-}
+const UPDATE_CHECK_INTERVAL_MS = 30 * 60 * 1000
 
 export async function registerOfflineSupport(onFirstControl: () => void) {
   if (!("serviceWorker" in navigator)) return () => {}
@@ -43,6 +32,7 @@ export async function registerOfflineSupport(onFirstControl: () => void) {
   const onController = () => {
     sendSync()
     if (!controlled) onFirstControl()
+    else if (!isApplyingAppUpdate()) markUpdatePending("worker-activated")
     controlled = true
   }
   const onMessage = (event: MessageEvent) => {
@@ -62,8 +52,7 @@ export async function registerOfflineSupport(onFirstControl: () => void) {
   navigator.serviceWorker.addEventListener("message", onMessage)
   const registration = await navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" })
   const offerUpdate = () => {
-    if (registration.active && registration.waiting)
-      window.dispatchEvent(new Event("pwa-update-ready"))
+    if (registration.active && registration.waiting) markUpdatePending("worker-waiting")
   }
   const onInstalled = () => offerUpdate()
   const onUpdate = () => registration.installing?.addEventListener("statechange", onInstalled)
@@ -74,6 +63,9 @@ export async function registerOfflineSupport(onFirstControl: () => void) {
     if (pendingChecks > 0 && navigator.onLine) sendSync()
   }, 30_000)
   window.addEventListener("online", sendSync)
+  const updateCheck = window.setInterval(() => {
+    if (document.visibilityState === "visible") void registration.update().catch(() => {})
+  }, UPDATE_CHECK_INTERVAL_MS)
   const check = () => {
     if (document.visibilityState === "visible") {
       sendSync()
@@ -87,6 +79,7 @@ export async function registerOfflineSupport(onFirstControl: () => void) {
     navigator.serviceWorker.removeEventListener("message", onMessage)
     registration.removeEventListener("updatefound", onUpdate)
     window.clearInterval(retry)
+    window.clearInterval(updateCheck)
     window.removeEventListener("online", sendSync)
     document.removeEventListener("visibilitychange", check)
   }

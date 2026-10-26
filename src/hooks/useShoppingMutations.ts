@@ -106,9 +106,10 @@ export function useAddManualItem(listId: string) {
     mutationFn: async (display: string) => {
       const trimmed = display.trim()
       if (!trimmed) return
-      await createManyApiHouseholdsShoppingItemsCreateBulkPost({
+      const result = await createManyApiHouseholdsShoppingItemsCreateBulkPost({
         body: [{ shoppingListId: listId, display: trimmed }],
       })
+      if (result.error) throw new Error("Couldn't add that item.")
     },
     onSettled: () => qc.invalidateQueries({ queryKey: key }),
   })

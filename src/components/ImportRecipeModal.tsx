@@ -13,7 +13,9 @@ import { useEffect, useState } from "react"
 import { usePostHog } from "../contexts/AnalyticsContext"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import { useImportRecipe } from "../hooks/useImportRecipe"
+import { usePersistentDraft } from "../hooks/usePersistentDraft"
 import { toastManager } from "../lib/toastManager"
+import { useHoldAppUpdate } from "../pwa/updateHolds"
 import { useOnline } from "../pwa/useOnline"
 import { loginStartHref } from "../utils/loginReturn"
 import { Icon } from "./Icon"
@@ -25,6 +27,8 @@ export interface ImportRecipeModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
+
+const IMPORT_URL_DRAFT_KEY = "import-recipe:url"
 
 export function normalizeRecipeUrl(input: string): string | null {
   const trimmed = input.trim()
@@ -51,13 +55,16 @@ export function ImportRecipeModal({
   returnTo,
   shared = false,
 }: ImportRecipeModalProps) {
-  const [url, setUrl] = useState(initialUrl)
+  const [url, setUrl, clearUrl] = usePersistentDraft(IMPORT_URL_DRAFT_KEY, initialUrl, {
+    base: initialUrl || null,
+  })
   const online = useOnline()
   const [validationError, setValidationError] = useState<string | null>(null)
   const current = useCurrentUser()
   const importRecipe = useImportRecipe()
   const navigate = useNavigate()
   const posthog = usePostHog()
+  useHoldAppUpdate(importRecipe.isPending, "importing-recipe")
 
   const hasClipboard =
     typeof navigator !== "undefined" && typeof navigator.clipboard?.readText === "function"
@@ -69,12 +76,13 @@ export function ImportRecipeModal({
   }, [open, posthog])
 
   function resetState() {
-    setUrl("")
+    clearUrl()
     setValidationError(null)
     importRecipe.reset()
   }
 
   function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen && importRecipe.isPending) return
     if (!nextOpen) {
       resetState()
     }
@@ -139,7 +147,10 @@ export function ImportRecipeModal({
     <Dialog.Root open={open} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs" />
-        <Dialog.Popup className="fixed top-1/2 left-1/2 z-50 mobile-dialog max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-gray-800 bg-gray-900 p-6 shadow-xl focus:outline-hidden">
+        <Dialog.Popup
+          data-update-safe
+          className="fixed top-1/2 left-1/2 z-50 mobile-dialog max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-gray-800 bg-gray-900 p-6 shadow-xl focus:outline-hidden"
+        >
           <div className="flex items-center justify-between pb-4">
             <Dialog.Title className="flex items-center gap-2.5 text-xl font-semibold text-gray-100">
               <Icon path={mdiBookPlus} size={0.8} className="text-orange-500" aria-hidden={true} />

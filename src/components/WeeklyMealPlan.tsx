@@ -1,11 +1,12 @@
 import { mdiCartPlus, mdiChefHat, mdiChevronRight, mdiCalendarArrowRight } from "@mdi/js"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { createParser, useQueryState } from "nuqs"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import type { ReadPlanEntry } from "../api/generated/types.gen"
 import { mealPlanQueryOptions, todayIsoDateString, toIsoDateString } from "../hooks/useMealPlan"
+import { usePersistentDraft } from "../hooks/usePersistentDraft"
 import { mealTypes } from "../utils/mealTypes"
 import { parsePlanDate } from "../utils/navigation"
 import { encodeRecipeId, recipeImageUrl, recipeUrl } from "../utils/recipe"
@@ -23,6 +24,30 @@ const dateLabel = (date: string, options: Intl.DateTimeFormatOptions) =>
 const controlClass =
   "inline-flex min-h-11 items-center justify-center rounded-full bg-gray-800 px-4 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-700"
 
+type PlannedMealTarget = { date: string; entryId?: number }
+
+function PlannedMealDialog({
+  date,
+  entryId,
+  onClose,
+}: PlannedMealTarget & { onClose: () => void }) {
+  const queryClient = useQueryClient()
+  const day = useQuery({ ...mealPlanQueryOptions(date, date), enabled: entryId !== undefined })
+  const entry = day.data
+    ? day.data.find(item => item.id === entryId)
+    : queryClient
+        .getQueriesData<ReadPlanEntry[]>({ queryKey: ["mealplan"] })
+        .flatMap(([, entries]) => entries ?? [])
+        .find(item => item.id === entryId)
+  const missing = entryId !== undefined && !day.isPending && !entry
+  useEffect(() => {
+    if (missing) onClose()
+  }, [missing, onClose])
+  if (entryId === undefined) return <LazyMealPlanDialog date={date} onClose={onClose} />
+  if (!entry) return null
+  return <LazyMealPlanDialog date={date} entry={entry} onClose={onClose} />
+}
+
 export function WeeklyMealPlan() {
   const navigate = useNavigate()
   const weather = useWeather()
@@ -30,7 +55,10 @@ export function WeeklyMealPlan() {
     "date",
     planDateParser.withDefault(todayIsoDateString()).withOptions({ history: "push" })
   )
-  const [editing, setEditing] = useState<{ date: string; entry?: ReadPlanEntry } | null>(null)
+  const [editing, setEditing, closeEditing] = usePersistentDraft<PlannedMealTarget | null>(
+    "meal-plan:open:week",
+    null
+  )
   const [shopping, setShopping] = useState(false)
   const [recentOpen, setRecentOpen] = useState(false)
   const [chooseDate, setChooseDate] = useState(false)
@@ -139,7 +167,7 @@ export function WeeklyMealPlan() {
           </button>
           <div id="recent-meals">
             {recentOpen && (
-              <RecentMeals onEdit={entry => setEditing({ date: entry.date, entry })} />
+              <RecentMeals onEdit={entry => setEditing({ date: entry.date, entryId: entry.id })} />
             )}
           </div>
         </div>
@@ -193,7 +221,7 @@ export function WeeklyMealPlan() {
                         <MealStory
                           key={entry.id}
                           entry={entry}
-                          onEdit={() => setEditing({ date, entry })}
+                          onEdit={() => setEditing({ date, entryId: entry.id })}
                         />
                       ))}
                     </div>
@@ -215,11 +243,7 @@ export function WeeklyMealPlan() {
         <MealPlanWeatherStatus weather={weather} />
       </div>
       {editing && (
-        <LazyMealPlanDialog
-          date={editing.date}
-          entry={editing.entry}
-          onClose={() => setEditing(null)}
-        />
+        <PlannedMealDialog date={editing.date} entryId={editing.entryId} onClose={closeEditing} />
       )}
       {shopping && (
         <LazyBuildShoppingListDialog

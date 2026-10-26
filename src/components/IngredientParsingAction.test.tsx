@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import userEvent from "@testing-library/user-event"
-import { beforeEach, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import * as catalog from "../api/ingredientCatalog"
 import { loadFoodRecipeCount } from "../api/ingredientPopularity"
 import * as parsing from "../api/recipeParsing"
 import { useCurrentUser } from "../hooks/useCurrentUser"
+import { resetUpdateHoldsForTesting, updateBlockers } from "../pwa/updateHolds"
 import { useOnline } from "../pwa/useOnline"
 import { render, screen, waitFor } from "../test/render"
 import { IngredientParsingAction } from "./IngredientParsingAction"
@@ -50,6 +51,9 @@ beforeEach(() => {
     food: [{ id: "lamb", name: "lamb" }],
     unit: [{ id: "g", name: "g" }],
   })
+})
+afterEach(() => {
+  resetUpdateHoldsForTesting()
 })
 it("keeps manual parsing available for a partially parsed recipe through recipe review", async () => {
   const user = userEvent.setup()
@@ -454,4 +458,179 @@ it("warms popularity counts before an ingredient editor opens", async () => {
   await waitFor(() => expect(loadFoodRecipeCount).toHaveBeenCalledTimes(2))
   expect(loadFoodRecipeCount).toHaveBeenCalledWith("mince", expect.any(AbortSignal))
   expect(screen.queryByRole("combobox")).not.toBeInTheDocument()
+})
+
+describe("surviving a reload", () => {
+  const reviewDraft = "manaaki:draft:v1:ingredient-review:user:recipe"
+  const rowsDraft = `${reviewDraft}:rows`
+
+  function deferred<T>() {
+    let resolve!: (value: T) => void
+    const promise = new Promise<T>(done => {
+      resolve = done
+    })
+    return { promise, resolve }
+  }
+
+  it("restores the AI result and edits without parsing again", async () => {
+    const user = userEvent.setup()
+    const first = render(<IngredientParsingAction recipe={recipe} />)
+    await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
+    await user.click(await screen.findByRole("button", { name: "Edit ingredient 1" }))
+    await user.clear(screen.getByLabelText("Quantity"))
+    await user.type(screen.getByLabelText("Quantity"), "250")
+    first.unmount()
+    render(<IngredientParsingAction recipe={recipe} />)
+    await user.click(screen.getByRole("button", { name: "Review parsed ingredients" }))
+    await user.click(screen.getByRole("button", { name: "Edit ingredient 1" }))
+    expect(screen.getByLabelText("Quantity")).toHaveValue(250)
+    await user.click(screen.getByRole("button", { name: "Save ingredients" }))
+    await waitFor(() =>
+      expect(parsing.saveReviewedIngredients).toHaveBeenCalledWith(
+        expect.objectContaining({ recipe }),
+        [expect.objectContaining({ ingredient: expect.objectContaining({ quantity: 250 }) })]
+      )
+    )
+    expect(parsing.parseRecipeIngredients).toHaveBeenCalledOnce()
+  })
+
+  it("keeps a cleared amount invalid after a reload", async () => {
+    const user = userEvent.setup()
+    const first = render(<IngredientParsingAction recipe={recipe} />)
+    await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
+    await user.click(await screen.findByRole("button", { name: "Edit ingredient 1" }))
+    await user.clear(screen.getByLabelText("Quantity"))
+    expect(screen.getByRole("button", { name: "Save ingredients" })).toBeDisabled()
+    first.unmount()
+    render(<IngredientParsingAction recipe={recipe} />)
+    await user.click(screen.getByRole("button", { name: "Review parsed ingredients" }))
+    expect(screen.getByRole("button", { name: "Save ingredients" })).toBeDisabled()
+    expect(screen.getByText("Enter valid, non-negative amounts before saving.")).toBeVisible()
+  })
+
+  it("keeps the AI result but discards edits on cancel", async () => {
+    const user = userEvent.setup()
+    const first = render(<IngredientParsingAction recipe={recipe} />)
+    await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
+    await user.click(await screen.findByRole("button", { name: "Edit ingredient 1" }))
+    await user.clear(screen.getByLabelText("Quantity"))
+    await user.type(screen.getByLabelText("Quantity"), "250")
+    await user.click(screen.getByRole("button", { name: "Cancel" }))
+    expect(localStorage.getItem(rowsDraft)).toBeNull()
+    first.unmount()
+    render(<IngredientParsingAction recipe={recipe} />)
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "Review parsed ingredients" }))
+    await user.click(screen.getByRole("button", { name: "Edit ingredient 1" }))
+    expect(screen.getByLabelText("Quantity")).toHaveValue(275)
+    expect(parsing.parseRecipeIngredients).toHaveBeenCalledOnce()
+  })
+
+  it("clears the review and edits after a successful save", async () => {
+    const user = userEvent.setup()
+    const first = render(<IngredientParsingAction recipe={recipe} />)
+    await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
+    await user.click(await screen.findByRole("button", { name: "Edit ingredient 1" }))
+    await user.type(screen.getByLabelText("Preparation / note"), " finely")
+    expect(localStorage.getItem(rowsDraft)).not.toBeNull()
+    await user.click(screen.getByRole("button", { name: "Save ingredients" }))
+    await waitFor(() => expect(invalidate).toHaveBeenCalled())
+    expect(localStorage.getItem(reviewDraft)).toBeNull()
+    expect(localStorage.getItem(rowsDraft)).toBeNull()
+    first.unmount()
+    render(<IngredientParsingAction recipe={recipe} />)
+    expect(screen.getByRole("button", { name: "Parse ingredients with AI" })).toBeVisible()
+  })
+
+  it("ignores a saved review once the recipe's ingredients have changed", async () => {
+    const user = userEvent.setup()
+    const first = render(<IngredientParsingAction recipe={recipe} />)
+    await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
+    await screen.findByRole("dialog", { name: "Review parsed ingredients" })
+    first.unmount()
+    render(
+      <IngredientParsingAction
+        recipe={{
+          ...recipe,
+          recipeIngredient: [{ note: "300g diced lamb", referenceId: "original" }],
+        }}
+      />
+    )
+    expect(screen.getByRole("button", { name: "Parse ingredients with AI" })).toBeVisible()
+  })
+
+  it("opens only the review that was asked for when the action appears twice", async () => {
+    const user = userEvent.setup()
+    render(
+      <>
+        <IngredientParsingAction recipe={recipe} />
+        <IngredientParsingAction recipe={recipe} />
+      </>
+    )
+    await user.click(screen.getAllByRole("button", { name: "Parse ingredients with AI" })[0])
+    expect(await screen.findAllByRole("dialog")).toHaveLength(1)
+    expect(
+      screen.getAllByRole("button", { name: "Review parsed ingredients", hidden: true })
+    ).toHaveLength(2)
+  })
+
+  it("keeps an import's AI result after a reload", async () => {
+    const client = new QueryClient()
+    client.setQueryData(parsing.ingredientReviewKey("user", "recipe"), {
+      recipe,
+      parsed: [suggestion],
+    })
+    const first = render(
+      <QueryClientProvider client={client}>
+        <IngredientParsingAction recipe={recipe} />
+      </QueryClientProvider>
+    )
+    await waitFor(() => expect(localStorage.getItem(reviewDraft)).not.toBeNull())
+    first.unmount()
+    render(<IngredientParsingAction recipe={recipe} />)
+    await userEvent.click(screen.getByRole("button", { name: "Review parsed ingredients" }))
+    expect(await screen.findByText("Original: 275g diced lamb")).toBeVisible()
+    expect(parsing.parseRecipeIngredients).not.toHaveBeenCalled()
+  })
+
+  it("defers in-place reloads while the review is open", async () => {
+    const user = userEvent.setup()
+    render(<IngredientParsingAction recipe={recipe} />)
+    await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
+    await screen.findByRole("dialog", { name: "Review parsed ingredients" })
+    expect(updateBlockers("in-place")).toContain("dialog")
+  })
+
+  it("holds automatic updates while parsing, creating a match and saving", async () => {
+    const parse = deferred<parsing.IngredientReview>()
+    vi.mocked(parsing.parseRecipeIngredients).mockReturnValueOnce(parse.promise)
+    const created = deferred<{ id: string; name: string }>()
+    vi.mocked(catalog.createIngredientMatch).mockReturnValueOnce(created.promise)
+    const saved = deferred<typeof recipe>()
+    vi.mocked(parsing.saveReviewedIngredients).mockReturnValueOnce(saved.promise)
+    const user = userEvent.setup()
+    render(<IngredientParsingAction recipe={recipe} />)
+    await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
+    expect(updateBlockers("navigation")).toContain("parsing ingredients")
+    parse.resolve({
+      recipe,
+      parsed: [
+        {
+          ...suggestion,
+          confidence: { average: 1 },
+          ingredient: { ...suggestion.ingredient, food: { name: "new food" } },
+        },
+      ],
+    })
+    await user.click(await screen.findByRole("button", { name: "Create food “new food”" }))
+    expect(updateBlockers("navigation")).toEqual(["creating ingredient match"])
+    created.resolve({ id: "new", name: "new food" })
+    await waitFor(() => expect(screen.queryByText(/Unmatched food/)).not.toBeInTheDocument())
+    await waitFor(() => expect(updateBlockers("navigation")).toEqual([]))
+    await user.click(screen.getByRole("button", { name: "Save ingredients" }))
+    expect(updateBlockers("navigation")).toEqual(["saving ingredients"])
+    saved.resolve(recipe)
+    await waitFor(() => expect(invalidate).toHaveBeenCalled())
+    await waitFor(() => expect(updateBlockers("navigation")).toEqual([]))
+  })
 })

@@ -6,6 +6,7 @@ import {
   resetAudioContextForTesting,
   startKitchenAlarm,
   stopKitchenAlarm,
+  unlockAudioOnFirstGesture,
 } from "./audio"
 
 describe("audio alarms and chimes", () => {
@@ -171,5 +172,76 @@ describe("audio alarms and chimes", () => {
 
     expect(isKitchenAlarmActive()).toBe(false)
     expect(onAutoStop).toHaveBeenCalledTimes(1)
+  })
+
+  describe("unlockAudioOnFirstGesture", () => {
+    function installSuspendedContext() {
+      const context = {
+        state: "suspended",
+        resume: vi.fn().mockResolvedValue(undefined),
+      }
+      const constructed = vi.fn()
+      function MockAudioContext(this: object) {
+        constructed()
+        Object.assign(this, context)
+      }
+      window.AudioContext = MockAudioContext as unknown as typeof AudioContext
+      return { context, constructed }
+    }
+
+    it("does not create an AudioContext before a gesture", () => {
+      const { constructed } = installSuspendedContext()
+      unlockAudioOnFirstGesture()
+      expect(constructed).not.toHaveBeenCalled()
+    })
+
+    it.each(["click", "touchend", "keydown"])(
+      "resumes a suspended context on the first %s",
+      gesture => {
+        const { context } = installSuspendedContext()
+        unlockAudioOnFirstGesture()
+
+        window.dispatchEvent(new Event(gesture))
+
+        expect(context.resume).toHaveBeenCalledTimes(1)
+      }
+    )
+
+    it("removes every gesture listener after the first gesture", () => {
+      const { context, constructed } = installSuspendedContext()
+      const removeSpy = vi.spyOn(window, "removeEventListener")
+      unlockAudioOnFirstGesture()
+
+      window.dispatchEvent(new Event("touchend"))
+      window.dispatchEvent(new Event("click"))
+      window.dispatchEvent(new Event("keydown"))
+
+      expect(constructed).toHaveBeenCalledTimes(1)
+      expect(context.resume).toHaveBeenCalledTimes(1)
+      for (const gesture of ["click", "touchend", "keydown"]) {
+        expect(removeSpy).toHaveBeenCalledWith(gesture, expect.any(Function), { capture: true })
+      }
+      removeSpy.mockRestore()
+    })
+
+    it("only arms one set of listeners when called repeatedly", () => {
+      const { context } = installSuspendedContext()
+      unlockAudioOnFirstGesture()
+      unlockAudioOnFirstGesture()
+
+      window.dispatchEvent(new Event("click"))
+
+      expect(context.resume).toHaveBeenCalledTimes(1)
+    })
+
+    it("reuses the unlocked context for the chime", async () => {
+      const { constructed } = installSuspendedContext()
+      unlockAudioOnFirstGesture()
+      window.dispatchEvent(new Event("click"))
+
+      await playKitchenChime()
+
+      expect(constructed).toHaveBeenCalledTimes(1)
+    })
   })
 })

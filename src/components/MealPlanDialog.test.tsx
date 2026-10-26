@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
   createOneApiHouseholdsMealplansPost,
@@ -10,6 +10,7 @@ import {
 } from "../api/generated/sdk.gen"
 import type { ReadPlanEntry } from "../api/generated/types.gen"
 import { toIsoDateString } from "../hooks/useMealPlan"
+import { resetUpdateHoldsForTesting, updateBlockers } from "../pwa/updateHolds"
 import { render, screen, waitFor, within } from "../test/render"
 import { useWeather } from "../weather/useWeather"
 import { MealPlanDialog } from "./MealPlanDialog"
@@ -51,6 +52,9 @@ beforeEach(() => {
   } as never)
   vi.mocked(createOneApiHouseholdsMealplansPost).mockResolvedValue({ data: entry } as never)
   vi.mocked(updateOneApiHouseholdsMealplansItemIdPut).mockResolvedValue({ data: entry } as never)
+})
+afterEach(() => {
+  resetUpdateHoldsForTesting()
 })
 describe("MealPlanDialog", () => {
   it("adds the chosen recipe on a date and meal type while keeping existing meals", async () => {
@@ -367,5 +371,193 @@ describe("meal removal", () => {
     expect(deleteOneApiHouseholdsMealplansItemIdDelete).toHaveBeenCalledOnce()
     finish({} as never)
     await waitFor(() => expect(close).toHaveBeenCalledOnce())
+  })
+})
+
+describe("surviving a reload", () => {
+  const recipeDraft = "manaaki:draft:v1:meal-plan:recipe:peppers"
+
+  it("restores typed and chosen fields after the dialog is remounted", async () => {
+    const user = userEvent.setup()
+    const first = render(
+      <MealPlanDialog
+        date="2026-09-06"
+        recipe={{ id: "peppers", name: "Peppers" }}
+        onClose={vi.fn()}
+      />
+    )
+    await user.click(screen.getByRole("button", { name: /^Lunch$/ }))
+    await user.type(screen.getByLabelText(/Planning note/), "Prep after work")
+    first.unmount()
+    render(
+      <MealPlanDialog
+        date="2026-09-06"
+        recipe={{ id: "peppers", name: "Peppers" }}
+        onClose={vi.fn()}
+      />
+    )
+    expect(screen.getByLabelText(/Planning note/)).toHaveValue("Prep after work")
+    expect(screen.getByRole("button", { name: /^Lunch$/ })).toHaveAttribute("aria-pressed", "true")
+  })
+
+  it("restores a note-only draft for a new meal", async () => {
+    const user = userEvent.setup()
+    const first = render(<MealPlanDialog date="2026-09-06" onClose={vi.fn()} />)
+    await user.click(screen.getByRole("checkbox", { name: /Note only/ }))
+    await user.type(screen.getByLabelText(/^Title/), "Eating out")
+    first.unmount()
+    render(<MealPlanDialog date="2026-09-06" onClose={vi.fn()} />)
+    expect(screen.getByRole("checkbox", { name: /Note only/ })).toBeChecked()
+    expect(screen.getByLabelText(/^Title/)).toHaveValue("Eating out")
+  })
+
+  it("ignores a new-meal draft started for another day", async () => {
+    const user = userEvent.setup()
+    const first = render(<MealPlanDialog date="2026-09-06" onClose={vi.fn()} />)
+    await user.type(screen.getByLabelText(/Planning note/), "Tuesday plan")
+    first.unmount()
+    render(<MealPlanDialog date="2026-09-07" onClose={vi.fn()} />)
+    expect(screen.getByLabelText(/Planning note/)).toHaveValue("")
+  })
+
+  it("clears the draft after a successful save", async () => {
+    const user = userEvent.setup()
+    const close = vi.fn()
+    const first = render(
+      <MealPlanDialog
+        date="2026-09-06"
+        recipe={{ id: "peppers", name: "Peppers" }}
+        onClose={close}
+      />
+    )
+    await user.type(screen.getByLabelText(/Planning note/), "Prep after work")
+    expect(localStorage.getItem(recipeDraft)).not.toBeNull()
+    await user.click(screen.getByRole("button", { name: "Add meal" }))
+    await waitFor(() => expect(close).toHaveBeenCalled())
+    expect(localStorage.getItem(recipeDraft)).toBeNull()
+    first.unmount()
+    render(
+      <MealPlanDialog
+        date="2026-09-06"
+        recipe={{ id: "peppers", name: "Peppers" }}
+        onClose={vi.fn()}
+      />
+    )
+    expect(screen.getByLabelText(/Planning note/)).toHaveValue("")
+  })
+
+  it("keeps the draft when saving fails", async () => {
+    vi.mocked(createOneApiHouseholdsMealplansPost).mockResolvedValueOnce({
+      error: { detail: "failed" },
+    } as never)
+    const user = userEvent.setup()
+    render(
+      <MealPlanDialog
+        date="2026-09-06"
+        recipe={{ id: "peppers", name: "Peppers" }}
+        onClose={vi.fn()}
+      />
+    )
+    await user.type(screen.getByLabelText(/Planning note/), "Prep after work")
+    await user.click(screen.getByRole("button", { name: "Add meal" }))
+    expect(await screen.findByRole("alert")).toBeInTheDocument()
+    expect(localStorage.getItem(recipeDraft)).not.toBeNull()
+  })
+
+  it.each([
+    [
+      "Cancel",
+      async (user: ReturnType<typeof userEvent.setup>) => {
+        await user.click(screen.getByRole("button", { name: "Cancel" }))
+      },
+    ],
+    [
+      "Escape",
+      async (user: ReturnType<typeof userEvent.setup>) => {
+        await user.keyboard("{Escape}")
+      },
+    ],
+  ])("clears the draft when closed with %s", async (_, dismiss) => {
+    const user = userEvent.setup()
+    const close = vi.fn()
+    render(
+      <MealPlanDialog
+        date="2026-09-06"
+        recipe={{ id: "peppers", name: "Peppers" }}
+        onClose={close}
+      />
+    )
+    await user.type(screen.getByLabelText(/Planning note/), "Prep after work")
+    await dismiss(user)
+    expect(close).toHaveBeenCalled()
+    expect(localStorage.getItem(recipeDraft)).toBeNull()
+  })
+
+  it("restores an edit draft only while the saved meal is unchanged", async () => {
+    const user = userEvent.setup()
+    const first = render(<MealPlanDialog date={entry.date} entry={entry} onClose={vi.fn()} />)
+    await user.type(screen.getByLabelText(/Planning note/), " tomorrow")
+    first.unmount()
+    const second = render(<MealPlanDialog date={entry.date} entry={entry} onClose={vi.fn()} />)
+    expect(screen.getByLabelText(/Planning note/)).toHaveValue("Use greens first tomorrow")
+    second.unmount()
+    render(
+      <MealPlanDialog
+        date={entry.date}
+        entry={{ ...entry, text: "Changed elsewhere" }}
+        onClose={vi.fn()}
+      />
+    )
+    expect(screen.getByLabelText(/Planning note/)).toHaveValue("Changed elsewhere")
+  })
+
+  it("clears the edit draft after removing the meal", async () => {
+    const user = userEvent.setup()
+    const close = vi.fn()
+    render(<MealPlanDialog date={entry.date} entry={entry} onClose={close} />)
+    await user.type(screen.getByLabelText(/Planning note/), " tomorrow")
+    expect(localStorage.getItem("manaaki:draft:v1:meal-plan:entry:12")).not.toBeNull()
+    await user.click(screen.getByRole("button", { name: "Remove from plan" }))
+    await user.click(screen.getByRole("button", { name: "Confirm removal" }))
+    await waitFor(() => expect(close).toHaveBeenCalledOnce())
+    expect(localStorage.getItem("manaaki:draft:v1:meal-plan:entry:12")).toBeNull()
+  })
+
+  it("is safe to reload in place while open", () => {
+    render(<MealPlanDialog date="2026-09-06" onClose={vi.fn()} />)
+    expect(screen.getByRole("dialog")).toBeInTheDocument()
+    expect(updateBlockers("in-place")).not.toContain("dialog")
+  })
+
+  it("holds automatic updates while saving or removing", async () => {
+    let finishSave!: (value: never) => void
+    vi.mocked(updateOneApiHouseholdsMealplansItemIdPut).mockImplementationOnce(
+      () =>
+        new Promise(resolve => {
+          finishSave = resolve
+        }) as never
+    )
+    let finishRemoval!: (value: never) => void
+    vi.mocked(deleteOneApiHouseholdsMealplansItemIdDelete).mockImplementationOnce(
+      () =>
+        new Promise(resolve => {
+          finishRemoval = resolve
+        }) as never
+    )
+    const user = userEvent.setup()
+    const close = vi.fn()
+    render(<MealPlanDialog date={entry.date} entry={entry} onClose={close} />)
+    expect(updateBlockers("navigation")).toEqual([])
+    await user.click(screen.getByRole("button", { name: "Save changes" }))
+    expect(updateBlockers("navigation")).toContain("saving meal plan")
+    finishSave({ error: { detail: "failed" } } as never)
+    await screen.findByRole("alert")
+    await waitFor(() => expect(updateBlockers("navigation")).toEqual([]))
+    await user.click(screen.getByRole("button", { name: "Remove from plan" }))
+    await user.click(screen.getByRole("button", { name: "Confirm removal" }))
+    expect(updateBlockers("navigation")).toContain("saving meal plan")
+    finishRemoval({} as never)
+    await waitFor(() => expect(close).toHaveBeenCalledOnce())
+    await waitFor(() => expect(updateBlockers("navigation")).toEqual([]))
   })
 })

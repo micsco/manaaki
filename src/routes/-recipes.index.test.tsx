@@ -11,6 +11,7 @@ import {
   RecipeCardToolBadges,
 } from "../components/RecipeCardMeta"
 import { useCurrentUser } from "../hooks/useCurrentUser"
+import { readDraft } from "../hooks/usePersistentDraft"
 import { render, screen, waitFor } from "../test/render"
 import { Route } from "./recipes.index"
 
@@ -18,8 +19,19 @@ vi.mock("../hooks/useCurrentUser", () => ({
   useCurrentUser: vi.fn(() => ({ user: null, isAnonymous: false })),
 }))
 vi.mock("../components/ImportRecipeModal", () => ({
-  ImportRecipeModal: ({ open }: { open: boolean }) =>
-    open ? <div role="dialog">Import Recipe</div> : null,
+  ImportRecipeModal: ({
+    open,
+    onOpenChange,
+  }: {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+  }) =>
+    open ? (
+      <div role="dialog">
+        Import Recipe
+        <button onClick={() => onOpenChange(false)}>Close import</button>
+      </div>
+    ) : null,
 }))
 
 vi.mock("../contexts/MotionPermissionContext", () => ({
@@ -248,6 +260,29 @@ describe("RecipeList loading state", () => {
     await user.click(screen.getByRole("button", { name: /import recipe/i }))
     expect(screen.getByRole("dialog")).toBeInTheDocument()
     expect(await screen.findByText("Import Recipe")).toBeInTheDocument()
+  })
+
+  it("reopens the Import modal after a reload", async () => {
+    const user = userEvent.setup()
+    mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
+    const first = render(<RecipeListWrapper />)
+    await user.click(screen.getByRole("button", { name: /import recipe/i }))
+    expect(await screen.findByText("Import Recipe")).toBeInTheDocument()
+    first.unmount()
+
+    render(<RecipeListWrapper />)
+    expect(await screen.findByText("Import Recipe")).toBeInTheDocument()
+  })
+
+  it("forgets the Import modal once it is closed", async () => {
+    const user = userEvent.setup()
+    mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
+    render(<RecipeListWrapper />)
+    await user.click(screen.getByRole("button", { name: /import recipe/i }))
+    await user.click(await screen.findByRole("button", { name: "Close import" }))
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    expect(readDraft("import-recipe:open")).toBeNull()
   })
 
   it("shows the search bar while loading", () => {

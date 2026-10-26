@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { RecipeOutput } from "../api/generated/types.gen"
 import * as api from "../api/recipeVersions"
+import { resetUpdateHoldsForTesting, updateBlockers } from "../pwa/updateHolds"
 import { goodAirFryerDraft, ovenSource } from "../test/fixtures/recipeVersionDrafts"
 import { act, render, screen, within } from "../test/render"
 import { RecipeVersionPage } from "./RecipeVersionPage"
@@ -54,14 +55,16 @@ function respond(draft = goodAirFryerDraft) {
 async function openReview(draft = goodAirFryerDraft) {
   respond(draft)
   const user = userEvent.setup()
-  render(<RecipeVersionPage recipe={recipe} />)
+  const view = render(<RecipeVersionPage recipe={recipe} />)
   await user.click(screen.getByRole("button", { name: "Create draft" }))
   await screen.findByRole("button", { name: "Save new version" })
-  return { user }
+  return { user, view }
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
+  blockers.length = 0
+  resetUpdateHoldsForTesting()
   vi.mocked(api.saveRecipeVersion).mockResolvedValue(saved)
 })
 
@@ -274,4 +277,67 @@ it("shows each drafting stage as the AI works", async () => {
   expect(within(stages).getByText("· 3 so far")).toBeInTheDocument()
   expect(within(stages).queryByText("Splitting food between zones")).not.toBeInTheDocument()
   expect(screen.getByText(/Usually 20–60 seconds/)).toBeInTheDocument()
+})
+
+describe("RecipeVersionPage across reloads", () => {
+  it("brings back the reviewed draft and the user's choices after a reload", async () => {
+    const { user, view } = await openReview()
+    const change = screen.getAllByRole("checkbox").find(box => (box as HTMLInputElement).checked)
+    await user.click(change!)
+    const before = screen.getAllByRole("checkbox").map(box => (box as HTMLInputElement).checked)
+    view.unmount()
+    render(<RecipeVersionPage recipe={recipe} />)
+    expect(await screen.findByRole("button", { name: "Save new version" })).toBeVisible()
+    expect(screen.getAllByRole("checkbox").map(box => (box as HTMLInputElement).checked)).toEqual(
+      before
+    )
+    expect(api.requestRecipeVersionDraft).toHaveBeenCalledTimes(1)
+  })
+
+  it("keeps the typed notes after a reload", async () => {
+    const user = userEvent.setup()
+    const first = render(<RecipeVersionPage recipe={recipe} />)
+    await user.type(screen.getByLabelText(/Anything the AI should know/), "two batches")
+    first.unmount()
+    render(<RecipeVersionPage recipe={recipe} />)
+    expect(screen.getByLabelText(/Anything the AI should know/)).toHaveValue("two batches")
+  })
+
+  it("ignores a saved draft once the original recipe has changed", async () => {
+    const user = userEvent.setup()
+    const first = render(<RecipeVersionPage recipe={{ ...recipe, dateUpdated: "2026-10-01" }} />)
+    await user.type(screen.getByLabelText(/Anything the AI should know/), "two batches")
+    first.unmount()
+    render(<RecipeVersionPage recipe={{ ...recipe, dateUpdated: "2026-10-02" }} />)
+    expect(screen.getByLabelText(/Anything the AI should know/)).toHaveValue("")
+  })
+
+  it("forgets the draft once the new version is saved", async () => {
+    const { user } = await openReview()
+    await user.click(screen.getByRole("button", { name: "Save new version" }))
+    expect(navigate).toHaveBeenCalled()
+    expect(Object.keys(localStorage).filter(key => key.startsWith("manaaki:draft:"))).toEqual([])
+  })
+
+  it("forgets the draft when the user confirms leaving without saving", async () => {
+    await openReview()
+    vi.spyOn(window, "confirm").mockReturnValue(true)
+    expect(blockers.at(-1)?.shouldBlockFn()).toBe(false)
+    expect(Object.keys(localStorage).filter(key => key.startsWith("manaaki:draft:"))).toEqual([])
+  })
+
+  it("holds app updates while the first draft is being written", async () => {
+    vi.mocked(api.requestRecipeVersionDraft).mockImplementation(() => new Promise(() => {}))
+    const user = userEvent.setup()
+    render(<RecipeVersionPage recipe={recipe} />)
+    expect(updateBlockers("in-place")).toEqual([])
+    await user.click(screen.getByRole("button", { name: "Create draft" }))
+    expect(updateBlockers("in-place")).toContain("recipe-version")
+  })
+
+  it("allows an in-place update during review but holds updates on navigation", async () => {
+    await openReview()
+    expect(updateBlockers("in-place")).toEqual([])
+    expect(updateBlockers("navigation")).toEqual(["recipe-version-draft"])
+  })
 })

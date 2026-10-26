@@ -22,9 +22,19 @@ vi.mock("../weather/useWeather", () => ({
 
 vi.mock("../api/generated/sdk.gen", () => ({ getAllApiHouseholdsMealplansGet: vi.fn() }))
 vi.mock("./MealPlanDialog", () => ({
-  MealPlanDialog: ({ date }: { date: string }) => (
+  MealPlanDialog: ({
+    date,
+    entry,
+    onClose,
+  }: {
+    date: string
+    entry?: { title?: string }
+    onClose: () => void
+  }) => (
     <div role="dialog" aria-label="Plan meal">
       {date}
+      {entry && <p>Editing {entry.title}</p>}
+      <button onClick={onClose}>Close plan</button>
     </div>
   ),
 }))
@@ -213,4 +223,78 @@ it("shows a useful empty state for recent meals", async () => {
   ).toBeInTheDocument()
   await user.click(screen.getByRole("button", { name: /Recent meals/ }))
   expect(screen.queryByText("No meals planned in the previous seven days.")).not.toBeInTheDocument()
+})
+
+function renderWeek() {
+  return render(
+    <NuqsTestingAdapter hasMemory>
+      <WeeklyMealPlan />
+    </NuqsTestingAdapter>
+  )
+}
+
+it("reopens the meal being edited after a reload until it is closed", async () => {
+  const date = todayIsoDateString()
+  vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({
+    data: { items: [{ id: 4, date, entryType: "dinner", title: "Soup" }] },
+  } as never)
+  const user = userEvent.setup()
+  const first = renderWeek()
+  await user.click(await screen.findByRole("button", { name: "Adjust plan for Soup" }))
+  expect(await screen.findByText("Editing Soup")).toBeInTheDocument()
+  first.unmount()
+  const second = renderWeek()
+  expect(await screen.findByText("Editing Soup")).toBeInTheDocument()
+  await user.click(screen.getByRole("button", { name: "Close plan" }))
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  second.unmount()
+  renderWeek()
+  await screen.findByRole("heading", { name: "Soup" })
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+})
+
+it("reopens a new meal for its day after a reload", async () => {
+  vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({ data: { items: [] } } as never)
+  const user = userEvent.setup()
+  const first = renderWeek()
+  const actions = await screen.findAllByRole("button", { name: /^Add meal for / })
+  await user.click(actions[2])
+  const date = new Date(`${todayIsoDateString()}T00:00:00`)
+  date.setDate(date.getDate() + 2)
+  const chosen = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+  expect(await screen.findByRole("dialog", { name: "Plan meal" })).toHaveTextContent(chosen)
+  first.unmount()
+  renderWeek()
+  expect(await screen.findByRole("dialog", { name: "Plan meal" })).toHaveTextContent(chosen)
+})
+
+it("forgets a restored edit when the meal no longer exists", async () => {
+  const date = todayIsoDateString()
+  vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({
+    data: { items: [{ id: 4, date, entryType: "dinner", title: "Soup" }] },
+  } as never)
+  const user = userEvent.setup()
+  const first = renderWeek()
+  await user.click(await screen.findByRole("button", { name: "Adjust plan for Soup" }))
+  expect(await screen.findByText("Editing Soup")).toBeInTheDocument()
+  first.unmount()
+  vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValue({ data: { items: [] } } as never)
+  renderWeek()
+  await screen.findAllByRole("button", { name: /^Add meal for / })
+  await waitFor(() =>
+    expect(localStorage.getItem("manaaki:draft:v1:meal-plan:open:week")).toBeNull()
+  )
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+})
+
+it("opens the meal being edited before its day has reloaded", async () => {
+  const date = todayIsoDateString()
+  vi.mocked(getAllApiHouseholdsMealplansGet).mockResolvedValueOnce({
+    data: { items: [{ id: 4, date, entryType: "dinner", title: "Soup" }] },
+  } as never)
+  vi.mocked(getAllApiHouseholdsMealplansGet).mockReturnValue(new Promise(() => {}) as never)
+  const user = userEvent.setup()
+  renderWeek()
+  await user.click(await screen.findByRole("button", { name: "Adjust plan for Soup" }))
+  expect(await screen.findByText("Editing Soup")).toBeInTheDocument()
 })

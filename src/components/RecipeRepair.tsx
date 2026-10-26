@@ -5,6 +5,8 @@ import { useState } from "react"
 
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { renameRecipe } from "../api/recipeParsing"
+import { usePersistentDraft } from "../hooks/usePersistentDraft"
+import { useHoldAppUpdate } from "../pwa/updateHolds"
 import { useOnline } from "../pwa/useOnline"
 import { IngredientParsingAction } from "./IngredientParsingAction"
 
@@ -24,13 +26,23 @@ export function RecipeRepair({ recipe }: { recipe: RecipeOutput }) {
 }
 
 function RecipeRepairDialog({ recipe, onClose }: { recipe: RecipeOutput; onClose: () => void }) {
-  const [name, setName] = useState(recipe.name ?? "")
+  const savedName = recipe.name ?? ""
+  const [name, setName, clearName] = usePersistentDraft(
+    `recipe-repair:${recipe.id || recipe.slug}:name`,
+    savedName,
+    { base: savedName }
+  )
   const [pending, setPending] = useState(false)
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
   const router = useRouter()
   const queryClient = useQueryClient()
   const online = useOnline()
+  useHoldAppUpdate(pending, "renaming-recipe")
+  function close() {
+    clearName()
+    onClose()
+  }
   async function update() {
     const slug = recipe.id || recipe.slug
     if (!slug || !online || pending) return
@@ -41,6 +53,7 @@ function RecipeRepairDialog({ recipe, onClose }: { recipe: RecipeOutput; onClose
       await renameRecipe(slug, name)
       await queryClient.invalidateQueries({ queryKey: ["recipes"] })
       await router.invalidate()
+      clearName()
       setMessage("Title saved.")
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Could not update the recipe.")
@@ -52,7 +65,7 @@ function RecipeRepairDialog({ recipe, onClose }: { recipe: RecipeOutput; onClose
     <Dialog.Root
       open
       onOpenChange={value => {
-        if (!value && !pending) onClose()
+        if (!value && !pending) close()
       }}
     >
       <Dialog.Portal>

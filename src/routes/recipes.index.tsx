@@ -13,6 +13,7 @@ import { RecipeFilterDrawer } from "../components/RecipeFilterDrawer"
 import { FilterBar, FilterPills } from "../components/RecipeFilters"
 import { Card } from "../components/ui"
 import { useCurrentUser } from "../hooks/useCurrentUser"
+import { usePersistentDraft } from "../hooks/usePersistentDraft"
 import { useRecipeFilters } from "../hooks/useRecipeFilters"
 import { recipeListQueryOptions } from "../hooks/useRecipeList"
 
@@ -113,7 +114,10 @@ function RecipeList() {
   const recipes = data ?? []
   const current = useCurrentUser()
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [importOpen, setImportOpen] = useState(false)
+  const [importOpen, setImportOpen, clearImportOpen] = usePersistentDraft(
+    "import-recipe:open",
+    false
+  )
   const isMounted = useHydrated()
 
   const showSkeleton = isLoading || !isMounted
@@ -289,7 +293,10 @@ function RecipeList() {
         onClearAll={handleClearAll}
       />
 
-      <LazyImportRecipeModal open={importOpen} onOpenChange={setImportOpen} />
+      <LazyImportRecipeModal
+        open={importOpen}
+        onOpenChange={open => (open ? setImportOpen(true) : clearImportOpen())}
+      />
     </main>
   )
 }

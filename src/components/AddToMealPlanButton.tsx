@@ -1,13 +1,15 @@
-import { useState } from "react"
-
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import { todayIsoDateString } from "../hooks/useMealPlan"
+import { usePersistentDraft } from "../hooks/usePersistentDraft"
 import { LazyMealPlanDialog } from "./LazyDialogs"
 
 export function AddToMealPlanButton({ recipe }: { recipe: RecipeOutput }) {
   const user = useCurrentUser()
-  const [open, setOpen] = useState(false)
+  const [open, setOpen, close] = usePersistentDraft(
+    `meal-plan:open:recipe:${recipe.id ?? ""}`,
+    false
+  )
   if (!recipe.id || !user || user.isAnonymous) return null
   return (
     <>
@@ -22,7 +24,7 @@ export function AddToMealPlanButton({ recipe }: { recipe: RecipeOutput }) {
         <LazyMealPlanDialog
           date={todayIsoDateString()}
           recipe={{ id: recipe.id, name: recipe.name }}
-          onClose={() => setOpen(false)}
+          onClose={close}
         />
       )}
     </>

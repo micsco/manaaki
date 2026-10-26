@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import * as sdk from "../api/generated/sdk.gen"
 import { shoppingListDetailQueryOptions } from "./useShoppingList"
-import { buildShoppingList, useToggleItem } from "./useShoppingMutations"
+import { buildShoppingList, useAddManualItem, useToggleItem } from "./useShoppingMutations"
 
 vi.mock("../api/generated/sdk.gen", () => ({
   updateOneApiHouseholdsShoppingItemsItemIdPut: vi.fn(),
@@ -188,5 +188,25 @@ describe("buildShoppingList", () => {
       selections: [{ recipeId: "r1", recipeIncrementQuantity: 1 }],
     })
     expect(res).toEqual({ listId: "new3", partial: true })
+  })
+})
+
+describe("useAddManualItem", () => {
+  it("fails when Mealie rejects the new item, so the typed text is kept", async () => {
+    vi.mocked(sdk.createManyApiHouseholdsShoppingItemsCreateBulkPost).mockResolvedValueOnce({
+      error: { detail: "Server error" },
+    } as never)
+    const { wrapper } = setup()
+    const { result } = renderHook(() => useAddManualItem("l1"), { wrapper })
+    await expect(result.current.add("Milk")).rejects.toThrow("Couldn't add that item.")
+  })
+
+  it("succeeds when Mealie accepts the new item", async () => {
+    vi.mocked(sdk.createManyApiHouseholdsShoppingItemsCreateBulkPost).mockResolvedValueOnce({
+      data: {},
+    } as never)
+    const { wrapper } = setup()
+    const { result } = renderHook(() => useAddManualItem("l1"), { wrapper })
+    await expect(result.current.add("Milk")).resolves.toBeUndefined()
   })
 })

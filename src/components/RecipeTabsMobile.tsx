@@ -6,6 +6,7 @@ import type {
   RecipeStep,
   RecipeTag,
 } from "../api/generated/types.gen"
+import { useSessionStorage } from "../hooks/useSessionStorage"
 import { IngredientsSection } from "./IngredientsSection"
 import { InstructionsSection } from "./InstructionsSection"
 import { Badge } from "./ui"
@@ -43,9 +44,18 @@ export function RecipeTabsMobile({
     "method",
     ...(hasDescription ? (["description"] as Tab[]) : []),
   ]
+  const [rememberedTab, setRememberedTab] = useSessionStorage<Tab>(
+    `recipe-tab:${recipeId}`,
+    "ingredients"
+  )
+  const activeTab = availableTabs.includes(rememberedTab) ? rememberedTab : "ingredients"
 
   return (
-    <Tabs.Root defaultValue="ingredients" className="md:hidden">
+    <Tabs.Root
+      value={activeTab}
+      onValueChange={(value: Tab) => setRememberedTab(value)}
+      className="md:hidden"
+    >
       <Tabs.List aria-label="Recipe sections" className="flex border-b border-gray-800">
         {availableTabs.map(tab => (
           <Tabs.Tab

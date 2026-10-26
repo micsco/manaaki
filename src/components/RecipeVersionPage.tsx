@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { Link, useBlocker, useNavigate } from "@tanstack/react-router"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 
 import type { RecipeOutput } from "../api/generated/types.gen"
 import {
@@ -13,7 +13,10 @@ import {
   type SavedRecipeRef,
 } from "../api/recipeVersions"
 import { usePostHog } from "../contexts/AnalyticsContext"
+import { clearDraft, readDraft, writeDraft } from "../hooks/usePersistentDraft"
 import { useRecipeList } from "../hooks/useRecipeList"
+import { isApplyingAppUpdate } from "../pwa/appUpdate"
+import { useHoldAppUpdate } from "../pwa/updateHolds"
 import { useOnline } from "../pwa/useOnline"
 import { householdAppliance } from "../utils/householdAppliances"
 import { encodeRecipeId, recipeUrl } from "../utils/recipe"
@@ -40,6 +43,47 @@ type Step =
   | { kind: "review"; response: DraftResponse }
   | { kind: "saving"; response: DraftResponse }
   | { kind: "unlinked"; recipe: SavedRecipeRef }
+
+type SavedReview = Omit<ReviewState, "acceptedChanges" | "acceptedNew"> & {
+  acceptedChanges: number[]
+  acceptedNew: number[]
+}
+
+type SavedVersionDraft = {
+  target: CookingMethod | null
+  notes: string
+  step: Extract<Step, { kind: "choose" | "review" | "unlinked" }>
+  review: SavedReview | null
+  pendingCopy: SavedRecipeRef | null
+}
+
+const subscribeHydration = () => () => {}
+
+function savedStep(step: Step): SavedVersionDraft["step"] {
+  if (step.kind === "drafting") return { kind: "choose" }
+  if (step.kind === "saving") return { kind: "review", response: step.response }
+  return step
+}
+
+function saveReview(review: ReviewState | null): SavedReview | null {
+  return review
+    ? {
+        ...review,
+        acceptedChanges: [...review.acceptedChanges],
+        acceptedNew: [...review.acceptedNew],
+      }
+    : null
+}
+
+function restoreReview(review: SavedReview | null): ReviewState | null {
+  return review
+    ? {
+        ...review,
+        acceptedChanges: new Set(review.acceptedChanges),
+        acceptedNew: new Set(review.acceptedNew),
+      }
+    : null
+}
 
 const primary = "min-h-11 rounded-xl bg-orange-600 px-4 font-medium text-white disabled:opacity-50"
 const secondary =
@@ -108,8 +152,48 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
   const leaving = useRef(false)
   const appliance = target ? householdAppliance(target) : null
   const backTo = recipe.id && recipe.slug ? recipeUrl(recipe.id, recipe.slug) : "/recipes"
+  const draftKey = `recipe-version:${recipe.id ?? recipe.slug}`
+  const draftBase = recipe.dateUpdated ?? null
+  const hydrated = useSyncExternalStore(
+    subscribeHydration,
+    () => true,
+    () => false
+  )
+  const [restored, setRestored] = useState(false)
+  if (hydrated && !restored) {
+    setRestored(true)
+    const saved = readDraft(draftKey, { base: draftBase })?.value as SavedVersionDraft | undefined
+    if (saved) {
+      if (saved.target && methods.some(o => o.method === saved.target && !o.disabled))
+        setTarget(saved.target)
+      setNotes(saved.notes)
+      setStep(saved.step)
+      setReview(restoreReview(saved.review))
+      setPendingCopy(saved.pendingCopy)
+    }
+  }
 
   useEffect(() => () => abort.current?.abort(), [])
+
+  useEffect(() => {
+    if (!restored || leaving.current) return
+    const persisted = savedStep(step)
+    if (persisted.kind === "choose" && !notes.trim() && !review && !pendingCopy) {
+      clearDraft(draftKey)
+      return
+    }
+    writeDraft(
+      draftKey,
+      {
+        target,
+        notes,
+        step: persisted,
+        review: saveReview(review),
+        pendingCopy,
+      } satisfies SavedVersionDraft,
+      { base: draftBase }
+    )
+  }, [restored, draftKey, draftBase, target, notes, step, review, pendingCopy])
 
   const existingNames = useMemo(() => recipes.map(r => r.name ?? "").filter(Boolean), [recipes])
   const response = step.kind === "review" || step.kind === "saving" ? step.response : null
@@ -122,13 +206,20 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
   )
   const hasDraft = review !== null && step.kind !== "unlinked"
   useBlocker({
-    shouldBlockFn: () =>
-      hasDraft && !leaving.current && !window.confirm("Leave without saving this draft?"),
-    enableBeforeUnload: () => hasDraft && !leaving.current,
+    shouldBlockFn: () => {
+      if (!hasDraft || leaving.current) return false
+      if (!window.confirm("Leave without saving this draft?")) return true
+      leaving.current = true
+      clearDraft(draftKey)
+      return false
+    },
+    enableBeforeUnload: () => hasDraft && !leaving.current && !isApplyingAppUpdate(),
   })
   const blocked = blockingChecks(checks).length > 0
   const needsAck = checks.some(check => check.level === "warn") && !review?.acknowledged
   const busy = step.kind === "drafting" || step.kind === "saving"
+  useHoldAppUpdate(busy, "recipe-version")
+  useHoldAppUpdate(hasDraft, "recipe-version-draft", "navigation")
 
   async function draft() {
     if (!recipe.id || !target || !online) return
@@ -197,6 +288,7 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
   async function finish(saved: SavedRecipeRef) {
     await queryClient.invalidateQueries({ queryKey: ["recipes"] })
     leaving.current = true
+    clearDraft(draftKey)
     await navigate({
       replace: true,
       to: "/recipes/$id/$slug",

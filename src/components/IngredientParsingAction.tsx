@@ -19,6 +19,8 @@ import {
   type IngredientReview,
 } from "../api/recipeParsing"
 import { useCurrentUser } from "../hooks/useCurrentUser"
+import { clearDraft, usePersistentDraft } from "../hooks/usePersistentDraft"
+import { useHoldAppUpdate } from "../pwa/updateHolds"
 import { useOnline } from "../pwa/useOnline"
 import {
   alternativeLabel,
@@ -28,6 +30,16 @@ import {
 } from "../utils/recipe"
 import { IngredientSuggestions } from "./IngredientSuggestions"
 
+type ReviewDraft = { review: IngredientReview }
+
+function ingredientsFingerprint(recipe: RecipeOutput) {
+  const text = JSON.stringify(recipe.recipeIngredient ?? [])
+  let hash = 5381
+  for (let index = 0; index < text.length; index++)
+    hash = (Math.imul(hash, 33) + text.charCodeAt(index)) | 0
+  return `${text.length}:${(hash >>> 0).toString(36)}`
+}
+
 export function IngredientParsingAction({ recipe }: { recipe: RecipeOutput }) {
   const current = useCurrentUser()
   const userId = current?.user?.id ?? ""
@@ -35,30 +47,45 @@ export function IngredientParsingAction({ recipe }: { recipe: RecipeOutput }) {
   const queryClient = useQueryClient()
   const queryKey = ingredientReviewKey(userId, recipeId)
   const { data: prepared } = useQuery<IngredientReview>({ queryKey, enabled: false })
+  const draftKey = `ingredient-review:${userId}:${recipeId}`
+  const rowsDraftKey = `${draftKey}:rows`
+  const draftBase = ingredientsFingerprint(recipe)
+  const [draft, setDraft, clearReviewDraft] = usePersistentDraft<ReviewDraft | null>(
+    draftKey,
+    null,
+    { base: draftBase }
+  )
+  const review = draft?.review ?? prepared
   const [open, setOpen] = useState(false)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState("")
   const online = useOnline()
+  useHoldAppUpdate(pending, "parsing ingredients")
+  const hasDraft = Boolean(draft)
   useEffect(() => {
-    if (prepared && online && userId && !current?.isAnonymous)
-      void prefetchIngredientPopularity(
-        queryClient,
-        userId,
-        prepared.parsed.map(item => item.ingredient.food?.name ?? "")
-      )
-  }, [prepared, online, userId, current?.isAnonymous, queryClient])
+    if (prepared && !hasDraft && userId && recipeId) setDraft({ review: prepared })
+  }, [prepared, hasDraft, userId, recipeId, setDraft])
+  const reviewFoodNames = review
+    ? JSON.stringify(review.parsed.map(item => item.ingredient.food?.name ?? ""))
+    : null
+  useEffect(() => {
+    if (reviewFoodNames && online && userId && !current?.isAnonymous)
+      void prefetchIngredientPopularity(queryClient, userId, JSON.parse(reviewFoodNames))
+  }, [reviewFoodNames, online, userId, current?.isAnonymous, queryClient])
   const count = unparsedIngredients(recipe).length
   if (!current || current.isAnonymous || !userId || !recipeId || !count) return null
   async function start() {
     setError("")
-    if (prepared) {
+    if (review) {
       setOpen(true)
       return
     }
     setPending(true)
     try {
-      const review = await parseRecipeIngredients(recipeId)
-      queryClient.setQueryData(queryKey, review)
+      const parsed = await parseRecipeIngredients(recipeId)
+      queryClient.setQueryData(queryKey, parsed)
+      clearDraft(rowsDraftKey)
+      setDraft({ review: parsed })
       setOpen(true)
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Could not parse ingredients.")
@@ -69,7 +96,7 @@ export function IngredientParsingAction({ recipe }: { recipe: RecipeOutput }) {
   return (
     <div className="mb-5 rounded-xl border border-orange-900/50 bg-orange-950/20 p-4">
       <p className="mb-3 text-sm text-gray-300">
-        {prepared
+        {review
           ? "Parsed suggestions are ready to review."
           : "Separate ingredient amounts, foods, and units for better serving sizes and shopping lists."}
       </p>
@@ -80,7 +107,7 @@ export function IngredientParsingAction({ recipe }: { recipe: RecipeOutput }) {
       >
         {pending
           ? "Parsing ingredients…"
-          : prepared
+          : review
             ? "Review parsed ingredients"
             : "Parse ingredients with AI"}
       </button>
@@ -92,8 +119,18 @@ export function IngredientParsingAction({ recipe }: { recipe: RecipeOutput }) {
           {error}
         </p>
       )}
-      {open && prepared && (
-        <IngredientReviewDialog review={prepared} userId={userId} onClose={() => setOpen(false)} />
+      {open && review && (
+        <IngredientReviewDialog
+          review={review}
+          userId={userId}
+          rowsDraftKey={rowsDraftKey}
+          draftBase={draftBase}
+          onClose={() => setOpen(false)}
+          onSaved={() => {
+            clearReviewDraft()
+            setOpen(false)
+          }}
+        />
       )}
     </div>
   )
@@ -105,27 +142,72 @@ type ReviewRow = {
   keepOriginal: boolean
 }
 
+type StoredReviewRow = ReviewRow & { blankQuantity?: true }
+
+function initialReviewRows(review: IngredientReview): ReviewRow[] {
+  return review.parsed.map((parsed, index) => ({
+    id: `ingredient-${index}`,
+    parsed: structuredClone(parsed),
+    keepOriginal: false,
+  }))
+}
+
+function storeReviewRows(rows: ReviewRow[]): StoredReviewRow[] {
+  return rows.map(row =>
+    Number.isNaN(row.parsed.ingredient.quantity) ? { ...row, blankQuantity: true } : row
+  )
+}
+
+function restoreReviewRows(rows: StoredReviewRow[]): ReviewRow[] {
+  return rows.map(({ blankQuantity, ...row }) =>
+    blankQuantity
+      ? {
+          ...row,
+          parsed: { ...row.parsed, ingredient: { ...row.parsed.ingredient, quantity: Number.NaN } },
+        }
+      : row
+  )
+}
+
 function IngredientReviewDialog({
   review,
   userId,
+  rowsDraftKey,
+  draftBase,
   onClose,
+  onSaved,
 }: {
   review: IngredientReview
   userId: string
+  rowsDraftKey: string
+  draftBase: string
   onClose: () => void
+  onSaved: () => void
 }) {
-  const [rows, setRows] = useState<ReviewRow[]>(() =>
-    review.parsed.map((parsed, index) => ({
-      id: `ingredient-${index}`,
-      parsed: structuredClone(parsed),
-      keepOriginal: false,
-    }))
+  const [storedRows, setStoredRows, clearRows] = usePersistentDraft<StoredReviewRow[] | null>(
+    rowsDraftKey,
+    null,
+    { base: draftBase }
   )
+  const rows = useMemo(
+    () => (storedRows ? restoreReviewRows(storedRows) : initialReviewRows(review)),
+    [storedRows, review]
+  )
+  function setRows(update: (previous: ReviewRow[]) => ReviewRow[]) {
+    setStoredRows(previous =>
+      storeReviewRows(update(previous ? restoreReviewRows(previous) : initialReviewRows(review)))
+    )
+  }
+  function close() {
+    clearRows()
+    onClose()
+  }
   const [pending, setPending] = useState(false)
   const [error, setError] = useState("")
   const online = useOnline()
   const queryClient = useQueryClient()
   const router = useRouter()
+  useHoldAppUpdate(pending, "saving ingredients")
   const catalogQuery = useQuery({
     queryKey: ["ingredientCatalog", userId],
     queryFn: loadIngredientCatalog,
@@ -181,9 +263,10 @@ function IngredientReviewDialog({
         queryKey: ingredientReviewKey(userId, review.recipe.id || review.recipe.slug || ""),
         exact: true,
       })
+      clearRows()
+      onSaved()
       await queryClient.invalidateQueries({ queryKey: ["recipes"] })
       await router.invalidate()
-      onClose()
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Could not save ingredients.")
     } finally {
@@ -194,7 +277,7 @@ function IngredientReviewDialog({
     <Dialog.Root
       open
       onOpenChange={value => {
-        if (!value && !pending) onClose()
+        if (!value && !pending) close()
       }}
     >
       <Dialog.Portal>
@@ -220,13 +303,14 @@ function IngredientReviewDialog({
               type="button"
               disabled={pending || !online}
               className="mb-3 min-h-11 text-sm text-orange-300 underline"
-              onClick={() =>
+              onClick={() => {
+                const unmatchedIds = new Set(unmatched.map(row => row.id))
                 setRows(previous =>
                   previous.map(row =>
-                    unmatched.includes(row) ? { ...row, keepOriginal: true } : row
+                    unmatchedIds.has(row.id) ? { ...row, keepOriginal: true } : row
                   )
                 )
-              }
+              }}
             >
               Keep originals for unmatched ingredients
             </button>
@@ -316,6 +400,7 @@ function IngredientReviewRow({
   const id = useId()
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState("")
+  useHoldAppUpdate(creating, "creating ingredient match")
   const ingredient = row.parsed.ingredient
   const hasMissingMatch = Boolean(
     (ingredient.food && !ingredient.food.id) || (ingredient.unit && !ingredient.unit.id)

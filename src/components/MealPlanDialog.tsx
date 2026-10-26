@@ -1,7 +1,7 @@
 import { Dialog } from "@base-ui/react/dialog"
 import { mdiSilverwareForkKnife } from "@mdi/js"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 import {
   createOneApiHouseholdsMealplansPost,
@@ -10,8 +10,10 @@ import {
 } from "../api/generated/sdk.gen"
 import type { PlanEntryType, ReadPlanEntry } from "../api/generated/types.gen"
 import { mealPlanQueryOptions, toIsoDateString } from "../hooks/useMealPlan"
+import { usePersistentDraft } from "../hooks/usePersistentDraft"
 import { recipeListQueryOptions } from "../hooks/useRecipeList"
 import { toastManager } from "../lib/toastManager"
+import { useHoldAppUpdate } from "../pwa/updateHolds"
 import { mealTypes } from "../utils/mealTypes"
 import { recipeImageUrl } from "../utils/recipe"
 import { weatherCondition, weatherLocation } from "../weather/forecast"
@@ -27,6 +29,34 @@ function focusKeepMealButton(button: HTMLButtonElement | null) {
   button?.focus()
 }
 
+type MealPlanForm = {
+  date: string
+  type: PlanEntryType
+  selected: string
+  search: string
+  noteOnly: boolean
+  title: string
+  text: string
+  customDate: boolean
+  otherMeal: boolean
+}
+
+function mealPlanDraftKey(entry?: ReadPlanEntry, recipe?: { id: string }) {
+  if (entry) return `meal-plan:entry:${entry.id}`
+  if (recipe) return `meal-plan:recipe:${recipe.id}`
+  return "meal-plan:new"
+}
+
+function entryFingerprint(entry: ReadPlanEntry) {
+  return JSON.stringify([
+    entry.date,
+    entry.entryType ?? null,
+    entry.recipeId ?? entry.recipe?.id ?? null,
+    entry.title ?? "",
+    entry.text ?? "",
+  ])
+}
+
 export function MealPlanDialog({
   date: initialDate,
   recipe,
@@ -40,7 +70,6 @@ export function MealPlanDialog({
 }) {
   const qc = useQueryClient()
   const weather = useWeather()
-  const [date, setDate] = useState(initialDate)
   const [quickDays] = useState(() =>
     Array.from({ length: 7 }, (_, offset) => {
       const day = new Date()
@@ -62,20 +91,49 @@ export function MealPlanDialog({
       }
     })
   )
-  const [customDate, setCustomDate] = useState(!quickDays.some(day => day.date === initialDate))
-  const [otherMeal, setOtherMeal] = useState(
-    Boolean(entry?.entryType && !["lunch", "dinner"].includes(entry.entryType))
+  const initialType = entry?.entryType ?? "dinner"
+  const initialSelected = recipe?.id ?? entry?.recipeId ?? entry?.recipe?.id ?? ""
+  const initialNoteOnly = Boolean(entry && !entry.recipeId && !entry.recipe)
+  const initialTitle = entry?.title ?? ""
+  const initialText = entry?.text ?? ""
+  const initialForm = useMemo<MealPlanForm>(
+    () => ({
+      date: initialDate,
+      type: initialType,
+      selected: initialSelected,
+      search: "",
+      noteOnly: initialNoteOnly,
+      title: initialTitle,
+      text: initialText,
+      customDate: !quickDays.some(day => day.date === initialDate),
+      otherMeal: !["lunch", "dinner"].includes(initialType),
+    }),
+    [
+      initialDate,
+      initialType,
+      initialSelected,
+      initialNoteOnly,
+      initialTitle,
+      initialText,
+      quickDays,
+    ]
   )
-  const [type, setType] = useState<PlanEntryType>(entry?.entryType ?? "dinner")
-  const [selected, setSelected] = useState(recipe?.id ?? entry?.recipeId ?? entry?.recipe?.id ?? "")
-  const [search, setSearch] = useState("")
-  const [noteOnly, setNoteOnly] = useState(Boolean(entry && !entry.recipeId && !entry.recipe))
-  const [title, setTitle] = useState(entry?.title ?? "")
-  const [text, setText] = useState(entry?.text ?? "")
+  const [form, setForm, clearForm] = usePersistentDraft(
+    mealPlanDraftKey(entry, recipe),
+    initialForm,
+    {
+      base: entry ? entryFingerprint(entry) : initialDate,
+    }
+  )
+  const { date, type, selected, search, noteOnly, title, text, customDate, otherMeal } = form
+  function updateForm(changes: Partial<MealPlanForm>) {
+    setForm(previous => ({ ...previous, ...changes }))
+  }
   const [confirmingRemoval, setConfirmingRemoval] = useState(false)
   const [removing, setRemoving] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  useHoldAppUpdate(saving || removing, "saving meal plan")
   const plan = useQuery({ ...mealPlanQueryOptions(date, date), enabled: Boolean(date) })
   const weekPlan = useQuery(mealPlanQueryOptions(quickDays[0].date, quickDays[6].date))
   const selectedForecast = weather.snapshot?.days.find(day => day.date === date)
@@ -84,6 +142,11 @@ export function MealPlanDialog({
   const choices = (recipes.data ?? []).filter(item =>
     item.name?.toLowerCase().includes(search.toLowerCase())
   )
+
+  function close() {
+    clearForm()
+    onClose()
+  }
 
   async function save() {
     if (saving || removing || confirmingRemoval) return
@@ -104,7 +167,7 @@ export function MealPlanDialog({
         title: entry ? "Meal plan updated" : "Added to meal plan",
         description: `${new Date(`${date}T00:00:00`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })} · ${type}`,
       })
-      onClose()
+      close()
     } catch {
       setError("Couldn't save this meal. Your choices are still here — please try again.")
     } finally {
@@ -123,7 +186,7 @@ export function MealPlanDialog({
       if (result.error) throw new Error("Removal failed")
       await qc.invalidateQueries({ queryKey: ["mealplan"] })
       toastManager.add({ title: "Removed from meal plan", description: entryTitle(entry) })
-      onClose()
+      close()
     } catch {
       setError("Couldn't remove this meal. Please try again.")
     } finally {
@@ -135,12 +198,15 @@ export function MealPlanDialog({
     <Dialog.Root
       open
       onOpenChange={open => {
-        if (!open && !saving && !removing) onClose()
+        if (!open && !saving && !removing) close()
       }}
     >
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs" />
-        <Dialog.Popup className="fixed top-1/2 left-1/2 z-50 mobile-dialog max-h-[90dvh] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-gray-800 bg-gray-900 p-6 text-gray-100 shadow-xl">
+        <Dialog.Popup
+          data-update-safe
+          className="fixed top-1/2 left-1/2 z-50 mobile-dialog max-h-[90dvh] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-gray-800 bg-gray-900 p-6 text-gray-100 shadow-xl"
+        >
           <Dialog.Title className="font-serif text-2xl font-bold">
             {confirmingRemoval
               ? "Remove planned meal?"
@@ -211,10 +277,7 @@ export function MealPlanDialog({
                           aria-label={day.fullLabel}
                           aria-describedby={descriptionId}
                           aria-pressed={date === day.date}
-                          onClick={() => {
-                            setDate(day.date)
-                            setCustomDate(false)
-                          }}
+                          onClick={() => updateForm({ date: day.date, customDate: false })}
                           className={`flex min-h-16 flex-1 flex-col items-center rounded-lg border px-1 py-2 text-center transition-colors ${date === day.date ? "border-orange-500 bg-orange-950 text-orange-200" : "border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-500"}`}
                         >
                           <span className="block text-xs font-semibold">{day.label}</span>
@@ -296,7 +359,7 @@ export function MealPlanDialog({
                 <button
                   type="button"
                   aria-expanded={customDate}
-                  onClick={() => setCustomDate(open => !open)}
+                  onClick={() => updateForm({ customDate: !customDate })}
                   className="min-h-11 text-sm text-orange-400 underline underline-offset-4"
                 >
                   Another date
@@ -309,7 +372,7 @@ export function MealPlanDialog({
                       type="date"
                       required
                       value={date}
-                      onChange={e => setDate(e.target.value)}
+                      onChange={e => updateForm({ date: e.target.value })}
                       className={fieldClass}
                     />
                   </label>
@@ -323,10 +386,7 @@ export function MealPlanDialog({
                       key={meal}
                       type="button"
                       aria-pressed={type === meal}
-                      onClick={() => {
-                        setType(meal)
-                        setOtherMeal(false)
-                      }}
+                      onClick={() => updateForm({ type: meal, otherMeal: false })}
                       className={`min-h-11 flex-1 rounded-full border px-4 py-2 text-sm font-medium ${type === meal ? "border-orange-500 bg-orange-950 text-orange-200" : "border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-500"}`}
                     >
                       {meal === "lunch" ? "Lunch" : "Dinner"}
@@ -335,7 +395,7 @@ export function MealPlanDialog({
                   <button
                     type="button"
                     aria-expanded={otherMeal}
-                    onClick={() => setOtherMeal(open => !open)}
+                    onClick={() => updateForm({ otherMeal: !otherMeal })}
                     className={`min-h-11 rounded-full border px-4 py-2 text-sm ${!["lunch", "dinner"].includes(type) ? "border-orange-500 bg-orange-950 text-orange-200" : "border-gray-700 text-gray-300"}`}
                   >
                     {!["lunch", "dinner"].includes(type)
@@ -349,7 +409,7 @@ export function MealPlanDialog({
                     <select
                       value={["lunch", "dinner"].includes(type) ? "" : type}
                       onChange={e => {
-                        if (e.target.value) setType(e.target.value as PlanEntryType)
+                        if (e.target.value) updateForm({ type: e.target.value as PlanEntryType })
                       }}
                       className={fieldClass}
                     >
@@ -372,7 +432,7 @@ export function MealPlanDialog({
                   <input
                     type="checkbox"
                     checked={noteOnly}
-                    onChange={e => setNoteOnly(e.target.checked)}
+                    onChange={e => updateForm({ noteOnly: e.target.checked })}
                   />
                   Note only, such as eating out or leftovers
                 </label>
@@ -383,7 +443,7 @@ export function MealPlanDialog({
                   <input
                     required
                     value={title}
-                    onChange={e => setTitle(e.target.value)}
+                    onChange={e => updateForm({ title: e.target.value })}
                     className={fieldClass}
                   />
                 </label>
@@ -394,7 +454,7 @@ export function MealPlanDialog({
                     <input
                       type="search"
                       value={search}
-                      onChange={e => setSearch(e.target.value)}
+                      onChange={e => updateForm({ search: e.target.value })}
                       className={fieldClass}
                     />
                   </label>
@@ -420,7 +480,7 @@ export function MealPlanDialog({
                             name="recipe"
                             value={item.id ?? ""}
                             checked={selected === item.id}
-                            onChange={() => setSelected(item.id ?? "")}
+                            onChange={() => updateForm({ selected: item.id ?? "" })}
                           />
                           {recipeImageUrl(item.id, "min-original", item.image) && (
                             <img
@@ -441,7 +501,7 @@ export function MealPlanDialog({
                 Planning note <span className="text-gray-400">(optional)</span>
                 <textarea
                   value={text}
-                  onChange={e => setText(e.target.value)}
+                  onChange={e => updateForm({ text: e.target.value })}
                   placeholder="Late finish, use the greens first…"
                   rows={2}
                   className={fieldClass}
@@ -481,7 +541,7 @@ export function MealPlanDialog({
                 <button
                   type="button"
                   disabled={saving}
-                  onClick={onClose}
+                  onClick={close}
                   className="min-h-11 rounded-full px-4 py-2 text-gray-300"
                 >
                   Cancel

@@ -6,6 +6,7 @@ import { useMemo, useState } from "react"
 import { mealPlanQueryOptions } from "../hooks/useMealPlan"
 import { buildShoppingList } from "../hooks/useShoppingMutations"
 import { toastManager } from "../lib/toastManager"
+import { useHoldAppUpdate } from "../pwa/updateHolds"
 import { computeRecipeIncrement, gatherPlanRecipes, shoppingDayRange } from "../utils/shopping"
 
 const DAY_OPTIONS = [3, 4, 5, 7]
@@ -36,6 +37,7 @@ export function BuildShoppingListDialog({
   const [rows, setRows] = useState<Row[] | null>(null)
   const [building, setBuilding] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  useHoldAppUpdate(building, "building shopping list")
 
   const [range, setRange] = useState<ReturnType<typeof shoppingDayRangeFromToday> | null>(null)
   const { data: entries } = useQuery({

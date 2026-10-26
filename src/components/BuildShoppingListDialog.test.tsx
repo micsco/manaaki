@@ -3,12 +3,17 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { ReactNode } from "react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import * as planHook from "../hooks/useMealPlan"
 import * as mutations from "../hooks/useShoppingMutations"
 import { toastManager } from "../lib/toastManager"
+import { resetUpdateHoldsForTesting, updateBlockers } from "../pwa/updateHolds"
 import { BuildShoppingListDialog } from "./BuildShoppingListDialog"
+
+afterEach(() => {
+  resetUpdateHoldsForTesting()
+})
 
 function wrap() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -131,4 +136,41 @@ it("exposes a named dialog and dismisses with Escape", async () => {
   expect(screen.getByRole("dialog", { name: "Build shopping list" })).toBeVisible()
   await userEvent.keyboard("{Escape}")
   expect(onClose).toHaveBeenCalledOnce()
+})
+
+it("holds automatic updates while the list is being built and blocks in-place reloads", async () => {
+  vi.spyOn(planHook, "mealPlanQueryOptions").mockReturnValue({
+    queryKey: ["mealplan", "hold"],
+    queryFn: async () => [
+      {
+        date: "2026-06-28",
+        id: 1,
+        groupId: "g",
+        userId: "u",
+        householdId: "h",
+        recipeId: "r1",
+        recipe: { id: "r1", name: "Soup", recipeServings: 4 },
+      },
+    ],
+  } as never)
+  let finish!: (value: { listId: string; partial: boolean }) => void
+  vi.spyOn(mutations, "buildShoppingList").mockReturnValue(
+    new Promise(resolve => {
+      finish = resolve
+    })
+  )
+  vi.spyOn(toastManager, "add").mockReturnValue("t1")
+  const onBuilt = vi.fn()
+  render(<BuildShoppingListDialog open onClose={vi.fn()} onBuilt={onBuilt} />, {
+    wrapper: wrap(),
+  })
+  expect(updateBlockers("in-place")).toContain("dialog")
+  await userEvent.click(screen.getByRole("button", { name: /next 4 days/i }))
+  expect(await screen.findByText("Soup")).toBeInTheDocument()
+  expect(updateBlockers("navigation")).toEqual([])
+  await userEvent.click(screen.getByRole("button", { name: /create list/i }))
+  expect(updateBlockers("navigation")).toEqual(["building shopping list"])
+  finish({ listId: "new1", partial: false })
+  await waitFor(() => expect(onBuilt).toHaveBeenCalled())
+  await waitFor(() => expect(updateBlockers("navigation")).toEqual([]))
 })

@@ -12,6 +12,7 @@ import { useCurrentUser } from "../hooks/useCurrentUser"
 import { currentListQueryOptions, useCurrentShoppingList } from "../hooks/useShoppingList"
 import { buildShoppingList } from "../hooks/useShoppingMutations"
 import { toastManager } from "../lib/toastManager"
+import { holdAppUpdate, useHoldAppUpdate } from "../pwa/updateHolds"
 import { shouldStartNewList } from "../utils/shopping"
 import { Icon } from "./Icon"
 
@@ -27,21 +28,27 @@ export function AddToShoppingListButton({ recipe }: { recipe: RecipeOutput }) {
   const list = useCurrentShoppingList({ enabled: Boolean(current && !current.isAnonymous) })
   const qc = useQueryClient()
   const [state, setState] = useState<"idle" | "adding" | "done" | "error">("idle")
+  useHoldAppUpdate(state === "adding", "adding to shopping list")
 
   if (!current || current.isAnonymous) return null
 
   // Move the recipe out of the existing list into a fresh one (the "New list
   // instead" toast action). Removal from the old list is best-effort.
   async function moveRecipeToNewList(recipeId: string, fromListId: string) {
-    const built = await buildShoppingList({
-      name: newListName(),
-      selections: [{ recipeId, recipeIncrementQuantity: 1 }],
-    })
-    await removeRecipeIngredientsFromListApiHouseholdsShoppingListsItemIdRecipeRecipeIdDeletePost({
-      path: { item_id: fromListId, recipe_id: recipeId },
-    }).catch(() => undefined)
-    await qc.invalidateQueries({ queryKey: currentListQueryOptions.queryKey })
-    window.location.assign(`/shopping?list=${built.listId}`)
+    const release = holdAppUpdate("moving recipe to a new shopping list")
+    try {
+      const built = await buildShoppingList({
+        name: newListName(),
+        selections: [{ recipeId, recipeIncrementQuantity: 1 }],
+      })
+      await removeRecipeIngredientsFromListApiHouseholdsShoppingListsItemIdRecipeRecipeIdDeletePost(
+        { path: { item_id: fromListId, recipe_id: recipeId } }
+      ).catch(() => undefined)
+      await qc.invalidateQueries({ queryKey: currentListQueryOptions.queryKey })
+      window.location.assign(`/shopping?list=${built.listId}`)
+    } finally {
+      release()
+    }
   }
 
   async function add() {

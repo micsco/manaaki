@@ -1,5 +1,6 @@
 import { createIsomorphicFn } from "@tanstack/react-start"
 
+import { clientFetch } from "./clientFetch"
 import { retryingFetch } from "./retryingFetch"
 
 export const timedFetch = createIsomorphicFn()
@@ -8,4 +9,4 @@ export const timedFetch = createIsomorphicFn()
     const { mealieFetch } = await import("../server/mealieUpstream")
     return measureServerTiming("mealie", () => retryingFetch(input, init, mealieFetch))
   })
-  .client(retryingFetch)
+  .client(clientFetch)
