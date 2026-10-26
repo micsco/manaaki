@@ -105,6 +105,31 @@ it("shows alternatives the parser found in the suggestion", async () => {
   expect(await screen.findByText("275 g lamb diced or diced beef")).toBeVisible()
 })
 
+it("lets a wrong alternative be removed before saving", async () => {
+  vi.mocked(parsing.parseRecipeIngredients).mockResolvedValue({
+    recipe,
+    parsed: [
+      {
+        ...suggestion,
+        ingredient: { ...suggestion.ingredient, substitutions: [{ note: "optional" }] },
+      },
+    ],
+  })
+  const user = userEvent.setup()
+  render(<IngredientParsingAction recipe={recipe} />)
+  await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
+  expect(await screen.findByText("275 g lamb diced or optional")).toBeVisible()
+  await user.click(screen.getByRole("button", { name: "Edit ingredient 1" }))
+  await user.click(screen.getByRole("button", { name: "Remove alternative optional" }))
+  expect(screen.getByText("275 g lamb diced")).toBeVisible()
+  await user.click(screen.getByRole("button", { name: "Save ingredients" }))
+  await waitFor(() =>
+    expect(parsing.saveReviewedIngredients).toHaveBeenCalledWith(expect.anything(), [
+      expect.objectContaining({ ingredient: expect.objectContaining({ substitutions: [] }) }),
+    ])
+  )
+})
+
 it("names alternatives the parser matched to an existing food", async () => {
   vi.mocked(catalog.loadIngredientCatalog).mockResolvedValue({
     food: [

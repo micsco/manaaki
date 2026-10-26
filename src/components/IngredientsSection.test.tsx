@@ -71,6 +71,25 @@ describe("IngredientsSection", () => {
       expect(screen.getByText("or spelt flour")).toBeInTheDocument()
     })
 
+    it("matches an alternative's plural to the ingredient line", () => {
+      render(
+        <IngredientsSection
+          ingredients={[
+            {
+              ...ingredients[1],
+              quantity: 2,
+              food: { name: "onion" },
+              substitutions: [
+                { substituteFood: { id: "s", name: "shallot", pluralName: "shallots" } },
+              ],
+            },
+          ]}
+          recipeId="test-recipe"
+        />
+      )
+      expect(screen.getByText("or shallots")).toBeInTheDocument()
+    })
+
     it("renders section title when ingredient has a title", () => {
       render(<IngredientsSection ingredients={ingredientsWithSection} recipeId="test-recipe" />)
       expect(screen.getByText("Dry ingredients")).toBeInTheDocument()

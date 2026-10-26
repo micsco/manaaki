@@ -20,7 +20,12 @@ import {
 } from "../api/recipeParsing"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import { useOnline } from "../pwa/useOnline"
-import { describeAlternatives, formatQuantity, ingredientAlternatives } from "../utils/recipe"
+import {
+  alternativeLabel,
+  describeAlternatives,
+  formatQuantity,
+  ingredientAlternatives,
+} from "../utils/recipe"
 import { IngredientSuggestions } from "./IngredientSuggestions"
 
 export function IngredientParsingAction({ recipe }: { recipe: RecipeOutput }) {
@@ -466,6 +471,40 @@ function IngredientReviewRow({
                     className="mt-1 min-h-11 w-full rounded-lg border border-gray-700 bg-gray-800 px-3 text-base"
                   />
                 </label>
+                {(ingredient.substitutions ?? []).map((substitution, position) => {
+                  const label = alternativeLabel(substitution, foodNames)
+                  if (!label) return null
+                  return (
+                    <div
+                      // eslint-disable-next-line react/no-array-index-key -- alternatives have no id and keep their order while editing
+                      key={position}
+                      className="flex items-center justify-between gap-3 text-sm text-gray-300"
+                    >
+                      <span>Alternative: {label}</span>
+                      <button
+                        type="button"
+                        aria-label={`Remove alternative ${label}`}
+                        onClick={() =>
+                          onChange({
+                            ...row,
+                            parsed: {
+                              ...row.parsed,
+                              ingredient: {
+                                ...ingredient,
+                                substitutions: ingredient.substitutions?.filter(
+                                  (_, index) => index !== position
+                                ),
+                              },
+                            },
+                          })
+                        }
+                        className="min-h-11 shrink-0 text-orange-300 underline"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )
+                })}
               </>
             )}
           </div>

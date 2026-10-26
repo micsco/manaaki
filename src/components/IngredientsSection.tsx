@@ -5,6 +5,7 @@ import {
   groupIngredients,
   ingredientAlternatives,
   scaleQuantity,
+  shouldPluralizeFood,
   servingsStorageKey,
 } from "../utils/recipe"
 import { IngredientCheckbox } from "./IngredientCheckbox"
@@ -24,16 +25,21 @@ function IngredientItem({
   scale: number
 }) {
   const text = ing.display || ing.originalText || ""
+  const quantity = scaleQuantity(ing.quantity, scale)
   return (
     <IngredientCheckbox
       ingredient={text}
       recipeId={recipeId}
       ingredientIndex={index}
-      quantity={scaleQuantity(ing.quantity, scale)}
+      quantity={quantity}
       unit={ing.unit}
       food={ing.food}
       note={ing.note}
-      alternatives={ingredientAlternatives(ing)}
+      alternatives={ingredientAlternatives(
+        ing,
+        undefined,
+        shouldPluralizeFood(quantity, Boolean(ing.unit))
+      )}
     />
   )
 }

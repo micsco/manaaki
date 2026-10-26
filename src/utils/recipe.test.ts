@@ -15,6 +15,7 @@ import {
   recipeTotalMinutes,
   recipeImageUrl,
   scaleQuantity,
+  shouldPluralizeFood,
   UNGROUPED_INGREDIENTS_TITLE,
 } from "./recipe"
 
@@ -607,6 +608,14 @@ describe("ingredientAlternatives", () => {
     ).toEqual(["vegetable stock"])
   })
 
+  it("uses the substitute's plural name when the line is plural", () => {
+    const ingredient = {
+      substitutions: [{ substituteFood: { id: "s", name: "shallot", pluralName: "shallots" } }],
+    }
+    expect(ingredientAlternatives(ingredient, undefined, true).recipe).toEqual(["shallots"])
+    expect(ingredientAlternatives(ingredient).recipe).toEqual(["shallot"])
+  })
+
   it("skips empty substitutions", () => {
     expect(
       ingredientAlternatives({ substitutions: [{ note: " " }, { substituteFood: null }] })
@@ -624,5 +633,22 @@ describe("describeAlternatives", () => {
 
   it("returns nothing when there are no alternatives", () => {
     expect(describeAlternatives({ recipe: [], food: [] })).toEqual({ recipe: null, food: null })
+  })
+})
+
+describe("shouldPluralizeFood", () => {
+  it("pluralises foods counted without a unit", () => {
+    expect(shouldPluralizeFood(2, false)).toBe(true)
+  })
+
+  it("keeps single items and measured foods singular", () => {
+    expect(shouldPluralizeFood(1, false)).toBe(false)
+    expect(shouldPluralizeFood(0.5, false)).toBe(false)
+    expect(shouldPluralizeFood(2, true)).toBe(false)
+  })
+
+  it("pluralises foods with no quantity", () => {
+    expect(shouldPluralizeFood(0, false)).toBe(true)
+    expect(shouldPluralizeFood(null, true)).toBe(true)
   })
 })

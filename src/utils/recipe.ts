@@ -235,14 +235,20 @@ type Substitution = {
 
 export type IngredientAlternatives = { recipe: string[]; food: string[] }
 
-function substitutionLabel(
+export function shouldPluralizeFood(quantity: number | null | undefined, hasUnit: boolean) {
+  if (quantity && quantity <= 1) return false
+  return !(quantity && hasUnit)
+}
+
+export function alternativeLabel(
   { note, substituteFoodId, substituteFood }: Substitution,
-  foodNames: ReadonlyMap<string, string>
+  foodNames: ReadonlyMap<string, string> = new Map(),
+  pluralFood = false
 ): string {
-  const food = (
-    substituteFood?.name ??
-    (substituteFoodId && foodNames.get(substituteFoodId))
-  )?.trim()
+  const foodName = pluralFood
+    ? substituteFood?.pluralName || substituteFood?.name
+    : substituteFood?.name
+  const food = (foodName ?? (substituteFoodId && foodNames.get(substituteFoodId)))?.trim()
   const detail = note?.trim()
   if (food && detail) return `${food} (${detail})`
   return food || detail || ""
@@ -250,20 +256,22 @@ function substitutionLabel(
 
 function substitutionLabels(
   substitutions: Substitution[] | null | undefined,
-  foodNames: ReadonlyMap<string, string>
+  foodNames: ReadonlyMap<string, string>,
+  pluralFood: boolean
 ): string[] {
   const labels = (substitutions ?? []).map(substitution =>
-    substitutionLabel(substitution, foodNames)
+    alternativeLabel(substitution, foodNames, pluralFood)
   )
   return [...new Set(labels.filter(Boolean))]
 }
 
 export function ingredientAlternatives(
   ingredient: Pick<RecipeIngredientOutput, "substitutions" | "food">,
-  foodNames: ReadonlyMap<string, string> = new Map()
+  foodNames: ReadonlyMap<string, string> = new Map(),
+  pluralFood = false
 ): IngredientAlternatives {
-  const recipe = substitutionLabels(ingredient.substitutions, foodNames)
-  const food = substitutionLabels(ingredient.food?.substitutions, foodNames).filter(
+  const recipe = substitutionLabels(ingredient.substitutions, foodNames, pluralFood)
+  const food = substitutionLabels(ingredient.food?.substitutions, foodNames, pluralFood).filter(
     label => !recipe.includes(label)
   )
   return { recipe, food }
