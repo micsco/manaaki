@@ -76,7 +76,10 @@ when an appliance changes. There is no specific oven entry.
 
 The server needs `GEMINI_API_KEY` in its runtime environment (never a `VITE_`
 variable). `GEMINI_MODEL` (default `gemini-3.8-flash`) and
-`RECIPE_VERSION_DRAFTS_PER_HOUR` (default 10) are optional. Before changing the
+`RECIPE_VERSION_DRAFTS_PER_HOUR` (default 10) are optional. `GEMINI_THINKING_LEVEL`
+(`minimal`, `low`, `medium` or `high`) sets how much Gemini thinks before writing;
+unset, the model's default applies. The level and the time to connect to Gemini are
+logged with each draft. Before changing the
 prompt or model, run `pnpm eval:recipe-versions` with a key in `.env`. The design
 is in `docs/superpowers/specs/2026-10-26-ai-recipe-versions-design.md`.
 

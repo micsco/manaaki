@@ -25,5 +25,12 @@ export const mealieStalledSlotHoldMs = (): number =>
 
 export const geminiApiKey = (): string | null => globalThis.process?.env?.GEMINI_API_KEY || null
 export const geminiModel = (): string => globalThis.process?.env?.GEMINI_MODEL || "gemini-3.8-flash"
+
+const THINKING_LEVELS = ["minimal", "low", "medium", "high"] as const
+export type GeminiThinkingLevel = (typeof THINKING_LEVELS)[number]
+export const geminiThinkingLevel = (): GeminiThinkingLevel | null => {
+  const value = globalThis.process?.env?.GEMINI_THINKING_LEVEL?.trim().toLowerCase()
+  return THINKING_LEVELS.find(level => level === value) ?? null
+}
 export const recipeVersionDraftsPerHour = (): number =>
   positiveInteger("RECIPE_VERSION_DRAFTS_PER_HOUR", 10)

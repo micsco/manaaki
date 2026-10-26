@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import {
   geminiApiKey,
   geminiModel,
+  geminiThinkingLevel,
   mealieInternalUrl,
   readonlyToken,
   recipeVersionDraftsPerHour,
@@ -15,6 +16,7 @@ const KEYS = [
   "SESSION_SECRET",
   "GEMINI_API_KEY",
   "GEMINI_MODEL",
+  "GEMINI_THINKING_LEVEL",
   "RECIPE_VERSION_DRAFTS_PER_HOUR",
 ] as const
 let saved: Record<string, string | undefined>
@@ -57,5 +59,10 @@ describe("server env", () => {
     expect(geminiApiKey()).toBe("key")
     expect(geminiModel()).toBe("gemini-other")
     expect(recipeVersionDraftsPerHour()).toBe(3)
+    expect(geminiThinkingLevel()).toBeNull()
+    process.env.GEMINI_THINKING_LEVEL = " LOW "
+    expect(geminiThinkingLevel()).toBe("low")
+    process.env.GEMINI_THINKING_LEVEL = "max"
+    expect(geminiThinkingLevel()).toBeNull()
   })
 })

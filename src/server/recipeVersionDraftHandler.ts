@@ -212,6 +212,8 @@ export async function recipeVersionDraftHandler(request: Request): Promise<Respo
         const checks = checkDraft(draft, source, target)
         const metrics: DraftMetrics = {
           model: usage.model,
+          thinkingLevel: usage.thinkingLevel,
+          connectMs: usage.connectMs,
           inputTokens: usage.inputTokens,
           outputTokens: usage.outputTokens,
           thinkingTokens: usage.thinkingTokens,

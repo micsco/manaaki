@@ -1,10 +1,15 @@
-import { FinishReason, type GenerateContentResponseUsageMetadata, GoogleGenAI } from "@google/genai"
+import {
+  FinishReason,
+  ThinkingLevel,
+  type GenerateContentResponseUsageMetadata,
+  GoogleGenAI,
+} from "@google/genai"
 import { z } from "zod"
 
 import { describeAppliance, householdAppliance } from "../utils/householdAppliances"
 import type { RecipeVersionDraft } from "../utils/recipeVersionDraft"
 import { COOKING_METHOD_LABELS, type CookingMethod } from "../utils/recipeVersions"
-import { geminiApiKey, geminiModel } from "./env"
+import { geminiApiKey, geminiModel, type GeminiThinkingLevel, geminiThinkingLevel } from "./env"
 
 export type DraftRequestRecipe = {
   name: string
@@ -202,8 +207,17 @@ export type DraftUsage = {
   outputTokens: number
   thinkingTokens: number
   model: string
+  thinkingLevel: GeminiThinkingLevel | "default"
+  connectMs: number
   firstTokenMs: number | null
   modelMs: number
+}
+
+const THINKING_LEVELS: Record<GeminiThinkingLevel, ThinkingLevel> = {
+  minimal: ThinkingLevel.MINIMAL,
+  low: ThinkingLevel.LOW,
+  medium: ThinkingLevel.MEDIUM,
+  high: ThinkingLevel.HIGH,
 }
 
 export type DraftProgress = { stage: "thinking" } | { stage: "writing"; steps: number }
@@ -238,6 +252,7 @@ export async function generateRecipeVersionDraft(
   const apiKey = geminiApiKey()
   if (!apiKey) throw new AiNotConfiguredError()
   const model = geminiModel()
+  const thinkingLevel = geminiThinkingLevel()
   const ai = new GoogleGenAI({ apiKey })
   const startedAt = performance.now()
   onProgress({ stage: "thinking" })
@@ -250,8 +265,12 @@ export async function generateRecipeVersionDraft(
       responseJsonSchema,
       maxOutputTokens: 16000,
       abortSignal: signal,
+      ...(thinkingLevel
+        ? { thinkingConfig: { thinkingLevel: THINKING_LEVELS[thinkingLevel] } }
+        : {}),
     },
   })
+  const connectMs = Math.round(performance.now() - startedAt)
 
   let text = ""
   let firstTokenMs: number | null = null
@@ -297,6 +316,8 @@ export async function generateRecipeVersionDraft(
       outputTokens: usage?.candidatesTokenCount ?? 0,
       thinkingTokens: usage?.thoughtsTokenCount ?? 0,
       model,
+      thinkingLevel: thinkingLevel ?? "default",
+      connectMs,
       firstTokenMs,
       modelMs: Math.round(performance.now() - startedAt),
     },

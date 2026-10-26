@@ -229,6 +229,8 @@ export function blockingChecks(checks: DraftCheck[]): DraftCheck[] {
 
 export type DraftMetrics = {
   model: string
+  thinkingLevel: string
+  connectMs: number
   inputTokens: number
   outputTokens: number
   thinkingTokens: number

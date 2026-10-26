@@ -160,6 +160,8 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
         ingredient_changes: result.draft.ingredientChanges.length,
         client_ms: Date.now() - startedAt,
         model: result.metrics?.model,
+        thinking_level: result.metrics?.thinkingLevel,
+        connect_ms: result.metrics?.connectMs,
         input_tokens: result.metrics?.inputTokens,
         output_tokens: result.metrics?.outputTokens,
         thinking_tokens: result.metrics?.thinkingTokens,

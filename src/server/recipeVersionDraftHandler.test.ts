@@ -81,6 +81,8 @@ beforeEach(() => {
       outputTokens: 2,
       thinkingTokens: 3,
       model: "gemini-3.8-flash",
+      thinkingLevel: "medium",
+      connectMs: 30,
       firstTokenMs: 40,
       modelMs: 50,
     },
@@ -137,7 +139,13 @@ describe("recipeVersionDraftHandler", () => {
     expect(logged).not.toContain("olive oil")
     expect(logged).toContain("recipe_version_draft")
     const entry = JSON.parse(String(info.mock.calls.at(-1)?.[0]))
-    expect(entry).toMatchObject({ outcome: "ok", model: "gemini-3.8-flash", firstTokenMs: 40 })
+    expect(entry).toMatchObject({
+      outcome: "ok",
+      model: "gemini-3.8-flash",
+      thinkingLevel: "medium",
+      connectMs: 30,
+      firstTokenMs: 40,
+    })
   })
 
   it("requires a session", async () => {
@@ -255,6 +263,8 @@ describe("recipeVersionDraftHandler", () => {
             outputTokens: 2,
             thinkingTokens: 0,
             model: "m",
+            thinkingLevel: "default",
+            connectMs: 1,
             firstTokenMs: 1,
             modelMs: 2,
           },
