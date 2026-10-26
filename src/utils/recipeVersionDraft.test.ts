@@ -80,7 +80,7 @@ describe("checkDraft", () => {
     ],
     [
       "temperature-range",
-      draftWith({ steps: ["Heat the air fryer to 240°C.", ...goodAirFryerDraft.steps.slice(1)] }),
+      draftWith({ steps: ["Heat the air fryer to 260°C.", ...goodAirFryerDraft.steps.slice(1)] }),
     ],
     [
       "target-missing",
@@ -108,6 +108,13 @@ describe("checkDraft", () => {
     expect(checks.find(check => check.id === id)?.level).toBe("warn")
   })
 
+  it("accepts Max Crisp at 240°C", () => {
+    const draft = draftWith({
+      steps: [...goodAirFryerDraft.steps, "Zone 2: Max Crisp the chips at 240°C for 20 minutes."],
+    })
+    expect(ids(draft)).not.toContain("temperature-range")
+  })
+
   it("warns when the name is already taken, ignoring case", () => {
     expect(ids(goodAirFryerDraft, ["bbq chicken twice-baked potatoes (AIR FRYER)"])).toContain(
       "name-taken"
@@ -125,6 +132,21 @@ describe("checkDraft", () => {
     expect(ids).not.toContain("slow-cooker-setting")
     expect(ids).not.toContain("target-missing")
   })
+
+  it.each(["Slow Cook on LO for 7 hours.", "Braise for 3 hours."])(
+    "accepts the PossibleCooker's own settings: %s",
+    step => {
+      const draft = draftWith({
+        name: "Stew (Slow cooker)",
+        cookMinutes: 360,
+        totalMinutes: 380,
+        steps: ["Sear the beef in the slow cooker pot.", step, "Serve."],
+      })
+      expect(checkDraft(draft, ovenSource, "slowCooker").map(check => check.id)).not.toContain(
+        "slow-cooker-setting"
+      )
+    }
+  )
 
   it("asks slow cooker drafts to say LOW or HIGH", () => {
     const draft = draftWith({

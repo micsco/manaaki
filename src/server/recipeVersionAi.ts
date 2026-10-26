@@ -163,7 +163,7 @@ Rules:
 
 function applianceDescription(target: CookingMethod): string {
   const appliance = householdAppliance(target)
-  return appliance ? describeAppliance(appliance) : ""
+  return appliance ? describeAppliance(appliance) : APPLIANCE_GUIDANCE[target]
 }
 
 export function buildPrompt(
@@ -179,7 +179,6 @@ export function buildPrompt(
   const times = `prep ${recipe.prepMinutes ?? "?"} min, cook ${recipe.cookMinutes ?? "?"} min, total ${recipe.totalMinutes ?? "?"} min${recipe.waitingNote ? ` (includes ${recipe.waitingNote})` : ""}`
   return [
     `Convert this ${COOKING_METHOD_LABELS[recipe.method].toLowerCase()} recipe so it is cooked in the ${COOKING_METHOD_LABELS[target].toLowerCase()}.`,
-    APPLIANCE_GUIDANCE[target],
     applianceDescription(target),
     notes.trim() ? `The cook adds: ${notes.trim()}` : "",
     "<recipe>",

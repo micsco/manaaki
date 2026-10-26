@@ -84,7 +84,7 @@ disabled; **warn** means Save needs the acknowledgement tick.
 | No new ingredients unless listed with a reason; they are added as note-only lines | block |
 | Changed amounts stay within ×0.25–×2 of the original | warn |
 | Times present; `total ≥ max(prep, cook)`; total cook within the method's plausible range (air fryer 5–90 min, oven 5–300 min, slow cooker 90–720 min) | block for missing or impossible, warn for out of range |
-| Temperatures are °C and plausible for the method (air fryer 120–210°C, oven 100–260°C); slow-cooker steps name LOW or HIGH | warn |
+| Temperatures are °C and plausible for the method (air fryer 120–240°C, oven 100–260°C); slow-cooker steps name LOW or HIGH | warn |
 | The steps mention the target appliance at least once, and don't mention the source appliance's setup ("preheat the oven" in an air fryer version) | warn |
 | Food-safety guidance kept: if the original states a core temperature or "cooked through" check for meat/fish, the draft keeps one | warn |
 | Step count within 50–200% of the original | warn |

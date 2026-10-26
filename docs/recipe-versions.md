@@ -52,7 +52,9 @@ adds a note to each.
 The household's own appliances (a Ninja Foodi MAX Dual Zone air fryer, AF400UK, and
 a Ninja Foodi PossibleCooker slow cooker, MC1001UK) are described in
 `src/utils/householdAppliances.ts`: capacity, functions, settings and how to write
-for each. Their details go into every prompt for that method, so the model doesn't
+for each, taken from Ninja's product pages and instruction manuals (AF400UK, April
+2021; MC1001UK, August 2022). Where they disagree, the safer figure is used: the
+PossibleCooker pot is listed as oven-safe to 240°C (the manual says 260°C). Their details go into every prompt for that method, so the model doesn't
 need to look anything up, and the setup screen names the appliance. Edit that file
 when an appliance changes. There is no specific oven entry.
 

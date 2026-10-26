@@ -46,7 +46,7 @@ const COOK_RANGES: Record<CookingMethod, [number, number]> = {
 }
 
 const TEMPERATURE_RANGES: Partial<Record<CookingMethod, [number, number]>> = {
-  airFryer: [120, 210],
+  airFryer: [120, 240],
   oven: [100, 260],
 }
 
@@ -175,8 +175,11 @@ export function checkDraft(
       }
     }
   }
-  if (target === "slowCooker" && !/\b(low|high|hi)\b/i.test(draft.steps.join(" "))) {
-    warn("slow-cooker-setting", "The method doesn't say whether to use the Low or Hi setting.")
+  if (target === "slowCooker" && !/\b(low|high|lo|hi|braise)\b/i.test(draft.steps.join(" "))) {
+    warn(
+      "slow-cooker-setting",
+      "The method doesn't say whether to use the LO or HI setting (or Braise)."
+    )
   }
 
   const steps = draft.steps.join("\n")

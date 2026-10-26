@@ -14,8 +14,8 @@ describe("householdAppliance", () => {
     expect(text).toMatch(
       /^The household cooks with a Ninja Foodi 8-in-1 PossibleCooker \(MC1001UK\):/
     )
-    expect(text).toContain("- 8 L cooking pot")
+    expect(text).toContain("- 8 L non-stick cooking pot")
     expect(text).toContain("Write the method for this appliance:")
-    expect(text).toContain("- Brown meat and soften onions in the pot with Sear/Sauté")
+    expect(text).toContain("- Brown meat and soften onions in the pot with Sear/Sauté (lid off)")
   })
 })

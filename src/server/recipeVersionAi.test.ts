@@ -109,12 +109,14 @@ describe("buildPrompt", () => {
     const airFryer = buildPrompt(recipe, "airFryer", "")
     expect(airFryer).toContain("Ninja Foodi MAX Dual Zone Air Fryer (AF400UK)")
     expect(airFryer).toContain("SYNC")
+    expect(airFryer).toContain("lowering the temperature by 10°C")
+    expect(airFryer).not.toContain("20°C lower")
     const slowCooker = buildPrompt(recipe, "slowCooker", "")
     expect(slowCooker).toContain("PossibleCooker (MC1001UK)")
-    expect(slowCooker).toContain("oven-safe up to 240°C")
-    expect(buildPrompt({ ...recipe, method: "airFryer" }, "oven", "")).not.toContain(
-      "The household cooks with"
-    )
+    expect(slowCooker).toContain("oven (up to 240°C) but not on the hob")
+    const oven = buildPrompt({ ...recipe, method: "airFryer" }, "oven", "")
+    expect(oven).not.toContain("The household cooks with")
+    expect(oven).toContain("fan oven temperature")
   })
 
   it("wraps the recipe as data with zero-based ingredient lines", () => {
