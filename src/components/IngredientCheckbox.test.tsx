@@ -27,6 +27,29 @@ describe("IngredientCheckbox", () => {
       expect(screen.getByRole("button").getAttribute("aria-label")).not.toMatch(/checked/)
     })
 
+    it("shows the recipe's alternatives under the ingredient", () => {
+      render(
+        <IngredientCheckbox
+          {...defaultProps}
+          ingredient="2 cups chicken stock"
+          food={{ name: "chicken stock" }}
+          quantity={2}
+          alternatives={{ recipe: ["vegetable stock"], food: ["water"] }}
+        />
+      )
+      expect(screen.getByText("or vegetable stock")).toBeInTheDocument()
+      expect(screen.getByText("Can swap for water")).toBeInTheDocument()
+      expect(screen.getByRole("button")).toHaveAccessibleName(
+        "2 cups chicken stock, or vegetable stock, Can swap for water"
+      )
+    })
+
+    it("shows no alternatives line when there are none", () => {
+      render(<IngredientCheckbox {...defaultProps} food={{ name: "flour" }} quantity={2} />)
+      expect(screen.queryByText(/^or /)).not.toBeInTheDocument()
+      expect(screen.getByRole("button")).toHaveAccessibleName("2 cups flour")
+    })
+
     it("renders structured ingredient: food name", () => {
       render(<IngredientCheckbox {...defaultProps} food={{ name: "flour" }} quantity={2} />)
       expect(screen.getByText("flour")).toBeInTheDocument()

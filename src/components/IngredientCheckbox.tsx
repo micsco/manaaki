@@ -9,7 +9,12 @@ import type {
 } from "../api/generated/types.gen"
 import { usePostHog } from "../contexts/AnalyticsContext"
 import { useCookingStorage } from "../hooks/useCookingStorage"
-import { formatQuantity, ingredientStorageKey } from "../utils/recipe"
+import {
+  describeAlternatives,
+  formatQuantity,
+  ingredientStorageKey,
+  type IngredientAlternatives,
+} from "../utils/recipe"
 import { Icon } from "./Icon"
 
 interface IngredientCheckboxProps {
@@ -20,6 +25,7 @@ interface IngredientCheckboxProps {
   unit?: IngredientUnitOutput | CreateIngredientUnit | null
   food?: IngredientFoodOutput | CreateIngredientFood | null
   note?: string | null
+  alternatives?: IngredientAlternatives
   className?: string
 }
 
@@ -60,7 +66,7 @@ function StructuredIngredient({
   const noteOnly = food == null && !hasQuantity && unit == null
   return (
     <span
-      className={`min-w-0 flex-1 transition-all duration-200 select-none ${isChecked ? checkedClass : ""}`}
+      className={`min-w-0 transition-all duration-200 select-none ${isChecked ? checkedClass : ""}`}
     >
       <span className="flex flex-wrap items-baseline gap-x-1.5 leading-relaxed">
         {(hasQuantity || unit != null) && (
@@ -96,6 +102,7 @@ export function IngredientCheckbox({
   unit,
   food,
   note,
+  alternatives = { recipe: [], food: [] },
   className = "",
 }: IngredientCheckboxProps) {
   const [isChecked, setIsChecked] = useCookingStorage(
@@ -114,6 +121,8 @@ export function IngredientCheckbox({
     setIsChecked(nextChecked)
   }, [isChecked, posthog, recipeId, ingredientIndex, ingredient, setIsChecked])
 
+  const alternativeText = describeAlternatives(alternatives)
+  const spokenAlternatives = [alternativeText.recipe, alternativeText.food].filter(Boolean)
   const hasStructuredData =
     food != null || unit != null || (quantity != null && quantity !== 0) || note != null
 
@@ -124,7 +133,9 @@ export function IngredientCheckbox({
         className="flex w-full cursor-pointer items-baseline gap-3 py-3 text-left transition-colors hover:text-gray-200"
         onClick={handleToggle}
         aria-pressed={isChecked}
-        aria-label={`${ingredient}${isChecked ? ", checked" : ""}`}
+        aria-label={[ingredient, ...spokenAlternatives, ...(isChecked ? ["checked"] : [])].join(
+          ", "
+        )}
       >
         <span
           className={`shrink-0 font-semibold transition-colors select-none ${
@@ -133,23 +144,39 @@ export function IngredientCheckbox({
         >
           •
         </span>
-        {hasStructuredData ? (
-          <StructuredIngredient
-            quantity={quantity}
-            unit={unit}
-            food={food}
-            note={note}
-            isChecked={isChecked}
-          />
-        ) : (
-          <span
-            className={`min-w-0 flex-1 leading-relaxed transition-colors select-none ${
-              isChecked ? "text-gray-500 line-through opacity-75" : "text-gray-300"
-            }`}
-          >
-            {ingredient}
-          </span>
-        )}
+        <span className="flex min-w-0 flex-1 flex-col gap-1">
+          {hasStructuredData ? (
+            <StructuredIngredient
+              quantity={quantity}
+              unit={unit}
+              food={food}
+              note={note}
+              isChecked={isChecked}
+            />
+          ) : (
+            <span
+              className={`min-w-0 leading-relaxed transition-colors select-none ${
+                isChecked ? "text-gray-500 line-through opacity-75" : "text-gray-300"
+              }`}
+            >
+              {ingredient}
+            </span>
+          )}
+          {alternativeText.recipe && (
+            <span
+              className={`text-sm leading-snug ${isChecked ? "text-gray-600 line-through" : "text-gray-400"}`}
+            >
+              {alternativeText.recipe}
+            </span>
+          )}
+          {alternativeText.food && (
+            <span
+              className={`text-xs leading-snug ${isChecked ? "text-gray-600 line-through" : "text-gray-500"}`}
+            >
+              {alternativeText.food}
+            </span>
+          )}
+        </span>
         {isChecked && (
           <Icon
             path={mdiCheck}

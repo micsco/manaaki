@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest"
 
 import type { RecipeIngredientOutput, RecipeStep } from "../api/generated/types.gen"
 import {
+  describeAlternatives,
   displayDomain,
   formatQuantity,
   formatTime,
   groupByTitle,
   groupIngredients,
+  ingredientAlternatives,
   mealieRecipeUrl,
   parseTimeMinutes,
   recipeTimes,
@@ -560,5 +562,67 @@ describe("recipeTimes", () => {
 
   it("rounds short durations up to a minute", () => {
     expect(recipeTimes({ prepTimeSeconds: 20 }).prep).toBe("1m")
+  })
+})
+
+describe("ingredientAlternatives", () => {
+  it("lists the alternatives the recipe gives, by food name or note", () => {
+    expect(
+      ingredientAlternatives({
+        substitutions: [
+          { substituteFood: { id: "stock", name: "vegetable stock" } },
+          { note: "vegan parmesan cheese" },
+        ],
+      })
+    ).toEqual({ recipe: ["vegetable stock", "vegan parmesan cheese"], food: [] })
+  })
+
+  it("adds the note to a substitute food", () => {
+    expect(
+      ingredientAlternatives({
+        substitutions: [{ substituteFood: { id: "milk", name: "milk" }, note: "with lemon" }],
+      }).recipe
+    ).toEqual(["milk (with lemon)"])
+  })
+
+  it("lists the food's own swaps separately and without repeats", () => {
+    expect(
+      ingredientAlternatives({
+        substitutions: [{ note: "shallots" }],
+        food: {
+          id: "onion",
+          name: "onion",
+          substitutions: [{ note: "shallots" }, { substituteFood: { id: "leek", name: "leek" } }],
+        },
+      })
+    ).toEqual({ recipe: ["shallots"], food: ["leek"] })
+  })
+
+  it("names a substitute the parser matched only by id", () => {
+    expect(
+      ingredientAlternatives(
+        { substitutions: [{ substituteFoodId: "stock" }] },
+        new Map([["stock", "vegetable stock"]])
+      ).recipe
+    ).toEqual(["vegetable stock"])
+  })
+
+  it("skips empty substitutions", () => {
+    expect(
+      ingredientAlternatives({ substitutions: [{ note: " " }, { substituteFood: null }] })
+    ).toEqual({ recipe: [], food: [] })
+  })
+})
+
+describe("describeAlternatives", () => {
+  it("reads as an or-list for the recipe and a swap hint for the food", () => {
+    expect(describeAlternatives({ recipe: ["broth", "water"], food: ["leek"] })).toEqual({
+      recipe: "or broth or water",
+      food: "Can swap for leek",
+    })
+  })
+
+  it("returns nothing when there are no alternatives", () => {
+    expect(describeAlternatives({ recipe: [], food: [] })).toEqual({ recipe: null, food: null })
   })
 })

@@ -1,7 +1,12 @@
 import type { RecipeIngredientOutput, RecipeStep } from "../api/generated/types.gen"
 import { useCookMode } from "../contexts/CookModeContext"
 import { useCookingStorage } from "../hooks/useCookingStorage"
-import { groupIngredients, scaleQuantity, servingsStorageKey } from "../utils/recipe"
+import {
+  groupIngredients,
+  ingredientAlternatives,
+  scaleQuantity,
+  servingsStorageKey,
+} from "../utils/recipe"
 import { IngredientCheckbox } from "./IngredientCheckbox"
 import { IngredientParsingAction } from "./IngredientParsingAction"
 import { IngredientSectionHeader } from "./IngredientSectionHeader"
@@ -28,6 +33,7 @@ function IngredientItem({
       unit={ing.unit}
       food={ing.food}
       note={ing.note}
+      alternatives={ingredientAlternatives(ing)}
     />
   )
 }

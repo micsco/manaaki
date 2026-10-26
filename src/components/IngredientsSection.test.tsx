@@ -56,6 +56,21 @@ describe("IngredientsSection", () => {
       expect(screen.getAllByRole("button")).toHaveLength(2)
     })
 
+    it("shows alternatives the recipe gives for an ingredient", () => {
+      render(
+        <IngredientsSection
+          ingredients={[
+            {
+              ...ingredients[0],
+              substitutions: [{ substituteFood: { id: "spelt", name: "spelt flour" } }],
+            },
+          ]}
+          recipeId="test-recipe"
+        />
+      )
+      expect(screen.getByText("or spelt flour")).toBeInTheDocument()
+    })
+
     it("renders section title when ingredient has a title", () => {
       render(<IngredientsSection ingredients={ingredientsWithSection} recipeId="test-recipe" />)
       expect(screen.getByText("Dry ingredients")).toBeInTheDocument()

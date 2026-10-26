@@ -69,6 +69,15 @@ it("rejects missing or reordered parser results before saving", () => {
     "unexpected order"
   )
 })
+it("keeps the alternatives the parser found", () => {
+  const withAlternative = {
+    ...parsed[0],
+    ingredient: { ...parsed[0].ingredient, substitutions: [{ note: "diced beef" }] },
+  }
+  expect(mergeParsedIngredients(recipe, [withAlternative])[0].substitutions).toEqual([
+    { note: "diced beef" },
+  ])
+})
 it("does not save when the AI provider fails", async () => {
   vi.mocked(sdk.parseIngredientsApiParserIngredientsPost).mockResolvedValue({ error: {} } as never)
   await expect(parseRecipeIngredients("lamb")).rejects.toThrow("AI provider")

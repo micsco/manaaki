@@ -1,6 +1,11 @@
 import { parse as uuidParse, stringify as uuidStringify } from "uuid"
 
-import type { RecipeIngredientOutput, RecipeStep, RecipeSummary } from "../api/generated/types.gen"
+import type {
+  IngredientFoodSummary,
+  RecipeIngredientOutput,
+  RecipeStep,
+  RecipeSummary,
+} from "../api/generated/types.gen"
 
 const MEALIE_BASE_URL =
   import.meta.env.VITE_PUBLIC_MEALIE_BASE_URL ?? "https://mealie.scottfamily.nz"
@@ -220,6 +225,55 @@ function addToStepGroup(
     groups.push(group)
   }
   group.items.push({ item: ing, index })
+}
+
+type Substitution = {
+  note?: string | null
+  substituteFoodId?: string | null
+  substituteFood?: IngredientFoodSummary | null
+}
+
+export type IngredientAlternatives = { recipe: string[]; food: string[] }
+
+function substitutionLabel(
+  { note, substituteFoodId, substituteFood }: Substitution,
+  foodNames: ReadonlyMap<string, string>
+): string {
+  const food = (
+    substituteFood?.name ??
+    (substituteFoodId && foodNames.get(substituteFoodId))
+  )?.trim()
+  const detail = note?.trim()
+  if (food && detail) return `${food} (${detail})`
+  return food || detail || ""
+}
+
+function substitutionLabels(
+  substitutions: Substitution[] | null | undefined,
+  foodNames: ReadonlyMap<string, string>
+): string[] {
+  const labels = (substitutions ?? []).map(substitution =>
+    substitutionLabel(substitution, foodNames)
+  )
+  return [...new Set(labels.filter(Boolean))]
+}
+
+export function ingredientAlternatives(
+  ingredient: Pick<RecipeIngredientOutput, "substitutions" | "food">,
+  foodNames: ReadonlyMap<string, string> = new Map()
+): IngredientAlternatives {
+  const recipe = substitutionLabels(ingredient.substitutions, foodNames)
+  const food = substitutionLabels(ingredient.food?.substitutions, foodNames).filter(
+    label => !recipe.includes(label)
+  )
+  return { recipe, food }
+}
+
+export function describeAlternatives({ recipe, food }: IngredientAlternatives) {
+  return {
+    recipe: recipe.length ? `or ${recipe.join(" or ")}` : null,
+    food: food.length ? `Can swap for ${food.join(" or ")}` : null,
+  }
 }
 
 export const UNGROUPED_INGREDIENTS_TITLE = "Recipe ingredients"

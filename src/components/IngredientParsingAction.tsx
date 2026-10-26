@@ -1,7 +1,7 @@
 import { Dialog } from "@base-ui/react/dialog"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "@tanstack/react-router"
-import { useEffect, useId, useState } from "react"
+import { useEffect, useId, useMemo, useState } from "react"
 
 import type { ParsedIngredient, RecipeOutput } from "../api/generated/types.gen"
 import {
@@ -20,7 +20,7 @@ import {
 } from "../api/recipeParsing"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import { useOnline } from "../pwa/useOnline"
-import { formatQuantity } from "../utils/recipe"
+import { describeAlternatives, formatQuantity, ingredientAlternatives } from "../utils/recipe"
 import { IngredientSuggestions } from "./IngredientSuggestions"
 
 export function IngredientParsingAction({ recipe }: { recipe: RecipeOutput }) {
@@ -316,12 +316,17 @@ function IngredientReviewRow({
     (ingredient.food && !ingredient.food.id) || (ingredient.unit && !ingredient.unit.id)
   )
   const [expanded, setExpanded] = useState(hasMissingMatch)
+  const foodNames = useMemo(
+    () => new Map((catalog?.food ?? []).flatMap(food => (food.id ? [[food.id, food.name]] : []))),
+    [catalog]
+  )
   const suggestion =
     [
       ingredient.quantity ? formatQuantity(ingredient.quantity) : "",
       ingredient.unit?.name,
       ingredient.food?.name,
       ingredient.note,
+      describeAlternatives(ingredientAlternatives(ingredient, foodNames)).recipe,
     ]
       .filter(Boolean)
       .join(" ") || row.parsed.input

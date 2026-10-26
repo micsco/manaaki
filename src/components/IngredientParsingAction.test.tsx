@@ -89,6 +89,45 @@ it("shows uncertainty without extra checkboxes and saves edits with one final ac
   )
   expect(invalidate).toHaveBeenCalled()
 })
+it("shows alternatives the parser found in the suggestion", async () => {
+  vi.mocked(parsing.parseRecipeIngredients).mockResolvedValue({
+    recipe,
+    parsed: [
+      {
+        ...suggestion,
+        ingredient: { ...suggestion.ingredient, substitutions: [{ note: "diced beef" }] },
+      },
+    ],
+  })
+  const user = userEvent.setup()
+  render(<IngredientParsingAction recipe={recipe} />)
+  await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
+  expect(await screen.findByText("275 g lamb diced or diced beef")).toBeVisible()
+})
+
+it("names alternatives the parser matched to an existing food", async () => {
+  vi.mocked(catalog.loadIngredientCatalog).mockResolvedValue({
+    food: [
+      { id: "lamb", name: "lamb" },
+      { id: "beef", name: "beef" },
+    ],
+    unit: [{ id: "g", name: "g" }],
+  })
+  vi.mocked(parsing.parseRecipeIngredients).mockResolvedValue({
+    recipe,
+    parsed: [
+      {
+        ...suggestion,
+        ingredient: { ...suggestion.ingredient, substitutions: [{ substituteFoodId: "beef" }] },
+      },
+    ],
+  })
+  const user = userEvent.setup()
+  render(<IngredientParsingAction recipe={recipe} />)
+  await user.click(screen.getByRole("button", { name: "Parse ingredients with AI" }))
+  expect(await screen.findByText("275 g lamb diced or beef")).toBeVisible()
+})
+
 it("cancel leaves the recipe unchanged and reuses prepared suggestions", async () => {
   const user = userEvent.setup()
   render(<IngredientParsingAction recipe={recipe} />)
