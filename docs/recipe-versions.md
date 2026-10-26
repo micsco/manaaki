@@ -86,7 +86,6 @@ Server settings (runtime environment only, never `VITE_` variables):
 | `CLAUDE_API_KEY` | Claude key (`ANTHROPIC_API_KEY` also works). |
 | `CLAUDE_EFFORT` | `low`, `medium`, `high`, `xhigh` or `max`; unset uses the model's default. |
 | `RECIPE_ESCALATION_MODEL` | Model for a second repair attempt when the first doesn't fix every problem (default `claude-sonnet-5-5`, used only when its key is set; `none` turns it off). |
-| `RECIPE_PROMPT_VERSION` | `v2` (default), `v3` (v2 plus rules to carry every cue, tip and serving suggestion over and give realistic hands-on times) or `v1`, the earliest prompt, kept for comparison. |
 | `RECIPE_VERSION_DRAFTS_PER_HOUR` | Drafts per person per hour (default 10). |
 
 ### How a draft is made
@@ -124,8 +123,7 @@ the prompt, model or thinking level. It runs on your machine, uses your own
 1. It loads the recipes in `evals/recipe-versions/cases.ts` from the live site's
    read-only API. They cover oven → air fryer, oven → slow cooker, air fryer and slow
    cooker → oven, plus hard cases such as fish, baking and macaroni cheese.
-2. It drafts each one with every drafter (a model, its thinking level or effort, and
-   a prompt version), using the production drafting code.
+2. It drafts each one with every drafter (a model and its thinking level or effort), using the production drafting code.
 3. It runs the automated checks, then asks a judge (Claude Opus 5.5 at high effort
    when there's a Claude key, so Gemini doesn't mark its own work) to score
    each draft from 1 to 5 on appliance use, temperatures, timings, food safety,
@@ -148,10 +146,8 @@ the prompt, model or thinking level. It runs on your machine, uses your own
 
 Options, as environment variables: `EVAL_DRAFTERS` (comma-separated, default
 Gemini low, medium and high, plus Claude Haiku, Sonnet and Opus when `CLAUDE_API_KEY`
-is set; each is `gemini[:level][@v1|@v2|@v3]` or `claude-<model>[:effort][@v1|@v2|@v3]`, or a full pipeline such as
-`structured/gemini:low>claude-sonnet-5-5`; `structured+carry/…` adds the rule sets in
-`evals/recipe-versions/promptVariants.ts` (`liquid`, `load`, `carry`) to the v2
-prompt to test them),
+is set; each is `gemini[:level]` or `claude-<model>[:effort]`, or a full pipeline such as
+`structured/gemini:low>claude-sonnet-5-5`),
 `EVAL_CASES` (comma-separated slugs), `EVAL_REPEATS` (default 1), `EVAL_JUDGE=0` to
 skip the judge, `EVAL_JUDGE_MODEL` (default `claude-opus-5-5` when there's a Claude key,
 otherwise `GEMINI_MODEL`),
@@ -173,8 +169,10 @@ by Opus:
 | all three | 4.03 | 4.38 | 0.45 | $0.0065 |
 
 Only `carry` changed anything beyond noise: completeness rose on 12 recipes and fell
-on 3. It became `v3`. Its hands-on-time rules didn't improve the timing scores, and
-`liquid` and `load` didn't reduce liquid or capacity issues. No public dataset pairs
+on 3. Its hands-on-time rules didn't improve the timing scores, and `liquid` and
+`load` didn't reduce liquid or capacity issues. The `carry` rules are now part of the
+prompt, logged as prompt version `v3`; the other rules and the earlier prompts were
+removed and stay in git history. No public dataset pairs
 the same recipe for oven, air fryer and slow cooker, so references come from the
 household's own recipes.
 

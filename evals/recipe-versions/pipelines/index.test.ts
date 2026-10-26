@@ -21,16 +21,6 @@ describe("parsePipeline", () => {
     })
   })
 
-  it("adds prompt variants to structured pipelines", () => {
-    expect(parsePipeline("structured+liquid+carry/gemini:low>claude-sonnet-5-5")).toMatchObject({
-      variants: ["liquid", "carry"],
-      label: "structured gemini low › sonnet +liquid +carry",
-    })
-    expect(parsePipeline("structured/gemini:low")).toMatchObject({ variants: [] })
-    expect(() => parsePipeline("structured+spicy/gemini")).toThrow(/Unknown prompt variant/)
-    expect(() => parsePipeline("single+liquid/gemini")).toThrow(/only work with structured/)
-  })
-
   it("rejects unknown pipelines and models", () => {
     expect(() => parsePipeline("tools/gemini")).toThrow(/Unknown pipeline/)
     expect(() => parsePipeline("single/gpt-9")).toThrow(/Unknown model/)
