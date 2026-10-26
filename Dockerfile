@@ -57,6 +57,8 @@ RUN pnpm prune --prod --ignore-scripts
 
 FROM nginx:1.30.5-alpine3.24 AS serve
 
+ENV NODE_ENV=production
+
 RUN apk add --no-cache libstdc++
 COPY --from=build /usr/local/bin/node /usr/local/bin/node
 
