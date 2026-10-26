@@ -33,3 +33,9 @@ it.each([undefined, { user: null, isAnonymous: true }])(
     expect(screen.queryByRole("button")).not.toBeInTheDocument()
   }
 )
+it("offers to create another version with AI", async () => {
+  const user = userEvent.setup()
+  render(<RecipeActionsMenu recipe={{}} />)
+  await user.click(screen.getByRole("button", { name: "Recipe actions" }))
+  expect(screen.getByRole("button", { name: "Create another version with AI…" })).toBeVisible()
+})

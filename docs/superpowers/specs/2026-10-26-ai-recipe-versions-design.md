@@ -43,8 +43,8 @@ current docs at implementation time. Expected cost is a fraction of a penny per 
    recipe id, target method and notes. The server loads the recipe itself from
    Mealie with the user's session (never trusting recipe content from the browser),
    calls Gemini, validates the result and runs the automated checks (below).
-   Response: `{ draft, checks }`.
-3. **Review screen.** Side by side, original vs draft:
+   Response: `{ draft, checks, source }`.
+3. **Review screen.** The draft, with the original method in a collapsible panel:
    - name, description, times (prep / cook / total / waiting note)
    - method steps (editable textareas)
    - ingredient changes, if any, shown as explicit rows ("olive oil 1 tbsp → 1 tsp,
@@ -52,16 +52,16 @@ current docs at implementation time. Expected cost is a fraction of a penny per 
    - notes the model added (editable)
    - the check results, failures first
 
-   Actions: **Save as new recipe**, **Regenerate** (optionally with more notes),
-   **Cancel**. Save is disabled while any blocking check fails; warnings need an
+   Actions: **Save new version**, **Start again**, **Cancel**. Save is disabled while any blocking check fails; warnings need an
    explicit "I've checked these" tick.
 4. **Save.** The browser, with the user's own Mealie permissions through the existing
    proxy: `POST /api/recipes/{slug}/duplicate` (keeps ingredients, photo, nutrition,
    tags) → `PATCH` the copy with the reviewed name, description, steps, times,
    waiting note, tool and `extras.<method>Version` pointing back → `PATCH` the
    original's `extras` to point at the copy. Any failure after the duplicate rolls
-   forward visibly ("Saved, but linking failed: Retry linking") rather than leaving a
-   silent half-state. The user lands on the new recipe, where the version switch
+   forward visibly rather than leaving a silent half-state: if updating the copy
+   fails, the next Save updates that same copy instead of duplicating again; if only
+   linking fails, the dialog offers **Retry linking**. The user lands on the new recipe, where the version switch
    appears.
 
 Nothing is written to Mealie before step 4. Abandoning the review costs only the
@@ -70,21 +70,22 @@ model call.
 ## Automated checks
 
 Deterministic code, run on the server after parsing and again in the browser after
-edits (shared module `src/utils/recipeVersionChecks.ts`). **Block** means Save is
+edits (shared module `src/utils/recipeVersionDraft.ts`). In the browser only the
+ticked ingredient changes are checked, so unticking a bad change clears its block. **Block** means Save is
 disabled; **warn** means Save needs the acknowledgement tick.
 
 | Check | Level |
 |---|---|
 | Output matches the schema (Zod parse); no empty name or steps | block |
-| Every original ingredient is accounted for: unchanged, or listed in `ingredientChanges` with a reason. No silently dropped lines. | block |
-| No new ingredients unless listed with a reason | block |
-| Ingredient quantity changes limited to the listed rows; amounts stay within ×0.25–×2 of the original | warn |
-| Times present; `total ≥ max(prep, cook)`; cook within the method's plausible range (air fryer 5–60 min per stage, slow cooker 2–10 h, oven 5–240 min) | block for missing or impossible, warn for out of range |
-| Every temperature in the steps is °C and plausible for the method (air fryer 140–210°C, oven 120–250°C); slow-cooker steps name LOW/HIGH, not degrees | warn |
+| Ingredients are copied by Mealie's duplicate, never rewritten by the model. Each change names an existing line, once, with a reason; amounts must be valid numbers, and only lines with a parsed amount can change amount (unparsed lines can only be removed) | block |
+| No new ingredients unless listed with a reason; they are added as note-only lines | block |
+| Changed amounts stay within ×0.25–×2 of the original | warn |
+| Times present; `total ≥ max(prep, cook)`; total cook within the method's plausible range (air fryer 5–90 min, oven 5–300 min, slow cooker 90–720 min) | block for missing or impossible, warn for out of range |
+| Temperatures are °C and plausible for the method (air fryer 120–210°C, oven 100–260°C); slow-cooker steps name LOW or HIGH | warn |
 | The steps mention the target appliance at least once, and don't mention the source appliance's setup ("preheat the oven" in an air fryer version) | warn |
 | Food-safety guidance kept: if the original states a core temperature or "cooked through" check for meat/fish, the draft keeps one | warn |
 | Step count within 50–200% of the original | warn |
-| Plain text only: no HTML, no links except Manaaki recipe links; markdown limited to what `RecipeNotes` renders | block (stripped and reported) |
+| No HTML and no `javascript:` or `data:` links (notes render through the safe markdown subset) | block |
 | Name ends with the method label, e.g. "(Air Fryer)", and doesn't collide with an existing recipe name | warn |
 
 The model also returns `confidence` and `assumptions[]` (e.g. "assumes a 5.5 L basket
@@ -119,15 +120,18 @@ fits 4 potatoes"), shown above the steps. Low confidence is a warning.
   - oversized input → 413
   - a blocked or truncated Gemini response (safety block, `MAX_TOKENS` finish) → clean error
   - the API key never appears in responses or logs
-- **Recorded-response fixtures:** a handful of real model outputs saved as JSON
-  (one per method, plus a deliberately bad one) and run through the checks in CI. No
+- **Fixtures:** synthetic drafts in `src/test/fixtures/recipeVersionDrafts.ts` (a
+  sound air fryer draft plus variations that break each check) run through the
+  checks in CI. Replace them with recorded model outputs once there are some. No
   live API calls in CI.
-- **Opt-in eval** (`pnpm eval:recipe-versions`, not in CI, prints its cost first):
-  - runs about 10 real recipes from the collection through the live model
-  - scores each draft with the deterministic checks
-  - adds a short rubric graded by a second model call: method correct for the
-    appliance, temperatures sensible, nothing missing
-  - writes a summary table, run before changing the prompt or model
+- **Opt-in eval** (`pnpm eval:recipe-versions`, not in CI, needs `GEMINI_API_KEY`
+  in `.env`):
+  - runs three sample recipes (oven → air fryer, oven → slow cooker, air fryer →
+    oven) through the live model
+  - prints the token counts, each draft's method and its check results, and fails
+    on any blocking check
+  - run it before changing the prompt or model. A second-model rubric and real
+    recipes from the collection are later additions.
 - **Normal gates:**
   - `pnpm check:fix`, `type-check` and `test` on commit
   - `test` and `build` on push
@@ -140,9 +144,12 @@ fits 4 potatoes"), shown above the steps. Low confidence is a warning.
 - Editing an existing version with AI.
 - Automatically regenerating when the original recipe changes.
 
-## Open decisions
+## Decisions
 
-1. Add `GEMINI_API_KEY` (the household's existing Google AI key works) to Manaaki's
-   environment in Dokploy.
-2. Whether the AI may adjust ingredient amounts (e.g. less oil for the air fryer).
-   The default proposed here is yes, but only as explicit rows you approve.
+1. `GEMINI_API_KEY` is set in Manaaki's Dokploy environment. `GEMINI_MODEL`
+   (default `gemini-3.8-flash`) and `RECIPE_VERSION_DRAFTS_PER_HOUR` (default 10)
+   are optional.
+2. The AI may adjust ingredient amounts (e.g. less oil for the air fryer), but only
+   as explicit rows you approve; all are ticked by default.
+3. nginx gives the draft route a 95-second read timeout; the server stops waiting
+   for Gemini after 85 seconds.

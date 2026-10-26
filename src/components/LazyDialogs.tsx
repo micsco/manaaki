@@ -49,3 +49,15 @@ export function LazyAboutModal(props: ComponentProps<typeof AboutModal>) {
     </DeferredDialog>
   )
 }
+
+const RecipeVersionDialog = lazy(() =>
+  import("./RecipeVersionDialog").then(module => ({ default: module.RecipeVersionDialog }))
+)
+
+export function LazyRecipeVersionDialog(props: ComponentProps<typeof RecipeVersionDialog>) {
+  return (
+    <DeferredDialog onClose={props.onClose}>
+      <RecipeVersionDialog {...props} />
+    </DeferredDialog>
+  )
+}

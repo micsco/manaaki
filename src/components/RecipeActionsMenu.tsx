@@ -6,6 +6,7 @@ import { useCurrentUser } from "../hooks/useCurrentUser"
 import { AddToShoppingListButton } from "./AddToShoppingListButton"
 import { Icon } from "./Icon"
 import { RecipeRepair } from "./RecipeRepair"
+import { RecipeVersionAction } from "./RecipeVersionAction"
 
 export function RecipeActionsMenu({ recipe }: { recipe: RecipeOutput }) {
   const current = useCurrentUser()
@@ -24,6 +25,7 @@ export function RecipeActionsMenu({ recipe }: { recipe: RecipeOutput }) {
             <Popover.Title className="sr-only">Recipe actions</Popover.Title>
             <AddToShoppingListButton recipe={recipe} />
             <RecipeRepair recipe={recipe} />
+            <RecipeVersionAction recipe={recipe} />
           </Popover.Popup>
         </Popover.Positioner>
       </Popover.Portal>

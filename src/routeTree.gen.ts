@@ -23,6 +23,7 @@ import { Route as ApiAuthLogoutRouteImport } from './routes/api.auth.logout'
 import { Route as ApiAuthMeRouteImport } from './routes/api.auth.me'
 import { Route as ApiAuthOauthRouteImport } from './routes/api.auth.oauth'
 import { Route as RecipesIdSlugRouteImport } from './routes/recipes.$id.$slug'
+import { Route as ApiManaakiRecipeVersionsDraftRouteImport } from './routes/api.manaaki.recipe-versions.draft'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -94,6 +95,12 @@ const RecipesIdSlugRoute = RecipesIdSlugRouteImport.update({
   path: '/$id/$slug',
   getParentRoute: () => RecipesRoute,
 } as any)
+const ApiManaakiRecipeVersionsDraftRoute =
+  ApiManaakiRecipeVersionsDraftRouteImport.update({
+    id: '/api/manaaki/recipe-versions/draft',
+    path: '/api/manaaki/recipe-versions/draft',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/me': typeof ApiAuthMeRoute
   '/api/auth/oauth': typeof ApiAuthOauthRoute
   '/recipes/$id/$slug': typeof RecipesIdSlugRoute
+  '/api/manaaki/recipe-versions/draft': typeof ApiManaakiRecipeVersionsDraftRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -125,6 +133,7 @@ export interface FileRoutesByTo {
   '/api/auth/me': typeof ApiAuthMeRoute
   '/api/auth/oauth': typeof ApiAuthOauthRoute
   '/recipes/$id/$slug': typeof RecipesIdSlugRoute
+  '/api/manaaki/recipe-versions/draft': typeof ApiManaakiRecipeVersionsDraftRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -142,6 +151,7 @@ export interface FileRoutesById {
   '/api/auth/me': typeof ApiAuthMeRoute
   '/api/auth/oauth': typeof ApiAuthOauthRoute
   '/recipes/$id/$slug': typeof RecipesIdSlugRoute
+  '/api/manaaki/recipe-versions/draft': typeof ApiManaakiRecipeVersionsDraftRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/api/auth/me'
     | '/api/auth/oauth'
     | '/recipes/$id/$slug'
+    | '/api/manaaki/recipe-versions/draft'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/api/auth/me'
     | '/api/auth/oauth'
     | '/recipes/$id/$slug'
+    | '/api/manaaki/recipe-versions/draft'
   id:
     | '__root__'
     | '/'
@@ -191,6 +203,7 @@ export interface FileRouteTypes {
     | '/api/auth/me'
     | '/api/auth/oauth'
     | '/recipes/$id/$slug'
+    | '/api/manaaki/recipe-versions/draft'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -205,6 +218,7 @@ export interface RootRouteChildren {
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
   ApiAuthMeRoute: typeof ApiAuthMeRoute
   ApiAuthOauthRoute: typeof ApiAuthOauthRoute
+  ApiManaakiRecipeVersionsDraftRoute: typeof ApiManaakiRecipeVersionsDraftRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -307,6 +321,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecipesIdSlugRouteImport
       parentRoute: typeof RecipesRoute
     }
+    '/api/manaaki/recipe-versions/draft': {
+      id: '/api/manaaki/recipe-versions/draft'
+      path: '/api/manaaki/recipe-versions/draft'
+      fullPath: '/api/manaaki/recipe-versions/draft'
+      preLoaderRoute: typeof ApiManaakiRecipeVersionsDraftRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -337,6 +358,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
   ApiAuthMeRoute: ApiAuthMeRoute,
   ApiAuthOauthRoute: ApiAuthOauthRoute,
+  ApiManaakiRecipeVersionsDraftRoute: ApiManaakiRecipeVersionsDraftRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -102,7 +102,7 @@ try {
   }
   console.log("nginx analytics proxy credential checks passed")
 
-  for (const path of ["/api/auth/me", "/plan"]) {
+  for (const path of ["/api/auth/me", "/api/manaaki/recipe-versions/draft", "/plan"]) {
     const { response, request } = await proxied(path)
     assert.equal(request.url, path)
     assert.equal(request.headers.cookie, credentials.Cookie)

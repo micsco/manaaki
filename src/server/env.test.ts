@@ -1,8 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
-import { mealieInternalUrl, readonlyToken, sessionSecret } from "./env"
+import {
+  geminiApiKey,
+  geminiModel,
+  mealieInternalUrl,
+  readonlyToken,
+  recipeVersionDraftsPerHour,
+  sessionSecret,
+} from "./env"
 
-const KEYS = ["MEALIE_INTERNAL_URL", "MEALIE_READONLY_TOKEN", "SESSION_SECRET"] as const
+const KEYS = [
+  "MEALIE_INTERNAL_URL",
+  "MEALIE_READONLY_TOKEN",
+  "SESSION_SECRET",
+  "GEMINI_API_KEY",
+  "GEMINI_MODEL",
+  "RECIPE_VERSION_DRAFTS_PER_HOUR",
+] as const
 let saved: Record<string, string | undefined>
 
 beforeEach(() => {
@@ -28,5 +42,20 @@ describe("server env", () => {
   it("throws when a required var is missing", () => {
     process.env.SESSION_SECRET = ""
     expect(() => sessionSecret()).toThrow(/SESSION_SECRET/)
+  })
+
+  it("reads the optional AI settings with safe defaults", () => {
+    delete process.env.GEMINI_API_KEY
+    delete process.env.GEMINI_MODEL
+    delete process.env.RECIPE_VERSION_DRAFTS_PER_HOUR
+    expect(geminiApiKey()).toBeNull()
+    expect(geminiModel()).toBe("gemini-3.8-flash")
+    expect(recipeVersionDraftsPerHour()).toBe(10)
+    process.env.GEMINI_API_KEY = "key"
+    process.env.GEMINI_MODEL = "gemini-other"
+    process.env.RECIPE_VERSION_DRAFTS_PER_HOUR = "3"
+    expect(geminiApiKey()).toBe("key")
+    expect(geminiModel()).toBe("gemini-other")
+    expect(recipeVersionDraftsPerHour()).toBe(3)
   })
 })

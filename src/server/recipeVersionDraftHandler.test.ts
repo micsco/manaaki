@@ -1,0 +1,215 @@
+import { ApiError } from "@google/genai"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+import { goodAirFryerDraft } from "../test/fixtures/recipeVersionDrafts"
+import { AiDraftError, AiNotConfiguredError, generateRecipeVersionDraft } from "./recipeVersionAi"
+import { recipeVersionDraftHandler, resetDraftRateLimit } from "./recipeVersionDraftHandler"
+import { buildSessionSetCookie } from "./session"
+
+vi.mock("./recipeVersionAi", async importOriginal => ({
+  ...(await importOriginal<typeof import("./recipeVersionAi")>()),
+  generateRecipeVersionDraft: vi.fn(),
+}))
+
+const RECIPE_ID = "1135368a-1a28-4b47-a422-dbf9d3a7bbc0"
+const recipe = {
+  id: RECIPE_ID,
+  slug: "bbq-chicken-twice-baked-potatoes",
+  name: "BBQ Chicken Twice-Baked Potatoes",
+  description: "",
+  recipeServings: 4,
+  tools: [],
+  extras: {},
+  recipeIngredient: [
+    { display: "4 large baking potatoes", quantity: 4 },
+    { display: "2 tbsp olive oil", quantity: 2, title: "Potatoes" },
+  ],
+  recipeInstructions: [{ text: "Preheat the oven to 200°C and bake for 1 hour." }],
+  notes: [],
+  prepTimeSeconds: 900,
+  performTimeSeconds: 4500,
+  totalTimeSeconds: 5400,
+}
+
+function cookie(): string {
+  const value = buildSessionSetCookie("user-token", false)
+    .split(";")[0]
+    .split("=")
+    .slice(1)
+    .join("=")
+  return `manaaki_session=${value}`
+}
+
+function post(body: unknown, headers: Record<string, string> = { cookie: cookie() }) {
+  return recipeVersionDraftHandler(
+    new Request("http://app/api/manaaki/recipe-versions/draft", {
+      method: "POST",
+      headers: { "content-type": "application/json", ...headers },
+      body: typeof body === "string" ? body : JSON.stringify(body),
+    })
+  )
+}
+
+function mealieReturns(status: number, body: unknown = recipe) {
+  return vi.spyOn(globalThis, "fetch").mockImplementation(
+    async () =>
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { "content-type": "application/json" },
+      })
+  )
+}
+
+const valid = { recipeId: RECIPE_ID, target: "airFryer" }
+
+beforeEach(() => {
+  process.env.MEALIE_INTERNAL_URL = "http://mealie:9000"
+  process.env.SESSION_SECRET = "unit-test-secret"
+  process.env.GEMINI_API_KEY = "super-secret-gemini-key"
+  resetDraftRateLimit()
+  vi.mocked(generateRecipeVersionDraft).mockResolvedValue({
+    draft: goodAirFryerDraft,
+    usage: { inputTokens: 1, outputTokens: 2, model: "gemini-3.8-flash" },
+  })
+  vi.spyOn(console, "info").mockImplementation(() => {})
+})
+
+afterEach(() => {
+  vi.restoreAllMocks()
+  delete process.env.RECIPE_VERSION_DRAFTS_PER_HOUR
+})
+
+describe("recipeVersionDraftHandler", () => {
+  it("returns the draft, checks and source for a signed-in cook", async () => {
+    const fetchSpy = mealieReturns(200)
+    const response = await post({ ...valid, notes: "small basket" })
+    expect(response.status).toBe(200)
+    expect(response.headers.get("cache-control")).toBe("private, no-store")
+    const body = await response.json()
+    expect(body.draft).toEqual(goodAirFryerDraft)
+    expect(Array.isArray(body.checks)).toBe(true)
+    expect(body.source.ingredients).toEqual([
+      { text: "4 large baking potatoes", quantity: 4 },
+      { text: "[Potatoes] 2 tbsp olive oil", quantity: 2 },
+    ])
+    const sent = new Request(fetchSpy.mock.calls[0][0])
+    expect(sent.url).toContain(`/api/recipes/${RECIPE_ID}`)
+    const [draftRecipe, target, notes] = vi.mocked(generateRecipeVersionDraft).mock.calls[0]
+    expect(target).toBe("airFryer")
+    expect(notes).toBe("small basket")
+    expect(draftRecipe.method).toBe("oven")
+    expect(draftRecipe.cookMinutes).toBe(75)
+  })
+
+  it("never echoes the API key or recipe text in logs", async () => {
+    mealieReturns(200)
+    const info = vi.mocked(console.info)
+    await post(valid)
+    const logged = info.mock.calls.flat().join(" ")
+    expect(logged).not.toContain("super-secret-gemini-key")
+    expect(logged).not.toContain("olive oil")
+    expect(logged).toContain("recipe_version_draft")
+  })
+
+  it("requires a session", async () => {
+    const response = await post(valid, {})
+    expect(response.status).toBe(401)
+    expect(generateRecipeVersionDraft).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ["bad JSON", "{nope", 400],
+    ["a missing target", { recipeId: RECIPE_ID }, 400],
+    ["a non-UUID recipe", { ...valid, recipeId: "../../users" }, 400],
+    ["long notes", { ...valid, notes: "x".repeat(501) }, 400],
+    ["an oversized body", { ...valid, notes: "x".repeat(5000) }, 413],
+  ])("rejects %s", async (_, body, status) => {
+    const response = await post(body)
+    expect(response.status).toBe(status)
+    expect(generateRecipeVersionDraft).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    [404, 404],
+    [401, 401],
+  ])("maps Mealie %i to %i", async (mealie, status) => {
+    mealieReturns(mealie, { detail: "x" })
+    expect((await post(valid)).status).toBe(status)
+  })
+
+  it("refuses the recipe's own method", async () => {
+    mealieReturns(200)
+    expect((await post({ ...valid, target: "oven" })).status).toBe(400)
+  })
+
+  it("refuses a method that is already linked", async () => {
+    mealieReturns(200, { ...recipe, extras: { airFryerVersion: "other-id" } })
+    expect((await post(valid)).status).toBe(409)
+  })
+
+  it("refuses recipes too long to send", async () => {
+    mealieReturns(200, {
+      ...recipe,
+      recipeInstructions: Array.from({ length: 50 }, () => ({ text: "x".repeat(1000) })),
+    })
+    expect((await post(valid)).status).toBe(413)
+  })
+
+  it("limits drafts per session per hour", async () => {
+    process.env.RECIPE_VERSION_DRAFTS_PER_HOUR = "2"
+    mealieReturns(200)
+    expect((await post(valid)).status).toBe(200)
+    expect((await post(valid)).status).toBe(200)
+    const limited = await post(valid)
+    expect(limited.status).toBe(429)
+    expect(Number(limited.headers.get("retry-after"))).toBeGreaterThan(0)
+  })
+
+  it("returns 504 when the request is aborted, whatever error the SDK throws", async () => {
+    mealieReturns(200)
+    const controller = new AbortController()
+    vi.mocked(generateRecipeVersionDraft).mockImplementation(async () => {
+      controller.abort()
+      throw new Error("wrapped abort")
+    })
+    const response = await recipeVersionDraftHandler(
+      new Request("http://app/api/manaaki/recipe-versions/draft", {
+        method: "POST",
+        headers: { "content-type": "application/json", cookie: cookie() },
+        body: JSON.stringify(valid),
+        signal: controller.signal,
+      })
+    )
+    expect(response.status).toBe(504)
+  })
+
+  it("frees the draft allowance an hour later", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    try {
+      process.env.RECIPE_VERSION_DRAFTS_PER_HOUR = "1"
+      mealieReturns(200)
+      expect((await post(valid)).status).toBe(200)
+      expect((await post(valid)).status).toBe(429)
+      vi.setSystemTime(Date.now() + 3_600_001)
+      expect((await post(valid)).status).toBe(200)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it.each([
+    [new AiNotConfiguredError(), 503, /isn't set up/],
+    [new AiDraftError("The AI returned an empty draft."), 502, /empty draft/],
+    [new ApiError({ message: "quota", status: 429 }), 429, /busy/],
+    [new ApiError({ message: "boom", status: 500 }), 502, /AI service/],
+    [new DOMException("timed out", "TimeoutError"), 504, /too long/],
+  ])("maps %o to %i", async (failure, status, message) => {
+    mealieReturns(200)
+    vi.mocked(generateRecipeVersionDraft).mockRejectedValue(failure)
+    const response = await post(valid)
+    expect(response.status).toBe(status)
+    const body = await response.json()
+    expect(body.error).toMatch(message)
+    expect(JSON.stringify(body)).not.toContain("super-secret-gemini-key")
+  })
+})

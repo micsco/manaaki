@@ -11,13 +11,13 @@ export const COOKING_METHOD_LABELS: Record<CookingMethod, string> = {
   slowCooker: "Slow cooker",
 }
 
-const VERSION_EXTRAS_KEYS: Record<CookingMethod, string> = {
+export const VERSION_EXTRAS_KEYS: Record<CookingMethod, string> = {
   oven: "ovenVersion",
   airFryer: "airFryerVersion",
   slowCooker: "slowCookerVersion",
 }
 
-const METHOD_TOOL_SLUGS: [CookingMethod, string][] = [
+export const METHOD_TOOL_SLUGS: [CookingMethod, string][] = [
   ["airFryer", "air-fryer"],
   ["slowCooker", "slow-cooker"],
 ]

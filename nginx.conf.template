@@ -50,6 +50,17 @@ server {
         proxy_hide_header Set-Cookie;
     }
 
+    location = /api/manaaki/recipe-versions/draft {
+        resolver 127.0.0.11 valid=10s;
+        proxy_pass $ssr_server;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $client_proto;
+        proxy_buffering off;
+        proxy_read_timeout 95s;
+    }
+
     location /api/ {
         resolver 127.0.0.11 valid=10s;
         proxy_pass $ssr_server;

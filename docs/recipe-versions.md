@@ -29,6 +29,28 @@ When at least one linked version exists in the recipe list, the recipe page show
 an Oven / Air fryer / Slow cooker switch above the times. A link to a missing
 recipe, or to the recipe itself, is ignored.
 
+## Creating a version with AI
+
+Signed-in cooks can open the recipe actions menu (top right) and choose **Create
+another version with AI…**. Pick the appliance, add any notes, and Gemini drafts a
+new method on Manaaki's server. Nothing is saved until you review it:
+
+- Automated checks run on the draft and again after every edit. **Must fix** items
+  disable Save; other warnings need the "I've checked" tick.
+- Ingredient changes are listed one by one with a reason, all ticked; untick any you
+  don't want. Ingredients are otherwise copied exactly.
+- The original method is in a collapsible panel for comparison.
+
+Save duplicates the recipe in Mealie, applies the reviewed name, description, steps,
+times and tool, keeps the original notes and adds any new ones, then links the two recipes both ways through `extras` and
+adds a note to each.
+
+The server needs `GEMINI_API_KEY` in its runtime environment (never a `VITE_`
+variable). `GEMINI_MODEL` (default `gemini-3.8-flash`) and
+`RECIPE_VERSION_DRAFTS_PER_HOUR` (default 10) are optional. Before changing the
+prompt or model, run `pnpm eval:recipe-versions` with a key in `.env`. The design
+is in `docs/superpowers/specs/2026-10-26-ai-recipe-versions-design.md`.
+
 ## Notes
 
 Recipe notes render a small, safe subset of markdown: paragraphs, line breaks,

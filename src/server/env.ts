@@ -22,3 +22,8 @@ export const mealieConcurrencyLimit = (): number => positiveInteger("MEALIE_CONC
 export const mealieQueueTimeoutMs = (): number => positiveInteger("MEALIE_QUEUE_TIMEOUT_MS", 10_000)
 export const mealieStalledSlotHoldMs = (): number =>
   positiveInteger("MEALIE_STALLED_SLOT_HOLD_MS", 30_000)
+
+export const geminiApiKey = (): string | null => globalThis.process?.env?.GEMINI_API_KEY || null
+export const geminiModel = (): string => globalThis.process?.env?.GEMINI_MODEL || "gemini-3.8-flash"
+export const recipeVersionDraftsPerHour = (): number =>
+  positiveInteger("RECIPE_VERSION_DRAFTS_PER_HOUR", 10)
