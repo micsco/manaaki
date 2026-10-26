@@ -4,6 +4,7 @@ import {
   mdiChevronRight,
   mdiStarCircleOutline,
   mdiTimerOutline,
+  mdiTimerSandEmpty,
 } from "@mdi/js"
 import { Link } from "@tanstack/react-router"
 
@@ -12,7 +13,7 @@ import { usePostHog } from "../contexts/AnalyticsContext"
 import type { RecipeNavItem } from "../hooks/useRecipeNav"
 import { recipeNavHotkeyLabels, recipeNavHotkeys } from "../lib/recipeHotkeys"
 import { markRecipeNavigation } from "../lib/recipeTransition"
-import { recipeTimes, recipeUrl } from "../utils/recipe"
+import { recipeTimes, recipeUrl, recipeWaitingNote } from "../utils/recipe"
 import { AddToMealPlanButton } from "./AddToMealPlanButton"
 import { CookModeToggle } from "./CookModeToggle"
 import { Icon } from "./Icon"
@@ -35,7 +36,17 @@ function HeroRating({ rating }: { rating: number }) {
   )
 }
 
-function HeroStat({ label, value, icon }: { label: string; value: string; icon: string }) {
+function HeroStat({
+  label,
+  value,
+  icon,
+  note,
+}: {
+  label: string
+  value: string
+  icon: string
+  note?: string | null
+}) {
   return (
     <div className="flex flex-col items-start gap-1">
       <span className="flex items-center gap-1 font-sans text-xs font-semibold tracking-widest text-gray-400 uppercase">
@@ -43,19 +54,27 @@ function HeroStat({ label, value, icon }: { label: string; value: string; icon: 
         {label}
       </span>
       <span className="font-sans text-sm font-semibold text-white">{value}</span>
+      {note && <span className="max-w-48 font-sans text-xs text-gray-400">incl. {note}</span>}
     </div>
   )
 }
 
 function HeroStats({ recipe }: { recipe: RecipeOutput }) {
   const { prep: prepTime, cook: cookTime, total: totalTime } = recipeTimes(recipe)
+  const waiting = recipeWaitingNote(recipe.extras)
   const rating = recipe.rating != null ? Math.round(recipe.rating) : null
-  if (!prepTime && !cookTime && !totalTime && !recipe.recipeServings && rating == null) return null
+  if (!prepTime && !cookTime && !totalTime && !waiting && !recipe.recipeServings && rating == null)
+    return null
   return (
     <div className="flex shrink-0 flex-wrap items-end gap-x-6 gap-y-3 pb-1">
       {prepTime && <HeroStat icon={mdiTimerOutline} label="Prep" value={prepTime} />}
       {cookTime && <HeroStat icon={mdiTimerOutline} label="Cook" value={cookTime} />}
-      {totalTime && <HeroStat icon={mdiTimerOutline} label="Total" value={totalTime} />}
+      {totalTime && (
+        <HeroStat icon={mdiTimerOutline} label="Total" value={totalTime} note={waiting} />
+      )}
+      {!totalTime && waiting && (
+        <HeroStat icon={mdiTimerSandEmpty} label="Waiting" value={waiting} />
+      )}
       {recipe.recipeServings != null && recipe.recipeServings > 0 && (
         <HeroStat
           icon={mdiAccountGroup}

@@ -1,7 +1,10 @@
+import { renderHook } from "@testing-library/react"
+import { NuqsTestingAdapter } from "nuqs/adapters/testing"
+import type { ReactNode } from "react"
 import { describe, expect, it } from "vitest"
 
 import type { RecipeSummary } from "../api/generated/types.gen"
-import { applyRecipeFilters } from "./useRecipeFilters"
+import { applyRecipeFilters, useRecipeFilters } from "./useRecipeFilters"
 
 function makeRecipe(overrides: Partial<RecipeSummary> = {}): RecipeSummary {
   return {
@@ -210,5 +213,62 @@ describe("applyRecipeFilters", () => {
       expect(result).toHaveLength(1)
       expect(result[0].totalTime).toBe("4 hours")
     })
+  })
+})
+
+describe("hands-on filter", () => {
+  it("buckets recipes by their prep time", () => {
+    const quick = makeRecipe({ name: "Quick", prepTimeSeconds: 600, performTimeSeconds: 25200 })
+    const fiddly = makeRecipe({ name: "Fiddly", prepTimeSeconds: 2400, performTimeSeconds: 600 })
+    expect(applyRecipeFilters([quick, fiddly], "", [], [], null, "under15")).toEqual([quick])
+    expect(applyRecipeFilters([quick, fiddly], "", [], [], null, "over30")).toEqual([fiddly])
+  })
+
+  it("combines with ready-in time for slow-cooker days", () => {
+    const slowCooker = makeRecipe({ prepTimeSeconds: 600, totalTimeSeconds: 25800 })
+    const stirFry = makeRecipe({ prepTimeSeconds: 600, totalTimeSeconds: 1200 })
+    expect(applyRecipeFilters([slowCooker, stirFry], "", [], [], "over120", "under15")).toEqual([
+      slowCooker,
+    ])
+  })
+
+  it("leaves out recipes with no prep time", () => {
+    expect(
+      applyRecipeFilters([makeRecipe({ totalTimeSeconds: 600 })], "", [], [], null, "under15")
+    ).toEqual([])
+  })
+
+  it("uses old text prep times", () => {
+    expect(
+      applyRecipeFilters([makeRecipe({ prepTime: "20 minutes" })], "", [], [], null, "15to30")
+    ).toHaveLength(1)
+  })
+})
+
+describe("useRecipeFilters links", () => {
+  function withParams(searchParams: string) {
+    return ({ children }: { children: ReactNode }) => (
+      <NuqsTestingAdapter searchParams={searchParams}>{children}</NuqsTestingAdapter>
+    )
+  }
+
+  it("ignores unknown time and hands-on values in the link", () => {
+    const recipes = [makeRecipe({ totalTimeSeconds: 600, prepTimeSeconds: 300 })]
+    const { result } = renderHook(() => useRecipeFilters(recipes), {
+      wrapper: withParams("time=under20&handsOn=quick"),
+    })
+    expect(result.current.time).toBeNull()
+    expect(result.current.handsOn).toBeNull()
+    expect(result.current.activeFilterCount).toBe(0)
+    expect(result.current.filtered).toEqual(recipes)
+  })
+
+  it("reads valid time and hands-on values from the link", () => {
+    const { result } = renderHook(() => useRecipeFilters([]), {
+      wrapper: withParams("time=over120&handsOn=under15"),
+    })
+    expect(result.current.time).toBe("over120")
+    expect(result.current.handsOn).toBe("under15")
+    expect(result.current.activeFilterCount).toBe(2)
   })
 })

@@ -4,6 +4,8 @@ import type { ReactNode } from "react"
 
 import { usePostHog } from "../contexts/AnalyticsContext"
 import {
+  HANDS_ON_BUCKETS,
+  type HandsOnBucket,
   PROTEIN_OPTIONS,
   TIME_BUCKETS,
   type TimeBucket,
@@ -68,27 +70,27 @@ function ToggleChip({ icon, label, value, type, active, onToggle }: ToggleChipPr
   )
 }
 
-interface TimeBucketSegmentWithTrackingProps {
-  value: TimeBucket | null
-  onChange: (value: TimeBucket | null) => void
+interface BucketSegmentProps<T extends string> {
+  label: string
+  event: "time_filter_changed" | "hands_on_filter_changed"
+  buckets: { value: T; label: string }[]
+  value: T | null
+  onChange: (value: T | null) => void
 }
 
-function TimeBucketOptionWithTracking({
-  bucket,
-  active,
-  hasBorderLeft,
+function BucketSegment<T extends string>({
+  label,
+  event,
+  buckets,
+  value,
   onChange,
-}: {
-  bucket: (typeof TIME_BUCKETS)[number]
-  active: boolean
-  hasBorderLeft: boolean
-  onChange: (value: TimeBucket | null) => void
-}) {
+}: BucketSegmentProps<T>) {
   const posthog = usePostHog()
 
-  const handleClick = () => {
+  function choose(bucket: { value: T; label: string }) {
+    const active = value === bucket.value
     const newValue = active ? null : bucket.value
-    posthog.capture("time_filter_changed", {
+    posthog.capture(event, {
       time_bucket: newValue,
       time_bucket_label: bucket.label,
       action: active ? "removed" : "added",
@@ -98,39 +100,33 @@ function TimeBucketOptionWithTracking({
   }
 
   return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={active}
-      onClick={handleClick}
-      className={[
-        "flex flex-1 items-center justify-center py-2.5 font-medium text-sm transition-colors",
-        "focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:ring-inset",
-        hasBorderLeft ? "border-gray-700 border-l" : "",
-        active ? "bg-orange-600 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-gray-100",
-      ].join(" ")}
-    >
-      {bucket.label}
-    </button>
-  )
-}
-
-function TimeBucketSegmentWithTracking({ value, onChange }: TimeBucketSegmentWithTrackingProps) {
-  return (
     <div
       role="radiogroup"
-      aria-label="Total time"
+      aria-label={label}
       className="flex w-full overflow-hidden rounded-lg border border-gray-700 bg-gray-800"
     >
-      {TIME_BUCKETS.map((bucket, i) => (
-        <TimeBucketOptionWithTracking
-          key={bucket.value}
-          bucket={bucket}
-          active={value === bucket.value}
-          hasBorderLeft={i > 0}
-          onChange={onChange}
-        />
-      ))}
+      {buckets.map((bucket, i) => {
+        const active = value === bucket.value
+        return (
+          <button
+            key={bucket.value}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => choose(bucket)}
+            className={[
+              "flex flex-1 items-center justify-center py-2.5 font-medium text-sm transition-colors",
+              "focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:ring-inset",
+              i > 0 ? "border-gray-700 border-l" : "",
+              active
+                ? "bg-orange-600 text-white"
+                : "text-gray-300 hover:bg-gray-700 hover:text-gray-100",
+            ].join(" ")}
+          >
+            {bucket.label}
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -144,6 +140,8 @@ interface RecipeFilterDrawerProps {
   onToggleTool: (value: string) => void
   time: TimeBucket | null
   onSetTime: (value: TimeBucket | null) => void
+  handsOn: HandsOnBucket | null
+  onSetHandsOn: (value: HandsOnBucket | null) => void
   activeFilterCount: number
   onClearAll: () => void
 }
@@ -157,6 +155,8 @@ export function RecipeFilterDrawer({
   onToggleTool,
   time,
   onSetTime,
+  handsOn,
+  onSetHandsOn,
   activeFilterCount,
   onClearAll,
 }: RecipeFilterDrawerProps) {
@@ -168,6 +168,7 @@ export function RecipeFilterDrawer({
       previous_proteins: proteins,
       previous_tools: tools,
       previous_time: time,
+      previous_hands_on: handsOn,
     })
     onClearAll()
     onOpenChange(false)
@@ -237,8 +238,28 @@ export function RecipeFilterDrawer({
               ))}
             </FilterSection>
 
-            <FilterSection label="Total time">
-              <TimeBucketSegmentWithTracking value={time} onChange={onSetTime} />
+            <FilterSection label="Ready in">
+              <BucketSegment
+                label="Ready in"
+                event="time_filter_changed"
+                buckets={TIME_BUCKETS}
+                value={time}
+                onChange={onSetTime}
+              />
+            </FilterSection>
+
+            <FilterSection label="Hands-on">
+              <p className="w-full text-sm text-gray-400">
+                Prep time: chopping and putting it together before it cooks. Doesn’t count time at
+                the hob.
+              </p>
+              <BucketSegment
+                label="Hands-on"
+                event="hands_on_filter_changed"
+                buckets={HANDS_ON_BUCKETS}
+                value={handsOn}
+                onChange={onSetHandsOn}
+              />
             </FilterSection>
           </div>
 

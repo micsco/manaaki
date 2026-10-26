@@ -67,6 +67,32 @@ describe("RecipeHeader", () => {
     expect(screen.getByText("50m").parentElement).toHaveTextContent(/total/i)
   })
 
+  it("shows the waiting note under the total time", () => {
+    render(
+      <RecipeHeader
+        recipe={{
+          ...minimalRecipe,
+          prepTimeSeconds: 900,
+          performTimeSeconds: 1800,
+          totalTimeSeconds: 12600,
+          extras: { waitingTime: "marinate 3 h" },
+        }}
+        img={null}
+      />
+    )
+    expect(screen.getByText("3h 30m").parentElement).toHaveTextContent("incl. marinate 3 h")
+  })
+
+  it("shows the waiting note on its own when there is no total", () => {
+    render(
+      <RecipeHeader
+        recipe={{ ...minimalRecipe, extras: { waitingTime: "chill 1 h" } }}
+        img={null}
+      />
+    )
+    expect(screen.getByText("chill 1 h").parentElement).toHaveTextContent(/waiting/i)
+  })
+
   it("renders an 'All recipes' back link", () => {
     render(<RecipeHeader recipe={minimalRecipe} img={null} />)
     expect(screen.getByRole("link", { name: /all recipes/i })).toBeInTheDocument()

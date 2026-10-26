@@ -127,6 +127,8 @@ function RecipeList() {
     toggleTool,
     time,
     setTimeBucket,
+    handsOn,
+    setHandsOnBucket,
     activeFilterCount,
     clearAll,
     filtered,
@@ -153,6 +155,11 @@ function RecipeList() {
 
   function handleSetTimeBucket(value: Parameters<typeof setTimeBucket>[0]) {
     setTimeBucket(value)
+    scrollToTop()
+  }
+
+  function handleSetHandsOn(value: Parameters<typeof setHandsOnBucket>[0]) {
+    setHandsOnBucket(value)
     scrollToTop()
   }
 
@@ -276,6 +283,8 @@ function RecipeList() {
         onToggleTool={handleToggleTool}
         time={time}
         onSetTime={handleSetTimeBucket}
+        handsOn={handsOn}
+        onSetHandsOn={handleSetHandsOn}
         activeFilterCount={activeFilterCount}
         onClearAll={handleClearAll}
       />

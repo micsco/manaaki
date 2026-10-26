@@ -133,6 +133,18 @@ export function recipeTotalMinutes(recipe: TimedRecipe): number | null {
   return wholeMinutes(prep + cook)
 }
 
+export function recipeHandsOnMinutes(recipe: TimedRecipe): number | null {
+  const seconds = durationSeconds(recipe.prepTimeSeconds, recipe.prepTime)
+  return seconds === null ? null : wholeMinutes(seconds)
+}
+
+export function recipeWaitingNote(
+  extras: Record<string, unknown> | null | undefined
+): string | null {
+  const note = extras?.waitingTime
+  return typeof note === "string" && note.trim() ? note.trim() : null
+}
+
 export function recipeTimes(recipe: TimedRecipe) {
   const total = recipeTotalMinutes(recipe)
   return {

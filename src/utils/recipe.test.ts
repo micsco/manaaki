@@ -11,8 +11,10 @@ import {
   ingredientAlternatives,
   mealieRecipeUrl,
   parseTimeMinutes,
+  recipeHandsOnMinutes,
   recipeTimes,
   recipeTotalMinutes,
+  recipeWaitingNote,
   recipeImageUrl,
   scaleQuantity,
   shouldPluralizeFood,
@@ -697,5 +699,25 @@ describe("shouldPluralizeFood", () => {
   it("pluralises foods with no quantity", () => {
     expect(shouldPluralizeFood(0, false)).toBe(true)
     expect(shouldPluralizeFood(null, true)).toBe(true)
+  })
+})
+
+describe("recipeHandsOnMinutes", () => {
+  it("reads structured prep time, falling back to text", () => {
+    expect(recipeHandsOnMinutes({ prepTimeSeconds: 900 })).toBe(15)
+    expect(recipeHandsOnMinutes({ prepTime: "1 hour" })).toBe(60)
+    expect(recipeHandsOnMinutes({ performTimeSeconds: 900 })).toBeNull()
+  })
+})
+
+describe("recipeWaitingNote", () => {
+  it("returns the saved waiting note", () => {
+    expect(recipeWaitingNote({ waitingTime: " marinate 2 h " })).toBe("marinate 2 h")
+  })
+
+  it("ignores missing, blank or non-text notes", () => {
+    expect(recipeWaitingNote(undefined)).toBeNull()
+    expect(recipeWaitingNote({ waitingTime: " " })).toBeNull()
+    expect(recipeWaitingNote({ waitingTime: 3 })).toBeNull()
   })
 })

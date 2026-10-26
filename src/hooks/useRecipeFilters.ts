@@ -14,7 +14,7 @@ import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs"
 import { useMemo } from "react"
 
 import type { RecipeSummary } from "../api/generated/types.gen"
-import { recipeTotalMinutes } from "../utils/recipe"
+import { recipeHandsOnMinutes, recipeTotalMinutes } from "../utils/recipe"
 
 export type TimeBucket = "under30" | "30to60" | "60to120" | "over120"
 
@@ -24,6 +24,17 @@ export const TIME_BUCKETS: { value: TimeBucket; label: string; icon: string }[] 
   { value: "60to120", label: "1–2h", icon: mdiClock },
   { value: "over120", label: "2h+", icon: mdiClock },
 ]
+
+export type HandsOnBucket = "under15" | "15to30" | "over30"
+
+export const HANDS_ON_BUCKETS: { value: HandsOnBucket; label: string }[] = [
+  { value: "under15", label: "Under 15m" },
+  { value: "15to30", label: "15–30m" },
+  { value: "over30", label: "30m+" },
+]
+
+const TIME_VALUES = new Set<string>(TIME_BUCKETS.map(bucket => bucket.value))
+const HANDS_ON_VALUES = new Set<string>(HANDS_ON_BUCKETS.map(bucket => bucket.value))
 
 export const PROTEIN_OPTIONS: { value: string; label: string; icon: string }[] = [
   { value: "chicken", label: "Chicken", icon: mdiFoodDrumstick },
@@ -46,6 +57,15 @@ function matchesTimeFilter(recipe: RecipeSummary, bucket: TimeBucket): boolean {
   if (bucket === "30to60") return minutes >= 30 && minutes < 60
   if (bucket === "60to120") return minutes >= 60 && minutes < 120
   return minutes >= 120
+}
+
+function matchesHandsOn(recipe: RecipeSummary, bucket: HandsOnBucket | null): boolean {
+  if (!bucket) return true
+  const minutes = recipeHandsOnMinutes(recipe)
+  if (minutes === null) return false
+  if (bucket === "under15") return minutes < 15
+  if (bucket === "15to30") return minutes >= 15 && minutes < 30
+  return minutes >= 30
 }
 
 function recipeNameFields(recipe: RecipeSummary): string[] {
@@ -85,14 +105,16 @@ export function applyRecipeFilters(
   search: string,
   proteins: string[],
   tools: string[],
-  time: TimeBucket | null
+  time: TimeBucket | null,
+  handsOn: HandsOnBucket | null = null
 ): RecipeSummary[] {
   return recipes.filter(
     recipe =>
       matchesSearch(recipe, search) &&
       matchesProteins(recipe, proteins) &&
       matchesTools(recipe, tools) &&
-      matchesTime(recipe, time)
+      matchesTime(recipe, time) &&
+      matchesHandsOn(recipe, handsOn)
   )
 }
 
@@ -103,13 +125,17 @@ export function useRecipeFilters(recipes: RecipeSummary[]) {
     parseAsArrayOf(parseAsString).withDefault([])
   )
   const [tools, setTools] = useQueryState("tool", parseAsArrayOf(parseAsString).withDefault([]))
-  const [time, setTime] = useQueryState("time", parseAsString.withDefault(""))
+  const [timeParam, setTime] = useQueryState("time", parseAsString.withDefault(""))
+  const time = TIME_VALUES.has(timeParam) ? (timeParam as TimeBucket) : null
+  const [handsOnParam, setHandsOn] = useQueryState("handsOn", parseAsString.withDefault(""))
+  const handsOn = HANDS_ON_VALUES.has(handsOnParam) ? (handsOnParam as HandsOnBucket) : null
 
-  const activeFilterCount = proteins.length + tools.length + (time ? 1 : 0) + (search ? 1 : 0)
+  const activeFilterCount =
+    proteins.length + tools.length + (time ? 1 : 0) + (handsOn ? 1 : 0) + (search ? 1 : 0)
 
   const filtered = useMemo(
-    () => applyRecipeFilters(recipes, search, proteins, tools, (time as TimeBucket) || null),
-    [recipes, search, proteins, tools, time]
+    () => applyRecipeFilters(recipes, search, proteins, tools, time, handsOn),
+    [recipes, search, proteins, tools, time, handsOn]
   )
 
   function toggleProtein(value: string) {
@@ -126,11 +152,16 @@ export function useRecipeFilters(recipes: RecipeSummary[]) {
     void setTime(value ?? "")
   }
 
+  function setHandsOnBucket(value: HandsOnBucket | null) {
+    void setHandsOn(value ?? "")
+  }
+
   function clearAll() {
     void setSearch("")
     void setProteins([])
     void setTools([])
     void setTime("")
+    void setHandsOn("")
   }
 
   return {
@@ -140,8 +171,10 @@ export function useRecipeFilters(recipes: RecipeSummary[]) {
     toggleProtein,
     tools,
     toggleTool,
-    time: (time as TimeBucket) || null,
+    time,
     setTimeBucket,
+    handsOn,
+    setHandsOnBucket,
     activeFilterCount,
     clearAll,
     filtered,
