@@ -10,7 +10,6 @@ const AnalyticsContext = createContext(createBufferedAnalytics(false))
 export const usePostHog = () => useContext(AnalyticsContext)
 
 export function AnalyticsProvider({ children }: { children: ReactNode }) {
-  const analytics = appAnalytics
   const fetching = useIsFetching()
   const started = useRef(false)
 
@@ -22,7 +21,7 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
       if (cancelled) return
       started.current = true
       void loadAnalytics()
-        .then(client => analytics.connect(client))
+        .then(client => appAnalytics.connect(client))
         .catch(() => {
           started.current = false
         })
@@ -36,9 +35,9 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
       window.clearTimeout(timer)
       if (idle !== undefined) window.cancelIdleCallback(idle)
     }
-  }, [analytics, fetching])
+  }, [fetching])
 
-  return <AnalyticsContext.Provider value={analytics}>{children}</AnalyticsContext.Provider>
+  return <AnalyticsContext.Provider value={appAnalytics}>{children}</AnalyticsContext.Provider>
 }
 
 export function AnalyticsPageViews() {
