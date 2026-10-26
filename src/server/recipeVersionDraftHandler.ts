@@ -243,7 +243,7 @@ export async function recipeVersionDraftHandler(request: Request): Promise<Respo
           const draftMetrics: DraftMetrics = {
             model: usage.model,
             thinkingLevel: usage.thinkingLevel,
-            connectMs: usage.connectMs,
+            firstChunkMs: usage.firstChunkMs,
             inputTokens: usage.inputTokens,
             outputTokens: usage.outputTokens,
             thinkingTokens: usage.thinkingTokens,

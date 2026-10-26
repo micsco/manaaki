@@ -259,6 +259,12 @@ it("shows each drafting stage as the AI works", async () => {
     "aria-current",
     "step"
   )
+  act(() =>
+    report({ type: "progress", stage: "thinking", thought: "Splitting food between zones" })
+  )
+  expect(within(stages).getByText("Splitting food between zones")).toBeInTheDocument()
+  act(() => report({ type: "progress", stage: "thinking" }))
+  expect(within(stages).getByText("Splitting food between zones")).toBeInTheDocument()
   act(() => report({ type: "progress", stage: "writing", steps: 3 }))
   expect(
     within(stages)
@@ -266,5 +272,6 @@ it("shows each drafting stage as the AI works", async () => {
       .closest("li")
   ).toHaveAttribute("aria-current", "step")
   expect(within(stages).getByText("· 3 so far")).toBeInTheDocument()
+  expect(within(stages).queryByText("Splitting food between zones")).not.toBeInTheDocument()
   expect(screen.getByText(/Usually 20–60 seconds/)).toBeInTheDocument()
 })

@@ -146,7 +146,12 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
         target,
         notes,
         controller.signal,
-        setProgress
+        event =>
+          setProgress(previous =>
+            event.stage === "thinking" && !event.thought && previous?.stage === "thinking"
+              ? previous
+              : event
+          )
       )
       if (controller.signal.aborted) return
       setReview(initialReview(result))
@@ -161,7 +166,7 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
         client_ms: Date.now() - startedAt,
         model: result.metrics?.model,
         thinking_level: result.metrics?.thinkingLevel,
-        connect_ms: result.metrics?.connectMs,
+        first_chunk_ms: result.metrics?.firstChunkMs,
         input_tokens: result.metrics?.inputTokens,
         output_tokens: result.metrics?.outputTokens,
         thinking_tokens: result.metrics?.thinkingTokens,

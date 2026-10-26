@@ -1,10 +1,11 @@
 import {
   FinishReason,
+  ThinkingLevel,
   type GenerateContentParameters,
   type GenerateContentResponse,
   type GenerateContentResponseUsageMetadata,
+  type Part,
   GoogleGenAI,
-  ThinkingLevel,
 } from "@google/genai"
 import { PostHogGoogleGenAI } from "@posthog/ai/gemini"
 import { z } from "zod"
@@ -212,7 +213,7 @@ export type DraftUsage = {
   thinkingTokens: number
   model: string
   thinkingLevel: GeminiThinkingLevel | "default"
-  connectMs: number
+  firstChunkMs: number | null
   firstTokenMs: number | null
   modelMs: number
 }
@@ -224,7 +225,29 @@ const THINKING_LEVELS: Record<GeminiThinkingLevel, ThinkingLevel> = {
   high: ThinkingLevel.HIGH,
 }
 
-export type DraftProgress = { stage: "thinking" } | { stage: "writing"; steps: number }
+export type DraftProgress =
+  | { stage: "thinking"; thought?: string }
+  | { stage: "writing"; steps: number }
+
+const MAX_THOUGHT_CHARS = 140
+
+export function summariseThought(text: string): string | null {
+  const heading = [...text.matchAll(/\*\*(.+?)\*\*/g)].at(-1)?.[1]
+  if (!heading && text.includes("**")) return null
+  const line = (heading ?? text.split("\n").find(part => part.trim()) ?? "")
+    .replace(/[*_`#>]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+  if (!line) return null
+  return line.length > MAX_THOUGHT_CHARS ? `${line.slice(0, MAX_THOUGHT_CHARS - 1)}…` : line
+}
+
+function thoughtText(parts: Part[]): string {
+  return parts
+    .filter(part => part.thought && part.text)
+    .map(part => part.text ?? "")
+    .join("")
+}
 
 export function stepsWritten(partialJson: string): number {
   const opening = /"steps"\s*:\s*\[/.exec(partialJson)
@@ -284,25 +307,37 @@ export async function generateRecipeVersionDraft(
       responseJsonSchema,
       maxOutputTokens: 16000,
       abortSignal: signal,
-      ...(thinkingLevel
-        ? { thinkingConfig: { thinkingLevel: THINKING_LEVELS[thinkingLevel] } }
-        : {}),
+      thinkingConfig: {
+        includeThoughts: true,
+        ...(thinkingLevel ? { thinkingLevel: THINKING_LEVELS[thinkingLevel] } : {}),
+      },
     },
   }
   const stream = await streamGeminiContent(apiKey, params, target)
 
-  let connectMs: number | null = null
   let text = ""
+  let firstChunkMs: number | null = null
+  let thoughts = ""
+  let reportedThought: string | null = null
   let firstTokenMs: number | null = null
   let blocked: string | undefined
   let finish: FinishReason | undefined
   let usage: GenerateContentResponseUsageMetadata | undefined
   let reportedSteps = -1
   for await (const chunk of stream) {
-    connectMs ??= Math.round(performance.now() - startedAt)
     blocked = chunk.promptFeedback?.blockReason ?? blocked
     finish = chunk.candidates?.[0]?.finishReason ?? finish
     usage = chunk.usageMetadata ?? usage
+    firstChunkMs ??= Math.round(performance.now() - startedAt)
+    const thinking = thoughtText(chunk.candidates?.[0]?.content?.parts ?? [])
+    if (thinking) {
+      thoughts += thinking
+      const thought = summariseThought(thoughts)
+      if (thought && thought !== reportedThought) {
+        reportedThought = thought
+        onProgress({ stage: "thinking", thought })
+      }
+    }
     const piece = chunk.text ?? ""
     if (!piece) continue
     firstTokenMs ??= Math.round(performance.now() - startedAt)
@@ -338,7 +373,7 @@ export async function generateRecipeVersionDraft(
       thinkingTokens: usage?.thoughtsTokenCount ?? 0,
       model,
       thinkingLevel: thinkingLevel ?? "default",
-      connectMs: connectMs ?? Math.round(performance.now() - startedAt),
+      firstChunkMs,
       firstTokenMs,
       modelMs: Math.round(performance.now() - startedAt),
     },

@@ -29,6 +29,7 @@ export function RecipeVersionProgress({
   const current = stageIndex(progress)
   const seconds = Math.max(0, Math.round((now - startedAt) / 1000))
   const steps = progress?.stage === "writing" ? progress.steps : 0
+  const thought = progress?.stage === "thinking" ? progress.thought : undefined
 
   return (
     <div className="space-y-3 rounded-xl border border-gray-800 bg-gray-950/60 p-4">
@@ -59,6 +60,9 @@ export function RecipeVersionProgress({
                 {stage.label}
                 {stage.key === "writing" && state === "active" && steps > 0 && (
                   <span className="text-gray-400"> · {steps} so far</span>
+                )}
+                {stage.key === "thinking" && state === "active" && thought && (
+                  <span className="block text-xs text-gray-400 italic">{thought}</span>
                 )}
               </span>
             </li>
