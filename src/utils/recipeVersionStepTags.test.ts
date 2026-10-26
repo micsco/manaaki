@@ -36,6 +36,9 @@ describe("stepTagParts", () => {
   it("lists the zone, function, setting and time that are set", () => {
     expect(stepTagParts(airFry)).toEqual(["Zone 2", "Air Fry", "190°C", "10 min"])
     expect(stepTagParts(prep)).toEqual([])
+    expect(
+      stepTagParts({ ...prep, zone: "hob", function: "Hob", setting: "HI", minutes: 4 })
+    ).toEqual(["Hob", "HI", "4 min"])
   })
 })
 

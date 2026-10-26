@@ -11,13 +11,20 @@ export function formatMinutes(minutes: number): string {
   return rest ? `${hours} h ${rest} min` : `${hours} h`
 }
 
+function capitalise(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
 export function stepTagParts(tag: StepTag): string[] {
-  return [
+  const parts = [
     tag.zone,
     tag.function,
     tag.setting,
     tag.minutes === null ? null : formatMinutes(tag.minutes),
-  ].filter((part): part is string => Boolean(part))
+  ].flatMap(part => (part?.trim() ? [capitalise(part.trim())] : []))
+  return parts.filter(
+    (part, index) => parts.findIndex(other => other.toLowerCase() === part.toLowerCase()) === index
+  )
 }
 
 function mentionsMinutes(text: string, minutes: number): boolean {

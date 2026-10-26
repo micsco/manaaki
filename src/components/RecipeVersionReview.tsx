@@ -450,28 +450,32 @@ export function DraftEditor({
                       {step || <span className="text-gray-500">Empty step</span>}
                     </p>
                   )}
-                  {(parts.length > 0 || tag?.alongsidePrevious) && (
-                    <StepChips parts={parts} alongside={Boolean(tag?.alongsidePrevious)} />
-                  )}
-                  <div className="-ml-2 flex gap-1">
-                    <button
-                      type="button"
-                      aria-label={
-                        editing ? `Done editing step ${index + 1}` : `Edit step ${index + 1}`
-                      }
-                      onClick={() => setEditingStep(editing ? null : index)}
-                      className={textButton}
-                    >
-                      {editing ? "Done" : "Edit"}
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`Remove step ${index + 1}`}
-                      onClick={() => removeStep(index)}
-                      className={quietButton}
-                    >
-                      Remove
-                    </button>
+                  <div className="flex flex-wrap items-center justify-between gap-x-3">
+                    {parts.length > 0 || tag?.alongsidePrevious ? (
+                      <StepChips parts={parts} alongside={Boolean(tag?.alongsidePrevious)} />
+                    ) : (
+                      <span />
+                    )}
+                    <div className="-mr-2 flex">
+                      <button
+                        type="button"
+                        aria-label={
+                          editing ? `Done editing step ${index + 1}` : `Edit step ${index + 1}`
+                        }
+                        onClick={() => setEditingStep(editing ? null : index)}
+                        className={textButton}
+                      >
+                        {editing ? "Done" : "Edit"}
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Remove step ${index + 1}`}
+                        onClick={() => removeStep(index)}
+                        className={quietButton}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 </div>
               </li>

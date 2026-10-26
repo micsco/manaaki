@@ -550,7 +550,7 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
               </Link>
               <button
                 type="button"
-                className={`${secondary} flex-1 sm:flex-none`}
+                className={secondary}
                 disabled={busy}
                 onClick={() => setStep({ kind: "choose" })}
               >
@@ -558,7 +558,7 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
               </button>
               <button
                 type="button"
-                className={`${primary} flex-1 sm:flex-none`}
+                className={`${primary} flex-1 whitespace-nowrap sm:flex-none`}
                 disabled={busy || blocked || needsAck || !online}
                 onClick={() => void save()}
               >
