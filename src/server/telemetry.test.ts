@@ -29,6 +29,8 @@ describe("telemetryOptions", () => {
     expect(options.host).toBe("https://eu.i.posthog.com")
     expect(options.traces).toMatchObject({ serviceName: "manaaki" })
     expect(options.metrics).toMatchObject({ serviceName: "manaaki" })
+    expect(options.traces).toMatchObject({ environment: import.meta.env.MODE })
+    expect(options.metrics).toMatchObject({ environment: import.meta.env.MODE })
   })
 })
 
