@@ -53,7 +53,7 @@ export function telemetryOptions(): PostHogOptions {
   const service = {
     serviceName: "manaaki",
     serviceVersion: import.meta.env.VITE_BUILD_GIT_SHA || undefined,
-    environment: globalThis.process?.env?.NODE_ENV || "development",
+    environment: import.meta.env.MODE,
   }
   return { host: posthogIngestionHost(), traces: service, metrics: service }
 }
@@ -66,7 +66,7 @@ function createClient(): PostHog | null {
     globalThis.process?.once?.("beforeExit", () => void posthog.shutdown())
     return posthog
   }
-  if (globalThis.process?.env?.NODE_ENV === "development") console.warn(MISSING_TOKEN_WARNING)
+  if (import.meta.env.DEV) console.warn(MISSING_TOKEN_WARNING)
   return null
 }
 

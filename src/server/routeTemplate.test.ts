@@ -12,6 +12,11 @@ describe("routeTemplate", () => {
     ["/recipes/chicken-fajitas", "/recipes/{slug}"],
     [`/recipes/${RECIPE_ID}/chicken-fajitas`, "/recipes/{id}/{slug}"],
     [`/recipes/${RECIPE_ID}/chicken-fajitas/new-version`, "/recipes/{id}/{slug}/new-version"],
+    ["/recipes/OFMhUL-aT5afeiIpxbt8Iw/chicken-fajitas", "/recipes/{id}/{slug}"],
+    [
+      "/recipes/OFMhUL-aT5afeiIpxbt8Iw/chicken-fajitas/new-version",
+      "/recipes/{id}/{slug}/new-version",
+    ],
     ["/api/recipes", "/api/recipes"],
     ["/api/recipes/chicken-fajitas", "/api/recipes/{slug}"],
     [`/api/recipes/${RECIPE_ID}/comments`, "/api/recipes/{slug}/comments"],

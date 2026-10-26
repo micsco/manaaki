@@ -28,9 +28,9 @@ function isId(segment: string): boolean {
 
 function pageTemplate(segments: string[]): string[] {
   if (segments[0] !== "recipes" || segments.length < 2) return segments
-  const [, first, second, ...rest] = segments
+  const [, , second, ...rest] = segments
   if (second === undefined) return ["recipes", "{slug}"]
-  return ["recipes", isId(first) ? "{id}" : first, "{slug}", ...rest]
+  return ["recipes", "{id}", "{slug}", ...rest]
 }
 
 function apiTemplate(segments: string[]): string[] {
