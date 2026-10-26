@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { goodAirFryerDraft, ovenSource } from "../test/fixtures/recipeVersionDrafts"
+import {
+  goodAirFryerDraft,
+  goodAirFryerStepTags,
+  ovenSource,
+} from "../test/fixtures/recipeVersionDrafts"
 import { installTestPostHog } from "../test/serverPostHog"
 import {
   AiNotConfiguredError,
@@ -60,6 +64,7 @@ beforeEach(() => {
   vi.mocked(runRecipeVersionPipeline).mockReset()
   vi.mocked(runRecipeVersionPipeline).mockResolvedValue({
     draft: goodAirFryerDraft,
+    stepTags: goodAirFryerStepTags,
     usage: {
       calls: 2,
       inputTokens: 3000,
@@ -133,6 +138,7 @@ describe("generateRecipeVersionDraft", () => {
       [{ provider: "claude", model: "claude-sonnet-5-5", setting: null }, "claude-key"],
     ])
     expect(result.draft).toEqual(goodAirFryerDraft)
+    expect(result.stepTags).toEqual(goodAirFryerStepTags)
     expect(result.usage).toMatchObject({
       model: "gemini-3.8-flash",
       escalationModel: "claude-sonnet-5-5",

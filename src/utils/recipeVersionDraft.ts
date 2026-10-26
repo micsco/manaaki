@@ -296,6 +296,14 @@ export function blockingChecks(checks: DraftCheck[]): DraftCheck[] {
   return checks.filter(check => check.level === "block")
 }
 
+export type StepTag = {
+  zone: string | null
+  function: string | null
+  setting: string | null
+  minutes: number | null
+  alongsidePrevious: boolean
+}
+
 export type DraftMetrics = {
   model: string
   escalationModel: string | null
@@ -329,6 +337,7 @@ export type DraftStreamEvent =
   | {
       type: "result"
       draft: RecipeVersionDraft
+      stepTags: StepTag[]
       checks: DraftCheck[]
       source: DraftSource
       metrics: DraftMetrics

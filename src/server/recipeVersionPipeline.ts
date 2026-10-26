@@ -7,12 +7,14 @@ import {
   type DraftCheck,
   type DraftSource,
   type RecipeVersionDraft,
+  type StepTag,
 } from "../utils/recipeVersionDraft"
 import { COOKING_METHOD_LABELS, type CookingMethod } from "../utils/recipeVersions"
 import { addUsage, type CallUsage, type DraftingModel } from "./recipeVersionModels"
 import {
   type Finding,
   STRUCTURED_RULES,
+  stepTagsOf,
   type StructuredDraft,
   structuredDraftSchema,
   tagFindings,
@@ -23,6 +25,7 @@ import { type DraftProgress, stepsWritten, summariseThought } from "./recipeVers
 
 export type PipelineOutcome = {
   draft: RecipeVersionDraft
+  stepTags: StepTag[]
   usage: CallUsage
   initialProblems: number
   repairRan: boolean
@@ -213,5 +216,5 @@ export async function runRecipeVersionPipeline({
       else outcome.repairFixed = true
     }
   }
-  return { draft: toDraft(structured), usage, ...outcome }
+  return { draft: toDraft(structured), stepTags: stepTagsOf(structured), usage, ...outcome }
 }

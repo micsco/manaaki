@@ -198,7 +198,7 @@ export async function recipeVersionDraftHandler(request: Request): Promise<Respo
         }, HEARTBEAT_MS)
         try {
           const source = toSource(recipe, draftRecipe)
-          const { draft, usage } = await generateRecipeVersionDraft({
+          const { draft, stepTags, usage } = await generateRecipeVersionDraft({
             recipe: draftRecipe,
             source,
             target,
@@ -258,7 +258,7 @@ export async function recipeVersionDraftHandler(request: Request): Promise<Respo
           })
           recordDraftOutcome(target, usage.model, "ok", 200, draftMetrics.totalMs)
           recordDraftTokens(draftMetrics)
-          send({ type: "result", draft, checks, source, metrics: draftMetrics })
+          send({ type: "result", draft, stepTags, checks, source, metrics: draftMetrics })
         } catch (failure) {
           const event = failureEvent(failure, signal)
           if (event.status === 500) console.error(failure)

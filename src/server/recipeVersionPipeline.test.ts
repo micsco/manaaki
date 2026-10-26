@@ -88,6 +88,14 @@ describe("runRecipeVersionPipeline", () => {
     expect(outcome.draft.cookMinutes).toBe(430)
     expect(outcome.draft.totalMinutes).toBe(445)
     expect(outcome.draft.steps[1]).toMatch(/LO for 7 hours/)
+    expect(outcome.stepTags).toHaveLength(outcome.draft.steps.length)
+    expect(outcome.stepTags[1]).toEqual({
+      zone: good.steps[1].zone,
+      function: good.steps[1].function,
+      setting: good.steps[1].setting,
+      minutes: good.steps[1].minutes,
+      alongsidePrevious: good.steps[1].alongsidePrevious,
+    })
     expect(onProgress.mock.calls.map(([event]) => event.stage)).toEqual([
       "thinking",
       "thinking",

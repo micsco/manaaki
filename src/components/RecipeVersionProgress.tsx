@@ -92,7 +92,7 @@ export function RecipeVersionProgress({
           : (STAGES[current]?.label ?? STAGES[0].label)}
       </p>
       <p className="text-sm text-gray-400">
-        {seconds} s. Usually 20–60 seconds; the AI plans the whole method before it starts writing.
+        {seconds} s. Usually 10–30 seconds; the AI plans the whole method before it starts writing.
       </p>
     </div>
   )

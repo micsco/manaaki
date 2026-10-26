@@ -6,6 +6,7 @@ import type {
   DraftSource,
   DraftStreamEvent,
   RecipeVersionDraft,
+  StepTag,
 } from "../utils/recipeVersionDraft"
 import {
   COOKING_METHOD_LABELS,
@@ -32,6 +33,7 @@ const DRAFT_URL = "/api/manaaki/recipe-versions/draft"
 
 export type DraftResponse = {
   draft: RecipeVersionDraft
+  stepTags: StepTag[]
   checks: DraftCheck[]
   source: DraftSource
   metrics?: DraftMetrics
@@ -111,6 +113,7 @@ export async function requestRecipeVersionDraft(
       else
         return {
           draft: event.draft,
+          stepTags: event.stepTags ?? [],
           checks: event.checks,
           source: event.source,
           metrics: event.metrics,

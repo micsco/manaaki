@@ -1,7 +1,7 @@
 import { captureAiGeneration } from "@posthog/ai"
 
 import { describeAppliance, householdAppliance } from "../utils/householdAppliances"
-import type { DraftSource, RecipeVersionDraft } from "../utils/recipeVersionDraft"
+import type { DraftSource, RecipeVersionDraft, StepTag } from "../utils/recipeVersionDraft"
 import { COOKING_METHOD_LABELS, type CookingMethod } from "../utils/recipeVersions"
 import {
   claudeApiKey,
@@ -136,7 +136,7 @@ export type DraftUsage = {
   modelMs: number
 }
 
-export type DraftResult = { draft: RecipeVersionDraft; usage: DraftUsage }
+export type DraftResult = { draft: RecipeVersionDraft; stepTags: StepTag[]; usage: DraftUsage }
 
 export type DraftRequest = {
   recipe: DraftRequestRecipe
@@ -251,6 +251,7 @@ export async function generateRecipeVersionDraft({
   })
   return {
     draft: outcome.draft,
+    stepTags: outcome.stepTags,
     usage: {
       inputTokens: outcome.usage.inputTokens,
       outputTokens: outcome.usage.outputTokens,

@@ -32,8 +32,9 @@ import {
   type CookingMethod,
   VERSION_EXTRAS_KEYS,
 } from "../utils/recipeVersions"
+import { initialStepPlans } from "../utils/recipeVersionStepTags"
 import { RecipeVersionProgress } from "./RecipeVersionProgress"
-import { CheckList, DraftEditor, OriginalPanel, type ReviewState } from "./RecipeVersionReview"
+import { DraftEditor, OriginalPanel, type ReviewState, ReviewSummary } from "./RecipeVersionReview"
 
 const METHODS: CookingMethod[] = ["oven", "airFryer", "slowCooker"]
 
@@ -44,9 +45,10 @@ type Step =
   | { kind: "saving"; response: DraftResponse }
   | { kind: "unlinked"; recipe: SavedRecipeRef }
 
-type SavedReview = Omit<ReviewState, "acceptedChanges" | "acceptedNew"> & {
+type SavedReview = Omit<ReviewState, "acceptedChanges" | "acceptedNew" | "stepPlans"> & {
   acceptedChanges: number[]
   acceptedNew: number[]
+  stepPlans?: ReviewState["stepPlans"]
 }
 
 type SavedVersionDraft = {
@@ -81,6 +83,7 @@ function restoreReview(review: SavedReview | null): ReviewState | null {
         ...review,
         acceptedChanges: new Set(review.acceptedChanges),
         acceptedNew: new Set(review.acceptedNew),
+        stepPlans: review.stepPlans ?? review.draft.steps.map(() => null),
       }
     : null
 }
@@ -117,6 +120,7 @@ export function acceptedOnly(review: ReviewState): RecipeVersionDraft {
 function initialReview(response: DraftResponse): ReviewState {
   return {
     draft: response.draft,
+    stepPlans: initialStepPlans(response.draft.steps, response.stepTags ?? []),
     acceptedChanges: new Set(response.draft.ingredientChanges.map(change => change.index)),
     acceptedNew: new Set(response.draft.newIngredients.map((_, index) => index)),
     acknowledged: false,
@@ -359,8 +363,8 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
 
   return (
     <main className="min-h-dvh bg-gray-950 text-gray-100">
-      <div className="mx-auto max-w-7xl space-y-6 px-4 pt-5 pb-32">
-        <div className="space-y-2">
+      <div className="mx-auto max-w-7xl space-y-6 px-4 pt-5 pb-52 md:pb-32">
+        <div className={`space-y-2 ${response ? "" : "mx-auto max-w-2xl"}`}>
           <Link
             to={backTo}
             className="inline-flex min-h-11 items-center text-sm text-gray-400 hover:text-gray-200"
@@ -369,14 +373,14 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
           </Link>
           <h1 className="font-serif text-3xl font-bold">New version with AI</h1>
           <p className="max-w-2xl text-sm text-gray-400">
-            Gemini drafts a new method for “{recipe.name}”. Nothing is saved until you review the
-            draft and choose Save.
+            AI drafts a new method for “{recipe.name}”. Nothing is saved until you review the draft
+            and choose Save.
           </p>
         </div>
 
         {(step.kind === "choose" || step.kind === "drafting") && (
           <form
-            className="max-w-2xl space-y-4 rounded-2xl border border-gray-800 bg-gray-900/60 p-4 sm:p-6"
+            className="mx-auto max-w-2xl space-y-4 rounded-2xl border border-gray-800 bg-gray-900/60 p-4 sm:p-6"
             onSubmit={event => {
               event.preventDefault()
               void draft()
@@ -419,7 +423,7 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
                 maxLength={500}
                 value={notes}
                 disabled={busy}
-                placeholder="e.g. 5.5 L basket, cook in two batches"
+                placeholder="e.g. use one drawer only, extra crispy chips"
                 onChange={event => setNotes(event.target.value)}
                 className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-base text-gray-100"
               />
@@ -451,19 +455,7 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
 
         {response && review && target && (
           <>
-            <section aria-label="Checks" className="grid gap-3 lg:grid-cols-2">
-              <CheckList checks={checks} />
-              {review.draft.assumptions.length > 0 && (
-                <div className="rounded-xl border border-gray-800 bg-gray-900/60 p-3 text-sm text-gray-300">
-                  <p className="font-semibold text-gray-200">The AI assumed:</p>
-                  <ul className="mt-1 list-disc space-y-1 pl-5">
-                    {review.draft.assumptions.map(assumption => (
-                      <li key={assumption}>{assumption}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </section>
+            <ReviewSummary checks={checks} assumptions={review.draft.assumptions} />
 
             <div
               role="group"
@@ -494,12 +486,11 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
               <OriginalPanel
                 recipe={recipe}
                 source={response.source}
-                state={review}
                 className={
                   view === "draft"
                     ? "hidden"
                     : view === "both"
-                      ? "hidden lg:sticky lg:top-4 lg:block lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto"
+                      ? "hidden lg:sticky lg:top-4 lg:block lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto"
                       : ""
                 }
               />
@@ -535,7 +526,7 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
       </div>
 
       {response && review && target && (
-        <div className="sticky bottom-0 border-t border-gray-800 bg-gray-950/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xs">
+        <div className="sticky bottom-[calc(var(--app-navigation-height,0px)+env(safe-area-inset-bottom,0px))] z-20 border-t border-gray-800 bg-gray-950/95 backdrop-blur-xs">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3">
             {checks.some(check => check.level === "warn") && (
               <label className="flex min-h-11 items-center gap-2 text-sm text-amber-100">
@@ -553,13 +544,13 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
                 Fix the “Must fix” items to save.
               </p>
             )}
-            <div className="ml-auto flex flex-wrap gap-3">
-              <Link to={backTo} className={`${secondary} inline-flex items-center`}>
+            <div className="flex w-full gap-3 sm:ml-auto sm:w-auto">
+              <Link to={backTo} className={`${secondary} hidden items-center sm:inline-flex`}>
                 Cancel
               </Link>
               <button
                 type="button"
-                className={secondary}
+                className={`${secondary} flex-1 sm:flex-none`}
                 disabled={busy}
                 onClick={() => setStep({ kind: "choose" })}
               >
@@ -567,7 +558,7 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
               </button>
               <button
                 type="button"
-                className={primary}
+                className={`${primary} flex-1 sm:flex-none`}
                 disabled={busy || blocked || needsAck || !online}
                 onClick={() => void save()}
               >

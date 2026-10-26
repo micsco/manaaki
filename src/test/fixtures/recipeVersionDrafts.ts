@@ -1,4 +1,4 @@
-import type { DraftSource, RecipeVersionDraft } from "../../utils/recipeVersionDraft"
+import type { DraftSource, RecipeVersionDraft, StepTag } from "../../utils/recipeVersionDraft"
 
 export const ovenSource: DraftSource = {
   name: "BBQ Chicken Twice-Baked Potatoes",
@@ -39,6 +39,24 @@ export const goodAirFryerDraft: RecipeVersionDraft = {
   assumptions: ["A 5.5 L basket fits four potato halves at once."],
   confidence: "high",
 }
+
+export const goodAirFryerStepTags: StepTag[] = [
+  {
+    zone: "Zone 1",
+    function: "Air Fry",
+    setting: "190°C",
+    minutes: 45,
+    alongsidePrevious: false,
+  },
+  { zone: null, function: null, setting: null, minutes: null, alongsidePrevious: false },
+  {
+    zone: "Zone 1",
+    function: "Air Fry",
+    setting: "180°C",
+    minutes: 10,
+    alongsidePrevious: false,
+  },
+]
 
 export function draftWith(patch: Partial<RecipeVersionDraft>): RecipeVersionDraft {
   return { ...goodAirFryerDraft, ...patch }

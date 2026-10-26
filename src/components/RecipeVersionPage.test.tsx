@@ -6,7 +6,11 @@ import type { RecipeOutput } from "../api/generated/types.gen"
 import * as api from "../api/recipeVersions"
 import { appAnalytics } from "../lib/analytics"
 import { resetUpdateHoldsForTesting, updateBlockers } from "../pwa/updateHolds"
-import { goodAirFryerDraft, ovenSource } from "../test/fixtures/recipeVersionDrafts"
+import {
+  goodAirFryerDraft,
+  goodAirFryerStepTags,
+  ovenSource,
+} from "../test/fixtures/recipeVersionDrafts"
 import { act, render, screen, within } from "../test/render"
 import { RecipeVersionPage } from "./RecipeVersionPage"
 
@@ -48,6 +52,7 @@ const saved = { id: "22222222-2222-4222-8222-222222222222", slug: "bbq-af", name
 function respond(draft = goodAirFryerDraft) {
   vi.mocked(api.requestRecipeVersionDraft).mockResolvedValue({
     draft,
+    stepTags: draft === goodAirFryerDraft ? goodAirFryerStepTags : [],
     checks: [],
     source: ovenSource,
   })
@@ -120,6 +125,7 @@ describe("RecipeVersionPage", () => {
     const { user } = await openReview({ ...goodAirFryerDraft, totalMinutes: 10 })
     expect(screen.getByText(/total time is shorter/)).toBeVisible()
     expect(screen.getByRole("button", { name: "Save new version" })).toBeDisabled()
+    await user.click(screen.getByRole("button", { name: "Edit details" }))
     const total = screen.getByLabelText("Total (min)")
     await user.clear(total)
     await user.type(total, "70")
@@ -168,14 +174,38 @@ describe("RecipeVersionPage", () => {
 
   it("lets the cook edit and remove steps and see the original method", async () => {
     const { user } = await openReview()
+    await user.click(screen.getByRole("button", { name: "Edit step 2" }))
+    const step = screen.getByLabelText("Step 2")
+    await user.clear(step)
+    await user.type(step, "Mash the filling.")
+    await user.click(screen.getByRole("button", { name: "Done editing step 2" }))
+    expect(screen.getByText("Mash the filling.")).toBeVisible()
     await user.click(screen.getByRole("button", { name: "Remove step 3" }))
-    expect(screen.queryByLabelText("Step 3")).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Edit step 3" })).not.toBeInTheDocument()
     const original = screen.getByRole("region", { name: "Original recipe" })
     expect(within(original).getByText(/Preheat the oven to 200°C/)).toBeInTheDocument()
     expect(screen.getByText(/new method doesn't/)).toBeVisible()
     await user.click(screen.getByLabelText("I've checked the warnings"))
     await user.click(screen.getByRole("button", { name: "Save new version" }))
-    expect(vi.mocked(api.saveRecipeVersion).mock.calls[0][0].draft.steps).toHaveLength(2)
+    expect(vi.mocked(api.saveRecipeVersion).mock.calls[0][0].draft.steps).toEqual([
+      goodAirFryerDraft.steps[0],
+      "Mash the filling.",
+    ])
+  })
+
+  it("labels steps with their zone, setting and time, and lists the cooking plan", async () => {
+    const { user } = await openReview()
+    const draft = screen.getByRole("region", { name: "New version" })
+    const plan = within(draft).getByRole("list", { name: "Cooking plan" })
+    expect(within(plan).getAllByRole("listitem")).toHaveLength(2)
+    expect(within(plan).getByText("45 min")).toBeInTheDocument()
+    expect(within(plan).getByText("180°C")).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "Edit step 3" }))
+    const step = screen.getByLabelText("Step 3")
+    await user.clear(step)
+    await user.type(step, "Air fry at 180°C for 14 minutes.")
+    expect(within(plan).getAllByRole("listitem")).toHaveLength(1)
+    expect(within(plan).queryByText("180°C")).not.toBeInTheDocument()
   })
 })
 
@@ -230,13 +260,17 @@ describe("RecipeVersionPage leaving", () => {
     expect(blockers.at(-1)?.shouldBlockFn()).toBe(false)
   })
 
-  it("lists accepted new ingredients beside the original ones", async () => {
+  it("lists the draft's ingredients with accepted changes, leaving the original as it was", async () => {
     await openReview({
       ...goodAirFryerDraft,
       newIngredients: [{ text: "spray oil", reason: "for the basket" }],
     })
     const original = screen.getByRole("region", { name: "Original recipe" })
-    expect(within(original).getByText("+ spray oil")).toBeInTheDocument()
+    const draft = screen.getByRole("region", { name: "New version" })
+    expect(within(draft).getByText("+ spray oil")).toBeInTheDocument()
+    expect(within(draft).getByText("→ 1")).toBeInTheDocument()
+    expect(within(original).queryByText("+ spray oil")).not.toBeInTheDocument()
+    expect(within(original).queryByText("→ 1")).not.toBeInTheDocument()
   })
 })
 
@@ -284,7 +318,7 @@ it("shows each drafting stage as the AI works", async () => {
   act(() => report({ type: "progress", stage: "fixing", problems: 1, escalated: true }))
   expect(within(stages).getByText("Asking a stronger model to fix 1 problem")).toBeInTheDocument()
   expect(within(stages).queryByText("Splitting food between zones")).not.toBeInTheDocument()
-  expect(screen.getByText(/Usually 20–60 seconds/)).toBeInTheDocument()
+  expect(screen.getByText(/Usually 10–30 seconds/)).toBeInTheDocument()
 })
 
 describe("RecipeVersionPage across reloads", () => {

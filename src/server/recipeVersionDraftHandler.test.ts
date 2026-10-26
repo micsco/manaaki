@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { goodAirFryerDraft } from "../test/fixtures/recipeVersionDrafts"
+import { goodAirFryerDraft, goodAirFryerStepTags } from "../test/fixtures/recipeVersionDrafts"
 import { installTestPostHog } from "../test/serverPostHog"
 import { AiDraftError, AiNotConfiguredError, generateRecipeVersionDraft } from "./recipeVersionAi"
 import { recipeVersionDraftHandler, resetDraftRateLimit } from "./recipeVersionDraftHandler"
@@ -79,6 +79,7 @@ beforeEach(() => {
   resetDraftRateLimit()
   vi.mocked(generateRecipeVersionDraft).mockResolvedValue({
     draft: goodAirFryerDraft,
+    stepTags: goodAirFryerStepTags,
     usage: {
       inputTokens: 1,
       outputTokens: 2,
@@ -117,6 +118,7 @@ describe("recipeVersionDraftHandler", () => {
     expect(sent.map(event => event.stage ?? event.type)).toEqual(["checking", "result"])
     const body = sent.at(-1)
     expect(body.draft).toEqual(goodAirFryerDraft)
+    expect(body.stepTags).toEqual(goodAirFryerStepTags)
     expect(body.metrics).toMatchObject({
       model: "gemini-3.8-flash",
       inputTokens: 1,
@@ -151,6 +153,7 @@ describe("recipeVersionDraftHandler", () => {
         traceIdSeenByModel = activeTraceId()
         return {
           draft: goodAirFryerDraft,
+          stepTags: goodAirFryerStepTags,
           usage: {
             inputTokens: 1,
             outputTokens: 2,
@@ -441,6 +444,7 @@ describe("recipeVersionDraftHandler", () => {
       onProgress?.({ stage: "fixing", problems: 1, escalated: false })
       return {
         draft: goodAirFryerDraft,
+        stepTags: goodAirFryerStepTags,
         usage: {
           inputTokens: 1,
           outputTokens: 2,

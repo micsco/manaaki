@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 import { findFunction, type HouseholdAppliance } from "../utils/householdAppliances"
-import type { RecipeVersionDraft } from "../utils/recipeVersionDraft"
+import type { RecipeVersionDraft, StepTag } from "../utils/recipeVersionDraft"
 import { planCookMinutes, validatePlan } from "../utils/recipeVersionPlan"
 import { draftSchema } from "./recipeVersionSchema"
 
@@ -54,6 +54,10 @@ export function toDraft(structured: StructuredDraft): RecipeVersionDraft {
     cookMinutes,
     totalMinutes: structured.prepMinutes + cookMinutes + waitingMinutes,
   }
+}
+
+export function stepTagsOf(structured: StructuredDraft): StepTag[] {
+  return structured.steps.map(({ text: _text, ...tag }) => tag)
 }
 
 export type Finding = { step: number | null; message: string }
