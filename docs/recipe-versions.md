@@ -86,7 +86,7 @@ Server settings (runtime environment only, never `VITE_` variables):
 | `CLAUDE_API_KEY` | Claude key (`ANTHROPIC_API_KEY` also works). |
 | `CLAUDE_EFFORT` | `low`, `medium`, `high`, `xhigh` or `max`; unset uses the model's default. |
 | `RECIPE_ESCALATION_MODEL` | Model for a second repair attempt when the first doesn't fix every problem (default `claude-sonnet-5-5`, used only when its key is set; `none` turns it off). |
-| `RECIPE_PROMPT_VERSION` | `v2` (default) or `v1`, the earlier prompt, kept for comparison. |
+| `RECIPE_PROMPT_VERSION` | `v2` (default), `v3` (v2 plus rules to carry every cue, tip and serving suggestion over and give realistic hands-on times) or `v1`, the earliest prompt, kept for comparison. |
 | `RECIPE_VERSION_DRAFTS_PER_HOUR` | Drafts per person per hour (default 10). |
 
 ### How a draft is made
@@ -129,21 +129,54 @@ the prompt, model or thinking level. It runs on your machine, uses your own
 3. It runs the automated checks, then asks a judge (Claude Opus 5.5 at high effort
    when there's a Claude key, so Gemini doesn't mark its own work) to score
    each draft from 1 to 5 on appliance use, temperatures, timings, food safety,
-   completeness and clarity, with up to five issues.
+   completeness and clarity, with up to five issues. Each issue has a category
+   (liquid, capacity, settings, temperature, timing, doneness, lostDetail,
+   ingredients, clarity or other), so the report can count what goes wrong most.
+   Some cases have a reference: how the author or the household cooks the dish on
+   the target appliance. The fattoush case removes the author's own oven
+   alternative from the steps and gives it to the judge; the twice-baked potatoes
+   case uses the household's linked air fryer version. The judge uses a reference
+   to check temperatures, times and approach without marking down other methods
+   that would also work.
 4. It writes `evals/results/<time>/report.html` (summary by drafter with time,
    tokens, cost at current and 2027 prices, checks and scores, then each recipe side
    by side with scores, checks, issues and the steps) and `results.json`. Prices are
-   in `evals/recipe-versions/prices.ts`.
+   in `evals/recipe-versions/prices.ts`. The summary also counts, for each
+   drafter, the recipes it scored better, worse or the same on than the first
+   drafter, and the issues per draft in each category. Overall differences under
+   about 0.15 are noise; per-recipe counts and the categories show more.
 
 Options, as environment variables: `EVAL_DRAFTERS` (comma-separated, default
 Gemini low, medium and high, plus Claude Haiku, Sonnet and Opus when `CLAUDE_API_KEY`
-is set; each is `gemini[:level][@v1|@v2]` or `claude-<model>[:effort][@v1|@v2]`),
+is set; each is `gemini[:level][@v1|@v2|@v3]` or `claude-<model>[:effort][@v1|@v2|@v3]`, or a full pipeline such as
+`structured/gemini:low>claude-sonnet-5-5`; `structured+carry/…` adds the rule sets in
+`evals/recipe-versions/promptVariants.ts` (`liquid`, `load`, `carry`) to the v2
+prompt to test them),
 `EVAL_CASES` (comma-separated slugs), `EVAL_REPEATS` (default 1), `EVAL_JUDGE=0` to
 skip the judge, `EVAL_JUDGE_MODEL` (default `claude-opus-5-5` when there's a Claude key,
 otherwise `GEMINI_MODEL`),
 `EVAL_CONCURRENCY` (default 3) and `EVAL_RECIPE_SOURCE` (default the live site). Each
-draft costs one judge call too, so 18 recipes × 6 drafters is 108 drafts plus 108
+draft costs one judge call too, so 20 recipes × 6 drafters is 120 drafts plus 120
 judge calls.
+
+### Prompt rule results (October 2026)
+
+20 recipes × 2 repeats per arm, structured Gemini low with Sonnet escalation, judged
+by Opus:
+
+| Rules added to v2 | Overall | Completeness | Lost-detail issues per draft | Cost per draft |
+|---|---|---|---|---|
+| none | 3.92 | 3.95 | 1.07 | $0.0053 |
+| `liquid` | 3.88 | 3.98 | 0.88 | $0.0056 |
+| `load` | 3.98 | 4.03 | 0.97 | $0.0057 |
+| `carry` | 4.00 | 4.38 | 0.60 | $0.0059 |
+| all three | 4.03 | 4.38 | 0.45 | $0.0065 |
+
+Only `carry` changed anything beyond noise: completeness rose on 12 recipes and fell
+on 3. It became `v3`. Its hands-on-time rules didn't improve the timing scores, and
+`liquid` and `load` didn't reduce liquid or capacity issues. No public dataset pairs
+the same recipe for oven, air fryer and slow cooker, so references come from the
+household's own recipes.
 
 ## Notes
 

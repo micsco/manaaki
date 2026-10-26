@@ -45,8 +45,15 @@ export const recipeEscalationModel = (): string | null => {
   return value.toLowerCase() === "none" ? null : value
 }
 
-export const recipePromptVersion = (): "v1" | "v2" =>
-  globalThis.process?.env?.RECIPE_PROMPT_VERSION?.trim().toLowerCase() === "v1" ? "v1" : "v2"
+export const PROMPT_VERSION_NAMES = ["v1", "v2", "v3"] as const
+export type PromptVersionName = (typeof PROMPT_VERSION_NAMES)[number]
+export const isPromptVersionName = (value: string): value is PromptVersionName =>
+  PROMPT_VERSION_NAMES.some(name => name === value)
+
+export const recipePromptVersion = (): PromptVersionName => {
+  const value = globalThis.process?.env?.RECIPE_PROMPT_VERSION?.trim().toLowerCase() ?? ""
+  return isPromptVersionName(value) ? value : "v2"
+}
 
 const THINKING_LEVELS = ["low", "medium", "high"] as const
 export type GeminiThinkingLevel = (typeof THINKING_LEVELS)[number]

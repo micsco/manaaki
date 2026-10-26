@@ -127,6 +127,8 @@ describe("server env", () => {
     expect(claudeApiKey()).toBe("preferred")
     expect(claudeEffort()).toBe("high")
     expect(recipePromptVersion()).toBe("v1")
+    process.env.RECIPE_PROMPT_VERSION = " V3 "
+    expect(recipePromptVersion()).toBe("v3")
     process.env.CLAUDE_EFFORT = "turbo"
     process.env.RECIPE_PROMPT_VERSION = "v9"
     expect(claudeEffort()).toBeNull()

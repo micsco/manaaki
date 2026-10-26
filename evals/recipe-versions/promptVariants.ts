@@ -1,3 +1,5 @@
+import { CARRY_OVER_RULES } from "../../src/server/recipeVersionAi"
+
 export const PROMPT_VARIANTS = {
   liquid: `
 Liquids: decide where every liquid goes and how much is left when the dish is served.
@@ -11,9 +13,7 @@ Capacity: before writing the steps, work out what goes where and check it fits.
 - Slow cooker: Slow Cook and Braise work best with the pot between half and two-thirds full. For a small quantity, use the shorter end of the time range; for a big batch, check the pot isn't overfilled.
 - Oven: name a tin or dish size that holds the food in one layer.
 - Record the plan in assumptions: what goes in each zone or tin, and roughly how much.`,
-  carry: `
-Carry everything over: list for yourself every cue, tip, baste, turn, resting time, garnish and serving suggestion in the original, and make sure each one appears in your method or notes. Leave one out only when the new appliance makes it pointless, and then say why in assumptions. Don't remove a stage that builds flavour (browning, reducing, basting with pan juices) unless you replace it.
-Hands-on times must be realistic for a home cook: softening onions takes 8 to 10 minutes, browning meat takes about 4 to 5 minutes per batch of roughly 500 g (so brown larger amounts in batches), and reducing a sauce by half takes 5 to 10 minutes. Include these in prep or cook time.`,
+  carry: CARRY_OVER_RULES,
 } as const
 
 export type PromptVariant = keyof typeof PROMPT_VARIANTS

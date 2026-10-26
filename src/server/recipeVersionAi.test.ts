@@ -5,6 +5,7 @@ import { installTestPostHog } from "../test/serverPostHog"
 import {
   AiNotConfiguredError,
   buildPrompt,
+  CARRY_OVER_RULES,
   type DraftRequestRecipe,
   draftModelConfig,
   escalationModelConfig,
@@ -146,10 +147,21 @@ describe("generateRecipeVersionDraft", () => {
     })
   })
 
-  it("uses the v1 prompt when asked", async () => {
+  it("uses the v1 or v3 prompt when asked", async () => {
     process.env.RECIPE_PROMPT_VERSION = "v1"
     await draft()
     expect(vi.mocked(runRecipeVersionPipeline).mock.calls[0][0].system).toBe(PROMPT_VERSIONS.v1)
+    process.env.RECIPE_PROMPT_VERSION = "v3"
+    const result = await draft()
+    expect(vi.mocked(runRecipeVersionPipeline).mock.calls[1][0].system).toBe(PROMPT_VERSIONS.v3)
+    expect(result.usage.promptVersion).toBe("v3")
+  })
+
+  it("builds v3 from v2 plus the rules for carrying every detail over", () => {
+    expect(PROMPT_VERSIONS.v3).toBe(`${PROMPT_VERSIONS.v2}\n\n${CARRY_OVER_RULES}`)
+    expect(CARRY_OVER_RULES).toBe(CARRY_OVER_RULES.trim())
+    expect(CARRY_OVER_RULES).toContain("Carry everything over")
+    expect(CARRY_OVER_RULES).toContain("softening onions takes 8 to 10 minutes")
   })
 
   it("needs a key for the drafting model", async () => {

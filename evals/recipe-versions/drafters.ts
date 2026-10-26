@@ -1,9 +1,11 @@
+import { isPromptVersionName, type PromptVersionName } from "../../src/server/env"
+
 export type DrafterSpec = {
   label: string
   provider: "gemini" | "claude"
   model: string | null
   setting: string | null
-  promptVersion: "v1" | "v2"
+  promptVersion: PromptVersionName
 }
 
 const GEMINI_LEVELS = new Set(["minimal", "low", "medium", "high"])
@@ -11,7 +13,7 @@ const CLAUDE_EFFORTS = new Set(["low", "medium", "high", "xhigh", "max"])
 
 export function parseDrafter(spec: string): DrafterSpec {
   const [body, version = "v2"] = spec.trim().split("@")
-  if (version !== "v1" && version !== "v2") {
+  if (!isPromptVersionName(version)) {
     throw new Error(`Unknown prompt version "${version}" in ${spec}`)
   }
   const [name, setting = null] = body.split(":")
@@ -41,7 +43,7 @@ export function parseDrafter(spec: string): DrafterSpec {
     }
   }
   throw new Error(
-    `Unknown drafter "${spec}". Use gemini[:level][@v1|@v2] or claude-<model>[:effort][@v1|@v2].`
+    `Unknown drafter "${spec}". Use gemini[:level][@v1|@v2|@v3] or claude-<model>[:effort][@v1|@v2|@v3].`
   )
 }
 

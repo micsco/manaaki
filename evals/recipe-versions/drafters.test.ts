@@ -27,6 +27,10 @@ describe("parseDrafter", () => {
       label: "claude-opus-5-5 low @v2",
       setting: "low",
     })
+    expect(parseDrafter("gemini:low@v3")).toMatchObject({
+      label: "gemini low @v3",
+      promptVersion: "v3",
+    })
   })
 
   it("rejects unknown drafters, settings and versions", () => {
