@@ -33,28 +33,34 @@ recipe, or to the recipe itself, is ignored.
 
 Signed-in cooks can open the recipe actions menu (top right) and choose **Create
 another version with AI…**, which opens a full page at
-`/recipes/<id>/<slug>/new-version`. Pick the appliance, add any notes, and Gemini drafts a
+`/recipes/<id>/<slug>/new-version`. Pick the appliance, add any notes, and the AI drafts a
 new method on Manaaki's server. Nothing is saved until you review it:
 
-- Automated checks run on the draft and again after every edit. **Must fix** items
-  disable Save; other warnings need the "I've checked" tick.
+- Automated checks run on the draft and again after every edit. They share one panel
+  with the AI's assumptions. **Must fix** items disable Save; other warnings need the
+  "I've checked" tick.
+- The draft reads like a recipe: name, times, ingredients, numbered steps and new
+  notes, each with Edit. Each step shows labels from the model's tags (zone,
+  function, setting, time, and "At the same time" for a step that runs alongside
+  the previous one), and a cooking plan lists the timed steps. A step's labels
+  disappear once an edit changes its time.
 - Ingredient changes are listed one by one with a reason, all ticked; untick any you
   don't want. Ingredients are otherwise copied exactly.
 - The original and the draft sit side by side on wide screens, with a switch for
   Side by side, Original only or Draft only (Original / Draft on phones). Changed
-  times show the original value, and the original ingredient list marks changed
-  and removed lines.
+  times show the original value, and the draft's ingredient list marks changed,
+  removed and added lines.
 
-While Gemini works, the page shows the stage it has reached (reading the recipe,
+While the AI works, the page shows the stage it has reached (reading the recipe,
 planning, writing the steps with a running count, running the checks) and the time
-so far. The server streams these as newline-delimited JSON events from Gemini's
+so far. The server streams these as newline-delimited JSON events from the model's
 streaming API.
 
 Each draft records how the model performed, without any recipe text:
 
 - The server logs one `recipe_version_draft` JSON line per draft (Dokploy logs) with
   the outcome, model, input, output and thinking tokens, the time to load the recipe
-  from Mealie, time to Gemini's first streamed chunk (`firstChunkMs`, usually a thought
+  from Mealie, time to the model's first streamed chunk (`firstChunkMs`, usually a thought
   summary, so roughly connection plus reading the prompt), time to the first word of
   the draft (`firstTokenMs`), model time, checks time and total
   time, plus the number of blocking checks and warnings and the confidence. Failures
