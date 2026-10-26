@@ -10,8 +10,8 @@ import { describe, expect, it } from "vitest"
 import type { RecipeOutput } from "../../src/api/generated/types.gen"
 import { geminiModel } from "../../src/server/env"
 import { generateRecipeVersionDraft } from "../../src/server/recipeVersionAi"
-import { toDraftRecipe, toSource } from "../../src/server/recipeVersionSource"
 import { checkDraft } from "../../src/utils/recipeVersionDraft"
+import { caseInput } from "./caseInput"
 import { EVAL_CASES } from "./cases"
 import { drafterEnvironment, parseDrafters } from "./drafters"
 import { claudeJudge, geminiJudge, type Judge } from "./judge"
@@ -107,7 +107,13 @@ describe.skipIf(!ready)("recipe version eval (live models)", () => {
       }. Keys from ${envFile ?? "the environment"}.`
     )
     const recipes = new Map<string, RecipeOutput>()
-    for (const example of cases) recipes.set(example.slug, await fetchRecipe(example.slug))
+    for (const slug of new Set(
+      cases.flatMap(example => [
+        example.slug,
+        ...(example.referenceSlug ? [example.referenceSlug] : []),
+      ])
+    ))
+      recipes.set(slug, await fetchRecipe(slug))
 
     const runs: EvalRun[] = []
     const baseGeminiModel = geminiModel()
@@ -125,6 +131,11 @@ describe.skipIf(!ready)("recipe version eval (live models)", () => {
       )
       await inBatches(jobs, concurrency, async ({ example, repeat }) => {
         const recipe = recipes.get(example.slug)!
+        const input = caseInput(
+          example,
+          recipe,
+          example.referenceSlug ? recipes.get(example.referenceSlug)! : null
+        )
         const run: EvalRun = {
           slug: example.slug,
           name: recipe.name ?? example.slug,
@@ -134,8 +145,7 @@ describe.skipIf(!ready)("recipe version eval (live models)", () => {
         }
         runs.push(run)
         try {
-          const draftRecipe = toDraftRecipe(recipe)
-          const source = toSource(recipe, draftRecipe)
+          const { recipe: draftRecipe, source, reference } = input
           let draft
           if (entry.kind === "pipeline") {
             const result = await runPipeline(
@@ -181,10 +191,12 @@ describe.skipIf(!ready)("recipe version eval (live models)", () => {
           run.draft = draft
           run.checks = checkDraft(draft, source, example.target)
           if (judge) {
-            run.verdict = await judge.grade(draftRecipe, example.target, draft).catch(failure => {
-              run.judgeError = failure instanceof Error ? failure.message : String(failure)
-              return undefined
-            })
+            run.verdict = await judge
+              .grade(draftRecipe, example.target, draft, reference)
+              .catch(failure => {
+                run.judgeError = failure instanceof Error ? failure.message : String(failure)
+                return undefined
+              })
           }
         } catch (failure) {
           run.error = failure instanceof Error ? failure.message : String(failure)

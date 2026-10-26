@@ -2,11 +2,20 @@ import { describe, expect, it } from "vitest"
 
 import { goodAirFryerDraft } from "../../src/test/fixtures/recipeVersionDrafts"
 import type { JudgeVerdict } from "./judge"
-import { type EvalRun, escapeHtml, mean, median, renderReport, summarise } from "./report"
+import {
+  type EvalRun,
+  escapeHtml,
+  headToHead,
+  mean,
+  median,
+  renderReport,
+  summarise,
+} from "./report"
 
 const verdict = (overall: number): JudgeVerdict => ({
   overall,
-  issues: overall < 4 ? ["Chips and fish finish at different times"] : [],
+  issues:
+    overall < 4 ? [{ category: "timing", text: "Chips and fish finish at different times" }] : [],
   scores: {
     appliance: overall,
     temperatures: overall,
@@ -91,6 +100,25 @@ describe("summarise", () => {
   })
 })
 
+describe("comparing drafters", () => {
+  it("counts issues per draft by category and recipes won or lost against the first drafter", () => {
+    const other = { slug: "harissa-chicken-traybake", name: "Harissa chicken" }
+    const runs = [
+      run("base", { verdict: verdict(3) }),
+      run("base", { ...other, verdict: verdict(4) }),
+      run("new", { verdict: verdict(4) }),
+      run("new", { repeat: 1, verdict: verdict(5) }),
+      run("new", { ...other, verdict: verdict(4) }),
+    ]
+    const [base, challenger] = summarise(runs, ["base", "new"])
+    expect(base.versusFirst).toBeNull()
+    expect(base.issuesPerDraft.timing).toBe(0.5)
+    expect(base.issuesPerDraft.liquid).toBe(0)
+    expect(challenger.versusFirst).toEqual({ wins: 1, losses: 0, ties: 1 })
+    expect(headToHead(runs, "new", "base")).toEqual({ wins: 0, losses: 1, ties: 1 })
+  })
+})
+
 describe("costs", () => {
   it("averages cost only when every successful draft has one", () => {
     const [claude] = summarise(
@@ -128,5 +156,10 @@ describe("renderReport", () => {
     expect(html).toContain("Failed: The AI took too long.")
     expect(html).toContain("4/5")
     expect(html).toContain("63°C is outside the range")
+  })
+
+  it("shows each judge issue with its category", () => {
+    const html = renderReport([run("low", { verdict: verdict(3) })], ["low"], { model: "m" })
+    expect(html).toContain('<span class="muted">timing</span> Chips and fish finish')
   })
 })

@@ -14,25 +14,43 @@ import {
   type RecipeVersionDraft,
 } from "../../../src/utils/recipeVersionDraft"
 import { COOKING_METHOD_LABELS, type CookingMethod } from "../../../src/utils/recipeVersions"
+import { isPromptVariant, type PromptVariant, withVariants } from "../promptVariants"
 import { type Keys, type LabelledConfig, meteredModel, parseModel } from "./models"
 
 export type PipelineSpec =
   | { kind: "single" | "repair"; model: LabelledConfig; label: string }
-  | { kind: "structured"; model: LabelledConfig; escalate: LabelledConfig | null; label: string }
+  | {
+      kind: "structured"
+      model: LabelledConfig
+      escalate: LabelledConfig | null
+      variants: PromptVariant[]
+      label: string
+    }
+
+function parseVariants(names: string[]): PromptVariant[] {
+  return names.map(name => {
+    if (!isPromptVariant(name)) throw new Error(`Unknown prompt variant "${name}".`)
+    return name
+  })
+}
 
 export function parsePipeline(spec: string): PipelineSpec {
-  const [kind, models = ""] = spec.trim().split("/")
+  const [head, models = ""] = spec.trim().split("/")
+  const [kind, ...variantNames] = head.split("+")
   if (kind === "structured") {
     const [first, second] = models.split(">")
     const model = parseModel(first)
     const escalate = second ? parseModel(second) : null
+    const variants = parseVariants(variantNames)
     return {
       kind,
       model,
       escalate,
-      label: `structured ${model.label}${escalate ? ` › ${escalate.label}` : ""}`,
+      variants,
+      label: `structured ${model.label}${escalate ? ` › ${escalate.label}` : ""}${variants.map(variant => ` +${variant}`).join("")}`,
     }
   }
+  if (variantNames.length) throw new Error("Prompt variants only work with structured/.")
   if (kind === "single" || kind === "repair") {
     const model = parseModel(models)
     return { kind, model, label: `${kind} ${model.label}` }
@@ -64,7 +82,7 @@ export async function runPipeline(
   const model = meteredModel(spec.model, keys, meter)
   if (spec.kind === "structured") {
     const outcome = await runRecipeVersionPipeline({
-      system: systemInstruction("v2"),
+      system: withVariants(systemInstruction("v2"), spec.variants),
       prompt: buildPrompt(job.recipe, job.target, ""),
       target: job.target,
       source: job.source,

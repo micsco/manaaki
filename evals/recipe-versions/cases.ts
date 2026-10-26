@@ -1,6 +1,13 @@
 import type { CookingMethod } from "../../src/utils/recipeVersions"
 
-export type EvalCase = { slug: string; target: CookingMethod; why: string }
+export type EvalCase = {
+  slug: string
+  target: CookingMethod
+  why: string
+  method?: CookingMethod
+  referenceInSteps?: RegExp
+  referenceSlug?: string
+}
 
 export const EVAL_CASES: EvalCase[] = [
   {
@@ -92,5 +99,18 @@ export const EVAL_CASES: EvalCase[] = [
     slug: "slow-cooker-pork-shoulder",
     target: "oven",
     why: "Slow cooker pulled pork back to a low oven",
+  },
+  {
+    slug: "air-fryer-chicken-fattoush-salad-recipe",
+    target: "oven",
+    method: "airFryer",
+    referenceInSteps: /\s*Alternatively, bake in the oven[^.]*\./g,
+    why: "The author's own oven alternative is taken out of the steps and given to the judge",
+  },
+  {
+    slug: "bbq-chicken-twice-baked-potatoes",
+    target: "airFryer",
+    referenceSlug: "bbq-chicken-twice-baked-potatoes-air-fryer",
+    why: "The household's own air fryer version is given to the judge",
   },
 ]

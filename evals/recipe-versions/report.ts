@@ -1,6 +1,6 @@
 import type { DraftCheck, RecipeVersionDraft } from "../../src/utils/recipeVersionDraft"
 import type { CookingMethod } from "../../src/utils/recipeVersions"
-import { CRITERIA, type JudgeVerdict } from "./judge"
+import { CRITERIA, ISSUE_CATEGORIES, type IssueCategory, type JudgeVerdict } from "./judge"
 
 export type EvalUsage = {
   inputTokens: number
@@ -53,6 +53,31 @@ export type DrafterSummary = {
   repairsFixed: number
   escalations: number
   escalationsFixed: number
+  issuesPerDraft: Record<IssueCategory, number | null>
+  versusFirst: { wins: number; losses: number; ties: number } | null
+}
+
+function overallByRecipe(runs: EvalRun[], drafter: string): Map<string, number> {
+  const scores = new Map<string, number[]>()
+  for (const run of runs) {
+    if (run.drafter !== drafter || !run.verdict) continue
+    const key = `${run.slug}:${run.target}`
+    scores.set(key, [...(scores.get(key) ?? []), run.verdict.overall])
+  }
+  return new Map([...scores].map(([key, values]) => [key, mean(values)!]))
+}
+
+export function headToHead(runs: EvalRun[], baseline: string, challenger: string) {
+  const base = overallByRecipe(runs, baseline)
+  const tally = { wins: 0, losses: 0, ties: 0 }
+  for (const [key, score] of overallByRecipe(runs, challenger)) {
+    const against = base.get(key)
+    if (against === undefined) continue
+    if (score > against) tally.wins += 1
+    else if (score < against) tally.losses += 1
+    else tally.ties += 1
+  }
+  return tally
 }
 
 export function median(values: number[]): number | null {
@@ -103,6 +128,19 @@ export function summarise(runs: EvalRun[], drafters: string[]): DrafterSummary[]
       repairsFixed: ok.filter(run => run.pipeline?.repairFixed).length,
       escalations: ok.filter(run => run.pipeline?.escalated).length,
       escalationsFixed: ok.filter(run => run.pipeline?.escalationFixed).length,
+      issuesPerDraft: Object.fromEntries(
+        ISSUE_CATEGORIES.map(category => [
+          category,
+          judged.length
+            ? judged.reduce(
+                (sum, verdict) =>
+                  sum + verdict.issues.filter(issue => issue.category === category).length,
+                0
+              ) / judged.length
+            : null,
+        ])
+      ) as Record<IssueCategory, number | null>,
+      versusFirst: drafter === drafters[0] ? null : headToHead(runs, drafters[0], drafter),
     }
   })
 }
@@ -139,12 +177,26 @@ function summaryTable(summaries: DrafterSummary[]): string {
     ["Must-fix checks", s => String(s.blocking)],
     ["Warnings", s => String(s.warnings)],
     ["Mean overall score", s => number(s.meanOverall, 2)],
+    [
+      "Recipes better / worse / same than the first",
+      s =>
+        s.versusFirst
+          ? `${s.versusFirst.wins} / ${s.versusFirst.losses} / ${s.versusFirst.ties}`
+          : "–",
+    ],
     ...CRITERIA.map(
       name =>
         [`Mean ${name}`, (s: DrafterSummary) => number(s.meanScores[name], 2)] as [
           string,
           (s: DrafterSummary) => string,
         ]
+    ),
+    ...ISSUE_CATEGORIES.map(
+      category =>
+        [
+          `Issues per draft: ${category}`,
+          (s: DrafterSummary) => number(s.issuesPerDraft[category], 2),
+        ] as [string, (s: DrafterSummary) => string]
     ),
   ]
   return `<table><thead><tr><th></th>${summaries.map(s => `<th>${escapeHtml(s.drafter)}</th>`).join("")}</tr></thead><tbody>${rows
@@ -161,7 +213,12 @@ function runCell(run: EvalRun | undefined): string {
   const checks = (run.checks ?? [])
     .map(check => `<li class="${check.level}">${escapeHtml(check.message)}</li>`)
     .join("")
-  const issues = (run.verdict?.issues ?? []).map(issue => `<li>${escapeHtml(issue)}</li>`).join("")
+  const issues = (run.verdict?.issues ?? [])
+    .map(
+      issue =>
+        `<li><span class="muted">${escapeHtml(issue.category)}</span> ${escapeHtml(issue.text)}</li>`
+    )
+    .join("")
   const steps = (run.draft?.steps ?? []).map(step => `<li>${escapeHtml(step)}</li>`).join("")
   return `<td>
     <p><strong>${number(run.verdict?.overall ?? null)}/5</strong> · ${seconds(run.usage?.modelMs ?? null)} · ${number(run.usage?.thinkingTokens ?? null)} thinking · confidence ${escapeHtml(run.draft?.confidence)}${run.pipeline ? ` · ${run.pipeline.calls} calls${run.pipeline.repairRan ? ` · repaired${run.pipeline.repairFixed ? "" : " (still failing)"}` : ""}${run.pipeline.escalated ? ` · escalated${run.pipeline.escalationFixed ? "" : " (still failing)"}` : ""}` : ""}${typeof run.costUsd === "number" ? ` · $${run.costUsd.toFixed(4)}` : ""}</p>
