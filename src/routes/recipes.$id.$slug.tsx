@@ -14,7 +14,7 @@ import { useCookMode } from "../contexts/CookModeContext"
 import { useRecipeNav } from "../hooks/useRecipeNav"
 import { recipeNavHotkeys } from "../lib/recipeHotkeys"
 import { markRecipeNavigation } from "../lib/recipeTransition"
-import { decodeRecipeId, recipeImageUrl, recipeUrl } from "../utils/recipe"
+import { decodeRecipeId, recipeImageUrl, recipeTimes, recipeUrl } from "../utils/recipe"
 
 async function loader({ params }: { params: { id: string; slug: string } }): Promise<RecipeOutput> {
   configureApiClient()
@@ -80,16 +80,17 @@ function RecipeDetail() {
   const navigate = useNavigate()
   const { prevRecipe, nextRecipe } = useRecipeNav(recipe.id ?? "")
   const posthog = usePostHog()
+  const totalTime = recipeTimes(recipe).total
 
   useEffect(() => {
     posthog.capture("recipe_viewed", {
       recipe_id: recipe.id,
       recipe_name: recipe.name,
       recipe_rating: recipe.rating,
-      recipe_total_time: recipe.totalTime,
+      recipe_total_time: totalTime,
       has_image: !!img,
     })
-  }, [recipe.id, recipe.name, recipe.rating, recipe.totalTime, img, posthog])
+  }, [recipe.id, recipe.name, recipe.rating, totalTime, img, posthog])
 
   useHotkey(
     recipeNavHotkeys.prev,

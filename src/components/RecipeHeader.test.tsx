@@ -55,6 +55,18 @@ describe("RecipeHeader", () => {
     expect(screen.getByRole("heading", { name: /banana bread/i })).toBeInTheDocument()
   })
 
+  it("shows prep, cook and total times from structured durations", () => {
+    render(
+      <RecipeHeader
+        recipe={{ ...minimalRecipe, prepTimeSeconds: 600, performTimeSeconds: 2400 }}
+        img={null}
+      />
+    )
+    expect(screen.getByText("10m").parentElement).toHaveTextContent(/prep/i)
+    expect(screen.getByText("40m").parentElement).toHaveTextContent(/cook/i)
+    expect(screen.getByText("50m").parentElement).toHaveTextContent(/total/i)
+  })
+
   it("renders an 'All recipes' back link", () => {
     render(<RecipeHeader recipe={minimalRecipe} img={null} />)
     expect(screen.getByRole("link", { name: /all recipes/i })).toBeInTheDocument()

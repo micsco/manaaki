@@ -31,9 +31,9 @@ The in-memory query cache is scoped by user, household and local date, stays fre
 
 Loading placeholders reserve space initially. A failed discovery request offers its own retry while the ordinary recipe catalogue remains available.
 
-## Mealie 3.28.0 compatibility
+## Mealie 3.28 and 3.29 compatibility
 
-Timeline history is group-authorised. Mealie 3.28.0 rejects a `household_id`
+Timeline history is group-authorised. Mealie 3.28.0 and 3.29.0 reject a `household_id`
 query filter with HTTP 400 because that field is an association. Requests omit
 that filter; each page is immediately filtered by the returned `householdId`
 before it enters the household-scoped cache. This also keeps other households'

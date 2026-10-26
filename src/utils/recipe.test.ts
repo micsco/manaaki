@@ -9,6 +9,8 @@ import {
   groupIngredients,
   mealieRecipeUrl,
   parseTimeMinutes,
+  recipeTimes,
+  recipeTotalMinutes,
   recipeImageUrl,
   scaleQuantity,
   UNGROUPED_INGREDIENTS_TITLE,
@@ -493,5 +495,70 @@ describe("groupIngredients", () => {
   it("returns empty array for empty ingredient list", () => {
     const steps = [step("Cook", "ref-1")]
     expect(groupIngredients([], steps)).toHaveLength(0)
+  })
+})
+
+describe("recipeTimes", () => {
+  it("reads the structured durations Mealie 3.29 stores", () => {
+    expect(
+      recipeTimes({ prepTimeSeconds: 600, performTimeSeconds: 2400, totalTimeSeconds: 3600 })
+    ).toEqual({ prep: "10m", cook: "40m", total: "1h" })
+  })
+
+  it("formats hours and minutes from seconds", () => {
+    expect(recipeTimes({ totalTimeSeconds: 15000 }).total).toBe("4h 10m")
+  })
+
+  it("adds prep and cook together when no total is stated", () => {
+    expect(recipeTimes({ prepTimeSeconds: 600, performTimeSeconds: 2400 }).total).toBe("50m")
+  })
+
+  it("does not make up a total from prep alone", () => {
+    expect(recipeTimes({ prepTimeSeconds: 600 })).toEqual({ prep: "10m", cook: null, total: null })
+  })
+
+  it("adds text and structured parts together", () => {
+    expect(recipeTotalMinutes({ prepTime: "15 minutes", performTimeSeconds: 1800 })).toBe(45)
+  })
+
+  it("adds the parts before rounding", () => {
+    expect(recipeTotalMinutes({ prepTimeSeconds: 90, performTimeSeconds: 90 })).toBe(3)
+  })
+
+  it("treats a total of none as missing", () => {
+    expect(
+      recipeTimes({ totalTime: "none", prepTimeSeconds: 600, performTimeSeconds: 1200 }).total
+    ).toBe("30m")
+  })
+
+  it("uses the text times of recipes that have no structured duration", () => {
+    expect(
+      recipeTimes({ prepTime: "15 mins", cookTime: "1 hour", totalTime: "1 hour 15 minutes" })
+    ).toEqual({ prep: "15m", cook: "1h", total: "1h 15m" })
+  })
+
+  it("prefers perform time over the legacy cook time text", () => {
+    expect(recipeTimes({ performTime: "20 minutes", cookTime: "5 minutes" }).cook).toBe("20m")
+  })
+
+  it("keeps free text totals instead of adding up the parts", () => {
+    expect(
+      recipeTimes({ totalTime: "overnight", prepTimeSeconds: 600, performTimeSeconds: 600 }).total
+    ).toBe("overnight")
+    expect(
+      recipeTotalMinutes({ totalTime: "overnight", prepTimeSeconds: 600, performTimeSeconds: 600 })
+    ).toBeNull()
+  })
+
+  it("ignores empty or invalid durations", () => {
+    expect(recipeTimes({ prepTimeSeconds: 0, performTimeSeconds: null })).toEqual({
+      prep: null,
+      cook: null,
+      total: null,
+    })
+  })
+
+  it("rounds short durations up to a minute", () => {
+    expect(recipeTimes({ prepTimeSeconds: 20 }).prep).toBe("1m")
   })
 })

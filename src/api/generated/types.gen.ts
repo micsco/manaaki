@@ -247,6 +247,10 @@ export type AdminAboutInfo = {
      */
     oidcProviderName: string;
     /**
+     * Enablereverseproxyauth
+     */
+    enableReverseProxyAuth: boolean;
+    /**
      * Tokentime
      */
     tokenTime: number;
@@ -254,6 +258,14 @@ export type AdminAboutInfo = {
      * Allowediframehosts
      */
     allowedIframeHosts?: Array<string>;
+    /**
+     * Brandingname
+     */
+    brandingName?: string;
+    /**
+     * Brandinglogourl
+     */
+    brandingLogoUrl?: string | null;
     /**
      * Versionlatest
      */
@@ -351,6 +363,10 @@ export type AppInfo = {
      */
     oidcProviderName: string;
     /**
+     * Enablereverseproxyauth
+     */
+    enableReverseProxyAuth: boolean;
+    /**
      * Tokentime
      */
     tokenTime: number;
@@ -358,6 +374,14 @@ export type AppInfo = {
      * Allowediframehosts
      */
     allowedIframeHosts?: Array<string>;
+    /**
+     * Brandingname
+     */
+    brandingName?: string;
+    /**
+     * Brandinglogourl
+     */
+    brandingLogoUrl?: string | null;
 };
 
 /**
@@ -508,7 +532,7 @@ export type AssignTags = {
 /**
  * AuthMethod
  */
-export type AuthMethod = 'Mealie' | 'LDAP' | 'OIDC';
+export type AuthMethod = 'Mealie' | 'LDAP' | 'OIDC' | 'ReverseProxy';
 
 /**
  * BackupFile
@@ -842,6 +866,14 @@ export type CheckAppConfig = {
      */
     oidcDisabled: boolean;
     /**
+     * Reverseproxyauthready
+     */
+    reverseProxyAuthReady: boolean;
+    /**
+     * Reverseproxyauthdisabled
+     */
+    reverseProxyAuthDisabled: boolean;
+    /**
      * Baseurlset
      */
     baseUrlSet: boolean;
@@ -1117,6 +1149,10 @@ export type CreatePlanEntry = {
      * Recipeid
      */
     recipeId?: string | null;
+    /**
+     * Recipescale
+     */
+    recipeScale?: number;
 };
 
 /**
@@ -2233,6 +2269,10 @@ export type IngredientFoodInput = {
     householdsWithIngredientFood?: Array<string>;
     label?: MultiPurposeLabelSummary | null;
     /**
+     * Recipecount
+     */
+    recipeCount?: number;
+    /**
      * Createdat
      */
     createdAt?: string | null;
@@ -2285,6 +2325,10 @@ export type IngredientFoodOutput = {
      */
     householdsWithIngredientFood?: Array<string>;
     label?: MultiPurposeLabelSummary | null;
+    /**
+     * Recipecount
+     */
+    recipeCount?: number;
     /**
      * Createdat
      */
@@ -2729,6 +2773,20 @@ export type MultiPurposeLabelCreate = {
      * Color
      */
     color?: string;
+};
+
+/**
+ * MultiPurposeLabelMerge
+ */
+export type MultiPurposeLabelMerge = {
+    /**
+     * Fromid
+     */
+    fromId: string;
+    /**
+     * Toid
+     */
+    toId: string;
 };
 
 /**
@@ -3565,6 +3623,20 @@ export type ReadInviteToken = {
 };
 
 /**
+ * ReadMealPlanICalToken
+ */
+export type ReadMealPlanICalToken = {
+    /**
+     * Householdid
+     */
+    householdId: string;
+    /**
+     * Mealplanicaltoken
+     */
+    mealplanIcalToken?: string | null;
+};
+
+/**
  * ReadPlanEntry
  */
 export type ReadPlanEntry = {
@@ -3585,6 +3657,10 @@ export type ReadPlanEntry = {
      * Recipeid
      */
     recipeId?: string | null;
+    /**
+     * Recipescale
+     */
+    recipeScale?: number;
     /**
      * Id
      */
@@ -3700,6 +3776,18 @@ export type RecipeInput = {
      */
     performTime?: string | null;
     /**
+     * Totaltimeseconds
+     */
+    totalTimeSeconds?: number | null;
+    /**
+     * Preptimeseconds
+     */
+    prepTimeSeconds?: number | null;
+    /**
+     * Performtimeseconds
+     */
+    performTimeSeconds?: number | null;
+    /**
      * Description
      */
     description?: string | null;
@@ -3739,10 +3827,6 @@ export type RecipeInput = {
      * Update At
      */
     update_at?: string | null;
-    /**
-     * Lastmade
-     */
-    lastMade?: string | null;
     /**
      * Recipeingredient
      */
@@ -3834,6 +3918,18 @@ export type RecipeOutput = {
      */
     performTime?: string | null;
     /**
+     * Totaltimeseconds
+     */
+    totalTimeSeconds?: number | null;
+    /**
+     * Preptimeseconds
+     */
+    prepTimeSeconds?: number | null;
+    /**
+     * Performtimeseconds
+     */
+    performTimeSeconds?: number | null;
+    /**
      * Description
      */
     description?: string | null;
@@ -3873,10 +3969,6 @@ export type RecipeOutput = {
      * Updatedat
      */
     updatedAt?: string | null;
-    /**
-     * Lastmade
-     */
-    lastMade?: string | null;
     /**
      * Recipeingredient
      */
@@ -3945,6 +4037,32 @@ export type RecipeCategory = {
      * Slug
      */
     slug: string;
+    /**
+     * Recipecount
+     */
+    recipeCount?: number;
+};
+
+/**
+ * RecipeCategoryIn
+ */
+export type RecipeCategoryIn = {
+    /**
+     * Id
+     */
+    id?: string | null;
+    /**
+     * Groupid
+     */
+    groupId?: string | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug?: string | null;
     /**
      * Recipecount
      */
@@ -4117,6 +4235,154 @@ export type RecipeDuplicate = {
      * Name
      */
     name?: string | null;
+};
+
+/**
+ * RecipeIn
+ *
+ * Recipe as accepted on the write path only (create/update/patch request bodies).
+ *
+ * Unlike Recipe -- which is also used for responses and must guarantee real ids/slugs on
+ * its organizers -- this allows a client (e.g. hand-edited or re-imported JSON) to submit
+ * tags/categories/tools that omit id/slug, to be resolved or generated server-side.
+ */
+export type RecipeIn = {
+    /**
+     * Id
+     */
+    id?: string | null;
+    /**
+     * Userid
+     */
+    userId?: string;
+    /**
+     * Householdid
+     */
+    householdId?: string;
+    /**
+     * Groupid
+     */
+    groupId?: string;
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Slug
+     */
+    slug?: string;
+    /**
+     * Image
+     */
+    image?: unknown | null;
+    /**
+     * Recipeservings
+     */
+    recipeServings?: number;
+    /**
+     * Recipeyieldquantity
+     */
+    recipeYieldQuantity?: number;
+    /**
+     * Recipeyield
+     */
+    recipeYield?: string | null;
+    /**
+     * Totaltime
+     */
+    totalTime?: string | null;
+    /**
+     * Preptime
+     */
+    prepTime?: string | null;
+    /**
+     * Cooktime
+     */
+    cookTime?: string | null;
+    /**
+     * Performtime
+     */
+    performTime?: string | null;
+    /**
+     * Totaltimeseconds
+     */
+    totalTimeSeconds?: number | null;
+    /**
+     * Preptimeseconds
+     */
+    prepTimeSeconds?: number | null;
+    /**
+     * Performtimeseconds
+     */
+    performTimeSeconds?: number | null;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Recipecategory
+     */
+    recipeCategory?: Array<RecipeCategoryIn> | null;
+    /**
+     * Tags
+     */
+    tags?: Array<RecipeTagIn> | null;
+    /**
+     * Tools
+     */
+    tools?: Array<RecipeToolIn>;
+    /**
+     * Rating
+     */
+    rating?: number | null;
+    /**
+     * Orgurl
+     */
+    orgURL?: string | null;
+    /**
+     * Dateadded
+     */
+    dateAdded?: string | null;
+    /**
+     * Dateupdated
+     */
+    dateUpdated?: string | null;
+    /**
+     * Createdat
+     */
+    createdAt?: string | null;
+    /**
+     * Update At
+     */
+    update_at?: string | null;
+    /**
+     * Recipeingredient
+     */
+    recipeIngredient?: Array<RecipeIngredientInput>;
+    /**
+     * Recipeinstructions
+     */
+    recipeInstructions?: Array<RecipeStep> | null;
+    nutrition?: Nutrition | null;
+    settings?: RecipeSettings | null;
+    /**
+     * Assets
+     */
+    assets?: Array<RecipeAsset> | null;
+    /**
+     * Notes
+     */
+    notes?: Array<RecipeNote> | null;
+    /**
+     * Extras
+     */
+    extras?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Comments
+     */
+    comments?: Array<RecipeCommentOutInput> | null;
 };
 
 /**
@@ -4475,6 +4741,18 @@ export type RecipeSummary = {
      */
     performTime?: string | null;
     /**
+     * Totaltimeseconds
+     */
+    totalTimeSeconds?: number | null;
+    /**
+     * Preptimeseconds
+     */
+    prepTimeSeconds?: number | null;
+    /**
+     * Performtimeseconds
+     */
+    performTimeSeconds?: number | null;
+    /**
      * Description
      */
     description?: string | null;
@@ -4514,10 +4792,6 @@ export type RecipeSummary = {
      * Updatedat
      */
     updatedAt?: string | null;
-    /**
-     * Lastmade
-     */
-    lastMade?: string | null;
 };
 
 /**
@@ -4540,6 +4814,41 @@ export type RecipeTag = {
      * Slug
      */
     slug: string;
+    /**
+     * Recipecount
+     */
+    recipeCount?: number;
+};
+
+/**
+ * RecipeTagIn
+ *
+ * Lenient variant of RecipeTag accepted only on the recipe write path (JSON import/edit),
+ * where a client may omit id/slug and expect them to be resolved or generated server-side.
+ * Never used for responses -- RecipeTag itself stays strictly required there.
+ *
+ * Deliberately does not subclass RecipeTag: narrowing id/slug from required to optional in a
+ * subclass would be an unsound field override (mypy correctly rejects it), so this is built as
+ * an independent sibling with the same fields instead, matching how RecipeToolCreate/Save/Out
+ * are already kept as separate classes elsewhere in this module rather than narrowing each other.
+ */
+export type RecipeTagIn = {
+    /**
+     * Id
+     */
+    id?: string | null;
+    /**
+     * Groupid
+     */
+    groupId?: string | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug?: string | null;
     /**
      * Recipecount
      */
@@ -4776,6 +5085,52 @@ export type RecipeToolCreate = {
 };
 
 /**
+ * RecipeToolIn
+ *
+ * Lenient variant of RecipeTool accepted only on the recipe write path. See RecipeTagIn.
+ */
+export type RecipeToolIn = {
+    /**
+     * Id
+     */
+    id?: string | null;
+    /**
+     * Groupid
+     */
+    groupId?: string | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug?: string | null;
+    /**
+     * Recipecount
+     */
+    recipeCount?: number;
+    /**
+     * Householdswithtool
+     */
+    householdsWithTool?: Array<string>;
+};
+
+/**
+ * RecipeToolMerge
+ */
+export type RecipeToolMerge = {
+    /**
+     * Fromid
+     */
+    fromId: string;
+    /**
+     * Toid
+     */
+    toId: string;
+};
+
+/**
  * RecipeToolOut
  */
 export type RecipeToolOut = {
@@ -4799,6 +5154,10 @@ export type RecipeToolOut = {
      * Slug
      */
     slug: string;
+    /**
+     * Recipecount
+     */
+    recipeCount?: number;
 };
 
 /**
@@ -4859,6 +5218,10 @@ export type RecipeToolResponse = {
      * Slug
      */
     slug: string;
+    /**
+     * Recipecount
+     */
+    recipeCount?: number;
     /**
      * Recipes
      */
@@ -6156,6 +6519,10 @@ export type UpdatePlanEntry = {
      */
     recipeId?: string | null;
     /**
+     * Recipescale
+     */
+    recipeScale?: number;
+    /**
      * Id
      */
     id: number;
@@ -6795,6 +7162,20 @@ export type GetAppThemeApiAppAboutThemeGetResponses = {
 
 export type GetAppThemeApiAppAboutThemeGetResponse = GetAppThemeApiAppAboutThemeGetResponses[keyof GetAppThemeApiAppAboutThemeGetResponses];
 
+export type GetAppBrandingLogoApiAppAboutBrandingLogoGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/app/about/branding-logo';
+};
+
+export type GetAppBrandingLogoApiAppAboutBrandingLogoGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type GetTokenApiAuthTokenPostData = {
     body?: BodyGetTokenApiAuthTokenPost;
     path?: never;
@@ -6879,6 +7260,20 @@ export type OauthNativeTokenApiAuthOauthNativeTokenPostErrors = {
 export type OauthNativeTokenApiAuthOauthNativeTokenPostError = OauthNativeTokenApiAuthOauthNativeTokenPostErrors[keyof OauthNativeTokenApiAuthOauthNativeTokenPostErrors];
 
 export type OauthNativeTokenApiAuthOauthNativeTokenPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type ReverseProxyLoginApiAuthReverseProxyGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/auth/reverse-proxy';
+};
+
+export type ReverseProxyLoginApiAuthReverseProxyGetResponses = {
     /**
      * Successful Response
      */
@@ -9646,6 +10041,174 @@ export type UpdateOneApiHouseholdsMealplansRulesItemIdPutResponses = {
 
 export type UpdateOneApiHouseholdsMealplansRulesItemIdPutResponse = UpdateOneApiHouseholdsMealplansRulesItemIdPutResponses[keyof UpdateOneApiHouseholdsMealplansRulesItemIdPutResponses];
 
+export type DeleteIcalTokenApiHouseholdsMealplansIcalDeleteData = {
+    body?: never;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/households/mealplans/ical';
+};
+
+export type DeleteIcalTokenApiHouseholdsMealplansIcalDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteIcalTokenApiHouseholdsMealplansIcalDeleteError = DeleteIcalTokenApiHouseholdsMealplansIcalDeleteErrors[keyof DeleteIcalTokenApiHouseholdsMealplansIcalDeleteErrors];
+
+export type DeleteIcalTokenApiHouseholdsMealplansIcalDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReadMealPlanICalToken;
+};
+
+export type DeleteIcalTokenApiHouseholdsMealplansIcalDeleteResponse = DeleteIcalTokenApiHouseholdsMealplansIcalDeleteResponses[keyof DeleteIcalTokenApiHouseholdsMealplansIcalDeleteResponses];
+
+export type GetIcalTokenApiHouseholdsMealplansIcalGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/households/mealplans/ical';
+};
+
+export type GetIcalTokenApiHouseholdsMealplansIcalGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetIcalTokenApiHouseholdsMealplansIcalGetError = GetIcalTokenApiHouseholdsMealplansIcalGetErrors[keyof GetIcalTokenApiHouseholdsMealplansIcalGetErrors];
+
+export type GetIcalTokenApiHouseholdsMealplansIcalGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReadMealPlanICalToken;
+};
+
+export type GetIcalTokenApiHouseholdsMealplansIcalGetResponse = GetIcalTokenApiHouseholdsMealplansIcalGetResponses[keyof GetIcalTokenApiHouseholdsMealplansIcalGetResponses];
+
+export type CreateIcalTokenApiHouseholdsMealplansIcalPostData = {
+    body?: never;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/households/mealplans/ical';
+};
+
+export type CreateIcalTokenApiHouseholdsMealplansIcalPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateIcalTokenApiHouseholdsMealplansIcalPostError = CreateIcalTokenApiHouseholdsMealplansIcalPostErrors[keyof CreateIcalTokenApiHouseholdsMealplansIcalPostErrors];
+
+export type CreateIcalTokenApiHouseholdsMealplansIcalPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReadMealPlanICalToken;
+};
+
+export type CreateIcalTokenApiHouseholdsMealplansIcalPostResponse = CreateIcalTokenApiHouseholdsMealplansIcalPostResponses[keyof CreateIcalTokenApiHouseholdsMealplansIcalPostResponses];
+
+export type GetMealplanIcalFeedApiHouseholdsMealplansIcalTokenGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path: {
+        /**
+         * Token
+         */
+        token: string;
+    };
+    query?: {
+        /**
+         * Types
+         */
+        types?: Array<PlanEntryType> | null;
+        /**
+         * Includenotes
+         */
+        includeNotes?: boolean;
+        /**
+         * Tz
+         */
+        tz?: string | null;
+        /**
+         * Breakfast
+         */
+        breakfast?: string | null;
+        /**
+         * Lunch
+         */
+        lunch?: string | null;
+        /**
+         * Dinner
+         */
+        dinner?: string | null;
+        /**
+         * Side
+         */
+        side?: string | null;
+        /**
+         * Snack
+         */
+        snack?: string | null;
+        /**
+         * Drink
+         */
+        drink?: string | null;
+        /**
+         * Dessert
+         */
+        dessert?: string | null;
+    };
+    url: '/api/households/mealplans/ical/{token}';
+};
+
+export type GetMealplanIcalFeedApiHouseholdsMealplansIcalTokenGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetMealplanIcalFeedApiHouseholdsMealplansIcalTokenGetError = GetMealplanIcalFeedApiHouseholdsMealplansIcalTokenGetErrors[keyof GetMealplanIcalFeedApiHouseholdsMealplansIcalTokenGetErrors];
+
+export type GetMealplanIcalFeedApiHouseholdsMealplansIcalTokenGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type GetAllApiHouseholdsMealplansGetData = {
     body?: never;
     headers?: {
@@ -10722,6 +11285,70 @@ export type CreateOneApiGroupsLabelsPostResponses = {
 
 export type CreateOneApiGroupsLabelsPostResponse = CreateOneApiGroupsLabelsPostResponses[keyof CreateOneApiGroupsLabelsPostResponses];
 
+export type GetAllEmptyApiGroupsLabelsEmptyGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/groups/labels/empty';
+};
+
+export type GetAllEmptyApiGroupsLabelsEmptyGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetAllEmptyApiGroupsLabelsEmptyGetError = GetAllEmptyApiGroupsLabelsEmptyGetErrors[keyof GetAllEmptyApiGroupsLabelsEmptyGetErrors];
+
+export type GetAllEmptyApiGroupsLabelsEmptyGetResponses = {
+    /**
+     * Response Get All Empty Api Groups Labels Empty Get
+     *
+     * Successful Response
+     */
+    200: Array<MultiPurposeLabelOut>;
+};
+
+export type GetAllEmptyApiGroupsLabelsEmptyGetResponse = GetAllEmptyApiGroupsLabelsEmptyGetResponses[keyof GetAllEmptyApiGroupsLabelsEmptyGetResponses];
+
+export type MergeLabelsApiGroupsLabelsMergePostData = {
+    body: MultiPurposeLabelMerge;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/groups/labels/merge';
+};
+
+export type MergeLabelsApiGroupsLabelsMergePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MergeLabelsApiGroupsLabelsMergePostError = MergeLabelsApiGroupsLabelsMergePostErrors[keyof MergeLabelsApiGroupsLabelsMergePostErrors];
+
+export type MergeLabelsApiGroupsLabelsMergePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: MultiPurposeLabelOut;
+};
+
+export type MergeLabelsApiGroupsLabelsMergePostResponse = MergeLabelsApiGroupsLabelsMergePostResponses[keyof MergeLabelsApiGroupsLabelsMergePostResponses];
+
 export type DeleteOneApiGroupsLabelsItemIdDeleteData = {
     body?: never;
     headers?: {
@@ -11340,7 +11967,7 @@ export type PatchManyApiRecipesPatchData = {
     /**
      * Data
      */
-    body: Array<RecipeInput>;
+    body: Array<RecipeIn>;
     headers?: {
         /**
          * Accept-Language
@@ -11405,7 +12032,7 @@ export type UpdateManyApiRecipesPutData = {
     /**
      * Data
      */
-    body: Array<RecipeInput>;
+    body: Array<RecipeIn>;
     headers?: {
         /**
          * Accept-Language
@@ -11587,7 +12214,7 @@ export type GetOneApiRecipesSlugGetResponses = {
 export type GetOneApiRecipesSlugGetResponse = GetOneApiRecipesSlugGetResponses[keyof GetOneApiRecipesSlugGetResponses];
 
 export type PatchOneApiRecipesSlugPatchData = {
-    body: RecipeInput;
+    body: RecipeIn;
     headers?: {
         /**
          * Accept-Language
@@ -11621,7 +12248,7 @@ export type PatchOneApiRecipesSlugPatchResponses = {
 };
 
 export type UpdateOneApiRecipesSlugPutData = {
-    body: RecipeInput;
+    body: RecipeIn;
     headers?: {
         /**
          * Accept-Language
@@ -13151,6 +13778,70 @@ export type CreateOneApiOrganizersToolsPostResponses = {
 
 export type CreateOneApiOrganizersToolsPostResponse = CreateOneApiOrganizersToolsPostResponses[keyof CreateOneApiOrganizersToolsPostResponses];
 
+export type GetAllEmptyApiOrganizersToolsEmptyGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/organizers/tools/empty';
+};
+
+export type GetAllEmptyApiOrganizersToolsEmptyGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetAllEmptyApiOrganizersToolsEmptyGetError = GetAllEmptyApiOrganizersToolsEmptyGetErrors[keyof GetAllEmptyApiOrganizersToolsEmptyGetErrors];
+
+export type GetAllEmptyApiOrganizersToolsEmptyGetResponses = {
+    /**
+     * Response Get All Empty Api Organizers Tools Empty Get
+     *
+     * Successful Response
+     */
+    200: Array<RecipeToolOut>;
+};
+
+export type GetAllEmptyApiOrganizersToolsEmptyGetResponse = GetAllEmptyApiOrganizersToolsEmptyGetResponses[keyof GetAllEmptyApiOrganizersToolsEmptyGetResponses];
+
+export type MergeToolsApiOrganizersToolsMergePostData = {
+    body: RecipeToolMerge;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/organizers/tools/merge';
+};
+
+export type MergeToolsApiOrganizersToolsMergePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MergeToolsApiOrganizersToolsMergePostError = MergeToolsApiOrganizersToolsMergePostErrors[keyof MergeToolsApiOrganizersToolsMergePostErrors];
+
+export type MergeToolsApiOrganizersToolsMergePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: RecipeToolOut;
+};
+
+export type MergeToolsApiOrganizersToolsMergePostResponse = MergeToolsApiOrganizersToolsMergePostResponses[keyof MergeToolsApiOrganizersToolsMergePostResponses];
+
 export type DeleteOneApiOrganizersToolsItemIdDeleteData = {
     body?: never;
     headers?: {
@@ -13785,6 +14476,39 @@ export type CreateOneApiFoodsPostResponses = {
 };
 
 export type CreateOneApiFoodsPostResponse = CreateOneApiFoodsPostResponses[keyof CreateOneApiFoodsPostResponses];
+
+export type GetAllEmptyApiFoodsEmptyGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/foods/empty';
+};
+
+export type GetAllEmptyApiFoodsEmptyGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetAllEmptyApiFoodsEmptyGetError = GetAllEmptyApiFoodsEmptyGetErrors[keyof GetAllEmptyApiFoodsEmptyGetErrors];
+
+export type GetAllEmptyApiFoodsEmptyGetResponses = {
+    /**
+     * Response Get All Empty Api Foods Empty Get
+     *
+     * Successful Response
+     */
+    200: Array<IngredientFoodOutput>;
+};
+
+export type GetAllEmptyApiFoodsEmptyGetResponse = GetAllEmptyApiFoodsEmptyGetResponses[keyof GetAllEmptyApiFoodsEmptyGetResponses];
 
 export type MergeOneApiFoodsMergePutData = {
     body: MergeFood;

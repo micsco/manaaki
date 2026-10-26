@@ -151,6 +151,16 @@ describe("applyRecipeFilters", () => {
       expect(applyRecipeFilters([recipe], "", [], [], "under30")).toHaveLength(0)
     })
 
+    it("buckets recipes by their structured total duration", () => {
+      const recipe = makeRecipe({ totalTimeSeconds: 2700 })
+      expect(applyRecipeFilters([recipe], "", [], [], "30to60")).toHaveLength(1)
+    })
+
+    it("buckets recipes by prep plus cook when no total is stated", () => {
+      const recipe = makeRecipe({ prepTimeSeconds: 600, performTimeSeconds: 2400 })
+      expect(applyRecipeFilters([recipe], "", [], [], "30to60")).toHaveLength(1)
+    })
+
     it("returns all when time is null", () => {
       const recipe = makeRecipe({ totalTime: "30 minutes" })
       expect(applyRecipeFilters([recipe], "", [], [], null)).toHaveLength(1)

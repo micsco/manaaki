@@ -101,6 +101,19 @@ describe("MealPlanEntryCard", () => {
     expect(screen.getByText("35m")).toBeInTheDocument()
   })
 
+  it("renders cook time from structured durations", () => {
+    const entry = makeEntry({
+      recipe: {
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        slug: "pasta",
+        name: "Pasta",
+        totalTimeSeconds: 4500,
+      },
+    })
+    render(<MealPlanEntryCard entry={entry} />)
+    expect(screen.getByText("1h 15m")).toBeInTheDocument()
+  })
+
   it("renders a link when the entry has a recipe with id and slug", () => {
     const entry = makeEntry({
       recipe: {

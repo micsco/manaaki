@@ -2,7 +2,7 @@ import { mdiTimerOutline } from "@mdi/js"
 import { Link } from "@tanstack/react-router"
 
 import type { PlanEntryType, ReadPlanEntry } from "../api/generated/types.gen"
-import { formatTime, recipeImageUrl, recipeUrl } from "../utils/recipe"
+import { recipeImageUrl, recipeTimes, recipeUrl } from "../utils/recipe"
 import { Icon } from "./Icon"
 import { Badge } from "./ui"
 
@@ -32,7 +32,7 @@ function CardInner({ entry, dayLabel, compact = false }: MealPlanEntryCardProps)
   const imageId = entry.recipe?.id
   const cacheKey = entry.recipe?.image
   const src = recipeImageUrl(imageId, "min-original", cacheKey)
-  const cookTime = formatTime(entry.recipe?.totalTime)
+  const cookTime = entry.recipe ? recipeTimes(entry.recipe).total : null
 
   const eyebrow = [dayLabel, typeLabel].filter(Boolean).join(" · ")
 

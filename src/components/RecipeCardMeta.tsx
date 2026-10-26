@@ -1,7 +1,7 @@
 import { mdiPotSteam, mdiTimerOutline, mdiToasterOven } from "@mdi/js"
 
 import type { RecipeSummary } from "../api/generated/types.gen"
-import { formatTime } from "../utils/recipe"
+import { recipeTimes } from "../utils/recipe"
 import { Icon } from "./Icon"
 import { Badge, StarRating } from "./ui"
 
@@ -41,7 +41,7 @@ function detectedTools(recipe: RecipeSummary): ToolBadge[] {
 }
 
 export function RecipeCardTimeBadge({ recipe }: { recipe: RecipeSummary }) {
-  const time = formatTime(recipe.totalTime)
+  const time = recipeTimes(recipe).total
   if (!time) return null
 
   return (

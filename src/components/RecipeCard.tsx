@@ -3,7 +3,7 @@ import { useState } from "react"
 
 import type { RecipeSummary } from "../api/generated/types.gen"
 import { usePostHog } from "../contexts/AnalyticsContext"
-import { recipeImageUrl, recipeUrl } from "../utils/recipe"
+import { recipeImageUrl, recipeTimes, recipeUrl } from "../utils/recipe"
 import { RecipeCardInfoBadges, RecipeCardToolBadges } from "./RecipeCardMeta"
 import { RecipeCardTimingBadges } from "./RecipeCardTimingBadges"
 import { Card } from "./ui"
@@ -64,7 +64,7 @@ export function RecipeCard({
               recipe_id: recipe.id,
               recipe_name: recipe.name,
               recipe_rating: recipe.rating,
-              recipe_total_time: recipe.totalTime,
+              recipe_total_time: recipeTimes(recipe).total,
             })
           }
         >

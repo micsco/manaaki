@@ -1,6 +1,6 @@
 import { parse as uuidParse, stringify as uuidStringify } from "uuid"
 
-import type { RecipeIngredientOutput, RecipeStep } from "../api/generated/types.gen"
+import type { RecipeIngredientOutput, RecipeStep, RecipeSummary } from "../api/generated/types.gen"
 
 const MEALIE_BASE_URL =
   import.meta.env.VITE_PUBLIC_MEALIE_BASE_URL ?? "https://mealie.scottfamily.nz"
@@ -77,6 +77,64 @@ export function parseTimeMinutes(t: string | null | undefined): number | null {
   const minutes = t.match(/^(\d+)\s+mins?(?:utes?)?$/)
   if (minutes) return Number(minutes[1])
   return null
+}
+
+export type TimedRecipe = Pick<
+  RecipeSummary,
+  | "totalTime"
+  | "prepTime"
+  | "performTime"
+  | "cookTime"
+  | "totalTimeSeconds"
+  | "prepTimeSeconds"
+  | "performTimeSeconds"
+>
+
+function wholeMinutes(seconds: number | null | undefined): number | null {
+  if (seconds == null || !Number.isFinite(seconds) || seconds <= 0) return null
+  return Math.max(1, Math.round(seconds / 60))
+}
+
+export function formatMinutes(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+  const remainder = minutes % 60
+  if (hours && remainder) return `${hours}h ${remainder}m`
+  if (hours) return `${hours}h`
+  return `${remainder}m`
+}
+
+function describeTime(seconds: number | null | undefined, text: string | null | undefined) {
+  const minutes = wholeMinutes(seconds)
+  if (minutes !== null) return formatMinutes(minutes)
+  return formatTime(text)
+}
+
+function durationSeconds(
+  seconds: number | null | undefined,
+  text: string | null | undefined
+): number | null {
+  if (seconds != null && wholeMinutes(seconds) !== null) return seconds
+  const minutes = parseTimeMinutes(text)
+  return minutes ? minutes * 60 : null
+}
+
+export function recipeTotalMinutes(recipe: TimedRecipe): number | null {
+  const stated = durationSeconds(recipe.totalTimeSeconds, recipe.totalTime)
+  if (stated !== null) return wholeMinutes(stated)
+  if (formatTime(recipe.totalTime) !== null) return null
+  const prep = durationSeconds(recipe.prepTimeSeconds, recipe.prepTime)
+  const cook = durationSeconds(recipe.performTimeSeconds, recipe.performTime || recipe.cookTime)
+  if (prep === null || cook === null) return null
+  return wholeMinutes(prep + cook)
+}
+
+export function recipeTimes(recipe: TimedRecipe) {
+  const total = recipeTotalMinutes(recipe)
+  return {
+    prep: describeTime(recipe.prepTimeSeconds, recipe.prepTime),
+    cook: describeTime(recipe.performTimeSeconds, recipe.performTime || recipe.cookTime),
+    total: total !== null ? formatMinutes(total) : formatTime(recipe.totalTime),
+  }
 }
 
 export function stepStorageKey(recipeId: string, index: number): string {

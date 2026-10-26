@@ -12,7 +12,7 @@ import { usePostHog } from "../contexts/AnalyticsContext"
 import type { RecipeNavItem } from "../hooks/useRecipeNav"
 import { recipeNavHotkeyLabels, recipeNavHotkeys } from "../lib/recipeHotkeys"
 import { markRecipeNavigation } from "../lib/recipeTransition"
-import { formatTime, recipeUrl } from "../utils/recipe"
+import { recipeTimes, recipeUrl } from "../utils/recipe"
 import { AddToMealPlanButton } from "./AddToMealPlanButton"
 import { CookModeToggle } from "./CookModeToggle"
 import { Icon } from "./Icon"
@@ -48,9 +48,7 @@ function HeroStat({ label, value, icon }: { label: string; value: string; icon: 
 }
 
 function HeroStats({ recipe }: { recipe: RecipeOutput }) {
-  const prepTime = formatTime(recipe.prepTime)
-  const cookTime = formatTime(recipe.cookTime)
-  const totalTime = formatTime(recipe.totalTime)
+  const { prep: prepTime, cook: cookTime, total: totalTime } = recipeTimes(recipe)
   const rating = recipe.rating != null ? Math.round(recipe.rating) : null
   if (!prepTime && !cookTime && !totalTime && !recipe.recipeServings && rating == null) return null
   return (

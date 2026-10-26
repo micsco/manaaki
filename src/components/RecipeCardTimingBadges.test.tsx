@@ -89,6 +89,11 @@ describe("RecipeCardTimingBadges", () => {
     expect(screen.queryByRole("button", { name: /calories per serving/ })).not.toBeInTheDocument()
   })
 
+  it("shows the cooking time from structured durations", () => {
+    renderBadges({ id: "recipe-id", slug: "soup", prepTimeSeconds: 600, performTimeSeconds: 2400 })
+    expect(screen.getByText("50m")).toBeInTheDocument()
+  })
+
   it("shows zero calories even without a cooking time", async () => {
     getRecipe.mockResolvedValue({
       data: { nutrition: { calories: "0" }, settings: { showNutrition: true } },

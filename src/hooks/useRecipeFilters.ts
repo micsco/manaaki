@@ -14,7 +14,7 @@ import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs"
 import { useMemo } from "react"
 
 import type { RecipeSummary } from "../api/generated/types.gen"
-import { parseTimeMinutes } from "../utils/recipe"
+import { recipeTotalMinutes } from "../utils/recipe"
 
 export type TimeBucket = "under30" | "30to60" | "60to120" | "over120"
 
@@ -39,8 +39,8 @@ export const TOOL_OPTIONS: { value: string; label: string; icon: string }[] = [
   { value: "air fryer", label: "Air fryer", icon: mdiToasterOven },
 ]
 
-function matchesTimeFilter(totalTime: string | null | undefined, bucket: TimeBucket): boolean {
-  const minutes = parseTimeMinutes(totalTime)
+function matchesTimeFilter(recipe: RecipeSummary, bucket: TimeBucket): boolean {
+  const minutes = recipeTotalMinutes(recipe)
   if (minutes === null) return false
   if (bucket === "under30") return minutes < 30
   if (bucket === "30to60") return minutes >= 30 && minutes < 60
@@ -77,7 +77,7 @@ function matchesTools(recipe: RecipeSummary, tools: string[]): boolean {
 
 function matchesTime(recipe: RecipeSummary, time: TimeBucket | null): boolean {
   if (!time) return true
-  return matchesTimeFilter(recipe.totalTime, time)
+  return matchesTimeFilter(recipe, time)
 }
 
 export function applyRecipeFilters(

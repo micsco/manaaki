@@ -9,9 +9,9 @@ import { client } from "./generated/client.gen"
 const originalConfig = client.getConfig()
 afterEach(() => client.setConfig(originalConfig))
 
-it("uses the 3.28.0 wire contract without filtering on household associations", async () => {
-  const schema = JSON.parse(readFileSync("schema/mealie-v3.28.0.openapi.json", "utf8"))
-  expect(schema.info.version).toBe("v3.28.0")
+it("uses the 3.29.0 wire contract without filtering on household associations", async () => {
+  const schema = JSON.parse(readFileSync("schema/mealie-v3.29.0.openapi.json", "utf8"))
+  expect(schema.info.version).toBe("v3.29.0")
   const parameters = new Set(
     schema.paths["/api/recipes/timeline/events"].get.parameters.map(
       (parameter: { name: string }) => parameter.name
