@@ -86,6 +86,9 @@ describe("MealPlanDialog", () => {
   it("moves the original entry and retains its recipe, ownership and note", async () => {
     const user = userEvent.setup()
     render(<MealPlanDialog date={entry.date} entry={entry} onClose={vi.fn()} />)
+    await waitFor(() =>
+      expect(screen.getByRole("dialog")).toContainElement(document.activeElement as HTMLElement)
+    )
     if (!screen.queryByLabelText("Day"))
       await user.click(screen.getByRole("button", { name: "Another date" }))
     await user.clear(screen.getByLabelText("Day"))
