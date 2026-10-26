@@ -1,4 +1,5 @@
 import type { RecipeOutput } from "../api/generated/types.gen"
+import { Markdown } from "./Markdown"
 
 export function RecipeNotes({ notes }: { notes: NonNullable<RecipeOutput["notes"]> }) {
   if (notes.length === 0) return null
@@ -8,7 +9,7 @@ export function RecipeNotes({ notes }: { notes: NonNullable<RecipeOutput["notes"
       {notes.map((note, i) => (
         <div key={note.title ?? i} className="mb-4 last:mb-0">
           {note.title && <h3 className="mb-2 font-semibold text-gray-200">{note.title}</h3>}
-          <p className="text-gray-300">{note.text}</p>
+          <Markdown source={note.text} className="text-gray-300" />
         </div>
       ))}
     </section>
