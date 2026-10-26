@@ -1,6 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { createLimiter, MealieBusyError, type MealieSlot } from "./mealieLimiter"
+import { installTestPostHog } from "../test/serverPostHog"
+import {
+  createLimiter,
+  type LimiterUsage,
+  MealieBusyError,
+  type MealieSlot,
+  reportMealieUsage,
+} from "./mealieLimiter"
 
 beforeEach(() => {
   vi.useFakeTimers()
@@ -20,6 +27,67 @@ function settled<T>(promise: Promise<T>) {
 }
 
 const tick = () => vi.advanceTimersByTimeAsync(0)
+
+describe("limiter usage", () => {
+  it("reports active and waiting slots as they change", async () => {
+    const usage: LimiterUsage[] = []
+    const limiter = createLimiter({
+      limit: () => 1,
+      queueTimeoutMs: () => 1000,
+      onUsageChange: next => usage.push(next),
+    })
+    const holder = await limiter.acquire()
+    const waiter = limiter.acquire()
+    await tick()
+    holder.release()
+    ;(await waiter).release()
+    expect(usage).toEqual([
+      { active: 1, waiting: 0 },
+      { active: 1, waiting: 1 },
+      { active: 1, waiting: 0 },
+      { active: 0, waiting: 0 },
+    ])
+  })
+
+  it("says whether a slot is free without waiting", async () => {
+    const limiter = createLimiter({ limit: () => 1, queueTimeoutMs: () => 1000 })
+    expect(limiter.hasCapacity()).toBe(true)
+    const holder = await limiter.acquire()
+    expect(limiter.hasCapacity()).toBe(false)
+    holder.release()
+    expect(limiter.hasCapacity()).toBe(true)
+  })
+
+  it("reports a request that gives up waiting", async () => {
+    const usage: LimiterUsage[] = []
+    const limiter = createLimiter({
+      limit: () => 1,
+      queueTimeoutMs: () => 100,
+      onUsageChange: next => usage.push(next),
+    })
+    await limiter.acquire()
+    const waiter = settled(limiter.acquire())
+    await vi.advanceTimersByTimeAsync(100)
+    expect(waiter.error).toBeInstanceOf(MealieBusyError)
+    expect(usage.at(-1)).toEqual({ active: 1, waiting: 0 })
+  })
+
+  it("sends Mealie slot usage to PostHog as gauges", async () => {
+    vi.useRealTimers()
+    const posthog = installTestPostHog()
+    try {
+      reportMealieUsage({ active: 4, waiting: 2 })
+      expect(await posthog.flushMetrics()).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ name: "mealie.slots.active", type: "gauge", value: 4 }),
+          expect.objectContaining({ name: "mealie.slots.waiting", type: "gauge", value: 2 }),
+        ])
+      )
+    } finally {
+      await posthog.uninstall()
+    }
+  })
+})
 
 describe("createLimiter", () => {
   it("grants slots immediately up to the limit and queues the rest", async () => {

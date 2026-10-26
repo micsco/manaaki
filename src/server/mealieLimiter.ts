@@ -1,4 +1,5 @@
 import { mealieConcurrencyLimit, mealieQueueTimeoutMs } from "./env"
+import { metrics } from "./telemetry"
 
 const DEFAULT_MAX_WAITING = 200
 
@@ -11,19 +12,24 @@ export type MealieSlot = {
   releaseAfter: (delayMs: number) => void
 }
 
+export type LimiterUsage = { active: number; waiting: number }
+
 type LimiterOptions = {
   limit: () => number
   queueTimeoutMs: () => number
   maxWaiting?: number
+  onUsageChange?: (usage: LimiterUsage) => void
 }
 
 export function createLimiter({
   limit,
   queueTimeoutMs,
   maxWaiting = DEFAULT_MAX_WAITING,
+  onUsageChange = () => {},
 }: LimiterOptions) {
   let active = 0
   const waiting: (() => void)[] = []
+  const reportUsage = () => onUsageChange({ active, waiting: waiting.length })
 
   function slot(): MealieSlot {
     let released = false
@@ -32,7 +38,10 @@ export function createLimiter({
       released = true
       const grantNext = waiting.shift()
       if (grantNext) grantNext()
-      else active--
+      else {
+        active--
+        reportUsage()
+      }
     }
     return {
       release,
@@ -46,6 +55,7 @@ export function createLimiter({
     if (signal?.aborted) return Promise.reject(signal.reason)
     if (active < limit()) {
       active++
+      reportUsage()
       return Promise.resolve(slot())
     }
     if (waiting.length >= maxWaiting) {
@@ -57,6 +67,7 @@ export function createLimiter({
         signal?.removeEventListener("abort", abandon)
         const position = waiting.indexOf(grant)
         if (position !== -1) waiting.splice(position, 1)
+        reportUsage()
       }
       const grant = () => {
         stopWaiting()
@@ -72,13 +83,20 @@ export function createLimiter({
       }, queueTimeoutMs())
       signal?.addEventListener("abort", abandon, { once: true })
       waiting.push(grant)
+      reportUsage()
     })
   }
 
-  return { acquire }
+  return { acquire, hasCapacity: () => active < limit() }
+}
+
+export function reportMealieUsage({ active, waiting }: LimiterUsage) {
+  metrics.gauge("mealie.slots.active", active)
+  metrics.gauge("mealie.slots.waiting", waiting)
 }
 
 export const mealieLimiter = createLimiter({
   limit: mealieConcurrencyLimit,
   queueTimeoutMs: mealieQueueTimeoutMs,
+  onUsageChange: reportMealieUsage,
 })

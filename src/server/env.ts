@@ -34,3 +34,10 @@ export const geminiThinkingLevel = (): GeminiThinkingLevel | null => {
 }
 export const recipeVersionDraftsPerHour = (): number =>
   positiveInteger("RECIPE_VERSION_DRAFTS_PER_HOUR", 10)
+
+export const posthogProjectToken = (): string | null =>
+  globalThis.process?.env?.POSTHOG_PROJECT_TOKEN ||
+  import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN ||
+  null
+export const posthogIngestionHost = (): string =>
+  globalThis.process?.env?.POSTHOG_INGESTION_HOST || "https://eu.i.posthog.com"

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 
+import { installTestPostHog } from "../test/serverPostHog"
 import { measureServerTiming, withServerTiming } from "./timing"
 
 describe("server timing", () => {
@@ -83,5 +84,29 @@ describe("server timing", () => {
     expect(result.response.headers.get("Server-Timing")).toMatch(
       /^mealie;dur=[\d.]+, app;dur=[\d.]+$/
     )
+  })
+
+  it("traces each timed step and sends its duration to PostHog", async () => {
+    const posthog = installTestPostHog()
+    try {
+      await withServerTiming(async () => {
+        await measureServerTiming("identity", () => undefined)
+        return { response: new Response() }
+      })
+      expect(posthog.span("identity")?.kind).toBe("client")
+      expect(posthog.span("app")).toBeUndefined()
+      expect(await posthog.flushMetrics()).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: "server.timing.duration",
+            type: "histogram",
+            unit: "ms",
+            attributes: { name: "identity" },
+          }),
+        ])
+      )
+    } finally {
+      await posthog.uninstall()
+    }
   })
 })

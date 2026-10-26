@@ -21,7 +21,12 @@ export default defineConfig({
     fsModuleCache: true,
     projects: [
       {
-        test: { name: "node", environment: "node", include: nodeTests },
+        test: {
+          name: "node",
+          environment: "node",
+          include: nodeTests,
+          server: { deps: { inline: ["@posthog/ai"] } },
+        },
       },
       {
         test: {

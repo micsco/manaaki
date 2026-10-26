@@ -15,6 +15,7 @@ it("keeps the analytics configuration while delegating pageviews to the router",
         api_host: "/ingest",
         capture_exceptions: true,
         capture_pageview: false,
+        tracing_headers: [window.location.hostname],
       })
     )
   } finally {

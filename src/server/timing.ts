@@ -1,18 +1,29 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 
+import { metrics, traced } from "./telemetry"
+
 type TimingName = "app" | "ssr" | "mealie" | "identity" | "session_refresh"
+
+const UPSTREAM_TIMINGS = new Set<TimingName>(["mealie", "identity", "session_refresh"])
 
 const requestTimings = new AsyncLocalStorage<Map<TimingName, number>>()
 
-export async function measureServerTiming<T>(name: TimingName, operation: () => T | Promise<T>) {
-  const timings = requestTimings.getStore()
-  if (!timings) return operation()
-  const started = performance.now()
-  try {
-    return await operation()
-  } finally {
-    timings.set(name, (timings.get(name) ?? 0) + performance.now() - started)
+export function measureServerTiming<T>(
+  name: TimingName,
+  operation: () => T | Promise<T>
+): Promise<T> {
+  const measure = async () => {
+    const started = performance.now()
+    try {
+      return await operation()
+    } finally {
+      const duration = performance.now() - started
+      metrics.histogram("server.timing.duration", duration, { unit: "ms", attributes: { name } })
+      const timings = requestTimings.getStore()
+      timings?.set(name, (timings.get(name) ?? 0) + duration)
+    }
   }
+  return UPSTREAM_TIMINGS.has(name) ? traced(name, { kind: "client" }, measure) : measure()
 }
 
 export function withServerTiming<T extends { response: Response }>(

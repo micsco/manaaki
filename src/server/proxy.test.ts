@@ -3,6 +3,7 @@ import * as http from "node:http"
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
+import { installTestPostHog } from "../test/serverPostHog"
 import { handleApiProxy } from "./proxy"
 import { buildSessionSetCookie, unsealSession } from "./session"
 import { withServerTiming } from "./timing"
@@ -185,6 +186,55 @@ describe("handleApiProxy — upstream Host", () => {
     expect(lastUpstreamRequest).not.toBeNull()
     expect(lastUpstreamRequest?.headers.host).toBe(`127.0.0.1:${serverPort}`)
     expect(lastUpstreamRequest?.headers.authorization).toBe("Bearer ro-token")
+  })
+})
+
+describe("handleApiProxy — tracing", () => {
+  it("keeps PostHog's browser headers away from Mealie", async () => {
+    setNextResponse({ status: 200, body: "[]" })
+    await handleApiProxy(
+      new Request("https://app/api/recipes", {
+        headers: {
+          "x-posthog-distinct-id": "person-1",
+          "x-posthog-session-id": "session-1",
+          "x-posthog-window-id": "window-1",
+          accept: "application/json",
+        },
+      })
+    )
+    expect(lastUpstreamRequest?.headers).not.toHaveProperty("x-posthog-distinct-id")
+    expect(lastUpstreamRequest?.headers).not.toHaveProperty("x-posthog-session-id")
+    expect(lastUpstreamRequest?.headers).not.toHaveProperty("x-posthog-window-id")
+    expect(lastUpstreamRequest?.headers.accept).toBe("application/json")
+  })
+
+  it("records the Mealie call as a span named by route", async () => {
+    const posthog = installTestPostHog()
+    try {
+      setNextResponse({ status: 404, body: "{}" })
+      await handleApiProxy(new Request("https://app/api/recipes/chicken-fajitas"))
+      const span = posthog.span("mealie")
+      expect(span?.attributes).toMatchObject({
+        "mealie.request.method": "GET",
+        "mealie.route": "/api/recipes/{slug}",
+        "mealie.response.status_code": 404,
+      })
+      expect(span?.status).toBeUndefined()
+      expect(posthog.span("mealie.slot_wait")).toBeUndefined()
+    } finally {
+      await posthog.uninstall()
+    }
+  })
+
+  it("marks a Mealie server error on its span", async () => {
+    const posthog = installTestPostHog()
+    try {
+      setNextResponse({ status: 503, body: "{}" })
+      await handleApiProxy(new Request("https://app/api/recipes"))
+      expect(posthog.span("mealie")?.status?.code).toBe("error")
+    } finally {
+      await posthog.uninstall()
+    }
   })
 })
 

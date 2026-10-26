@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { installTestPostHog } from "../test/serverPostHog"
 import { MealieBusyError } from "./mealieLimiter"
 import {
   mealieFetch,
@@ -139,5 +140,24 @@ describe("upstreamFailureResponse", () => {
 
   it("leaves unrelated errors alone", () => {
     expect(upstreamFailureResponse(new Error("bug"))).toBeNull()
+  })
+
+  it("counts each kind of Mealie failure", async () => {
+    const posthog = installTestPostHog()
+    try {
+      upstreamFailureResponse(new MealieBusyError("busy"))
+      upstreamFailureResponse(new MealieBusyError("busy"))
+      upstreamFailureResponse(new MealieTimeoutError("slow"))
+      upstreamFailureResponse(new Error("bug"))
+      const failuresByReason: Record<string, number> = {}
+      for (const sample of await posthog.flushMetrics()) {
+        if (sample.name !== "mealie.upstream.failures") continue
+        const reason = String(sample.attributes?.reason)
+        failuresByReason[reason] = (failuresByReason[reason] ?? 0) + sample.value
+      }
+      expect(failuresByReason).toEqual({ busy: 2, timeout: 1 })
+    } finally {
+      await posthog.uninstall()
+    }
   })
 })

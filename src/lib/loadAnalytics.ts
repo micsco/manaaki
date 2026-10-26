@@ -6,6 +6,7 @@ export async function loadAnalytics() {
     defaults: "2025-05-24",
     capture_exceptions: true,
     capture_pageview: false,
+    tracing_headers: [window.location.hostname],
     debug: import.meta.env.DEV,
   })
   return posthog

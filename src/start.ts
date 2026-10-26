@@ -2,6 +2,13 @@ import { createMiddleware, createStart } from "@tanstack/react-start"
 
 import { handleSilentLoginRequest } from "./server/silentLogin"
 
+const tracingMiddleware = createMiddleware({ type: "request" }).server(
+  async ({ request, next }) => {
+    const { traceRequest } = await import("./server/requestTracing")
+    return traceRequest(request, next)
+  }
+)
+
 const timingMiddleware = createMiddleware({ type: "request" }).server(async ({ request, next }) => {
   const { withServerTiming } = await import("./server/timing")
   return withServerTiming(
@@ -15,5 +22,5 @@ const silentLoginMiddleware = createMiddleware({ type: "request" }).server(
 )
 
 export const startInstance = createStart(() => ({
-  requestMiddleware: [timingMiddleware, silentLoginMiddleware],
+  requestMiddleware: [tracingMiddleware, timingMiddleware, silentLoginMiddleware],
 }))

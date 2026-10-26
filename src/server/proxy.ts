@@ -9,14 +9,17 @@ import { mealieInternalUrl, readonlyToken } from "./env"
 import type { MealieSlot } from "./mealieLimiter"
 import {
   acquireMealieSlot,
+  describeMealieCall,
   isMealieOverloaded,
   mealieFetch,
   MealieTimeoutError,
   mealieTimeoutMs,
   MealieUnreachableError,
+  recordMealieStatus,
   releaseAfterFailure,
   upstreamFailureResponse,
 } from "./mealieUpstream"
+import { POSTHOG_TRACING_HEADERS } from "./requestTracing"
 import {
   buildClearSessionCookie,
   buildSessionSetCookie,
@@ -36,6 +39,7 @@ const STRIP_REQUEST_HEADERS = new Set([
   "host",
   "connection",
   "content-length",
+  ...POSTHOG_TRACING_HEADERS,
 ])
 
 // node:http does NOT auto-decompress the upstream body (unlike undici/fetch), so
@@ -104,58 +108,58 @@ function send(
   const transport = isHttps ? httpsRequest : httpRequest
   const hasBody = request.method !== "GET" && request.method !== "HEAD"
 
-  return measureServerTiming(
-    "mealie",
-    () =>
-      new Promise<Response>((resolve, reject) => {
-        const upstream = transport(
-          {
-            protocol: base.protocol,
-            hostname: base.hostname,
-            port: base.port || (isHttps ? 443 : 80),
-            method: request.method,
-            path: pathWithQuery,
-            headers: upstreamHeaders(request, token),
-          },
-          res => {
-            clearTimeout(responseDeadline)
-            slot?.release()
-            const headers = buildResponseHeaders(res)
-            const status = res.statusCode ?? 502
-            const noBody = status === 204 || status === 304 || request.method === "HEAD"
-            if (noBody) res.resume()
-            resolve(
-              new Response(noBody ? null : (Readable.toWeb(res) as ReadableStream), {
-                status,
-                statusText: res.statusMessage,
-                headers,
-              })
-            )
-          }
-        )
-        const responseDeadline = setTimeout(
-          () => upstream.destroy(new MealieTimeoutError("Mealie did not answer in time")),
-          mealieTimeoutMs(request.method)
-        )
-        const abandon = () => upstream.destroy(new Error("Client disconnected"))
-        if (request.signal.aborted) abandon()
-        else request.signal.addEventListener("abort", abandon, { once: true })
-        upstream.on("error", error => {
+  return measureServerTiming("mealie", () => {
+    const span = describeMealieCall(request.method, new URL(pathWithQuery, base).pathname)
+    return new Promise<Response>((resolve, reject) => {
+      const upstream = transport(
+        {
+          protocol: base.protocol,
+          hostname: base.hostname,
+          port: base.port || (isHttps ? 443 : 80),
+          method: request.method,
+          path: pathWithQuery,
+          headers: upstreamHeaders(request, token),
+        },
+        res => {
           clearTimeout(responseDeadline)
-          reject(
-            error instanceof MealieTimeoutError || request.signal.aborted
-              ? error
-              : new MealieUnreachableError("Mealie could not be reached", { cause: error })
+          slot?.release()
+          const headers = buildResponseHeaders(res)
+          const status = res.statusCode ?? 502
+          recordMealieStatus(span, status)
+          const noBody = status === 204 || status === 304 || request.method === "HEAD"
+          if (noBody) res.resume()
+          resolve(
+            new Response(noBody ? null : (Readable.toWeb(res) as ReadableStream), {
+              status,
+              statusText: res.statusMessage,
+              headers,
+            })
           )
-        })
-        if (hasBody && request.body) {
-          // @ts-expect-error ReadableStream<Uint8Array> is compatible but types diverge
-          Readable.fromWeb(request.body).pipe(upstream)
-        } else {
-          upstream.end()
         }
+      )
+      const responseDeadline = setTimeout(
+        () => upstream.destroy(new MealieTimeoutError("Mealie did not answer in time")),
+        mealieTimeoutMs(request.method)
+      )
+      const abandon = () => upstream.destroy(new Error("Client disconnected"))
+      if (request.signal.aborted) abandon()
+      else request.signal.addEventListener("abort", abandon, { once: true })
+      upstream.on("error", error => {
+        clearTimeout(responseDeadline)
+        reject(
+          error instanceof MealieTimeoutError || request.signal.aborted
+            ? error
+            : new MealieUnreachableError("Mealie could not be reached", { cause: error })
+        )
       })
-  )
+      if (hasBody && request.body) {
+        // @ts-expect-error ReadableStream<Uint8Array> is compatible but types diverge
+        Readable.fromWeb(request.body).pipe(upstream)
+      } else {
+        upstream.end()
+      }
+    })
+  })
 }
 
 function isPastRefreshPoint({ exp, iat }: JwtTiming, now: number): boolean {

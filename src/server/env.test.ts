@@ -1,10 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
   geminiApiKey,
   geminiModel,
   geminiThinkingLevel,
   mealieInternalUrl,
+  posthogIngestionHost,
+  posthogProjectToken,
   readonlyToken,
   recipeVersionDraftsPerHour,
   sessionSecret,
@@ -18,6 +20,8 @@ const KEYS = [
   "GEMINI_MODEL",
   "GEMINI_THINKING_LEVEL",
   "RECIPE_VERSION_DRAFTS_PER_HOUR",
+  "POSTHOG_PROJECT_TOKEN",
+  "POSTHOG_INGESTION_HOST",
 ] as const
 let saved: Record<string, string | undefined>
 
@@ -64,5 +68,27 @@ describe("server env", () => {
     expect(geminiThinkingLevel()).toBe("low")
     process.env.GEMINI_THINKING_LEVEL = "max"
     expect(geminiThinkingLevel()).toBeNull()
+  })
+
+  it("reads the PostHog token at runtime, falling back to the one built into the app", () => {
+    vi.stubEnv("VITE_PUBLIC_POSTHOG_PROJECT_TOKEN", "phc_build")
+    try {
+      delete process.env.POSTHOG_PROJECT_TOKEN
+      expect(posthogProjectToken()).toBe("phc_build")
+      process.env.POSTHOG_PROJECT_TOKEN = "phc_runtime"
+      expect(posthogProjectToken()).toBe("phc_runtime")
+      vi.stubEnv("VITE_PUBLIC_POSTHOG_PROJECT_TOKEN", "")
+      delete process.env.POSTHOG_PROJECT_TOKEN
+      expect(posthogProjectToken()).toBeNull()
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
+
+  it("sends server telemetry to PostHog EU unless told otherwise", () => {
+    delete process.env.POSTHOG_INGESTION_HOST
+    expect(posthogIngestionHost()).toBe("https://eu.i.posthog.com")
+    process.env.POSTHOG_INGESTION_HOST = "https://us.i.posthog.com"
+    expect(posthogIngestionHost()).toBe("https://us.i.posthog.com")
   })
 })

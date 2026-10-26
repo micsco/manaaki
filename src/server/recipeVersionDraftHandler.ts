@@ -11,7 +11,7 @@ import {
   type DraftStreamEvent,
 } from "../utils/recipeVersionDraft"
 import { cookingMethod, VERSION_EXTRAS_KEYS } from "../utils/recipeVersions"
-import { recipeVersionDraftsPerHour } from "./env"
+import { geminiModel, recipeVersionDraftsPerHour } from "./env"
 import { createMealieClient } from "./mealieClient"
 import { upstreamFailureResponse } from "./mealieUpstream"
 import {
@@ -21,6 +21,7 @@ import {
   generateRecipeVersionDraft,
 } from "./recipeVersionAi"
 import { readSessionToken } from "./session"
+import { metrics, traced } from "./telemetry"
 
 const MAX_BODY_BYTES = 4096
 const MAX_RECIPE_CHARS = 40_000
@@ -98,6 +99,33 @@ function toSource(recipe: RecipeOutput, draftRecipe: DraftRequestRecipe): DraftS
       quantity: line.quantity || null,
     })),
     steps: draftRecipe.steps,
+  }
+}
+
+function recordDraftOutcome(
+  target: string,
+  model: string,
+  outcome: "ok" | "error" | "abandoned",
+  status: number,
+  durationMs: number
+) {
+  const attributes = { target, model, outcome }
+  metrics.count("recipe_version.drafts", 1, {
+    attributes: { ...attributes, status: String(status) },
+  })
+  metrics.histogram("recipe_version.draft.duration", durationMs, { unit: "ms", attributes })
+}
+
+function recordDraftTokens(usage: DraftMetrics) {
+  const tokens = {
+    input: usage.inputTokens,
+    output: usage.outputTokens,
+    thinking: usage.thinkingTokens,
+  }
+  for (const [kind, count] of Object.entries(tokens)) {
+    metrics.histogram("recipe_version.draft.tokens", count, {
+      attributes: { model: usage.model, kind },
+    })
   }
 }
 
@@ -189,75 +217,108 @@ export async function recipeVersionDraftHandler(request: Request): Promise<Respo
   const encoder = new TextEncoder()
   let open = true
   const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      const send = (event: DraftStreamEvent) => {
-        if (!open) return
+    start(controller) {
+      const attributes = { "recipe_version.target": target, "recipe.id": recipeId }
+      return traced("recipe_version.draft", { attributes }, async span => {
+        const send = (event: DraftStreamEvent) => {
+          if (!open) return
+          try {
+            controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
+          } catch {
+            open = false
+          }
+        }
         try {
-          controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
-        } catch {
-          open = false
-        }
-      }
-      try {
-        const { draft, usage } = await generateRecipeVersionDraft(
-          draftRecipe,
-          target,
-          notes,
-          signal,
-          progress => send({ type: "progress", ...progress })
-        )
-        send({ type: "progress", stage: "checking" })
-        const checksStartedAt = performance.now()
-        const source = toSource(recipe, draftRecipe)
-        const checks = checkDraft(draft, source, target)
-        const metrics: DraftMetrics = {
-          model: usage.model,
-          thinkingLevel: usage.thinkingLevel,
-          connectMs: usage.connectMs,
-          inputTokens: usage.inputTokens,
-          outputTokens: usage.outputTokens,
-          thinkingTokens: usage.thinkingTokens,
-          mealieMs,
-          firstTokenMs: usage.firstTokenMs,
-          modelMs: usage.modelMs,
-          checksMs: Math.round(performance.now() - checksStartedAt),
-          totalMs: elapsed(),
-        }
-        console.info(
-          JSON.stringify({
-            event: "recipe_version_draft",
-            outcome: "ok",
-            recipeId,
+          const { draft, usage } = await generateRecipeVersionDraft(
+            draftRecipe,
             target,
-            ...metrics,
-            blocking: checks.filter(c => c.level === "block").length,
-            warnings: checks.filter(c => c.level === "warn").length,
-            confidence: draft.confidence,
-          })
-        )
-        send({ type: "result", draft, checks, source, metrics })
-      } catch (failure) {
-        const event = failureEvent(failure, signal)
-        if (event.status === 500) console.error(failure)
-        console.info(
-          JSON.stringify({
-            event: "recipe_version_draft",
-            outcome: "error",
-            recipeId,
-            target,
-            status: event.status,
-            detail: failure instanceof AiDraftError ? failure.detail : undefined,
+            notes,
+            signal,
+            progress => send({ type: "progress", ...progress })
+          )
+          send({ type: "progress", stage: "checking" })
+          const checksStartedAt = performance.now()
+          const source = toSource(recipe, draftRecipe)
+          const checks = checkDraft(draft, source, target)
+          const draftMetrics: DraftMetrics = {
+            model: usage.model,
+            thinkingLevel: usage.thinkingLevel,
+            connectMs: usage.connectMs,
+            inputTokens: usage.inputTokens,
+            outputTokens: usage.outputTokens,
+            thinkingTokens: usage.thinkingTokens,
             mealieMs,
+            firstTokenMs: usage.firstTokenMs,
+            modelMs: usage.modelMs,
+            checksMs: Math.round(performance.now() - checksStartedAt),
             totalMs: elapsed(),
+          }
+          const blocking = checks.filter(c => c.level === "block").length
+          const warnings = checks.filter(c => c.level === "warn").length
+          console.info(
+            JSON.stringify({
+              event: "recipe_version_draft",
+              outcome: "ok",
+              recipeId,
+              target,
+              ...draftMetrics,
+              blocking,
+              warnings,
+              confidence: draft.confidence,
+            })
+          )
+          span.setAttributes({
+            "gen_ai.request.model": usage.model,
+            "gen_ai.usage.input_tokens": usage.inputTokens,
+            "gen_ai.usage.output_tokens": usage.outputTokens,
+            "recipe_version.thinking_level": usage.thinkingLevel,
+            "recipe_version.thinking_tokens": usage.thinkingTokens,
+            "recipe_version.confidence": draft.confidence,
+            "recipe_version.blocking_checks": blocking,
+            "recipe_version.warning_checks": warnings,
           })
-        )
-        send({ type: "error", ...event })
-      } finally {
-        if (open) {
-          open = false
-          controller.close()
+          recordDraftOutcome(target, usage.model, "ok", 200, draftMetrics.totalMs)
+          recordDraftTokens(draftMetrics)
+          send({ type: "result", draft, checks, source, metrics: draftMetrics })
+        } catch (failure) {
+          const event = failureEvent(failure, signal)
+          if (event.status === 500) console.error(failure)
+          const detail = failure instanceof AiDraftError ? failure.detail : undefined
+          const totalMs = elapsed()
+          console.info(
+            JSON.stringify({
+              event: "recipe_version_draft",
+              outcome: "error",
+              recipeId,
+              target,
+              status: event.status,
+              detail,
+              mealieMs,
+              totalMs,
+            })
+          )
+          const abandoned = disconnected.signal.aborted || request.signal.aborted
+          span.setAttributes({
+            "http.response.status_code": event.status,
+            "error.detail": detail,
+            "recipe_version.abandoned": abandoned,
+          })
+          if (!abandoned) span.recordException(failure)
+          recordDraftOutcome(
+            target,
+            geminiModel(),
+            abandoned ? "abandoned" : "error",
+            event.status,
+            totalMs
+          )
+          send({ type: "error", ...event })
+        } finally {
+          if (open) {
+            open = false
+            controller.close()
+          }
         }
-      }
+      })
     },
     cancel() {
       open = false

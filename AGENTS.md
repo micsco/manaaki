@@ -19,6 +19,10 @@ full documentation.
 |----------|---------|
 | `MEALIE_API_TOKEN` | Long-lived Mealie API token |
 | `MEALIE_INTERNAL_URL` | Docker-internal URL for Mealie (e.g. `http://scottfamilynz-mealie-cvtizz-mealie-1:9000`) |
+| `POSTHOG_PROJECT_TOKEN` | Optional. Server traces, metrics and AI events; defaults to the build's `VITE_PUBLIC_POSTHOG_PROJECT_TOKEN` |
+| `POSTHOG_INGESTION_HOST` | Optional. Defaults to `https://eu.i.posthog.com` |
+
+Server tracing, metrics and AI observability are described in `docs/observability.md`.
 
 For local development, copy `.env.example` to `.env` and set both vars. The Vite
 dev proxy in `vite.config.ts` injects the token identically to nginx.

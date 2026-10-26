@@ -1,15 +1,19 @@
 import {
   FinishReason,
-  ThinkingLevel,
+  type GenerateContentParameters,
+  type GenerateContentResponse,
   type GenerateContentResponseUsageMetadata,
   GoogleGenAI,
+  ThinkingLevel,
 } from "@google/genai"
+import { PostHogGoogleGenAI } from "@posthog/ai/gemini"
 import { z } from "zod"
 
 import { describeAppliance, householdAppliance } from "../utils/householdAppliances"
 import type { RecipeVersionDraft } from "../utils/recipeVersionDraft"
 import { COOKING_METHOD_LABELS, type CookingMethod } from "../utils/recipeVersions"
 import { geminiApiKey, geminiModel, type GeminiThinkingLevel, geminiThinkingLevel } from "./env"
+import { activeTraceId, requestContext, serverPostHog } from "./telemetry"
 
 export type DraftRequestRecipe = {
   name: string
@@ -242,6 +246,22 @@ export function stepsWritten(partialJson: string): number {
   return count
 }
 
+async function streamGeminiContent(
+  apiKey: string,
+  params: GenerateContentParameters,
+  target: CookingMethod
+): Promise<AsyncIterable<GenerateContentResponse>> {
+  const posthog = serverPostHog()
+  if (!posthog) return new GoogleGenAI({ apiKey }).models.generateContentStream(params)
+  const { distinctId, sessionId } = requestContext()
+  return new PostHogGoogleGenAI({ apiKey, posthog }).models.generateContentStream({
+    ...params,
+    posthogDistinctId: distinctId,
+    posthogTraceId: activeTraceId(),
+    posthogProperties: { $session_id: sessionId, feature: "recipe_version_draft", target },
+  })
+}
+
 export async function generateRecipeVersionDraft(
   recipe: DraftRequestRecipe,
   target: CookingMethod,
@@ -253,10 +273,9 @@ export async function generateRecipeVersionDraft(
   if (!apiKey) throw new AiNotConfiguredError()
   const model = geminiModel()
   const thinkingLevel = geminiThinkingLevel()
-  const ai = new GoogleGenAI({ apiKey })
   const startedAt = performance.now()
   onProgress({ stage: "thinking" })
-  const stream = await ai.models.generateContentStream({
+  const params: GenerateContentParameters = {
     model,
     contents: buildPrompt(recipe, target, notes),
     config: {
@@ -269,9 +288,10 @@ export async function generateRecipeVersionDraft(
         ? { thinkingConfig: { thinkingLevel: THINKING_LEVELS[thinkingLevel] } }
         : {}),
     },
-  })
-  const connectMs = Math.round(performance.now() - startedAt)
+  }
+  const stream = await streamGeminiContent(apiKey, params, target)
 
+  let connectMs: number | null = null
   let text = ""
   let firstTokenMs: number | null = null
   let blocked: string | undefined
@@ -279,6 +299,7 @@ export async function generateRecipeVersionDraft(
   let usage: GenerateContentResponseUsageMetadata | undefined
   let reportedSteps = -1
   for await (const chunk of stream) {
+    connectMs ??= Math.round(performance.now() - startedAt)
     blocked = chunk.promptFeedback?.blockReason ?? blocked
     finish = chunk.candidates?.[0]?.finishReason ?? finish
     usage = chunk.usageMetadata ?? usage
@@ -317,7 +338,7 @@ export async function generateRecipeVersionDraft(
       thinkingTokens: usage?.thoughtsTokenCount ?? 0,
       model,
       thinkingLevel: thinkingLevel ?? "default",
-      connectMs,
+      connectMs: connectMs ?? Math.round(performance.now() - startedAt),
       firstTokenMs,
       modelMs: Math.round(performance.now() - startedAt),
     },

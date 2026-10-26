@@ -2,9 +2,12 @@ import { ApiError } from "@google/genai"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { goodAirFryerDraft } from "../test/fixtures/recipeVersionDrafts"
+import { installTestPostHog } from "../test/serverPostHog"
 import { AiDraftError, AiNotConfiguredError, generateRecipeVersionDraft } from "./recipeVersionAi"
 import { recipeVersionDraftHandler, resetDraftRateLimit } from "./recipeVersionDraftHandler"
+import { traceRequest } from "./requestTracing"
 import { buildSessionSetCookie } from "./session"
+import { activeTraceId } from "./telemetry"
 
 vi.mock("./recipeVersionAi", async importOriginal => ({
   ...(await importOriginal<typeof import("./recipeVersionAi")>()),
@@ -130,6 +133,101 @@ describe("recipeVersionDraftHandler", () => {
     expect(draftRecipe.cookMinutes).toBe(75)
   })
 
+  it("traces the draft and records its outcome, tokens and duration", async () => {
+    const posthog = installTestPostHog()
+    try {
+      let traceIdSeenByModel: string | undefined
+      vi.mocked(generateRecipeVersionDraft).mockImplementation(async () => {
+        traceIdSeenByModel = activeTraceId()
+        return {
+          draft: goodAirFryerDraft,
+          usage: {
+            inputTokens: 1,
+            outputTokens: 2,
+            thinkingTokens: 3,
+            model: "gemini-3.8-flash",
+            thinkingLevel: "medium",
+            connectMs: 30,
+            firstTokenMs: 40,
+            modelMs: 50,
+          },
+        }
+      })
+      mealieReturns(200)
+      const draftRequest = new Request("http://app/api/manaaki/recipe-versions/draft", {
+        method: "POST",
+      })
+      const { response } = await traceRequest(draftRequest, async () => ({
+        response: await post(valid),
+      }))
+      await events(response)
+      const requestSpan = posthog.span("POST /api/manaaki/recipe-versions/draft")!
+      const span = posthog.span("recipe_version.draft")!
+      expect(span.parentSpanId).toBe(requestSpan.spanId)
+      expect(posthog.span("mealie")?.traceId).toBe(requestSpan.traceId)
+      expect(traceIdSeenByModel).toBe(requestSpan.traceId)
+      expect(span.attributes).toMatchObject({
+        "recipe.id": RECIPE_ID,
+        "recipe_version.target": "airFryer",
+        "gen_ai.request.model": "gemini-3.8-flash",
+        "gen_ai.usage.input_tokens": 1,
+        "gen_ai.usage.output_tokens": 2,
+        "recipe_version.thinking_tokens": 3,
+        "recipe_version.confidence": goodAirFryerDraft.confidence,
+      })
+      const samples = await posthog.flushMetrics()
+      expect(samples).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: "recipe_version.drafts",
+            attributes: {
+              target: "airFryer",
+              model: "gemini-3.8-flash",
+              outcome: "ok",
+              status: "200",
+            },
+          }),
+          expect.objectContaining({
+            name: "recipe_version.draft.duration",
+            unit: "ms",
+            attributes: { target: "airFryer", model: "gemini-3.8-flash", outcome: "ok" },
+          }),
+          expect.objectContaining({
+            name: "recipe_version.draft.tokens",
+            value: 3,
+            attributes: { model: "gemini-3.8-flash", kind: "thinking" },
+          }),
+        ])
+      )
+      expect(JSON.stringify(samples)).not.toContain(RECIPE_ID)
+    } finally {
+      await posthog.uninstall()
+    }
+  })
+
+  it("marks a failed draft's span as an error", async () => {
+    const posthog = installTestPostHog()
+    try {
+      vi.mocked(generateRecipeVersionDraft).mockRejectedValue(
+        new AiDraftError("The AI stopped before finishing the draft.", "MAX_TOKENS")
+      )
+      mealieReturns(200)
+      await events(await post(valid))
+      expect(posthog.span("recipe_version.draft")).toMatchObject({
+        status: { code: "error" },
+        attributes: { "http.response.status_code": 502, "error.detail": "MAX_TOKENS" },
+      })
+      expect(await posthog.flushMetrics()).toContainEqual(
+        expect.objectContaining({
+          name: "recipe_version.drafts",
+          attributes: expect.objectContaining({ outcome: "error", status: "502" }),
+        })
+      )
+    } finally {
+      await posthog.uninstall()
+    }
+  })
+
   it("never echoes the API key or recipe text in logs", async () => {
     mealieReturns(200)
     const info = vi.mocked(console.info)
@@ -248,6 +346,41 @@ describe("recipeVersionDraftHandler", () => {
       expect(vi.mocked(console.info).mock.calls.flat().join(" ")).toContain('"status":504')
     )
     expect(abortedWhenLeft).toBe(true)
+  })
+
+  it("records a draft the cook left as abandoned, not as an error", async () => {
+    const posthog = installTestPostHog()
+    try {
+      mealieReturns(200)
+      let leave: () => void = () => {}
+      const left = new Promise<void>(resolve => {
+        leave = resolve
+      })
+      vi.mocked(generateRecipeVersionDraft).mockImplementation(
+        async (_recipe, _target, _notes, _signal, onProgress) => {
+          onProgress?.({ stage: "thinking" })
+          await left
+          throw new DOMException("aborted", "AbortError")
+        }
+      )
+      const reader = (await post(valid)).body!.getReader()
+      await reader.read()
+      await reader.cancel()
+      leave()
+      await vi.waitFor(() => expect(posthog.span("recipe_version.draft")).toBeDefined())
+      const span = posthog.span("recipe_version.draft")!
+      expect(span.status).toBeUndefined()
+      expect(span.events).toEqual([])
+      expect(span.attributes).toMatchObject({ "recipe_version.abandoned": true })
+      expect(await posthog.flushMetrics()).toContainEqual(
+        expect.objectContaining({
+          name: "recipe_version.drafts",
+          attributes: expect.objectContaining({ outcome: "abandoned", status: "504" }),
+        })
+      )
+    } finally {
+      await posthog.uninstall()
+    }
   })
 
   it("streams the model's progress before the result", async () => {

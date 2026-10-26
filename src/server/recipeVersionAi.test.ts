@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { goodAirFryerDraft } from "../test/fixtures/recipeVersionDrafts"
+import { installTestPostHog } from "../test/serverPostHog"
 import {
   AiDraftError,
   AiNotConfiguredError,
@@ -9,6 +10,7 @@ import {
   generateRecipeVersionDraft,
   stepsWritten,
 } from "./recipeVersionAi"
+import { traced, withRequestContext } from "./telemetry"
 
 const generateContentStream = vi.hoisted(() => vi.fn())
 
@@ -118,6 +120,75 @@ describe("generateRecipeVersionDraft", () => {
     generateContentStream.mockImplementation(async () => streamed(reply()))
     await generateRecipeVersionDraft(recipe, "airFryer", "")
     expect(generateContentStream.mock.calls[0][0].model).toBe("gemini-other")
+  })
+
+  it("times connecting as the wait for Gemini's first chunk", async () => {
+    let now = 0
+    const clock = vi.spyOn(performance, "now").mockImplementation(() => now)
+    try {
+      generateContentStream.mockImplementation(async () =>
+        (async function* () {
+          now = 300
+          yield { text: "" }
+          now = 900
+          yield reply()
+          now = 1200
+        })()
+      )
+      const { usage } = await generateRecipeVersionDraft(recipe, "airFryer", "")
+      expect(usage).toMatchObject({ connectMs: 300, firstTokenMs: 900, modelMs: 1200 })
+    } finally {
+      clock.mockRestore()
+    }
+  })
+
+  it("reports the generation to PostHog on the request's trace", async () => {
+    const posthog = installTestPostHog()
+    try {
+      generateContentStream.mockImplementation(async () => streamed(reply()))
+      await withRequestContext({ distinctId: "person-1", sessionId: "session-1" }, () =>
+        traced("recipe_version.draft", {}, () => generateRecipeVersionDraft(recipe, "airFryer", ""))
+      )
+      const span = posthog.span("recipe_version.draft")!
+      const generation = posthog.capture.mock.calls
+        .map(([event]) => event)
+        .find(event => event.event === "$ai_generation")
+      expect(generation).toMatchObject({
+        distinctId: "person-1",
+        properties: {
+          $ai_trace_id: span.traceId,
+          $ai_model: "gemini-3.8-flash",
+          $ai_provider: "gemini",
+          $ai_input_tokens: 800,
+          $session_id: "session-1",
+          feature: "recipe_version_draft",
+          target: "airFryer",
+        },
+      })
+    } finally {
+      await posthog.uninstall()
+    }
+  })
+
+  it("reports failed generations to PostHog", async () => {
+    const posthog = installTestPostHog()
+    try {
+      generateContentStream.mockImplementation(async () =>
+        (async function* () {
+          yield { text: "" }
+          throw new Error("connection reset")
+        })()
+      )
+      await expect(generateRecipeVersionDraft(recipe, "airFryer", "")).rejects.toThrow(
+        "connection reset"
+      )
+      const generation = posthog.capture.mock.calls
+        .map(([event]) => event)
+        .find(event => event.event === "$ai_generation")
+      expect(generation?.properties).toMatchObject({ $ai_is_error: true })
+    } finally {
+      await posthog.uninstall()
+    }
   })
 
   it("refuses to run without a key", async () => {
