@@ -14,6 +14,7 @@ import {
   METHOD_TOOL_SLUGS,
   VERSION_EXTRAS_KEYS,
 } from "../utils/recipeVersions"
+import { withClientBuild } from "./clientBuild"
 import {
   duplicateOneApiRecipesSlugDuplicatePost,
   getOneApiRecipesSlugGet,
@@ -26,6 +27,8 @@ import type {
   RecipeOutput,
   RecipeTool,
 } from "./generated/types.gen"
+
+const DRAFT_URL = "/api/manaaki/recipe-versions/draft"
 
 export type DraftResponse = {
   draft: RecipeVersionDraft
@@ -75,13 +78,16 @@ export async function requestRecipeVersionDraft(
   signal?: AbortSignal,
   onProgress: (event: DraftProgressEvent) => void = () => {}
 ): Promise<DraftResponse> {
-  const response = await fetch("/api/manaaki/recipe-versions/draft", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "same-origin",
-    body: JSON.stringify({ recipeId, target, notes }),
-    signal,
-  })
+  const response = await fetch(
+    DRAFT_URL,
+    withClientBuild(DRAFT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ recipeId, target, notes }),
+      signal,
+    })
+  )
   if (!response.ok || !response.body) {
     const body: unknown = await response.json().catch(() => null)
     const message =

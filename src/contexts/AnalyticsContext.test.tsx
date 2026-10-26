@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react"
 import { useState } from "react"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
+import { appAnalytics } from "../lib/analytics"
 import { loadAnalytics } from "../lib/loadAnalytics"
 import { AnalyticsPageViews, AnalyticsProvider, usePostHog } from "./AnalyticsContext"
 
@@ -40,6 +41,7 @@ beforeEach(() => {
   fetching = 0
 })
 afterEach(() => {
+  appAnalytics.reset()
   vi.useRealTimers()
   vi.unstubAllEnvs()
 })

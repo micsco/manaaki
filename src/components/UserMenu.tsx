@@ -1,6 +1,7 @@
 import { Menu } from "@base-ui/react/menu"
 import { mdiAccount, mdiInformationOutline, mdiLogout } from "@mdi/js"
 
+import { withClientBuild } from "../api/clientBuild"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import { clearCookingStorage } from "../pwa/client"
 import { loginStartHref } from "../utils/loginReturn"
@@ -62,7 +63,7 @@ export function UserMenu({ onOpenAbout, returnTo = "/recipes" }: UserMenuProps) 
 
   async function signOut() {
     clearCookingStorage()
-    await fetch("/api/auth/logout", { method: "POST" })
+    await fetch("/api/auth/logout", withClientBuild("/api/auth/logout", { method: "POST" }))
     window.location.assign("/recipes")
   }
 

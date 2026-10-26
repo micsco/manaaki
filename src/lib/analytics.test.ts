@@ -46,3 +46,33 @@ it("bounds memory when analytics never loads", () => {
   expect(capture).toHaveBeenCalledTimes(200)
   expect(capture.mock.calls[0][1].index).toBe(50)
 })
+
+it("replays early metrics once PostHog loads, then sends them straight through", () => {
+  const analytics = createBufferedAnalytics(true)
+  const metrics = { count: vi.fn(), gauge: vi.fn(), histogram: vi.fn() }
+  analytics.count("app_update.version_check", 1, { attributes: { outcome: "same" } })
+  analytics.histogram("app_update.held.duration", 1200, { unit: "ms" })
+  expect(metrics.count).not.toHaveBeenCalled()
+  analytics.connect({ capture: vi.fn(), metrics })
+  expect(metrics.count).toHaveBeenCalledWith("app_update.version_check", 1, {
+    attributes: { outcome: "same" },
+  })
+  expect(metrics.histogram).toHaveBeenCalledWith("app_update.held.duration", 1200, { unit: "ms" })
+  analytics.gauge("open_tabs", 2)
+  expect(metrics.gauge).toHaveBeenCalledWith("open_tabs", 2, undefined)
+})
+
+it("checks whether analytics is enabled each time, so the shared client follows the token", () => {
+  let enabled = false
+  const analytics = createBufferedAnalytics(() => enabled)
+  const capture = vi.fn()
+  analytics.capture("before")
+  enabled = true
+  analytics.capture("after")
+  analytics.connect({ capture })
+  expect(capture).toHaveBeenCalledTimes(1)
+  expect(capture).toHaveBeenCalledWith("after", expect.anything(), expect.anything())
+  analytics.reset()
+  analytics.capture("queued again")
+  expect(capture).toHaveBeenCalledTimes(1)
+})

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { installTestPostHog } from "../test/serverPostHog"
 import { traceRequest } from "./requestTracing"
@@ -102,5 +102,52 @@ describe("traceRequest", () => {
       return { response: new Response() }
     })
     expect(anonymous).toEqual({ distinctId: undefined, sessionId: undefined })
+  })
+
+  it("records which build the browser is running and counts requests from other builds", async () => {
+    vi.stubEnv("VITE_BUILD_GIT_SHORT_SHA", "new5678")
+    posthog = installTestPostHog()
+    try {
+      await traceRequest(request("/api/recipes", { "x-manaaki-build": "old1234" }), async () => ({
+        response: new Response(),
+      }))
+      await traceRequest(request("/plan", { "x-manaaki-build": "new5678" }), async () => ({
+        response: new Response(),
+      }))
+      expect(posthog.span("GET /api/recipes")?.attributes).toMatchObject({
+        "client.build": "old1234",
+        "client.build_current": false,
+      })
+      expect(posthog.span("GET /plan")?.attributes).toMatchObject({
+        "client.build_current": true,
+      })
+      expect(await posthog.flushMetrics()).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: "http.server.client_build_requests",
+            attributes: { route: "/api/recipes", client_build: "other" },
+          }),
+          expect.objectContaining({
+            name: "http.server.client_build_requests",
+            attributes: { route: "/plan", client_build: "current" },
+          }),
+        ])
+      )
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
+
+  it("leaves the build out when the browser doesn't send one", async () => {
+    vi.stubEnv("VITE_BUILD_GIT_SHORT_SHA", "new5678")
+    posthog = installTestPostHog()
+    try {
+      await traceRequest(request("/plan"), async () => ({ response: new Response() }))
+      expect(posthog.span("GET /plan")?.attributes).not.toHaveProperty("client.build")
+      const samples = await posthog.flushMetrics()
+      expect(samples.map(sample => sample.name)).not.toContain("http.server.client_build_requests")
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 })

@@ -30,7 +30,7 @@ vi.mock("../pwa/appUpdate", async original => ({
 }))
 
 let visibility: DocumentVisibilityState = "visible"
-const analytics = { capture: vi.fn() }
+const analytics = { capture: vi.fn(), count: vi.fn(), gauge: vi.fn(), histogram: vi.fn() }
 
 function makeRouter() {
   const blocker: { fn?: BlockerFn } = {}
@@ -351,20 +351,130 @@ describe("recovering from a missing page file", () => {
   })
 })
 
-it("reports a completed update to analytics", () => {
-  vi.mocked(takeAppliedUpdate).mockReturnValueOnce({
-    trigger: "navigation",
-    source: "worker-waiting",
+describe("reporting to analytics", () => {
+  const applied = {
+    trigger: "navigation" as const,
+    source: "worker-waiting" as const,
     heldMs: 1200,
     fromSha: "abc1234",
     toSha: "def5678",
+    activation: "activated" as const,
+    updated: true,
+  }
+
+  it("reports a completed update with how long it was held", () => {
+    vi.mocked(takeAppliedUpdate).mockReturnValueOnce(applied)
+    start()
+    expect(analytics.capture).toHaveBeenCalledWith("app_updated", {
+      trigger: "navigation",
+      source: "worker-waiting",
+      held_ms: 1200,
+      from_sha: "abc1234",
+      to_sha: "def5678",
+      activation: "activated",
+    })
+    expect(analytics.histogram).toHaveBeenCalledWith("app_update.held.duration", 1200, {
+      unit: "ms",
+      attributes: { trigger: "navigation" },
+    })
+    expect(analytics.count).toHaveBeenCalledWith("app_update.applied", 1, {
+      attributes: { trigger: "navigation", activation: "activated" },
+    })
   })
-  start()
-  expect(analytics.capture).toHaveBeenCalledWith("app_updated", {
-    trigger: "navigation",
-    source: "worker-waiting",
-    held_ms: 1200,
-    from_sha: "abc1234",
-    to_sha: "def5678",
+
+  it("reports a reload that came back on the same build as a failed update", () => {
+    vi.mocked(takeAppliedUpdate).mockReturnValueOnce({
+      ...applied,
+      toSha: "abc1234",
+      activation: "timeout",
+      updated: false,
+    })
+    start()
+    expect(analytics.capture).toHaveBeenCalledWith(
+      "app_update_failed",
+      expect.objectContaining({ trigger: "navigation", activation: "timeout", to_sha: "abc1234" })
+    )
+    expect(analytics.capture).not.toHaveBeenCalledWith("app_updated", expect.anything())
+    expect(analytics.count).toHaveBeenCalledWith("app_update.failed", 1, {
+      attributes: { trigger: "navigation", activation: "timeout" },
+    })
+  })
+
+  it("reports each update once when it is first found", () => {
+    start()
+    tap()
+    act(() => markUpdatePending("worker-waiting"))
+    act(() => markUpdatePending("worker-activated"))
+    const detected = analytics.capture.mock.calls.filter(
+      ([event]) => event === "app_update_detected"
+    )
+    expect(detected).toEqual([
+      ["app_update_detected", { source: "worker-waiting", from_sha: "abc1234" }],
+    ])
+  })
+
+  it("counts each reason that held an update back once per trigger", () => {
+    start()
+    tap()
+    act(() => markUpdatePending("worker-waiting"))
+    const release = holdAppUpdate("timer")
+    act(() => {
+      vi.advanceTimersByTime(IDLE_APPLY_MS + IDLE_CHECK_MS * 3)
+    })
+    const heldBack = analytics.count.mock.calls.filter(([name]) => name === "app_update.held_back")
+    expect(heldBack).toEqual([
+      ["app_update.held_back", 1, { attributes: { trigger: "idle", reason: "timer" } }],
+    ])
+    release()
+  })
+
+  it("reports the fallback prompt with how long the update waited", async () => {
+    start()
+    tap()
+    act(() => markUpdatePending("worker-waiting"))
+    const release = holdAppUpdate("timer")
+    act(() => {
+      vi.advanceTimersByTime(FALLBACK_PROMPT_MS)
+    })
+    expect(analytics.capture).toHaveBeenCalledWith("app_update_prompt_shown", {
+      held_ms: FALLBACK_PROMPT_MS,
+    })
+    release()
+  })
+
+  it.each([
+    ["newer", { ok: true, json: async () => ({ sha: "new9999" }) }],
+    ["same", { ok: true, json: async () => ({ sha: "abc1234" }) }],
+    ["failed", { ok: false }],
+  ])("counts a %s version check", async (outcome, response) => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response))
+    start()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(VERSION_POLL_MS)
+    })
+    expect(analytics.count).toHaveBeenCalledWith("app_update.version_check", 1, {
+      attributes: { outcome },
+    })
+  })
+
+  it("counts missing-file recoveries and the ones the loop guard stopped", () => {
+    start()
+    act(() => {
+      window.dispatchEvent(new Event("vite:preloadError", { cancelable: true }))
+    })
+    sessionStorage.setItem(
+      "manaaki:update:attempt",
+      JSON.stringify({ sha: "abc1234", at: Date.now() })
+    )
+    act(() => {
+      window.dispatchEvent(new Event("vite:preloadError", { cancelable: true }))
+    })
+    sessionStorage.removeItem("manaaki:update:attempt")
+    expect(analytics.count).toHaveBeenCalledWith("app_update.missing_file", 1, {
+      attributes: { outcome: "reloaded" },
+    })
+    expect(analytics.count).toHaveBeenCalledWith("app_update.missing_file", 1, {
+      attributes: { outcome: "loop_guarded" },
+    })
   })
 })

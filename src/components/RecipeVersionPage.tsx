@@ -13,7 +13,7 @@ import {
   type SavedRecipeRef,
 } from "../api/recipeVersions"
 import { usePostHog } from "../contexts/AnalyticsContext"
-import { clearDraft, readDraft, writeDraft } from "../hooks/usePersistentDraft"
+import { clearDraft, readDraft, reportRestoredDraft, writeDraft } from "../hooks/usePersistentDraft"
 import { useRecipeList } from "../hooks/useRecipeList"
 import { isApplyingAppUpdate } from "../pwa/appUpdate"
 import { useHoldAppUpdate } from "../pwa/updateHolds"
@@ -174,6 +174,10 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
   }
 
   useEffect(() => () => abort.current?.abort(), [])
+
+  useEffect(() => {
+    if (restored) reportRestoredDraft(draftKey, { base: draftBase })
+  }, [restored, draftKey, draftBase])
 
   useEffect(() => {
     if (!restored || leaving.current) return

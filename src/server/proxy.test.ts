@@ -190,7 +190,7 @@ describe("handleApiProxy — upstream Host", () => {
 })
 
 describe("handleApiProxy — tracing", () => {
-  it("keeps PostHog's browser headers away from Mealie", async () => {
+  it("keeps PostHog's and the app's telemetry headers away from Mealie", async () => {
     setNextResponse({ status: 200, body: "[]" })
     await handleApiProxy(
       new Request("https://app/api/recipes", {
@@ -198,6 +198,7 @@ describe("handleApiProxy — tracing", () => {
           "x-posthog-distinct-id": "person-1",
           "x-posthog-session-id": "session-1",
           "x-posthog-window-id": "window-1",
+          "x-manaaki-build": "abc1234",
           accept: "application/json",
         },
       })
@@ -205,6 +206,7 @@ describe("handleApiProxy — tracing", () => {
     expect(lastUpstreamRequest?.headers).not.toHaveProperty("x-posthog-distinct-id")
     expect(lastUpstreamRequest?.headers).not.toHaveProperty("x-posthog-session-id")
     expect(lastUpstreamRequest?.headers).not.toHaveProperty("x-posthog-window-id")
+    expect(lastUpstreamRequest?.headers).not.toHaveProperty("x-manaaki-build")
     expect(lastUpstreamRequest?.headers.accept).toBe("application/json")
   })
 

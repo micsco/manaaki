@@ -1,8 +1,14 @@
 import { act, renderHook } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { appAnalytics } from "../lib/analytics"
 import { clearCookingStorage } from "../pwa/client"
-import { DRAFT_TTL_MS, pruneExpiredDrafts, usePersistentDraft } from "./usePersistentDraft"
+import {
+  DRAFT_TTL_MS,
+  pruneExpiredDrafts,
+  reportRestoredDraft,
+  usePersistentDraft,
+} from "./usePersistentDraft"
 
 afterEach(() => {
   vi.useRealTimers()
@@ -75,5 +81,40 @@ describe("usePersistentDraft", () => {
     act(() => result.current[1]("Private"))
     act(() => clearCookingStorage())
     expect(result.current[0]).toBe("")
+  })
+})
+
+describe("draft metrics", () => {
+  function storeDraft(key: string, savedAt: number, value: unknown = "saved") {
+    localStorage.setItem(`manaaki:draft:v1:${key}`, JSON.stringify({ savedAt, base: null, value }))
+  }
+
+  it("counts a draft saved before this page loaded as restored, by kind", () => {
+    const count = vi.spyOn(appAnalytics, "count")
+    storeDraft("meal-plan:recipe:abc", performance.timeOrigin - 60_000)
+    const { result } = renderHook(() => usePersistentDraft("meal-plan:recipe:abc", ""))
+    expect(result.current[0]).toBe("saved")
+    expect(count).toHaveBeenCalledWith("draft.restored", 1, { attributes: { kind: "meal-plan" } })
+    localStorage.clear()
+  })
+
+  it("does not count a draft written earlier in the same page load", () => {
+    const count = vi.spyOn(appAnalytics, "count")
+    storeDraft("recipe-version:abc", Date.now())
+    reportRestoredDraft("recipe-version:abc")
+    expect(count).not.toHaveBeenCalled()
+    localStorage.clear()
+  })
+
+  it("counts expired drafts as they are pruned", () => {
+    const count = vi.spyOn(appAnalytics, "count")
+    storeDraft("import-recipe:url", Date.now() - DRAFT_TTL_MS - 1)
+    storeDraft("shopping-list:1:new-item", Date.now())
+    pruneExpiredDrafts()
+    expect(count).toHaveBeenCalledTimes(1)
+    expect(count).toHaveBeenCalledWith("draft.expired", 1, {
+      attributes: { kind: "import-recipe" },
+    })
+    localStorage.clear()
   })
 })

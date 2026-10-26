@@ -42,8 +42,9 @@ appears instead.
 Unfinished text in forms and the AI recipe-version review are saved as drafts
 (`usePersistentDraft`, 24-hour expiry, cleared on sign-out), so a reload brings them
 back. A missing lazy-loaded file after a deploy triggers one reload to fetch the new
-build, and a reload-loop guard stops repeats on the same build. Each applied update
-is reported to PostHog as `app_updated` with its trigger and how long it was held.
+build, and a reload-loop guard stops repeats on the same build. Each update is
+reported to PostHog from detection to reload, including reloads that stayed on the old
+build and what held updates back; see `docs/observability.md`.
 The worker retains two previous app-shell versions to support already-open tabs.
 
 Shopping check-offs are queued automatically in account-scoped storage, with a

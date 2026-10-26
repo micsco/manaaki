@@ -26,3 +26,12 @@ it("does not hold app updates for reads", async () => {
   respond(new Response("{}"))
   await read
 })
+
+it("tells the server which build is calling", async () => {
+  vi.stubEnv("VITE_BUILD_GIT_SHORT_SHA", "abc1234")
+  const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}"))
+  await clientFetch(new Request("http://localhost/api/recipes"))
+  const [, init] = fetchSpy.mock.calls[0]
+  expect(new Headers(init?.headers).get("x-manaaki-build")).toBe("abc1234")
+  vi.unstubAllEnvs()
+})

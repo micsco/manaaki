@@ -1,7 +1,7 @@
 import type { AnyRouter, BlockerFn } from "@tanstack/react-router"
 import { useEffect } from "react"
 
-import type { AnalyticsClient } from "../lib/analytics"
+import type { AppAnalytics } from "../lib/analytics"
 import { toastManager } from "../lib/toastManager"
 import {
   applyAppUpdate,
@@ -12,6 +12,7 @@ import {
   recentlyAttemptedUpdate,
   takeAppliedUpdate,
   updatePendingSince,
+  updatePendingSource,
   type UpdateTrigger,
 } from "../pwa/appUpdate"
 import { noteTyping, updateBlockers, type UpdateContext } from "../pwa/updateHolds"
@@ -26,46 +27,83 @@ export const FALLBACK_PROMPT_MS = 12 * 60 * 60 * 1000
 const UPDATE_TOAST_ID = "app-update-available"
 const INTERACTION_EVENTS = ["pointerdown", "keydown", "wheel", "touchmove"] as const
 
-async function fetchRemoteSha(): Promise<string | null> {
+async function fetchRemoteSha(): Promise<{ sha: string | null } | null> {
   try {
     const res = await fetch("/version.json", { cache: "no-store" })
     if (!res.ok) return null
     const data = (await res.json()) as { sha?: string }
-    return data.sha ?? null
+    return { sha: data.sha ?? null }
   } catch {
     return null
   }
 }
 
-function canApplyUpdate(context: UpdateContext) {
-  return (
-    updatePendingSince() !== null &&
-    !isApplyingAppUpdate() &&
-    !recentlyAttemptedUpdate() &&
-    updateBlockers(context).length === 0
-  )
+function reportAppliedUpdate(analytics: AppAnalytics) {
+  const applied = takeAppliedUpdate()
+  if (!applied) return
+  const properties = {
+    trigger: applied.trigger,
+    source: applied.source,
+    held_ms: applied.heldMs,
+    from_sha: applied.fromSha,
+    to_sha: applied.toSha,
+    activation: applied.activation,
+  }
+  const attributes = { trigger: applied.trigger, activation: applied.activation ?? "unknown" }
+  if (!applied.updated) {
+    analytics.capture("app_update_failed", properties)
+    analytics.count("app_update.failed", 1, { attributes })
+    return
+  }
+  analytics.capture("app_updated", properties)
+  analytics.count("app_update.applied", 1, { attributes })
+  analytics.histogram("app_update.held.duration", applied.heldMs, {
+    unit: "ms",
+    attributes: { trigger: applied.trigger },
+  })
 }
 
-function tryApplyUpdate(trigger: UpdateTrigger, context: UpdateContext = "in-place") {
-  if (!canApplyUpdate(context)) return false
-  void applyAppUpdate(trigger)
-  return true
-}
+export function useAutoUpdate(router: AnyRouter, analytics: AppAnalytics) {
+  useEffect(() => reportAppliedUpdate(analytics), [analytics])
 
-export function useAutoUpdate(router: AnyRouter, analytics: AnalyticsClient) {
   useEffect(() => {
-    const applied = takeAppliedUpdate()
-    if (applied)
-      analytics.capture("app_updated", {
-        trigger: applied.trigger,
-        source: applied.source,
-        held_ms: applied.heldMs,
-        from_sha: applied.fromSha,
-        to_sha: applied.toSha,
+    let reportedPendingSince: number | null = null
+    const reportedHolds = new Set<string>()
+
+    const reportHolds = (trigger: UpdateTrigger, reasons: string[]) => {
+      for (const reason of reasons) {
+        const key = `${trigger}:${reason}`
+        if (reportedHolds.has(key)) continue
+        reportedHolds.add(key)
+        analytics.count("app_update.held_back", 1, { attributes: { trigger, reason } })
+      }
+    }
+
+    const canApplyUpdate = (trigger: UpdateTrigger, context: UpdateContext) => {
+      if (updatePendingSince() === null || isApplyingAppUpdate() || recentlyAttemptedUpdate())
+        return false
+      const blockers = updateBlockers(context)
+      reportHolds(trigger, blockers)
+      return blockers.length === 0
+    }
+
+    const tryApplyUpdate = (trigger: UpdateTrigger, context: UpdateContext = "in-place") => {
+      if (!canApplyUpdate(trigger, context)) return false
+      void applyAppUpdate(trigger)
+      return true
+    }
+
+    const reportDetected = () => {
+      const pendingSince = updatePendingSince()
+      if (pendingSince === null || pendingSince === reportedPendingSince) return
+      reportedPendingSince = pendingSince
+      reportedHolds.clear()
+      analytics.capture("app_update_detected", {
+        source: updatePendingSource(),
+        from_sha: currentBuildSha(),
       })
-  }, [analytics])
+    }
 
-  useEffect(() => {
     let freshSince = Date.now()
     let freshTrigger: UpdateTrigger = "launch"
     let lastInteractionAt = 0
@@ -86,6 +124,7 @@ export function useAutoUpdate(router: AnyRouter, analytics: AnalyticsClient) {
     }
 
     const onPending = () => {
+      reportDetected()
       if (document.visibilityState === "hidden") {
         scheduleHiddenApply()
         return
@@ -113,8 +152,9 @@ export function useAutoUpdate(router: AnyRouter, analytics: AnalyticsClient) {
       lastInteractionAt = Date.now()
     }
 
-    const showFallbackPrompt = () => {
+    const showFallbackPrompt = (heldMs: number) => {
       promptShown = true
+      analytics.capture("app_update_prompt_shown", { held_ms: heldMs })
       toastManager.add({
         id: UPDATE_TOAST_ID,
         title: "Update ready",
@@ -140,14 +180,19 @@ export function useAutoUpdate(router: AnyRouter, analytics: AnalyticsClient) {
       if (pendingSince === null || document.visibilityState !== "visible") return
       const lastActivity = Math.max(lastInteractionAt, freshSince)
       if (Date.now() - lastActivity >= IDLE_APPLY_MS && tryApplyUpdate("idle")) return
-      if (!promptShown && Date.now() - pendingSince >= FALLBACK_PROMPT_MS) showFallbackPrompt()
+      const heldMs = Date.now() - pendingSince
+      if (!promptShown && heldMs >= FALLBACK_PROMPT_MS) showFallbackPrompt(heldMs)
     }
 
     const currentSha = currentBuildSha()
     const versionCheck = async () => {
       if (!currentSha || document.visibilityState !== "visible") return
-      const remoteSha = await fetchRemoteSha()
-      if (!remoteSha || remoteSha === currentSha || remoteSha === "dev") return
+      const remote = await fetchRemoteSha()
+      const remoteSha = remote?.sha
+      const isNewer = Boolean(remoteSha && remoteSha !== currentSha && remoteSha !== "dev")
+      const outcome = !remote ? "failed" : isNewer ? "newer" : "same"
+      analytics.count("app_update.version_check", 1, { attributes: { outcome } })
+      if (!isNewer) return
       if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
         const registration = await navigator.serviceWorker.getRegistration()
         await registration?.update().catch(() => {})
@@ -157,14 +202,18 @@ export function useAutoUpdate(router: AnyRouter, analytics: AnalyticsClient) {
     }
 
     const onPreloadError = (event: Event) => {
-      if (recentlyAttemptedUpdate()) return
+      const guarded = recentlyAttemptedUpdate()
+      analytics.count("app_update.missing_file", 1, {
+        attributes: { outcome: guarded ? "loop_guarded" : "reloaded" },
+      })
+      if (guarded) return
       event.preventDefault()
       void applyAppUpdate("chunk-error")
     }
 
     const blockerFn: BlockerFn = ({ currentLocation, nextLocation, action }) => {
       if (currentLocation.pathname === nextLocation.pathname) return false
-      if (!canApplyUpdate("navigation")) return false
+      if (!canApplyUpdate("navigation", "navigation")) return false
       if (action === "PUSH" || action === "REPLACE") {
         void applyAppUpdate("navigation", {
           href: nextLocation.href,
@@ -205,5 +254,5 @@ export function useAutoUpdate(router: AnyRouter, analytics: AnalyticsClient) {
       for (const type of INTERACTION_EVENTS)
         window.removeEventListener(type, trackInteraction, { capture: true })
     }
-  }, [router])
+  }, [analytics, router])
 }

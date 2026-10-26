@@ -1,4 +1,6 @@
-import { useCallback, useMemo, useSyncExternalStore } from "react"
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react"
+
+import { appAnalytics } from "../lib/analytics"
 
 export const DRAFT_TTL_MS = 24 * 60 * 60 * 1000
 const PREFIX = "manaaki:draft:v1:"
@@ -14,6 +16,10 @@ function storageKey(key: string) {
   return `${PREFIX}${key}`
 }
 
+function draftKind(key: string) {
+  return key.split(":")[0] || "unknown"
+}
+
 function readRaw(key: string) {
   const unsaved = unsavedDrafts.get(key)
   if (unsaved !== undefined) return unsaved
@@ -24,13 +30,16 @@ function readRaw(key: string) {
   }
 }
 
-function parseDraft(raw: string | null, base: string | null): { value: unknown } | null {
+function parseDraft(
+  raw: string | null,
+  base: string | null
+): { value: unknown; savedAt: number } | null {
   if (raw === null) return null
   try {
     const stored = JSON.parse(raw) as StoredDraft
     if (Date.now() - stored.savedAt > DRAFT_TTL_MS) return null
     if ((stored.base ?? null) !== base) return null
-    return { value: stored.value }
+    return { value: stored.value, savedAt: stored.savedAt }
   } catch {
     return null
   }
@@ -46,7 +55,14 @@ function subscribe(listener: () => void) {
 }
 
 export function readDraft(key: string, options: DraftOptions = {}) {
-  return parseDraft(readRaw(key), options.base ?? null)
+  const stored = parseDraft(readRaw(key), options.base ?? null)
+  return stored ? { value: stored.value } : null
+}
+
+export function reportRestoredDraft(key: string, options: DraftOptions = {}) {
+  const stored = parseDraft(readRaw(key), options.base ?? null)
+  if (!stored || stored.savedAt >= performance.timeOrigin) return
+  appAnalytics.count("draft.restored", 1, { attributes: { kind: draftKind(key) } })
 }
 
 export function writeDraft(key: string, value: unknown, options: DraftOptions = {}) {
@@ -85,8 +101,12 @@ export function pruneExpiredDrafts(now = Date.now()) {
       const stored = JSON.parse(window.localStorage.getItem(key) ?? "null") as {
         savedAt?: number
       } | null
-      if (!stored?.savedAt || now - stored.savedAt > DRAFT_TTL_MS)
+      if (!stored?.savedAt || now - stored.savedAt > DRAFT_TTL_MS) {
         window.localStorage.removeItem(key)
+        appAnalytics.count("draft.expired", 1, {
+          attributes: { kind: draftKind(key.slice(PREFIX.length)) },
+        })
+      }
     }
   } catch {}
 }
@@ -111,5 +131,6 @@ export function usePersistentDraft<T>(key: string, initialValue: T, options: Dra
     [key, base, initialValue]
   )
   const clear = useCallback(() => clearDraft(key), [key])
+  useEffect(() => reportRestoredDraft(key, { base }), [key, base])
   return [value, setValue, clear] as const
 }

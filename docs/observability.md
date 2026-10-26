@@ -31,6 +31,11 @@ requests (`tracing_headers` in `src/lib/loadAnalytics.ts`), so a request's spans
 carry the person and the session replay they belong to. The proxy removes these
 headers before calling Mealie.
 
+Browser API calls also send `X-Manaaki-Build` with the running build (`src/api/clientBuild.ts`).
+Request spans record it as `client.build` and `client.build_current`, and
+`http.server.client_build_requests` counts requests from the current build and from
+older or newer tabs by route. The proxy strips this header too.
+
 ## AI observability
 
 Gemini calls go through `@posthog/ai`, which records an `$ai_generation` event with
@@ -59,3 +64,34 @@ one query; see PostHog's
 `mealie.slots.active` staying at `MEALIE_CONCURRENCY_LIMIT` while `mealie.slots.waiting`
 climbs is the early sign of Mealie's connection pool wedging. Keep metric attributes
 to small fixed sets; recipe IDs and people belong on spans.
+
+## Browser telemetry
+
+`posthog-js` loads as `manaaki-web` and registers `app_version` (the short build SHA)
+on every event, so errors, replays and funnels can be split by build. Code outside
+React reports through `appAnalytics` in `src/lib/analytics.ts`, which queues events
+and metrics until PostHog has loaded.
+
+App updates (`src/hooks/useAutoUpdate.ts`) send these events:
+
+| Event | When |
+|-------|------|
+| `app_update_detected` | A new build is first found, with `source` (`worker-waiting`, `worker-activated`, `version-file`) |
+| `app_updated` | The page reloaded onto the new build, with `trigger`, `held_ms` and the worker `activation` |
+| `app_update_failed` | The page reloaded but is still on the old build |
+| `app_update_prompt_shown` | An update was held for 12 hours and the Update prompt appeared |
+
+And these metrics:
+
+| Metric | Type | Attributes |
+|--------|------|------------|
+| `app_update.applied`, `app_update.failed` | counter | `trigger`, `activation` (`activated`, `timeout`, `none-waiting`, `unsupported`, `failed`) |
+| `app_update.held.duration` | histogram (ms) | `trigger` |
+| `app_update.held_back` | counter | `trigger`, `reason` (each hold reason, once per update) |
+| `app_update.version_check` | counter | `outcome` (`same`, `newer`, `failed`) |
+| `app_update.missing_file` | counter | `outcome` (`reloaded`, `loop_guarded`) |
+| `draft.restored` | counter | `kind` (first part of the draft key, e.g. `meal-plan`) |
+| `draft.expired` | counter | `kind` |
+
+A draft counts as restored only when it was saved before the current page load.
+

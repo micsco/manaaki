@@ -19,7 +19,7 @@ import {
   releaseAfterFailure,
   upstreamFailureResponse,
 } from "./mealieUpstream"
-import { POSTHOG_TRACING_HEADERS } from "./requestTracing"
+import { CLIENT_TELEMETRY_HEADERS } from "./requestTracing"
 import {
   buildClearSessionCookie,
   buildSessionSetCookie,
@@ -39,7 +39,7 @@ const STRIP_REQUEST_HEADERS = new Set([
   "host",
   "connection",
   "content-length",
-  ...POSTHOG_TRACING_HEADERS,
+  ...CLIENT_TELEMETRY_HEADERS,
 ])
 
 // node:http does NOT auto-decompress the upstream body (unlike undici/fetch), so

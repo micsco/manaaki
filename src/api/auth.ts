@@ -1,5 +1,6 @@
 import { createIsomorphicFn, createServerFn } from "@tanstack/react-start"
 
+import { withClientBuild } from "./clientBuild"
 import type { UserOut } from "./generated"
 
 export type CurrentUser = { user: UserOut | null; isAnonymous: boolean }
@@ -18,7 +19,10 @@ const fetchCurrentUserFromServer = createServerFn().handler(async (): Promise<Cu
 export const fetchCurrentUser = createIsomorphicFn()
   .server(() => fetchCurrentUserFromServer())
   .client(async (): Promise<CurrentUser> => {
-    const response = await fetch("/api/auth/me", { cache: "no-store" })
+    const response = await fetch(
+      "/api/auth/me",
+      withClientBuild("/api/auth/me", { cache: "no-store" })
+    )
     if (!response.ok) throw new Error("Could not load your account")
     return response.json()
   })

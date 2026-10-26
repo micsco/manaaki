@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { RecipeOutput } from "../api/generated/types.gen"
 import * as api from "../api/recipeVersions"
+import { appAnalytics } from "../lib/analytics"
 import { resetUpdateHoldsForTesting, updateBlockers } from "../pwa/updateHolds"
 import { goodAirFryerDraft, ovenSource } from "../test/fixtures/recipeVersionDrafts"
 import { act, render, screen, within } from "../test/render"
@@ -301,6 +302,21 @@ describe("RecipeVersionPage across reloads", () => {
     first.unmount()
     render(<RecipeVersionPage recipe={recipe} />)
     expect(screen.getByLabelText(/Anything the AI should know/)).toHaveValue("two batches")
+  })
+
+  it("counts a draft brought back by a reload as restored", async () => {
+    const user = userEvent.setup()
+    const count = vi.spyOn(appAnalytics, "count")
+    const first = render(<RecipeVersionPage recipe={recipe} />)
+    await user.type(screen.getByLabelText(/Anything the AI should know/), "two batches")
+    first.unmount()
+    expect(count).not.toHaveBeenCalledWith("draft.restored", 1, expect.anything())
+    vi.spyOn(performance, "timeOrigin", "get").mockReturnValue(Date.now() + 1)
+    render(<RecipeVersionPage recipe={recipe} />)
+    expect(count).toHaveBeenCalledWith("draft.restored", 1, {
+      attributes: { kind: "recipe-version" },
+    })
+    vi.restoreAllMocks()
   })
 
   it("ignores a saved draft once the original recipe has changed", async () => {

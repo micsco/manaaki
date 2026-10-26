@@ -126,13 +126,42 @@ describe("applyAppUpdate", () => {
       heldMs: 3000,
       fromSha: "old1234",
       toSha: "new5678",
+      activation: "none-waiting",
+      updated: true,
     })
     expect(takeAppliedUpdate()).toBeNull()
   })
 
-  it("does not report an update when the build did not change", async () => {
+  it("reports a reload that stayed on the same build as not updated", async () => {
     stubWorker(null)
     await applyAppUpdate("idle")
-    expect(takeAppliedUpdate()).toBeNull()
+    expect(takeAppliedUpdate()).toMatchObject({
+      trigger: "idle",
+      fromSha: "old1234",
+      toSha: "old1234",
+      updated: false,
+    })
+  })
+
+  it("records whether the waiting worker took over in time", async () => {
+    vi.useFakeTimers()
+    stubWorker({ postMessage: vi.fn() })
+    const applying = applyAppUpdate("idle")
+    await vi.advanceTimersByTimeAsync(3000)
+    await applying
+    expect(takeAppliedUpdate()?.activation).toBe("timeout")
+
+    resetAppUpdateForTesting()
+    const activate = stubWorker({ postMessage: vi.fn() })
+    const activating = applyAppUpdate("idle")
+    await vi.advanceTimersByTimeAsync(0)
+    activate()
+    await activating
+    expect(takeAppliedUpdate()?.activation).toBe("activated")
+
+    resetAppUpdateForTesting()
+    vi.stubGlobal("navigator", {})
+    await applyAppUpdate("idle")
+    expect(takeAppliedUpdate()?.activation).toBe("unsupported")
   })
 })

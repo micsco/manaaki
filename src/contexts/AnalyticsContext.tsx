@@ -1,8 +1,8 @@
 import { useIsFetching } from "@tanstack/react-query"
 import { useRouter } from "@tanstack/react-router"
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useRef, type ReactNode } from "react"
 
-import { createBufferedAnalytics } from "../lib/analytics"
+import { appAnalytics, createBufferedAnalytics } from "../lib/analytics"
 import { loadAnalytics } from "../lib/loadAnalytics"
 
 const AnalyticsContext = createContext(createBufferedAnalytics(false))
@@ -10,9 +10,7 @@ const AnalyticsContext = createContext(createBufferedAnalytics(false))
 export const usePostHog = () => useContext(AnalyticsContext)
 
 export function AnalyticsProvider({ children }: { children: ReactNode }) {
-  const [analytics] = useState(() =>
-    createBufferedAnalytics(Boolean(import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN))
-  )
+  const analytics = appAnalytics
   const fetching = useIsFetching()
   const started = useRef(false)
 
