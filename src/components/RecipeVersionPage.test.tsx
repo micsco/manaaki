@@ -1,15 +1,25 @@
 import userEvent from "@testing-library/user-event"
+import type { ReactNode } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { RecipeOutput } from "../api/generated/types.gen"
 import * as api from "../api/recipeVersions"
 import { goodAirFryerDraft, ovenSource } from "../test/fixtures/recipeVersionDrafts"
 import { render, screen, within } from "../test/render"
-import { RecipeVersionDialog } from "./RecipeVersionDialog"
+import { RecipeVersionPage } from "./RecipeVersionPage"
 
 const navigate = vi.fn()
+const blockers: { shouldBlockFn: () => boolean }[] = []
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => navigate,
+  useBlocker: (options: { shouldBlockFn: () => boolean }) => {
+    blockers.push(options)
+  },
+  Link: ({ to, children, className }: { to: string; children: ReactNode; className?: string }) => (
+    <a href={to} className={className}>
+      {children}
+    </a>
+  ),
 }))
 vi.mock("../hooks/useRecipeList", () => ({
   useRecipeList: () => [{ name: "Existing Recipe" }],
@@ -28,6 +38,7 @@ const recipe = {
   slug: "bbq-potatoes",
   name: "BBQ Chicken Twice-Baked Potatoes",
   tools: [],
+  performTimeSeconds: 4500,
   extras: { slowCookerVersion: "33333333-3333-4333-8333-333333333333" },
 } as unknown as RecipeOutput
 const saved = { id: "22222222-2222-4222-8222-222222222222", slug: "bbq-af", name: "AF" }
@@ -43,11 +54,10 @@ function respond(draft = goodAirFryerDraft) {
 async function openReview(draft = goodAirFryerDraft) {
   respond(draft)
   const user = userEvent.setup()
-  const onClose = vi.fn()
-  render(<RecipeVersionDialog recipe={recipe} onClose={onClose} />)
+  render(<RecipeVersionPage recipe={recipe} />)
   await user.click(screen.getByRole("button", { name: "Create draft" }))
   await screen.findByRole("button", { name: "Save new version" })
-  return { user, onClose }
+  return { user }
 }
 
 beforeEach(() => {
@@ -55,9 +65,9 @@ beforeEach(() => {
   vi.mocked(api.saveRecipeVersion).mockResolvedValue(saved)
 })
 
-describe("RecipeVersionDialog", () => {
+describe("RecipeVersionPage", () => {
   it("offers only methods the recipe doesn't already have", () => {
-    render(<RecipeVersionDialog recipe={recipe} onClose={vi.fn()} />)
+    render(<RecipeVersionPage recipe={recipe} />)
     expect(screen.getByRole("radio", { name: /Oven/ })).toBeDisabled()
     expect(screen.getByRole("radio", { name: /Slow cooker/ })).toBeDisabled()
     expect(screen.getByRole("radio", { name: /Air fryer/ })).toBeChecked()
@@ -66,8 +76,7 @@ describe("RecipeVersionDialog", () => {
   it("sends the chosen method and notes, then saves the reviewed draft", async () => {
     respond()
     const user = userEvent.setup()
-    const onClose = vi.fn()
-    render(<RecipeVersionDialog recipe={recipe} onClose={onClose} />)
+    render(<RecipeVersionPage recipe={recipe} />)
     await user.type(screen.getByLabelText(/Anything the AI should know/), "two batches")
     await user.click(screen.getByRole("button", { name: "Create draft" }))
     expect(api.requestRecipeVersionDraft).toHaveBeenCalledWith(
@@ -86,17 +95,17 @@ describe("RecipeVersionDialog", () => {
       })
     )
     expect(navigate).toHaveBeenCalledWith({
+      replace: true,
       to: "/recipes/$id/$slug",
       params: { id: "IiIiIiIiQiKCIiIiIiIiIg", slug: "bbq-af" },
     })
-    expect(onClose).toHaveBeenCalled()
     expect(JSON.stringify(capture.mock.calls)).not.toContain("Twice-Baked")
   })
 
   it("shows the server's error and stays on the form", async () => {
     vi.mocked(api.requestRecipeVersionDraft).mockRejectedValue(new Error("AI isn't set up yet."))
     const user = userEvent.setup()
-    render(<RecipeVersionDialog recipe={recipe} onClose={vi.fn()} />)
+    render(<RecipeVersionPage recipe={recipe} />)
     await user.click(screen.getByRole("button", { name: "Create draft" }))
     expect(await screen.findByRole("alert")).toHaveTextContent("AI isn't set up yet.")
     expect(screen.getByRole("button", { name: "Create draft" })).toBeEnabled()
@@ -117,7 +126,7 @@ describe("RecipeVersionDialog", () => {
     const { user } = await openReview({ ...goodAirFryerDraft, confidence: "low" })
     const save = screen.getByRole("button", { name: "Save new version" })
     expect(save).toBeDisabled()
-    await user.click(screen.getByLabelText("I've checked the warnings above."))
+    await user.click(screen.getByLabelText("I've checked the warnings"))
     expect(save).toBeEnabled()
   })
 
@@ -156,11 +165,72 @@ describe("RecipeVersionDialog", () => {
     const { user } = await openReview()
     await user.click(screen.getByRole("button", { name: "Remove step 3" }))
     expect(screen.queryByLabelText("Step 3")).not.toBeInTheDocument()
-    const original = screen.getByText("Original oven method").closest("details")!
+    const original = screen.getByRole("region", { name: "Original recipe" })
     expect(within(original).getByText(/Preheat the oven to 200°C/)).toBeInTheDocument()
     expect(screen.getByText(/new method doesn't/)).toBeVisible()
-    await user.click(screen.getByLabelText("I've checked the warnings above."))
+    await user.click(screen.getByLabelText("I've checked the warnings"))
     await user.click(screen.getByRole("button", { name: "Save new version" }))
     expect(vi.mocked(api.saveRecipeVersion).mock.calls[0][0].draft.steps).toHaveLength(2)
+  })
+})
+
+describe("RecipeVersionPage comparison", () => {
+  it("switches between side by side, original only and draft only", async () => {
+    const { user } = await openReview()
+    const original = screen.getByRole("region", { name: "Original recipe" })
+    const draft = screen.getByRole("region", { name: "New version" })
+    expect(screen.getByRole("button", { name: "Side by side" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    )
+    await user.click(screen.getByRole("button", { name: "Original" }))
+    expect(draft).toHaveClass("hidden")
+    expect(original).not.toHaveClass("hidden")
+    await user.click(screen.getByRole("button", { name: "Draft" }))
+    expect(original).toHaveClass("hidden")
+    expect(draft).not.toHaveClass("hidden")
+  })
+
+  it("shows the original time next to a changed draft time", async () => {
+    await openReview()
+    expect(screen.getByText("was 75")).toBeInTheDocument()
+  })
+
+  it("goes back to the setup form to change notes before redrafting", async () => {
+    const { user } = await openReview()
+    await user.click(screen.getByRole("button", { name: "Start again" }))
+    expect(screen.getByLabelText(/Anything the AI should know/)).toBeVisible()
+    expect(screen.getByRole("link", { name: "Cancel" })).toHaveAttribute(
+      "href",
+      "/recipes/ETU2ihooS0ekItv506e7wA/bbq-potatoes"
+    )
+  })
+})
+
+describe("RecipeVersionPage leaving", () => {
+  it("asks before leaving with an unsaved draft, but not after saving", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false)
+    const { user } = await openReview()
+    expect(blockers.at(-1)?.shouldBlockFn()).toBe(true)
+    expect(confirm).toHaveBeenCalledWith("Leave without saving this draft?")
+    await user.click(screen.getByRole("button", { name: "Save new version" }))
+    confirm.mockClear()
+    expect(blockers.at(-1)?.shouldBlockFn()).toBe(false)
+    expect(confirm).not.toHaveBeenCalled()
+    confirm.mockRestore()
+  })
+
+  it("doesn't ask before a draft exists", () => {
+    render(<RecipeVersionPage recipe={recipe} />)
+    expect(blockers.at(-1)?.shouldBlockFn()).toBe(false)
+  })
+
+  it("lists accepted new ingredients beside the original ones", async () => {
+    await openReview({
+      ...goodAirFryerDraft,
+      newIngredients: [{ text: "spray oil", reason: "for the basket" }],
+    })
+    const original = screen.getByRole("region", { name: "Original recipe" })
+    expect(within(original).getByText("+ spray oil")).toBeInTheDocument()
   })
 })

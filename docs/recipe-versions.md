@@ -32,14 +32,18 @@ recipe, or to the recipe itself, is ignored.
 ## Creating a version with AI
 
 Signed-in cooks can open the recipe actions menu (top right) and choose **Create
-another version with AI…**. Pick the appliance, add any notes, and Gemini drafts a
+another version with AI…**, which opens a full page at
+`/recipes/<id>/<slug>/new-version`. Pick the appliance, add any notes, and Gemini drafts a
 new method on Manaaki's server. Nothing is saved until you review it:
 
 - Automated checks run on the draft and again after every edit. **Must fix** items
   disable Save; other warnings need the "I've checked" tick.
 - Ingredient changes are listed one by one with a reason, all ticked; untick any you
   don't want. Ingredients are otherwise copied exactly.
-- The original method is in a collapsible panel for comparison.
+- The original and the draft sit side by side on wide screens, with a switch for
+  Side by side, Original only or Draft only (Original / Draft on phones). Changed
+  times show the original value, and the original ingredient list marks changed
+  and removed lines.
 
 Save duplicates the recipe in Mealie, applies the reviewed name, description, steps,
 times and tool, keeps the original notes and adds any new ones, then links the two recipes both ways through `extras` and

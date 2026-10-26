@@ -1,4 +1,5 @@
 import userEvent from "@testing-library/user-event"
+import type { ReactNode } from "react"
 import { beforeEach, expect, it, vi } from "vitest"
 
 import { useCurrentUser } from "../hooks/useCurrentUser"
@@ -7,6 +8,9 @@ import { RecipeActionsMenu } from "./RecipeActionsMenu"
 vi.mock("../hooks/useCurrentUser", () => ({ useCurrentUser: vi.fn() }))
 vi.mock("./RecipeRepair", () => ({
   RecipeRepair: () => <button>Review title and ingredients</button>,
+}))
+vi.mock("@tanstack/react-router", () => ({
+  Link: ({ children }: { children: ReactNode }) => <a href="/new-version">{children}</a>,
 }))
 vi.mock("./AddToShoppingListButton", () => ({
   AddToShoppingListButton: () => <button>Add to shopping list</button>,
@@ -35,7 +39,9 @@ it.each([undefined, { user: null, isAnonymous: true }])(
 )
 it("offers to create another version with AI", async () => {
   const user = userEvent.setup()
-  render(<RecipeActionsMenu recipe={{}} />)
+  render(
+    <RecipeActionsMenu recipe={{ id: "1135368a-1a28-4b47-a422-dbf9d3a7bbc0", slug: "soup" }} />
+  )
   await user.click(screen.getByRole("button", { name: "Recipe actions" }))
-  expect(screen.getByRole("button", { name: "Create another version with AI…" })).toBeVisible()
+  expect(screen.getByRole("link", { name: "Create another version with AI…" })).toBeVisible()
 })

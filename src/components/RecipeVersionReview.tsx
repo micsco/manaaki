@@ -1,5 +1,6 @@
 import { useId } from "react"
 
+import type { RecipeOutput } from "../api/generated/types.gen"
 import {
   type DraftCheck,
   type DraftSource,
@@ -18,8 +19,14 @@ export type ReviewState = {
 const field =
   "mt-1 w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-base text-gray-100 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:outline-hidden"
 const label = "block text-sm font-medium text-gray-300"
+const heading = "text-sm font-semibold tracking-wide text-gray-400 uppercase"
+const panel = "space-y-6 rounded-2xl border border-gray-800 bg-gray-900/60 p-4 sm:p-6"
 
-function CheckList({ checks }: { checks: DraftCheck[] }) {
+function minutesOf(seconds: number | null | undefined): number | null {
+  return seconds ? Math.round(seconds / 60) : null
+}
+
+export function CheckList({ checks }: { checks: DraftCheck[] }) {
   if (checks.length === 0) {
     return (
       <p
@@ -54,18 +61,94 @@ function CheckList({ checks }: { checks: DraftCheck[] }) {
   )
 }
 
-export function RecipeVersionReview({
+export function OriginalPanel({
+  recipe,
+  source,
+  state,
+  className = "",
+}: {
+  recipe: RecipeOutput
+  source: DraftSource
+  state: ReviewState
+  className?: string
+}) {
+  const changes = new Map(
+    state.draft.ingredientChanges
+      .filter(change => state.acceptedChanges.has(change.index))
+      .map(change => [change.index, change])
+  )
+  const times: [string, number | null][] = [
+    ["Prep", minutesOf(recipe.prepTimeSeconds)],
+    ["Cook", minutesOf(recipe.performTimeSeconds)],
+    ["Total", minutesOf(recipe.totalTimeSeconds)],
+  ]
+  return (
+    <section aria-label="Original recipe" className={`${panel} ${className}`}>
+      <div>
+        <p className={heading}>Original · {methodLabel(source.method)}</p>
+        <h2 className="mt-1 text-xl font-semibold text-gray-100">{source.name}</h2>
+      </div>
+      <dl className="grid grid-cols-3 gap-3 text-sm">
+        {times.map(([name, value]) => (
+          <div key={name}>
+            <dt className="text-gray-400">{name}</dt>
+            <dd className="text-gray-100">{value === null ? "–" : `${value} min`}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="space-y-2">
+        <h3 className={heading}>Ingredients</h3>
+        <ul className="space-y-1 text-sm text-gray-300">
+          {source.ingredients.map((line, index) => {
+            const change = changes.get(index)
+            return (
+              // eslint-disable-next-line react/no-array-index-key -- ingredient lines are addressed by position
+              <li key={index} className={change?.remove ? "text-gray-500 line-through" : ""}>
+                {line.text}
+                {change && !change.remove && change.quantity !== null && (
+                  <span className="ml-2 rounded bg-orange-950/60 px-1.5 text-xs text-orange-200">
+                    → {change.quantity}
+                  </span>
+                )}
+              </li>
+            )
+          })}
+          {state.draft.newIngredients
+            .filter((_, index) => state.acceptedNew.has(index))
+            .map(item => (
+              <li key={`new-${item.text}`} className="text-orange-200">
+                + {item.text}
+              </li>
+            ))}
+        </ul>
+      </div>
+      <div className="space-y-2">
+        <h3 className={heading}>Method</h3>
+        <ol className="list-decimal space-y-3 pl-5 text-sm leading-relaxed text-gray-300">
+          {source.steps.map((step, index) => (
+            // eslint-disable-next-line react/no-array-index-key -- read-only list of original steps
+            <li key={index}>{step}</li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  )
+}
+
+export function DraftEditor({
+  recipe,
   source,
   target,
   state,
-  checks,
   onChange,
+  className = "",
 }: {
+  recipe: RecipeOutput
   source: DraftSource
   target: CookingMethod
   state: ReviewState
-  checks: DraftCheck[]
   onChange: (state: ReviewState) => void
+  className?: string
 }) {
   const id = useId()
   const { draft } = state
@@ -76,6 +159,11 @@ export function RecipeVersionReview({
     if (next.has(index)) next.delete(index)
     else next.add(index)
     onChange({ ...state, [key]: next })
+  }
+  const was = {
+    prepMinutes: minutesOf(recipe.prepTimeSeconds),
+    cookMinutes: minutesOf(recipe.performTimeSeconds),
+    totalMinutes: minutesOf(recipe.totalTimeSeconds),
   }
   const minutesInput = (key: "prepMinutes" | "cookMinutes" | "totalMinutes", text: string) => (
     <label className={label}>
@@ -88,32 +176,16 @@ export function RecipeVersionReview({
         onChange={event => update({ [key]: event.target.valueAsNumber })}
         className={field}
       />
+      {was[key] !== null && was[key] !== draft[key] && (
+        <span className="mt-1 block text-xs text-gray-500">was {was[key]}</span>
+      )}
     </label>
   )
 
   return (
-    <div className="space-y-6">
-      <section aria-labelledby={`${id}-checks`} className="space-y-2">
-        <h3
-          id={`${id}-checks`}
-          className="text-sm font-semibold tracking-wide text-gray-400 uppercase"
-        >
-          Checks
-        </h3>
-        <CheckList checks={checks} />
-        {draft.assumptions.length > 0 && (
-          <div className="rounded-xl border border-gray-800 bg-gray-950/60 p-3 text-sm text-gray-300">
-            <p className="font-semibold text-gray-200">The AI assumed:</p>
-            <ul className="mt-1 list-disc space-y-1 pl-5">
-              {draft.assumptions.map(assumption => (
-                <li key={assumption}>{assumption}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </section>
-
-      <section className="space-y-3">
+    <section aria-label="New version" className={`${panel} ${className}`}>
+      <p className={heading}>Draft · {methodLabel(target)}</p>
+      <div className="space-y-3">
         <label className={label}>
           Name
           <input
@@ -125,7 +197,7 @@ export function RecipeVersionReview({
         <label className={label}>
           Description
           <textarea
-            rows={2}
+            rows={3}
             value={draft.description}
             onChange={event => update({ description: event.target.value })}
             className={field}
@@ -145,16 +217,11 @@ export function RecipeVersionReview({
             className={field}
           />
         </label>
-      </section>
+      </div>
 
       {(draft.ingredientChanges.length > 0 || draft.newIngredients.length > 0) && (
-        <section aria-labelledby={`${id}-ingredients`} className="space-y-2">
-          <h3
-            id={`${id}-ingredients`}
-            className="text-sm font-semibold tracking-wide text-gray-400 uppercase"
-          >
-            Ingredient changes
-          </h3>
+        <div className="space-y-2">
+          <h3 className={heading}>Ingredient changes</h3>
           <p className="text-sm text-gray-400">
             Untick any you don't want. Everything else is copied exactly.
           </p>
@@ -202,17 +269,12 @@ export function RecipeVersionReview({
               </li>
             ))}
           </ul>
-        </section>
+        </div>
       )}
 
-      <section aria-labelledby={`${id}-method`} className="space-y-3">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3
-            id={`${id}-method`}
-            className="text-sm font-semibold tracking-wide text-gray-400 uppercase"
-          >
-            {methodLabel(target)} method
-          </h3>
+          <h3 className={heading}>Method</h3>
           <button
             type="button"
             onClick={() => update({ steps: [...draft.steps, ""] })}
@@ -221,17 +283,6 @@ export function RecipeVersionReview({
             Add step
           </button>
         </div>
-        <details className="rounded-xl border border-gray-800 p-3 text-sm text-gray-300">
-          <summary className="min-h-11 cursor-pointer content-center font-medium text-gray-200">
-            Original {methodLabel(source.method).toLowerCase()} method
-          </summary>
-          <ol className="mt-2 list-decimal space-y-2 pl-5">
-            {source.steps.map((step, index) => (
-              // eslint-disable-next-line react/no-array-index-key -- read-only list of original steps
-              <li key={index}>{step}</li>
-            ))}
-          </ol>
-        </details>
         <ol className="space-y-3">
           {draft.steps.map((step, index) => (
             // eslint-disable-next-line react/no-array-index-key -- steps are edited in place and have no ids
@@ -251,28 +302,23 @@ export function RecipeVersionReview({
               </div>
               <textarea
                 id={`${id}-step-${index}`}
-                rows={3}
+                rows={4}
                 value={step}
                 onChange={event =>
                   update({
                     steps: draft.steps.map((s, i) => (i === index ? event.target.value : s)),
                   })
                 }
-                className={field}
+                className={`${field} field-sizing-content`}
               />
             </li>
           ))}
         </ol>
-      </section>
+      </div>
 
       {draft.notes.length > 0 && (
-        <section aria-labelledby={`${id}-notes`} className="space-y-3">
-          <h3
-            id={`${id}-notes`}
-            className="text-sm font-semibold tracking-wide text-gray-400 uppercase"
-          >
-            Notes
-          </h3>
+        <div className="space-y-3">
+          <h3 className={heading}>New notes</h3>
           {draft.notes.map((note, index) => (
             // eslint-disable-next-line react/no-array-index-key -- notes are edited in place and have no ids
             <label key={index} className={label}>
@@ -287,24 +333,12 @@ export function RecipeVersionReview({
                     ),
                   })
                 }
-                className={field}
+                className={`${field} field-sizing-content`}
               />
             </label>
           ))}
-        </section>
+        </div>
       )}
-
-      {checks.some(check => check.level === "warn") && (
-        <label className="flex items-start gap-3 rounded-xl border border-amber-900/60 bg-amber-950/30 p-3 text-sm text-amber-100">
-          <input
-            type="checkbox"
-            checked={state.acknowledged}
-            onChange={event => onChange({ ...state, acknowledged: event.target.checked })}
-            className="mt-1 h-4 w-4 accent-orange-500"
-          />
-          I've checked the warnings above.
-        </label>
-      )}
-    </div>
+    </section>
   )
 }

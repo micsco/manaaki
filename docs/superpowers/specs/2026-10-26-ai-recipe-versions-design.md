@@ -44,7 +44,9 @@ current docs at implementation time. Expected cost is a fraction of a penny per 
    Mealie with the user's session (never trusting recipe content from the browser),
    calls Gemini, validates the result and runs the automated checks (below).
    Response: `{ draft, checks, source }`.
-3. **Review screen.** The draft, with the original method in a collapsible panel:
+3. **Review page.** A full page (`/recipes/<id>/<slug>/new-version`), not a dialog. On
+   wide screens the original sits beside the editable draft, with a Side by side /
+   Original / Draft switch; phones switch between Original and Draft. The draft has:
    - name, description, times (prep / cook / total / waiting note)
    - method steps (editable textareas)
    - ingredient changes, if any, shown as explicit rows ("olive oil 1 tbsp → 1 tsp,
@@ -52,7 +54,8 @@ current docs at implementation time. Expected cost is a fraction of a penny per 
    - notes the model added (editable)
    - the check results, failures first
 
-   Actions: **Save new version**, **Start again**, **Cancel**. Save is disabled while any blocking check fails; warnings need an
+   A bar pinned to the bottom holds the warnings tick and **Save new version**,
+   **Start again** (back to the method and notes) and **Cancel**. Save is disabled while any blocking check fails; warnings need an
    explicit "I've checked these" tick.
 4. **Save.** The browser, with the user's own Mealie permissions through the existing
    proxy: `POST /api/recipes/{slug}/duplicate` (keeps ingredients, photo, nutrition,
