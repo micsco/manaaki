@@ -35,3 +35,25 @@ it("gracefully skips browsers without service workers", async () => {
   cleanup()
   expect(firstControl).not.toHaveBeenCalled()
 })
+
+it("tells the app to reload when the worker finds a newer recipe", async () => {
+  const listeners = new Map<string, (event: MessageEvent) => void>()
+  const registration = { addEventListener: vi.fn(), removeEventListener: vi.fn(), update: vi.fn() }
+  vi.stubGlobal("navigator", {
+    onLine: true,
+    serviceWorker: {
+      controller: null,
+      addEventListener: (type: string, listener: (event: MessageEvent) => void) =>
+        listeners.set(type, listener),
+      removeEventListener: vi.fn(),
+      register: async () => registration,
+    },
+  })
+  const updated = vi.fn()
+  window.addEventListener("recipe-updated", updated)
+  const cleanup = await registerOfflineSupport(vi.fn())
+  listeners.get("message")?.(new MessageEvent("message", { data: { type: "RECIPE_UPDATED" } }))
+  expect(updated).toHaveBeenCalledTimes(1)
+  cleanup()
+  window.removeEventListener("recipe-updated", updated)
+})

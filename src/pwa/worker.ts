@@ -369,6 +369,24 @@ async function warmRelated(cache: Cache, path: string, response: Response, epoch
   }
 }
 
+async function revalidateRecipe(
+  cache: Cache,
+  request: Request,
+  cached: Response,
+  group: string,
+  epoch: number
+) {
+  const response = await fetch(request.url, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(5000),
+  })
+  if (!response.ok) return
+  const [fresh, stale] = await Promise.all([response.clone().text(), cached.text()])
+  if (fresh === stale) return
+  await save(cache, request, response, group, epoch)
+  if (epoch === generation) await notifyClients("RECIPE_UPDATED", { url: request.url })
+}
+
 async function dataResponse(event: FetchEvent, group: string): Promise<Response> {
   const scope = await identity()
   if (!scope) return fetch(event.request)
@@ -381,8 +399,12 @@ async function dataResponse(event: FetchEvent, group: string): Promise<Response>
   const entry = cached ? (await readIndex(cache)).find(item => item.url === request.url) : undefined
   const reload = request.cache === "reload"
   if (!reload && immutable && cached && entry && Date.now() - entry.cachedAt < RECIPE_FRESH_MS) {
-    if (path.startsWith("/api/recipes/"))
+    if (path.startsWith("/api/recipes/")) {
       event.waitUntil(recordVisit(cache, group, epoch).catch(() => {}))
+      event.waitUntil(
+        revalidateRecipe(cache, request, cached.clone(), group, epoch).catch(() => {})
+      )
+    }
     return path.startsWith("/api/households/shopping/lists/")
       ? overlayChecks(cache, cached)
       : cached

@@ -52,6 +52,7 @@ export async function registerOfflineSupport(onFirstControl: () => void) {
       pendingChecks = event.data.pending
       receiveShoppingStatus(event.data.pending, event.data.blocked)
     }
+    if (event.data?.type === "RECIPE_UPDATED") window.dispatchEvent(new Event("recipe-updated"))
     if (event.data?.type === "ACCOUNT_CHANGED") {
       clearCookingStorage()
       receiveShoppingStatus(0)

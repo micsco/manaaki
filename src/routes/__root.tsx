@@ -71,7 +71,11 @@ function RootComponent() {
     const refreshShopping = () => {
       void queryClient.invalidateQueries({ queryKey: ["shopping"] })
     }
+    const refreshRecipe = () => {
+      void router.invalidate()
+    }
     window.addEventListener("shopping-synced", refreshShopping)
+    window.addEventListener("recipe-updated", refreshRecipe)
     let cancelled = false
     let cleanup: (() => void) | undefined
     void registerOfflineSupport(() => warmVisiblePage(queryClient))
@@ -82,10 +86,11 @@ function RootComponent() {
       .catch(() => {})
     return () => {
       window.removeEventListener("shopping-synced", refreshShopping)
+      window.removeEventListener("recipe-updated", refreshRecipe)
       cancelled = true
       cleanup?.()
     }
-  }, [])
+  }, [router])
 
   return (
     <RootDocument>

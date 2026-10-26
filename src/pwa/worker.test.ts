@@ -103,6 +103,9 @@ beforeEach(async () => {
 
 afterEach(() => vi.unstubAllGlobals())
 
+const workerGlobals = () =>
+  globalThis as unknown as { clients: { matchAll: ReturnType<typeof vi.fn> } }
+
 describe("offline service worker", () => {
   it("automatically caches a recipe and its image for offline visits", async () => {
     await request("/api/recipes/soup")
@@ -272,6 +275,35 @@ it("fetches fresh recipe data for parsing even when an immutable response is cac
   )
   offline = true
   await expect(request("/api/recipes/soup", { cache: "reload" })).rejects.toThrow()
+})
+it("serves a cached recipe instantly, then refreshes it and tells the page when Mealie changed it", async () => {
+  const postMessage = vi.fn()
+  workerGlobals().clients.matchAll.mockResolvedValue([{ postMessage }])
+  await request("/api/auth/me")
+  await request("/api/recipes/soup")
+  postMessage.mockClear()
+  fetchMock.mockImplementation(async (input: string | Request) =>
+    new URL(absolute(input)).pathname === "/api/recipes/soup"
+      ? Response.json({ id: "soup", name: "Edited in Mealie", image: "123" })
+      : Response.json({ user: { id: account }, isAnonymous: false })
+  )
+  expect(await (await request("/api/recipes/soup"))?.json()).toMatchObject({ name: "Soup" })
+  expect(postMessage).toHaveBeenCalledWith({
+    type: "RECIPE_UPDATED",
+    url: `${origin}/api/recipes/soup`,
+  })
+  expect(await (await request("/api/recipes/soup"))?.json()).toMatchObject({
+    name: "Edited in Mealie",
+  })
+})
+it("doesn't tell the page anything when the cached recipe is still current", async () => {
+  const postMessage = vi.fn()
+  workerGlobals().clients.matchAll.mockResolvedValue([{ postMessage }])
+  await request("/api/auth/me")
+  await request("/api/recipes/soup")
+  postMessage.mockClear()
+  await request("/api/recipes/soup")
+  expect(postMessage).not.toHaveBeenCalledWith(expect.objectContaining({ type: "RECIPE_UPDATED" }))
 })
 it("invalidates recipe and list caches after a successful edit", async () => {
   await request("/api/auth/me")
