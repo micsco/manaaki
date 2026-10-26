@@ -6,6 +6,7 @@ import { COOKING_METHOD_LABELS, type CookingMethod } from "../utils/recipeVersio
 import {
   claudeApiKey,
   claudeEffort,
+  DEFAULT_PROMPT_VERSION,
   geminiApiKey,
   geminiThinkingLevel,
   type PromptVersionName,
@@ -101,9 +102,7 @@ export const PROMPT_VERSIONS = {
   v3: SYSTEM_INSTRUCTION_V3,
 } as const satisfies Record<PromptVersionName, string>
 export type PromptVersion = PromptVersionName
-export const LATEST_PROMPT_VERSION: PromptVersion = "v2"
-
-export function systemInstruction(version: PromptVersion = LATEST_PROMPT_VERSION): string {
+export function systemInstruction(version: PromptVersion = DEFAULT_PROMPT_VERSION): string {
   return PROMPT_VERSIONS[version]
 }
 

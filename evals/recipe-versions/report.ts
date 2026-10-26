@@ -178,7 +178,7 @@ function summaryTable(summaries: DrafterSummary[]): string {
     ["Warnings", s => String(s.warnings)],
     ["Mean overall score", s => number(s.meanOverall, 2)],
     [
-      "Recipes better / worse / same than the first",
+      "Recipes better / worse / same as the first",
       s =>
         s.versusFirst
           ? `${s.versusFirst.wins} / ${s.versusFirst.losses} / ${s.versusFirst.ties}`

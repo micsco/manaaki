@@ -50,9 +50,11 @@ export type PromptVersionName = (typeof PROMPT_VERSION_NAMES)[number]
 export const isPromptVersionName = (value: string): value is PromptVersionName =>
   PROMPT_VERSION_NAMES.some(name => name === value)
 
+export const DEFAULT_PROMPT_VERSION: PromptVersionName = "v2"
+
 export const recipePromptVersion = (): PromptVersionName => {
   const value = globalThis.process?.env?.RECIPE_PROMPT_VERSION?.trim().toLowerCase() ?? ""
-  return isPromptVersionName(value) ? value : "v2"
+  return isPromptVersionName(value) ? value : DEFAULT_PROMPT_VERSION
 }
 
 const THINKING_LEVELS = ["low", "medium", "high"] as const
