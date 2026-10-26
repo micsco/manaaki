@@ -76,16 +76,74 @@ PossibleCooker pot is listed as oven-safe to 240°C (the manual says 260°C). Th
 need to look anything up, and the setup screen names the appliance. Edit that file
 when an appliance changes. There is no specific oven entry.
 
-The server needs `GEMINI_API_KEY` in its runtime environment (never a `VITE_`
-variable). `GEMINI_MODEL` (default `gemini-3.8-flash`) and
-`RECIPE_VERSION_DRAFTS_PER_HOUR` (default 10) are optional. `GEMINI_THINKING_LEVEL`
-(`minimal`, `low`, `medium` or `high`) sets how much Gemini thinks before writing;
-unset, the model's default applies. The level is logged with each draft, and each
-draft is traced in PostHog (see `docs/observability.md`). Gemini also streams short
-thought summaries, and the progress panel shows the latest one under "Planning the
-new method". Before changing the
-prompt or model, run `pnpm eval:recipe-versions` with a key in `.env`. The design
-is in `docs/superpowers/specs/2026-10-26-ai-recipe-versions-design.md`.
+Server settings (runtime environment only, never `VITE_` variables):
+
+| Variable | Purpose |
+|---|---|
+| `RECIPE_VERSION_MODEL` | Model that drafts versions. A `claude-…` model (for example `claude-sonnet-5-5`) uses Claude; anything else uses Gemini. Default: `GEMINI_MODEL`. |
+| `GEMINI_API_KEY`, `GEMINI_MODEL` | Gemini key and model (default `gemini-3.8-flash`). |
+| `GEMINI_THINKING_LEVEL` | `minimal`, `low`, `medium` or `high` (default `low`). |
+| `CLAUDE_API_KEY` | Claude key (`ANTHROPIC_API_KEY` also works). |
+| `CLAUDE_EFFORT` | `low`, `medium`, `high`, `xhigh` or `max`; unset uses the model's default. |
+| `RECIPE_ESCALATION_MODEL` | Model for a second repair attempt when the first doesn't fix every problem (default `claude-sonnet-5-5`, used only when its key is set; `none` turns it off). |
+| `RECIPE_PROMPT_VERSION` | `v2` (default) or `v1`, the earlier prompt, kept for comparison. |
+| `RECIPE_VERSION_DRAFTS_PER_HOUR` | Drafts per person per hour (default 10). |
+
+### How a draft is made
+
+Models are called through `@tanstack/ai` (with its Gemini and Anthropic adapters)
+behind a small `DraftingModel` interface in `src/server/recipeVersionModels.ts`, so
+the provider can change without touching the pipeline.
+
+1. **Draft.** One call writes the version with tagged steps: each step's text plus
+   its zone, function, setting, minutes and whether it runs alongside the previous
+   step.
+2. **Check.** Code works out cook and total time from the tags, checks every tagged
+   setting against the appliance's limits (`functions` in
+   `src/utils/householdAppliances.ts`), checks that each step's text agrees with its
+   tags, and runs the usual automated checks. Each finding names its step.
+3. **Repair.** If anything must be fixed, the same model gets only the failing steps,
+   their neighbours and the relevant limits, and returns replacement steps. The rest
+   of the draft stays word for word, and a repair that doesn't reduce the problems is
+   discarded.
+4. **Escalate.** If problems remain, the escalation model gets one more patch
+   attempt. Whatever is left shows up on the review page as usual.
+
+The progress panel shows the model's thought summaries while it plans, the step
+count while it writes, and "Fixing N problems" when a repair runs.
+Each draft logs the model, setting, prompt version, model calls, repairs and escalations, and is traced in PostHog with an `$ai_generation` event for every model call (see `docs/observability.md`). The design is in
+`docs/superpowers/specs/2026-10-26-ai-recipe-versions-design.md`.
+
+## Evaluating drafts
+
+`pnpm eval:recipe-versions` compares draft quality, speed and cost before you change
+the prompt, model or thinking level. It runs on your machine, uses your own
+`GEMINI_API_KEY` and `CLAUDE_API_KEY` from `.env` (in this checkout or the main one;
+`.env` is gitignored), and saves nothing to Mealie.
+
+1. It loads the recipes in `evals/recipe-versions/cases.ts` from the live site's
+   read-only API. They cover oven → air fryer, oven → slow cooker, air fryer and slow
+   cooker → oven, plus hard cases such as fish, baking and macaroni cheese.
+2. It drafts each one with every drafter (a model, its thinking level or effort, and
+   a prompt version), using the production drafting code.
+3. It runs the automated checks, then asks a judge (Claude Opus 5.5 at high effort
+   when there's a Claude key, so Gemini doesn't mark its own work) to score
+   each draft from 1 to 5 on appliance use, temperatures, timings, food safety,
+   completeness and clarity, with up to five issues.
+4. It writes `evals/results/<time>/report.html` (summary by drafter with time,
+   tokens, cost at current and 2027 prices, checks and scores, then each recipe side
+   by side with scores, checks, issues and the steps) and `results.json`. Prices are
+   in `evals/recipe-versions/prices.ts`.
+
+Options, as environment variables: `EVAL_DRAFTERS` (comma-separated, default
+Gemini low, medium and high, plus Claude Haiku, Sonnet and Opus when `CLAUDE_API_KEY`
+is set; each is `gemini[:level][@v1|@v2]` or `claude-<model>[:effort][@v1|@v2]`),
+`EVAL_CASES` (comma-separated slugs), `EVAL_REPEATS` (default 1), `EVAL_JUDGE=0` to
+skip the judge, `EVAL_JUDGE_MODEL` (default `claude-opus-5-5` when there's a Claude key,
+otherwise `GEMINI_MODEL`),
+`EVAL_CONCURRENCY` (default 3) and `EVAL_RECIPE_SOURCE` (default the live site). Each
+draft costs one judge call too, so 18 recipes × 6 drafters is 108 drafts plus 108
+judge calls.
 
 ## Notes
 

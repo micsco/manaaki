@@ -5,6 +5,6 @@ export default defineConfig({
     name: "eval",
     environment: "node",
     include: ["evals/**/*.eval.ts"],
-    testTimeout: 120_000,
+    testTimeout: 60 * 60_000,
   },
 })

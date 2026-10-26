@@ -1,31 +1,23 @@
 import { createHash } from "node:crypto"
 
-import { ApiError } from "@google/genai"
 import { z } from "zod"
 
 import { getOneApiRecipesSlugGet, type RecipeOutput } from "../api/generated"
-import {
-  checkDraft,
-  type DraftMetrics,
-  type DraftSource,
-  type DraftStreamEvent,
-} from "../utils/recipeVersionDraft"
-import { cookingMethod, VERSION_EXTRAS_KEYS } from "../utils/recipeVersions"
-import { geminiModel, recipeVersionDraftsPerHour } from "./env"
+import { checkDraft, type DraftMetrics, type DraftStreamEvent } from "../utils/recipeVersionDraft"
+import { VERSION_EXTRAS_KEYS } from "../utils/recipeVersions"
+import { recipeVersionDraftsPerHour, recipeVersionModel } from "./env"
 import { createMealieClient } from "./mealieClient"
 import { upstreamFailureResponse } from "./mealieUpstream"
-import {
-  AiDraftError,
-  AiNotConfiguredError,
-  type DraftRequestRecipe,
-  generateRecipeVersionDraft,
-} from "./recipeVersionAi"
+import { AiDraftError, AiNotConfiguredError, generateRecipeVersionDraft } from "./recipeVersionAi"
+import { ModelBusyError, ModelCallError } from "./recipeVersionModels"
+import { toDraftRecipe, toSource } from "./recipeVersionSource"
 import { readSessionToken } from "./session"
 import { metrics, traced } from "./telemetry"
 
 const MAX_BODY_BYTES = 4096
 const MAX_RECIPE_CHARS = 40_000
-const AI_TIMEOUT_MS = 85_000
+const AI_TIMEOUT_MS = 150_000
+const HEARTBEAT_MS = 20_000
 const HOUR_MS = 3_600_000
 
 const requestSchema = z.object({
@@ -65,43 +57,6 @@ export function resetDraftRateLimit() {
   draftsBySession.clear()
 }
 
-function minutes(seconds: number | null | undefined): number | null {
-  return seconds ? Math.round(seconds / 60) : null
-}
-
-function toDraftRecipe(recipe: RecipeOutput): DraftRequestRecipe {
-  const waiting = recipe.extras?.waitingTime
-  return {
-    name: recipe.name ?? "Recipe",
-    description: recipe.description ?? "",
-    servings: recipe.recipeServings ?? null,
-    method: cookingMethod(recipe),
-    ingredients: (recipe.recipeIngredient ?? []).map(line =>
-      [line.title ? `[${line.title}]` : "", line.display || line.note || line.originalText || ""]
-        .filter(Boolean)
-        .join(" ")
-    ),
-    steps: (recipe.recipeInstructions ?? []).map(step => step.text ?? "").filter(Boolean),
-    notes: (recipe.notes ?? []).map(note => ({ title: note.title ?? "", text: note.text ?? "" })),
-    prepMinutes: minutes(recipe.prepTimeSeconds),
-    cookMinutes: minutes(recipe.performTimeSeconds),
-    totalMinutes: minutes(recipe.totalTimeSeconds),
-    waitingNote: typeof waiting === "string" && waiting.trim() ? waiting.trim() : null,
-  }
-}
-
-function toSource(recipe: RecipeOutput, draftRecipe: DraftRequestRecipe): DraftSource {
-  return {
-    name: draftRecipe.name,
-    method: draftRecipe.method,
-    ingredients: (recipe.recipeIngredient ?? []).map((line, index) => ({
-      text: draftRecipe.ingredients[index],
-      quantity: line.quantity || null,
-    })),
-    steps: draftRecipe.steps,
-  }
-}
-
 function recordDraftOutcome(
   target: string,
   model: string,
@@ -123,6 +78,7 @@ function recordDraftTokens(usage: DraftMetrics) {
     thinking: usage.thinkingTokens,
   }
   for (const [kind, count] of Object.entries(tokens)) {
+    if (count === null) continue
     metrics.histogram("recipe_version.draft.tokens", count, {
       attributes: { model: usage.model, kind },
     })
@@ -133,15 +89,22 @@ function failureEvent(failure: unknown, signal: AbortSignal): { status: number; 
   if (failure instanceof AiNotConfiguredError) {
     return {
       status: 503,
-      error: "AI isn't set up yet. Add GEMINI_API_KEY to Manaaki's environment.",
+      error:
+        "AI isn't set up yet. Add the API key for the drafting model to Manaaki's environment.",
     }
   }
-  if (failure instanceof AiDraftError)
+  if (failure instanceof ModelBusyError) {
+    return { status: 429, error: "The AI service is busy. Try again in a minute." }
+  }
+  if (
+    signal.aborted ||
+    (failure instanceof DOMException &&
+      (failure.name === "TimeoutError" || failure.name === "AbortError"))
+  ) {
+    return { status: 504, error: "The AI took too long. Try again." }
+  }
+  if (failure instanceof AiDraftError || failure instanceof ModelCallError) {
     return { status: 502, error: `${failure.message} Try again.` }
-  if (failure instanceof ApiError) {
-    return failure.status === 429
-      ? { status: 429, error: "The AI service is busy. Try again in a minute." }
-      : { status: 502, error: "The AI service returned an error. Try again." }
   }
   if (
     signal.aborted ||
@@ -220,29 +183,43 @@ export async function recipeVersionDraftHandler(request: Request): Promise<Respo
     start(controller) {
       const attributes = { "recipe_version.target": target, "recipe.id": recipeId }
       return traced("recipe_version.draft", { attributes }, async span => {
+        let lastProgress: DraftStreamEvent | null = null
         const send = (event: DraftStreamEvent) => {
           if (!open) return
+          if (event.type === "progress") lastProgress = event
           try {
             controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
           } catch {
             open = false
           }
         }
+        const heartbeat = setInterval(() => {
+          if (lastProgress) send(lastProgress)
+        }, HEARTBEAT_MS)
         try {
-          const { draft, usage } = await generateRecipeVersionDraft(
-            draftRecipe,
+          const source = toSource(recipe, draftRecipe)
+          const { draft, usage } = await generateRecipeVersionDraft({
+            recipe: draftRecipe,
+            source,
             target,
             notes,
             signal,
-            progress => send({ type: "progress", ...progress })
-          )
+            onProgress: progress => send({ type: "progress", ...progress }),
+          })
           send({ type: "progress", stage: "checking" })
           const checksStartedAt = performance.now()
-          const source = toSource(recipe, draftRecipe)
           const checks = checkDraft(draft, source, target)
           const draftMetrics: DraftMetrics = {
             model: usage.model,
+            escalationModel: usage.escalationModel,
+            calls: usage.calls,
+            initialProblems: usage.initialProblems,
+            repairRan: usage.repairRan,
+            repairFixed: usage.repairFixed,
+            escalated: usage.escalated,
+            escalationFixed: usage.escalationFixed,
             thinkingLevel: usage.thinkingLevel,
+            promptVersion: usage.promptVersion,
             firstChunkMs: usage.firstChunkMs,
             inputTokens: usage.inputTokens,
             outputTokens: usage.outputTokens,
@@ -253,8 +230,6 @@ export async function recipeVersionDraftHandler(request: Request): Promise<Respo
             checksMs: Math.round(performance.now() - checksStartedAt),
             totalMs: elapsed(),
           }
-          const blocking = checks.filter(c => c.level === "block").length
-          const warnings = checks.filter(c => c.level === "warn").length
           console.info(
             JSON.stringify({
               event: "recipe_version_draft",
@@ -262,8 +237,8 @@ export async function recipeVersionDraftHandler(request: Request): Promise<Respo
               recipeId,
               target,
               ...draftMetrics,
-              blocking,
-              warnings,
+              blocking: checks.filter(c => c.level === "block").length,
+              warnings: checks.filter(c => c.level === "warn").length,
               confidence: draft.confidence,
             })
           )
@@ -272,10 +247,14 @@ export async function recipeVersionDraftHandler(request: Request): Promise<Respo
             "gen_ai.usage.input_tokens": usage.inputTokens,
             "gen_ai.usage.output_tokens": usage.outputTokens,
             "recipe_version.thinking_level": usage.thinkingLevel,
-            "recipe_version.thinking_tokens": usage.thinkingTokens,
+            "recipe_version.thinking_tokens": usage.thinkingTokens ?? undefined,
+            "recipe_version.model_calls": usage.calls,
+            "recipe_version.initial_problems": usage.initialProblems,
+            "recipe_version.repaired": usage.repairRan,
+            "recipe_version.escalated": usage.escalated,
             "recipe_version.confidence": draft.confidence,
-            "recipe_version.blocking_checks": blocking,
-            "recipe_version.warning_checks": warnings,
+            "recipe_version.blocking_checks": checks.filter(c => c.level === "block").length,
+            "recipe_version.warning_checks": checks.filter(c => c.level === "warn").length,
           })
           recordDraftOutcome(target, usage.model, "ok", 200, draftMetrics.totalMs)
           recordDraftTokens(draftMetrics)
@@ -283,7 +262,10 @@ export async function recipeVersionDraftHandler(request: Request): Promise<Respo
         } catch (failure) {
           const event = failureEvent(failure, signal)
           if (event.status === 500) console.error(failure)
-          const detail = failure instanceof AiDraftError ? failure.detail : undefined
+          const detail =
+            failure instanceof AiDraftError || failure instanceof ModelCallError
+              ? failure.detail
+              : undefined
           const totalMs = elapsed()
           console.info(
             JSON.stringify({
@@ -306,13 +288,14 @@ export async function recipeVersionDraftHandler(request: Request): Promise<Respo
           if (!abandoned) span.recordException(failure)
           recordDraftOutcome(
             target,
-            geminiModel(),
+            recipeVersionModel(),
             abandoned ? "abandoned" : "error",
             event.status,
             totalMs
           )
           send({ type: "error", ...event })
         } finally {
+          clearInterval(heartbeat)
           if (open) {
             open = false
             controller.close()

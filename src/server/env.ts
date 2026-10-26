@@ -26,7 +26,29 @@ export const mealieStalledSlotHoldMs = (): number =>
 export const geminiApiKey = (): string | null => globalThis.process?.env?.GEMINI_API_KEY || null
 export const geminiModel = (): string => globalThis.process?.env?.GEMINI_MODEL || "gemini-3.8-flash"
 
-const THINKING_LEVELS = ["minimal", "low", "medium", "high"] as const
+export const claudeApiKey = (): string | null =>
+  globalThis.process?.env?.CLAUDE_API_KEY || globalThis.process?.env?.ANTHROPIC_API_KEY || null
+
+export const recipeVersionModel = (): string =>
+  globalThis.process?.env?.RECIPE_VERSION_MODEL?.trim() || geminiModel()
+
+const CLAUDE_EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const
+export type ClaudeEffort = (typeof CLAUDE_EFFORTS)[number]
+export const claudeEffort = (): ClaudeEffort | null => {
+  const value = globalThis.process?.env?.CLAUDE_EFFORT?.trim().toLowerCase()
+  return CLAUDE_EFFORTS.find(effort => effort === value) ?? null
+}
+
+export const recipeEscalationModel = (): string | null => {
+  const value = globalThis.process?.env?.RECIPE_ESCALATION_MODEL?.trim()
+  if (value === undefined || value === "") return "claude-sonnet-5-5"
+  return value.toLowerCase() === "none" ? null : value
+}
+
+export const recipePromptVersion = (): "v1" | "v2" =>
+  globalThis.process?.env?.RECIPE_PROMPT_VERSION?.trim().toLowerCase() === "v1" ? "v1" : "v2"
+
+const THINKING_LEVELS = ["low", "medium", "high"] as const
 export type GeminiThinkingLevel = (typeof THINKING_LEVELS)[number]
 export const geminiThinkingLevel = (): GeminiThinkingLevel | null => {
   const value = globalThis.process?.env?.GEMINI_THINKING_LEVEL?.trim().toLowerCase()

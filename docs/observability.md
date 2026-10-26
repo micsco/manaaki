@@ -38,9 +38,12 @@ older or newer tabs by route. The proxy strips this header too.
 
 ## AI observability
 
-Gemini calls go through `@posthog/ai`, which records an `$ai_generation` event with
-the prompt, the reply, tokens, cost and latency. The event's `$ai_trace_id` is the
-draft's trace ID, and it carries the browser's distinct ID and `$session_id`.
+Recipe version drafts call models through TanStack AI. Every call (the draft, any
+repair and any escalation) records an `$ai_generation` event through `@posthog/ai`'s
+`captureAiGeneration`, with the prompt, the reply, tokens, latency and a `purpose`
+property (`draft`, `repair` or `escalation`). The event's `$ai_trace_id` is the
+draft's trace ID, and it carries the browser's distinct ID and `$session_id`. Claude
+calls don't report thinking tokens separately; they are included in output tokens.
 
 To go from a slow draft to its model call, take the trace ID from
 `posthog.trace_spans` with `lower(hex(tryBase64Decode(trace_id)))` and look for that

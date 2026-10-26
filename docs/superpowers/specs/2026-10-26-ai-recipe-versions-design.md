@@ -128,13 +128,9 @@ fits 4 potatoes"), shown above the steps. Low confidence is a warning.
   checks in CI. Replace them with recorded model outputs once there are some. No
   live API calls in CI.
 - **Opt-in eval** (`pnpm eval:recipe-versions`, not in CI, needs `GEMINI_API_KEY`
-  in `.env`):
-  - runs three sample recipes (oven → air fryer, oven → slow cooker, air fryer →
-    oven) through the live model
-  - prints the token counts, each draft's method and its check results, and fails
-    on any blocking check
-  - run it before changing the prompt or model. A second-model rubric and real
-    recipes from the collection are later additions.
+  in `.env`): see "Evaluating drafts" in `docs/recipe-versions.md`. It drafts eight
+  real recipes at each thinking level, scores them with the checks and a Gemini
+  judge, and writes an HTML comparison report.
 - **Normal gates:**
   - `pnpm check:fix`, `type-check` and `test` on commit
   - `test` and `build` on push
@@ -156,3 +152,10 @@ fits 4 potatoes"), shown above the steps. Low confidence is a warning.
    as explicit rows you approve; all are ticked by default.
 3. nginx gives the draft route a 95-second read timeout; the server stops waiting
    for Gemini after 85 seconds.
+4. Evaluation (`pnpm eval:recipe-versions`, judged by Claude Opus 5.5) compared a
+   single call, a single call plus repair, a plan → write chain, a tool-calling loop
+   and tagged steps with patch repair. Tagged steps with patch repair gave the best
+   Gemini results for under a penny a draft, so production drafts with Gemini 3.8
+   Flash at low thinking, repairs with patches, and escalates to Claude Sonnet 5.5
+   when the first repair misses something. The chain and tool loop were dropped.
+

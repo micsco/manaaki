@@ -7,6 +7,7 @@ const nodeTests = [
   "src/api/**/*.test.ts",
   "src/utils/!(audio).test.ts",
   "src/routes/-manifest.test.ts",
+  "evals/**/*.test.ts",
 ]
 
 export default defineConfig({

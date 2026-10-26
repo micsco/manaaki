@@ -4,6 +4,11 @@ import {
   geminiApiKey,
   geminiModel,
   geminiThinkingLevel,
+  claudeApiKey,
+  claudeEffort,
+  recipeEscalationModel,
+  recipePromptVersion,
+  recipeVersionModel,
   mealieInternalUrl,
   posthogIngestionHost,
   posthogProjectToken,
@@ -19,6 +24,12 @@ const KEYS = [
   "GEMINI_API_KEY",
   "GEMINI_MODEL",
   "GEMINI_THINKING_LEVEL",
+  "CLAUDE_API_KEY",
+  "ANTHROPIC_API_KEY",
+  "CLAUDE_EFFORT",
+  "RECIPE_VERSION_MODEL",
+  "RECIPE_PROMPT_VERSION",
+  "RECIPE_ESCALATION_MODEL",
   "RECIPE_VERSION_DRAFTS_PER_HOUR",
   "POSTHOG_PROJECT_TOKEN",
   "POSTHOG_INGESTION_HOST",
@@ -90,5 +101,44 @@ describe("server env", () => {
     expect(posthogIngestionHost()).toBe("https://eu.i.posthog.com")
     process.env.POSTHOG_INGESTION_HOST = "https://us.i.posthog.com"
     expect(posthogIngestionHost()).toBe("https://us.i.posthog.com")
+  })
+
+  it("reads the drafting model, Claude settings and prompt version", () => {
+    for (const key of [
+      "CLAUDE_API_KEY",
+      "ANTHROPIC_API_KEY",
+      "CLAUDE_EFFORT",
+      "RECIPE_VERSION_MODEL",
+      "RECIPE_PROMPT_VERSION",
+      "GEMINI_MODEL",
+    ])
+      delete process.env[key]
+    expect(recipeVersionModel()).toBe("gemini-3.8-flash")
+    expect(claudeApiKey()).toBeNull()
+    expect(claudeEffort()).toBeNull()
+    expect(recipePromptVersion()).toBe("v2")
+    process.env.RECIPE_VERSION_MODEL = " claude-sonnet-5-5 "
+    process.env.ANTHROPIC_API_KEY = "fallback"
+    process.env.CLAUDE_EFFORT = "HIGH"
+    process.env.RECIPE_PROMPT_VERSION = "v1"
+    expect(recipeVersionModel()).toBe("claude-sonnet-5-5")
+    expect(claudeApiKey()).toBe("fallback")
+    process.env.CLAUDE_API_KEY = "preferred"
+    expect(claudeApiKey()).toBe("preferred")
+    expect(claudeEffort()).toBe("high")
+    expect(recipePromptVersion()).toBe("v1")
+    process.env.CLAUDE_EFFORT = "turbo"
+    process.env.RECIPE_PROMPT_VERSION = "v9"
+    expect(claudeEffort()).toBeNull()
+    expect(recipePromptVersion()).toBe("v2")
+  })
+
+  it("escalates to Sonnet unless another model or none is set", () => {
+    delete process.env.RECIPE_ESCALATION_MODEL
+    expect(recipeEscalationModel()).toBe("claude-sonnet-5-5")
+    process.env.RECIPE_ESCALATION_MODEL = "claude-opus-5-5"
+    expect(recipeEscalationModel()).toBe("claude-opus-5-5")
+    process.env.RECIPE_ESCALATION_MODEL = "None"
+    expect(recipeEscalationModel()).toBeNull()
   })
 })

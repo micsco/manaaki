@@ -115,6 +115,8 @@ describe("checkDraft", () => {
     "Cook until the basa is opaque and 63°C in the thickest part.",
     "Bake until the salmon is 63°C inside.",
     "Cook to a safe 63°C.",
+    "Check that the chicken reaches an internal temperature of at least 75°C and the juices run clear.",
+    "A thermometer in the thickest part of the thigh (avoiding the bone) should register at least 74°C.",
   ])("doesn't treat a food temperature as an appliance setting: %s", step => {
     const draft = draftWith({ steps: [...goodAirFryerDraft.steps, step] })
     expect(ids(draft)).not.toContain("temperature-range")
@@ -139,6 +141,26 @@ describe("checkDraft", () => {
       ],
     })
     expect(ids(draft)).not.toContain("target-missing")
+  })
+
+  it("still checks a low temperature on a low-heat function", () => {
+    const draft = draftWith({
+      steps: [
+        ...goodAirFryerDraft.steps,
+        "Zone 2: Dehydrate the apple slices at 30°C for 6 hours.",
+      ],
+    })
+    expect(ids(draft)).toContain("temperature-range")
+  })
+
+  it("allows a Fahrenheit conversion in brackets after °C", () => {
+    const draft = draftWith({
+      steps: [
+        ...goodAirFryerDraft.steps,
+        "The thigh should read 74°C (165°F) in the thickest part.",
+      ],
+    })
+    expect(ids(draft)).not.toContain("fahrenheit")
   })
 
   it("accepts Max Crisp at 240°C", () => {
@@ -191,5 +213,65 @@ describe("checkDraft", () => {
     expect(checkDraft(draft, ovenSource, "slowCooker").map(check => check.id)).toContain(
       "slow-cooker-setting"
     )
+  })
+})
+
+describe("slow cooker limits", () => {
+  const slowDraft = (step: string) =>
+    draftWith({
+      name: "Stew (Slow cooker)",
+      cookMinutes: 400,
+      totalMinutes: 420,
+      steps: ["Brown the beef with Sear/Sauté on HI.", step, "Serve."],
+    })
+  const blocks = (step: string) =>
+    blockingChecks(checkDraft(slowDraft(step), ovenSource, "slowCooker")).map(
+      check => check.message
+    )
+
+  it.each([
+    ["Slow Cook on LO for 3 hours.", /LO for 3 h isn't possible/],
+    ["Slow Cook on LO for 5 hours, until tender.", /LO for 5 h/],
+    ["Slow Cook on HI for 2½ hours.", /HI for 2 h 30 min/],
+    ["Slow Cook on HI for 90 minutes.", /HI for 1 h 30 min/],
+    ["Slow Cook on LOW for 1 hour 30 minutes.", /LO for 1 h 30 min/],
+  ])("blocks %s", (step, message) => {
+    expect(blocks(step).join(" ")).toMatch(message)
+  })
+
+  it.each([
+    "Slow Cook on LO for 7 hours.",
+    "Slow Cook on HI for 3 hours, or LO for 6 hours.",
+    "Sear/Sauté on HI for 5 minutes, then stir in the paste.",
+    "Braise for 2 hours.",
+  ])("allows %s", step => {
+    expect(blocks(step)).toEqual([])
+  })
+
+  it("counts Sear/Sauté and Braise as using the slow cooker", () => {
+    const draft = draftWith({
+      name: "Stew (Slow cooker)",
+      cookMinutes: 140,
+      totalMinutes: 160,
+      steps: ["Brown the beef with Sear/Sauté on HI.", "Braise for 2 hours.", "Serve."],
+    })
+    expect(checkDraft(draft, ovenSource, "slowCooker").map(check => check.id)).not.toContain(
+      "target-missing"
+    )
+  })
+})
+
+describe("doneness cues", () => {
+  it.each([
+    "Air fry until the fish flakes easily.",
+    "Cook until the cod is opaque in the centre.",
+    "Cook until the chicken reads 75°C.",
+  ])("counts %s as keeping a doneness check", step => {
+    const draft = draftWith({
+      steps: goodAirFryerDraft.steps.map((text, index) =>
+        index === 2 ? `Spoon the filling back in and air fry for 8 minutes. ${step}` : text
+      ),
+    })
+    expect(ids(draft)).not.toContain("doneness-dropped")
   })
 })

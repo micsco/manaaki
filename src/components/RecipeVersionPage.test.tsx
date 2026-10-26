@@ -276,6 +276,13 @@ it("shows each drafting stage as the AI works", async () => {
       .closest("li")
   ).toHaveAttribute("aria-current", "step")
   expect(within(stages).getByText("· 3 so far")).toBeInTheDocument()
+  expect(within(stages).queryByText(/Fixing/)).not.toBeInTheDocument()
+  act(() => report({ type: "progress", stage: "fixing", problems: 2, escalated: false }))
+  expect(
+    within(stages).getByText("Fixing 2 problems the checks found").closest("li")
+  ).toHaveAttribute("aria-current", "step")
+  act(() => report({ type: "progress", stage: "fixing", problems: 1, escalated: true }))
+  expect(within(stages).getByText("Asking a stronger model to fix 1 problem")).toBeInTheDocument()
   expect(within(stages).queryByText("Splitting food between zones")).not.toBeInTheDocument()
   expect(screen.getByText(/Usually 20–60 seconds/)).toBeInTheDocument()
 })

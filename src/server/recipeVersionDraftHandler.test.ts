@@ -1,10 +1,10 @@
-import { ApiError } from "@google/genai"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { goodAirFryerDraft } from "../test/fixtures/recipeVersionDrafts"
 import { installTestPostHog } from "../test/serverPostHog"
 import { AiDraftError, AiNotConfiguredError, generateRecipeVersionDraft } from "./recipeVersionAi"
 import { recipeVersionDraftHandler, resetDraftRateLimit } from "./recipeVersionDraftHandler"
+import { ModelBusyError, ModelCallError } from "./recipeVersionModels"
 import { traceRequest } from "./requestTracing"
 import { buildSessionSetCookie } from "./session"
 import { activeTraceId } from "./telemetry"
@@ -84,7 +84,15 @@ beforeEach(() => {
       outputTokens: 2,
       thinkingTokens: 3,
       model: "gemini-3.8-flash",
+      escalationModel: null,
+      calls: 1,
+      initialProblems: 0,
+      repairRan: false,
+      repairFixed: false,
+      escalated: false,
+      escalationFixed: false,
       thinkingLevel: "medium",
+      promptVersion: "v2",
       firstChunkMs: 30,
       firstTokenMs: 40,
       modelMs: 50,
@@ -126,11 +134,13 @@ describe("recipeVersionDraftHandler", () => {
     ])
     const mealieRequest = new Request(fetchSpy.mock.calls[0][0])
     expect(mealieRequest.url).toContain(`/api/recipes/${RECIPE_ID}`)
-    const [draftRecipe, target, notes] = vi.mocked(generateRecipeVersionDraft).mock.calls[0]
+    const [{ recipe: draftRecipe, target, notes, source }] = vi.mocked(generateRecipeVersionDraft)
+      .mock.calls[0]
     expect(target).toBe("airFryer")
     expect(notes).toBe("small basket")
     expect(draftRecipe.method).toBe("oven")
     expect(draftRecipe.cookMinutes).toBe(75)
+    expect(source.ingredients).toHaveLength(2)
   })
 
   it("traces the draft and records its outcome, tokens and duration", async () => {
@@ -146,7 +156,15 @@ describe("recipeVersionDraftHandler", () => {
             outputTokens: 2,
             thinkingTokens: 3,
             model: "gemini-3.8-flash",
+            escalationModel: null,
+            calls: 2,
+            initialProblems: 1,
+            repairRan: true,
+            repairFixed: true,
+            escalated: false,
+            escalationFixed: false,
             thinkingLevel: "medium",
+            promptVersion: "v2",
             firstChunkMs: 30,
             firstTokenMs: 40,
             modelMs: 50,
@@ -173,6 +191,8 @@ describe("recipeVersionDraftHandler", () => {
         "gen_ai.usage.input_tokens": 1,
         "gen_ai.usage.output_tokens": 2,
         "recipe_version.thinking_tokens": 3,
+        "recipe_version.model_calls": 2,
+        "recipe_version.repaired": true,
         "recipe_version.confidence": goodAirFryerDraft.confidence,
       })
       const samples = await posthog.flushMetrics()
@@ -241,6 +261,7 @@ describe("recipeVersionDraftHandler", () => {
       outcome: "ok",
       model: "gemini-3.8-flash",
       thinkingLevel: "medium",
+      promptVersion: "v2",
       firstChunkMs: 30,
       firstTokenMs: 40,
     })
@@ -325,15 +346,13 @@ describe("recipeVersionDraftHandler", () => {
       leave = resolve
     })
     let abortedWhenLeft: boolean | undefined
-    vi.mocked(generateRecipeVersionDraft).mockImplementation(
-      async (_recipe, _target, _notes, signal, onProgress) => {
-        onProgress?.({ stage: "thinking" })
-        await left
-        abortedWhenLeft = signal?.aborted
-        onProgress?.({ stage: "writing", steps: 1 })
-        throw new DOMException("aborted", "AbortError")
-      }
-    )
+    vi.mocked(generateRecipeVersionDraft).mockImplementation(async ({ signal, onProgress }) => {
+      onProgress?.({ stage: "thinking" })
+      await left
+      abortedWhenLeft = signal?.aborted
+      onProgress?.({ stage: "writing", steps: 1 })
+      throw new DOMException("aborted", "AbortError")
+    })
     const response = await post(valid)
     const reader = response.body!.getReader()
     expect(JSON.parse(new TextDecoder().decode((await reader.read()).value))).toEqual({
@@ -356,13 +375,11 @@ describe("recipeVersionDraftHandler", () => {
       const left = new Promise<void>(resolve => {
         leave = resolve
       })
-      vi.mocked(generateRecipeVersionDraft).mockImplementation(
-        async (_recipe, _target, _notes, _signal, onProgress) => {
-          onProgress?.({ stage: "thinking" })
-          await left
-          throw new DOMException("aborted", "AbortError")
-        }
-      )
+      vi.mocked(generateRecipeVersionDraft).mockImplementation(async ({ onProgress }) => {
+        onProgress?.({ stage: "thinking" })
+        await left
+        throw new DOMException("aborted", "AbortError")
+      })
       const reader = (await post(valid)).body!.getReader()
       await reader.read()
       await reader.cancel()
@@ -383,31 +400,72 @@ describe("recipeVersionDraftHandler", () => {
     }
   })
 
+  it("repeats the latest progress while the AI is quiet, so proxies keep the connection open", async () => {
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] })
+    try {
+      mealieReturns(200)
+      let finish: () => void = () => {}
+      const finished = new Promise<void>(resolve => {
+        finish = resolve
+      })
+      vi.mocked(generateRecipeVersionDraft).mockImplementation(async ({ onProgress }) => {
+        onProgress?.({ stage: "fixing", problems: 1, escalated: true })
+        await finished
+        throw new DOMException("gone", "AbortError")
+      })
+      const response = await post(valid)
+      const reader = response.body!.getReader()
+      const decoder = new TextDecoder()
+      expect(JSON.parse(decoder.decode((await reader.read()).value))).toMatchObject({
+        stage: "fixing",
+      })
+      vi.advanceTimersByTime(20_000)
+      expect(JSON.parse(decoder.decode((await reader.read()).value))).toEqual({
+        type: "progress",
+        stage: "fixing",
+        problems: 1,
+        escalated: true,
+      })
+      finish()
+      await reader.cancel()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it("streams the model's progress before the result", async () => {
     mealieReturns(200)
-    vi.mocked(generateRecipeVersionDraft).mockImplementation(
-      async (_recipe, _target, _notes, _signal, onProgress) => {
-        onProgress?.({ stage: "thinking" })
-        onProgress?.({ stage: "writing", steps: 2 })
-        return {
-          draft: goodAirFryerDraft,
-          usage: {
-            inputTokens: 1,
-            outputTokens: 2,
-            thinkingTokens: 0,
-            model: "m",
-            thinkingLevel: "default",
-            firstChunkMs: 1,
-            firstTokenMs: 1,
-            modelMs: 2,
-          },
-        }
+    vi.mocked(generateRecipeVersionDraft).mockImplementation(async ({ onProgress }) => {
+      onProgress?.({ stage: "thinking" })
+      onProgress?.({ stage: "writing", steps: 2 })
+      onProgress?.({ stage: "fixing", problems: 1, escalated: false })
+      return {
+        draft: goodAirFryerDraft,
+        usage: {
+          inputTokens: 1,
+          outputTokens: 2,
+          thinkingTokens: 0,
+          model: "m",
+          escalationModel: null,
+          calls: 1,
+          initialProblems: 0,
+          repairRan: false,
+          repairFixed: false,
+          escalated: false,
+          escalationFixed: false,
+          thinkingLevel: "default",
+          promptVersion: "v2",
+          firstChunkMs: 1,
+          firstTokenMs: 1,
+          modelMs: 2,
+        },
       }
-    )
+    })
     const sent = await events(await post(valid))
-    expect(sent.slice(0, 3)).toEqual([
+    expect(sent.slice(0, 4)).toEqual([
       { type: "progress", stage: "thinking" },
       { type: "progress", stage: "writing", steps: 2 },
+      { type: "progress", stage: "fixing", problems: 1, escalated: false },
       { type: "progress", stage: "checking" },
     ])
   })
@@ -429,8 +487,8 @@ describe("recipeVersionDraftHandler", () => {
   it.each([
     [new AiNotConfiguredError(), 503, /isn't set up/],
     [new AiDraftError("The AI returned an empty draft."), 502, /empty draft/],
-    [new ApiError({ message: "quota", status: 429 }), 429, /busy/],
-    [new ApiError({ message: "boom", status: 500 }), 502, /AI service/],
+    [new ModelBusyError("429 RESOURCE_EXHAUSTED"), 429, /busy/],
+    [new ModelCallError("The AI service returned an error.", "400"), 502, /AI service/],
     [new DOMException("timed out", "TimeoutError"), 504, /too long/],
   ])("maps %o to %i", async (failure, status, message) => {
     mealieReturns(200)

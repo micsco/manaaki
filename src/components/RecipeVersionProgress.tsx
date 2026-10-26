@@ -6,12 +6,18 @@ const STAGES = [
   { key: "reading", label: "Reading the recipe" },
   { key: "thinking", label: "Planning the new method" },
   { key: "writing", label: "Writing the steps" },
+  { key: "fixing", label: "Fixing problems the checks found" },
   { key: "checking", label: "Running the automated checks" },
 ] as const
 
 function stageIndex(progress: DraftProgressEvent | null): number {
   if (!progress) return 0
   return STAGES.findIndex(stage => stage.key === progress.stage)
+}
+
+function fixingLabel(problems: number, escalated: boolean): string {
+  const count = `${problems} problem${problems === 1 ? "" : "s"}`
+  return escalated ? `Asking a stronger model to fix ${count}` : `Fixing ${count} the checks found`
 }
 
 export function RecipeVersionProgress({
@@ -30,11 +36,20 @@ export function RecipeVersionProgress({
   const seconds = Math.max(0, Math.round((now - startedAt) / 1000))
   const steps = progress?.stage === "writing" ? progress.steps : 0
   const thought = progress?.stage === "thinking" ? progress.thought : undefined
+  const [fixed, setFixed] = useState<{ problems: number; escalated: boolean } | null>(null)
+  if (
+    progress?.stage === "fixing" &&
+    (fixed?.problems !== progress.problems || fixed.escalated !== progress.escalated)
+  ) {
+    setFixed({ problems: progress.problems, escalated: progress.escalated })
+  }
+  const visible = STAGES.filter(stage => stage.key !== "fixing" || fixed)
 
   return (
     <div className="space-y-3 rounded-xl border border-gray-800 bg-gray-950/60 p-4">
       <ol aria-label="Drafting progress" className="space-y-2 text-sm">
-        {STAGES.map((stage, index) => {
+        {visible.map(stage => {
+          const index = STAGES.indexOf(stage)
           const state = index < current ? "done" : index === current ? "active" : "waiting"
           return (
             <li
@@ -57,7 +72,9 @@ export function RecipeVersionProgress({
                 {state === "done" ? "✓" : ""}
               </span>
               <span>
-                {stage.label}
+                {stage.key === "fixing" && fixed
+                  ? fixingLabel(fixed.problems, fixed.escalated)
+                  : stage.label}
                 {stage.key === "writing" && state === "active" && steps > 0 && (
                   <span className="text-gray-400"> · {steps} so far</span>
                 )}
@@ -70,7 +87,9 @@ export function RecipeVersionProgress({
         })}
       </ol>
       <p role="status" className="sr-only">
-        {STAGES[current]?.label ?? STAGES[0].label}
+        {progress?.stage === "fixing"
+          ? fixingLabel(progress.problems, progress.escalated)
+          : (STAGES[current]?.label ?? STAGES[0].label)}
       </p>
       <p className="text-sm text-gray-400">
         {seconds} s. Usually 20–60 seconds; the AI plans the whole method before it starts writing.

@@ -1,11 +1,24 @@
 import type { CookingMethod } from "./recipeVersions"
 
+export type SettingLimits = { minMinutes: number; maxMinutes: number }
+
 export type HouseholdAppliance = {
   name: string
   model: string
   url: string
   details: string[]
   guidance: string[]
+  functions: ApplianceFunction[]
+}
+
+export type ApplianceFunction = {
+  name: string
+  aliases?: string[]
+  minMinutes?: number
+  maxMinutes?: number
+  fixedTemperature?: number
+  temperature?: [number, number]
+  settings?: Record<string, SettingLimits | null>
 }
 
 export const HOUSEHOLD_APPLIANCES: Partial<Record<CookingMethod, HouseholdAppliance>> = {
@@ -39,6 +52,14 @@ export const HOUSEHOLD_APPLIANCES: Partial<Record<CookingMethod, HouseholdApplia
       "Coat wet or battered food in flour, egg, then breadcrumbs pressed on firmly, and pin down light food such as a top slice of bread with cocktail sticks, so the fan doesn't blow it about",
       "Check meat and fish with a thermometer and remove food as soon as it's done",
     ],
+    functions: [
+      { name: "Air Fry", maxMinutes: 60 },
+      { name: "Max Crisp", maxMinutes: 30, fixedTemperature: 240 },
+      { name: "Roast", maxMinutes: 240 },
+      { name: "Bake", maxMinutes: 240 },
+      { name: "Reheat", maxMinutes: 60 },
+      { name: "Dehydrate", minMinutes: 60, maxMinutes: 720 },
+    ],
   },
   slowCooker: {
     name: "Ninja Foodi 8-in-1 PossibleCooker",
@@ -65,6 +86,22 @@ export const HOUSEHOLD_APPLIANCES: Partial<Record<CookingMethod, HouseholdApplia
       "Avoid adding fridge-cold ingredients to a very hot pot",
       "Check meat with a thermometer before serving",
     ],
+    functions: [
+      {
+        name: "Slow Cook",
+        settings: {
+          lo: { minMinutes: 360, maxMinutes: 720 },
+          hi: { minMinutes: 180, maxMinutes: 720 },
+        },
+      },
+      { name: "Sear/Sauté", aliases: ["sear", "sauté", "saute"], settings: { lo: null, hi: null } },
+      { name: "Braise", minMinutes: 60, maxMinutes: 720, fixedTemperature: 99 },
+      { name: "Simmer", fixedTemperature: 99 },
+      { name: "Steam", minMinutes: 1, maxMinutes: 60 },
+      { name: "Bake", maxMinutes: 360, temperature: [120, 230] },
+      { name: "Prove", maxMinutes: 240, temperature: [30, 40] },
+      { name: "Keep Warm", maxMinutes: 720 },
+    ],
   },
 }
 
@@ -79,4 +116,16 @@ export function describeAppliance(appliance: HouseholdAppliance): string {
     "Write the method for this appliance:",
     ...appliance.guidance.map(line => `- ${line}`),
   ].join("\n")
+}
+
+export function findFunction(
+  appliance: HouseholdAppliance,
+  name: string
+): ApplianceFunction | null {
+  const wanted = name.trim().toLowerCase()
+  return (
+    appliance.functions.find(
+      fn => fn.name.toLowerCase() === wanted || (fn.aliases ?? []).includes(wanted)
+    ) ?? null
+  )
 }
