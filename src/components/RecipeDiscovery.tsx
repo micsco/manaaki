@@ -6,6 +6,7 @@ import { toIsoDateString } from "../hooks/useMealPlan"
 import { recipeDiscoveryQueryOptions } from "../hooks/useRecipeDiscovery"
 import { buildRecipeDiscovery, type DiscoveryRow } from "../utils/recipeDiscovery"
 import { RecipeCard } from "./RecipeCard"
+import { ScrollRow } from "./ScrollRow"
 
 export function RecipeDiscovery({
   userId,
@@ -61,30 +62,22 @@ export function RecipeDiscovery({
             once per day.
           </p>
           {rows.map(row => (
-            <section key={row.id} aria-labelledby={`discovery-${row.id}`}>
-              <h2
-                id={`discovery-${row.id}`}
-                className="mb-3 font-serif text-2xl font-bold text-gray-100"
-              >
-                {row.title}
-              </h2>
-              <ul
-                className="flex snap-x snap-proximity gap-4 overflow-x-auto pb-4"
-                aria-label={row.title}
-              >
-                {row.items.map(item => (
-                  <li key={item.recipe.id} className="w-64 shrink-0 snap-start sm:w-72">
-                    <RecipeCard recipe={item.recipe} heading="h3" />
-                    <p className="mt-2 text-sm text-gray-400">{item.reason}</p>
-                    {item.planned && (
-                      <p className="mt-1 text-xs font-medium text-orange-400">
-                        On your plan in the next two weeks
-                      </p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </section>
+            <ScrollRow key={row.id} title={row.title} headingId={`discovery-${row.id}`}>
+              {row.items.map(item => (
+                <li
+                  key={item.recipe.id}
+                  className="w-64 shrink-0 snap-start sm:w-72 lg:w-[calc((100%-3rem)/3)] xl:w-[calc((100%-4.5rem)/4)]"
+                >
+                  <RecipeCard recipe={item.recipe} heading="h3" />
+                  <p className="mt-2 text-sm text-gray-400">{item.reason}</p>
+                  {item.planned && (
+                    <p className="mt-1 text-xs font-medium text-orange-400">
+                      On your plan in the next two weeks
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ScrollRow>
           ))}
         </div>
       ) : null}

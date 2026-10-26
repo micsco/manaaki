@@ -89,6 +89,30 @@
   }
 }
 
+@utility scroll-row {
+  --scroll-row-fade: 2.5rem;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  &[data-fade="end"] {
+    mask-image: linear-gradient(to right, #000 calc(100% - var(--scroll-row-fade)), transparent);
+  }
+  &[data-fade="start"] {
+    mask-image: linear-gradient(to right, transparent, #000 var(--scroll-row-fade));
+  }
+  &[data-fade="both"] {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 var(--scroll-row-fade),
+      #000 calc(100% - var(--scroll-row-fade)),
+      transparent
+    );
+  }
+}
+
 /* Custom component styles */
 @utility recipe-card {
   /* Recipe card styles */

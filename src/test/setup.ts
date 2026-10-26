@@ -8,6 +8,12 @@ Object.defineProperty(navigator, "wakeLock", {
   writable: true,
 })
 
+globalThis.ResizeObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
 beforeEach(() => {
   sessionStorage.clear()
   localStorage.clear()
