@@ -66,7 +66,10 @@ const DONENESS =
   /\b(cooked through|no longer pink|juices run clear|internal temperature|core temperature|\d{2,3}\s*°?\s*[CF]\s*(inside|internal))/i
 
 const FOOD_TEMPERATURE =
-  /\b(internal|core|centre|center|thermometer|reach(es|ed)?)\b(\W+\w+){0,3}\W*$/i
+  /\b(internal|core|centre|center|thermometer|reach(es|ed)?|safe)\b(\W+\w+){0,3}\W*$/i
+
+const FOOD_TEMPERATURE_AFTER =
+  /^\W{0,3}(internal(ly)?|inside|core|at the (centre|center|core)|in the (centre|center|middle|thickest))/i
 
 const MARKUP = /<\/?[a-z][^>]*>|javascript:|\bdata:[a-z]+\//i
 
@@ -169,8 +172,10 @@ export function checkDraft(
   if (FAHRENHEIT.test(text)) warn("fahrenheit", "The method uses Fahrenheit; use °C.")
   if (range) {
     for (const match of text.matchAll(CELSIUS)) {
-      const before = text.slice(Math.max(0, (match.index ?? 0) - 60), match.index)
-      if (FOOD_TEMPERATURE.test(before)) continue
+      const start = match.index ?? 0
+      const before = text.slice(Math.max(0, start - 60), start)
+      const after = text.slice(start + match[0].length, start + match[0].length + 40)
+      if (FOOD_TEMPERATURE.test(before) || FOOD_TEMPERATURE_AFTER.test(after)) continue
       const value = Number(match[1] ?? match[2])
       if (value < range[0] || value > range[1]) {
         warn(

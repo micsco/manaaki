@@ -111,6 +111,10 @@ describe("checkDraft", () => {
   it.each([
     "Cook until the chicken reaches an internal temperature of 75°C.",
     "Check the core temperature is 75°C with a thermometer.",
+    "Air fry until the fish flakes easily (63°C internal).",
+    "Cook until the basa is opaque and 63°C in the thickest part.",
+    "Bake until the salmon is 63°C inside.",
+    "Cook to a safe 63°C.",
   ])("doesn't treat a food temperature as an appliance setting: %s", step => {
     const draft = draftWith({ steps: [...goodAirFryerDraft.steps, step] })
     expect(ids(draft)).not.toContain("temperature-range")
