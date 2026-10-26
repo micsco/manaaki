@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("../hooks/useCurrentUser", () => ({
   useCurrentUser: vi.fn(() => ({ user: null, isAnonymous: true })),
 }))
+vi.mock("../hooks/useRecipeList", () => ({ useRecipeList: vi.fn(() => []) }))
 vi.mock("../hooks/useShoppingList", () => ({
   useCurrentShoppingList: () => null,
   currentListQueryOptions: { queryKey: ["shopping", "current"] },
@@ -12,6 +13,7 @@ vi.mock("../hooks/useShoppingList", () => ({
 
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { useCurrentUser } from "../hooks/useCurrentUser"
+import { useRecipeList } from "../hooks/useRecipeList"
 import type { RecipeNavItem } from "../hooks/useRecipeNav"
 import { takeRecipeNavigation } from "../lib/recipeTransition"
 import { render, screen } from "../test/render"
@@ -91,6 +93,25 @@ describe("RecipeHeader", () => {
       />
     )
     expect(screen.getByText("chill 1 h").parentElement).toHaveTextContent(/waiting/i)
+  })
+
+  it("shows the cooking method switch when an air fryer version is linked", () => {
+    const airFryerId = "33333333-3333-4333-8333-333333333333"
+    vi.mocked(useRecipeList).mockReturnValue([
+      { id: minimalRecipe.id, slug: "banana-bread", name: "Banana Bread" },
+      { id: airFryerId, slug: "air-fryer-banana-bread", name: "Air Fryer Banana Bread" },
+    ])
+    render(
+      <RecipeHeader
+        recipe={{ ...minimalRecipe, tools: [], extras: { airFryerVersion: airFryerId } }}
+        img={null}
+      />
+    )
+    expect(screen.getByRole("navigation", { name: "Cooking method" })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Air fryer" })).toHaveAttribute(
+      "href",
+      `/recipes/${encodeRecipeId(airFryerId)}/air-fryer-banana-bread`
+    )
   })
 
   it("renders an 'All recipes' back link", () => {

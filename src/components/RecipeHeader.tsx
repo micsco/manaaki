@@ -19,6 +19,7 @@ import { CookModeToggle } from "./CookModeToggle"
 import { Icon } from "./Icon"
 import { RecipeActionsMenu } from "./RecipeActionsMenu"
 import { RecipeBackLink } from "./RecipeBackLink"
+import { RecipeVersionSwitch } from "./RecipeVersionSwitch"
 import { ShareRecipeButton } from "./ShareRecipeButton"
 
 function HeroRating({ rating }: { rating: number }) {
@@ -193,6 +194,7 @@ export function RecipeHeader({
             {recipe.name}
           </h1>
           <div className="flex flex-col items-start gap-4">
+            <RecipeVersionSwitch recipe={recipe} />
             <HeroStats recipe={recipe} />
             <div className="flex flex-wrap items-center gap-2">
               <CookModeToggle primary />
