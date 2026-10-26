@@ -53,7 +53,7 @@ const TEMPERATURE_RANGES: Partial<Record<CookingMethod, [number, number]>> = {
 const APPLIANCE_WORDS: Record<CookingMethod, RegExp> = {
   airFryer: /\bair[- ]?fr(y|ier|yer)/i,
   oven: /\boven\b/i,
-  slowCooker: /\b(slow[- ]?cooker|crock[- ]?pot)\b/i,
+  slowCooker: /\b(slow[- ]?cook(er)?|crock[- ]?pot|possiblecooker)\b/i,
 }
 
 const SOURCE_SETUP: Record<CookingMethod, RegExp> = {
@@ -175,8 +175,8 @@ export function checkDraft(
       }
     }
   }
-  if (target === "slowCooker" && !/\b(low|high)\b/i.test(draft.steps.join(" "))) {
-    warn("slow-cooker-setting", "The method doesn't say whether to use the LOW or HIGH setting.")
+  if (target === "slowCooker" && !/\b(low|high|hi)\b/i.test(draft.steps.join(" "))) {
+    warn("slow-cooker-setting", "The method doesn't say whether to use the Low or Hi setting.")
   }
 
   const steps = draft.steps.join("\n")

@@ -49,6 +49,13 @@ Save duplicates the recipe in Mealie, applies the reviewed name, description, st
 times and tool, keeps the original notes and adds any new ones, then links the two recipes both ways through `extras` and
 adds a note to each.
 
+The household's own appliances (a Ninja Foodi MAX Dual Zone air fryer, AF400UK, and
+a Ninja Foodi PossibleCooker slow cooker, MC1001UK) are described in
+`src/utils/householdAppliances.ts`: capacity, functions, settings and how to write
+for each. Their details go into every prompt for that method, so the model doesn't
+need to look anything up, and the setup screen names the appliance. Edit that file
+when an appliance changes. There is no specific oven entry.
+
 The server needs `GEMINI_API_KEY` in its runtime environment (never a `VITE_`
 variable). `GEMINI_MODEL` (default `gemini-3.8-flash`) and
 `RECIPE_VERSION_DRAFTS_PER_HOUR` (default 10) are optional. Before changing the

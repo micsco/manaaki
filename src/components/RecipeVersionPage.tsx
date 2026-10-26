@@ -15,6 +15,7 @@ import {
 import { usePostHog } from "../contexts/AnalyticsContext"
 import { useRecipeList } from "../hooks/useRecipeList"
 import { useOnline } from "../pwa/useOnline"
+import { householdAppliance } from "../utils/householdAppliances"
 import { encodeRecipeId, recipeUrl } from "../utils/recipe"
 import { blockingChecks, checkDraft, type RecipeVersionDraft } from "../utils/recipeVersionDraft"
 import {
@@ -98,6 +99,7 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
   const posthog = usePostHog()
   const [view, setView] = useState<View>("both")
   const leaving = useRef(false)
+  const appliance = target ? householdAppliance(target) : null
   const backTo = recipe.id && recipe.slug ? recipeUrl(recipe.id, recipe.slug) : "/recipes"
 
   useEffect(() => () => abort.current?.abort(), [])
@@ -257,6 +259,11 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
                 ))}
               </div>
             </fieldset>
+            {appliance && (
+              <p className="text-sm text-gray-400">
+                {`Written for your ${appliance.name} (${appliance.model}).`}
+              </p>
+            )}
             <label className="block text-sm font-medium text-gray-300">
               Anything the AI should know? (optional)
               <textarea

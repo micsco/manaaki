@@ -105,6 +105,18 @@ describe("generateRecipeVersionDraft", () => {
 })
 
 describe("buildPrompt", () => {
+  it("describes the household's own appliance so the model needn't look it up", () => {
+    const airFryer = buildPrompt(recipe, "airFryer", "")
+    expect(airFryer).toContain("Ninja Foodi MAX Dual Zone Air Fryer (AF400UK)")
+    expect(airFryer).toContain("SYNC")
+    const slowCooker = buildPrompt(recipe, "slowCooker", "")
+    expect(slowCooker).toContain("PossibleCooker (MC1001UK)")
+    expect(slowCooker).toContain("oven-safe up to 240°C")
+    expect(buildPrompt({ ...recipe, method: "airFryer" }, "oven", "")).not.toContain(
+      "The household cooks with"
+    )
+  })
+
   it("wraps the recipe as data with zero-based ingredient lines", () => {
     const prompt = buildPrompt(recipe, "airFryer", "5.5 L basket")
     expect(prompt).toContain("Convert this oven recipe so it is cooked in the air fryer.")

@@ -114,6 +114,18 @@ describe("checkDraft", () => {
     )
   })
 
+  it("accepts Ninja's Low and Hi setting names", () => {
+    const draft = draftWith({
+      name: "Stew (Slow cooker)",
+      cookMinutes: 360,
+      totalMinutes: 380,
+      steps: ["Brown the beef with Sear/Sauté.", "Slow Cook on Hi for 6 hours.", "Serve."],
+    })
+    const ids = checkDraft(draft, ovenSource, "slowCooker").map(check => check.id)
+    expect(ids).not.toContain("slow-cooker-setting")
+    expect(ids).not.toContain("target-missing")
+  })
+
   it("asks slow cooker drafts to say LOW or HIGH", () => {
     const draft = draftWith({
       name: "Stew (Slow cooker)",

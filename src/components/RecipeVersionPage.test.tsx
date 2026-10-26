@@ -234,3 +234,10 @@ describe("RecipeVersionPage leaving", () => {
     expect(within(original).getByText("+ spray oil")).toBeInTheDocument()
   })
 })
+
+it("says which household appliance the draft is written for", () => {
+  render(<RecipeVersionPage recipe={recipe} />)
+  expect(
+    screen.getByText("Written for your Ninja Foodi MAX Dual Zone Air Fryer (AF400UK).")
+  ).toBeInTheDocument()
+})
