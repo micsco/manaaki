@@ -184,14 +184,14 @@ describe("formatTime", () => {
 describe("groupByTitle", () => {
   it("returns a single group with no title when all items have no title", () => {
     const items = [{ title: null }, { title: null }]
-    const result = groupByTitle(items)
+    const result = groupByTitle(items, () => true)
     expect(result).toHaveLength(1)
     expect(result[0].title).toBeNull()
     expect(result[0].items).toHaveLength(2)
   })
 
   it("returns an empty array for an empty input", () => {
-    expect(groupByTitle([])).toHaveLength(0)
+    expect(groupByTitle([], () => true)).toHaveLength(0)
   })
 
   it("splits items into groups based on title markers", () => {
@@ -202,7 +202,7 @@ describe("groupByTitle", () => {
       { title: "Section B" },
       { title: null },
     ]
-    const result = groupByTitle(items)
+    const result = groupByTitle(items, () => true)
     expect(result).toHaveLength(2)
     expect(result[0].title).toBe("Section A")
     expect(result[0].items).toHaveLength(2)
@@ -212,7 +212,7 @@ describe("groupByTitle", () => {
 
   it("preserves the original index of each item", () => {
     const items = [{ title: null }, { title: null }, { title: null }]
-    const result = groupByTitle(items)
+    const result = groupByTitle(items, () => true)
     expect(result[0].items[0].index).toBe(0)
     expect(result[0].items[1].index).toBe(1)
     expect(result[0].items[2].index).toBe(2)
@@ -220,14 +220,24 @@ describe("groupByTitle", () => {
 
   it("does not include title-marker items in the items array", () => {
     const items = [{ title: "Header" }, { title: null, name: "item" }]
-    const result = groupByTitle(items)
+    const result = groupByTitle(items, () => true)
     expect(result[0].items).toHaveLength(1)
     expect(result[0].items[0].item).toEqual({ title: null, name: "item" })
   })
 
+  it("keeps a titled item in its section when it is not a heading only", () => {
+    const items = [
+      { title: "Header", name: "first" },
+      { title: null, name: "second" },
+    ]
+    const result = groupByTitle(items, item => !item.name)
+    expect(result[0].items.map(entry => entry.item.name)).toEqual(["first", "second"])
+    expect(result[0].items[0].index).toBe(0)
+  })
+
   it("handles a title with no following items", () => {
     const items = [{ title: "Lonely section" }]
-    const result = groupByTitle(items)
+    const result = groupByTitle(items, () => true)
     expect(result).toHaveLength(1)
     expect(result[0].title).toBe("Lonely section")
     expect(result[0].items).toHaveLength(0)
@@ -394,6 +404,43 @@ const step = (summary: string | null, ...refIds: string[]): RecipeStep => ({
 })
 
 describe("groupIngredients", () => {
+  it("keeps the first ingredient of each section, which carries the section title", () => {
+    const groups = groupIngredients([
+      { title: "Low FODMAP Minestrone", quantity: 65, food: { name: "bacon" }, referenceId: "a" },
+      { quantity: 1, food: { name: "leek" }, referenceId: "b" },
+      { title: "To serve", note: "Drizzle of garlic infused oil", referenceId: "c" },
+      { quantity: 2, food: { name: "parmesan" }, referenceId: "d" },
+    ])
+    expect(groups.map(group => [group.title, group.items.map(entry => entry.index)])).toEqual([
+      ["Low FODMAP Minestrone", [0, 1]],
+      ["To serve", [2, 3]],
+    ])
+  })
+
+  it("treats an entry with only a title as a heading", () => {
+    const groups = groupIngredients([
+      { title: "Dry ingredients", note: "", display: "", originalText: "Dry ingredients" },
+      { quantity: 2, food: { name: "flour" } },
+    ])
+    expect(groups).toEqual([
+      { title: "Dry ingredients", items: [expect.objectContaining({ index: 1 })] },
+    ])
+  })
+
+  it("recognises a heading whose text differs only by case or a trailing colon", () => {
+    const groups = groupIngredients([
+      { title: "For the sauce", originalText: "for the sauce:" },
+      { quantity: 1, food: { name: "tomato" } },
+    ])
+    expect(groups[0].items.map(entry => entry.index)).toEqual([1])
+  })
+
+  it("leaves heading-only entries out when steps link the ingredients", () => {
+    const heading = { title: "Dry ingredients", note: "", display: "" }
+    const result = groupIngredients([heading, ing("ref-1")], [step("Mix", "ref-1")])
+    expect(result.flatMap(group => group.items.map(entry => entry.index))).toEqual([1])
+  })
+
   it("falls back to title-based grouping when no steps provided", () => {
     const result = groupIngredients([ing("a"), ing("b")])
     expect(result).toHaveLength(1)

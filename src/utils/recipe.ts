@@ -167,7 +167,10 @@ export interface TitleGroup<T> {
   items: { item: T; index: number }[]
 }
 
-export function groupByTitle<T extends { title?: string | null }>(items: T[]): TitleGroup<T>[] {
+export function groupByTitle<T extends { title?: string | null }>(
+  items: T[],
+  isHeadingOnly: (item: T) => boolean
+): TitleGroup<T>[] {
   const groups: TitleGroup<T>[] = []
   let current: TitleGroup<T> = { title: null, items: [] }
 
@@ -177,7 +180,7 @@ export function groupByTitle<T extends { title?: string | null }>(items: T[]): T
       if (current.items.length > 0 || current.title !== null) {
         groups.push(current)
       }
-      current = { title: item.title, items: [] }
+      current = { title: item.title, items: isHeadingOnly(item) ? [] : [{ item, index: i }] }
     } else {
       current.items.push({ item, index: i })
     }
@@ -286,6 +289,23 @@ export function describeAlternatives({ recipe, food }: IngredientAlternatives) {
 
 export const UNGROUPED_INGREDIENTS_TITLE = "Recipe ingredients"
 
+function isHeadingOnlyIngredient(ingredient: RecipeIngredientOutput): boolean {
+  if (ingredient.food || ingredient.unit || ingredient.quantity || ingredient.referencedRecipe)
+    return false
+  const heading = headingText(ingredient.title)
+  return [ingredient.note, ingredient.display, ingredient.originalText].every(text => {
+    const content = headingText(text)
+    return !content || content === heading
+  })
+}
+
+function headingText(text: string | null | undefined): string {
+  return (text ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s:.-]+$/, "")
+}
+
 export function groupIngredients(
   ingredients: RecipeIngredientOutput[],
   steps?: RecipeStep[]
@@ -293,7 +313,7 @@ export function groupIngredients(
   const hasStepRefs = steps?.some(s => (s.ingredientReferences?.length ?? 0) > 0) ?? false
 
   if (!hasStepRefs) {
-    return groupByTitle(ingredients)
+    return groupByTitle(ingredients, isHeadingOnlyIngredient)
   }
 
   const resolvedSteps = steps ?? []
@@ -304,6 +324,7 @@ export function groupIngredients(
 
   for (let i = 0; i < ingredients.length; i++) {
     const ing = ingredients[i]
+    if (ing.title && isHeadingOnlyIngredient(ing)) continue
     const stepIndices = ing.referenceId ? refIndex.get(ing.referenceId) : undefined
 
     if (!stepIndices || stepIndices.length === 0) {

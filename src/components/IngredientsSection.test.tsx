@@ -90,6 +90,18 @@ describe("IngredientsSection", () => {
       expect(screen.getByText("or shallots")).toBeInTheDocument()
     })
 
+    it("shows the ingredient that carries a section title", () => {
+      render(
+        <IngredientsSection
+          ingredients={[{ ...ingredients[0], title: "Dough" }, ingredients[1]]}
+          recipeId="test-recipe"
+        />
+      )
+      expect(screen.getByText("Dough")).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "2 cups flour" })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "1 egg" })).toBeInTheDocument()
+    })
+
     it("renders section title when ingredient has a title", () => {
       render(<IngredientsSection ingredients={ingredientsWithSection} recipeId="test-recipe" />)
       expect(screen.getByText("Dry ingredients")).toBeInTheDocument()
