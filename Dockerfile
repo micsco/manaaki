@@ -61,7 +61,7 @@ FROM nginx:1.30.5-alpine3.24 AS serve
 
 ENV NODE_ENV=production
 
-RUN apk add --no-cache libstdc++
+RUN apk add --no-cache libatomic libstdc++
 COPY --from=build /usr/local/bin/node /usr/local/bin/node
 
 # Templates go in conf-templates/, not /etc/nginx/templates/, to prevent the
