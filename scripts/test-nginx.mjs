@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { Buffer } from "node:buffer"
 import { execFileSync } from "node:child_process"
 import { chmod, mkdtemp, mkdir, readFile, rm, writeFile, access } from "node:fs/promises"
 import { createServer } from "node:http"
@@ -11,6 +12,7 @@ const directory = await mkdtemp(join(tmpdir(), "manaaki-nginx-test-"))
 await chmod(directory, 0o755)
 const root = join(directory, "html")
 const configuration = join(directory, "nginx.conf")
+const errorLog = join(directory, "error.log")
 const template = await readFile(process.argv[2], "utf8")
 
 const upstreamRequests = []
@@ -54,6 +56,7 @@ await writeFile(
   configuration,
   `pid ${directory}/nginx.pid;
 error_log stderr;
+error_log ${errorLog} warn;
 events {}
 http {
   access_log off;
@@ -101,6 +104,22 @@ try {
     assert.deepEqual(response.headers.getSetCookie(), [], `${path} relayed an upstream Set-Cookie`)
   }
   console.log("nginx analytics proxy credential checks passed")
+
+  upstreamRequests.length = 0
+  const replayPayload = Buffer.alloc(512 * 1024, "a")
+  const replayResponse = await fetch("http://127.0.0.1:18080/ingest/s/?ip=0", {
+    method: "POST",
+    body: replayPayload,
+  })
+  await replayResponse.arrayBuffer()
+  assert.equal(replayResponse.status, 200)
+  assert.equal(upstreamRequests.length, 1)
+  assert.doesNotMatch(
+    await readFile(errorLog, "utf8"),
+    /buffered to a temporary file/,
+    "session replay payload spilled to a temporary file"
+  )
+  console.log("nginx analytics proxy body buffer checks passed")
 
   for (const path of ["/api/auth/me", "/api/manaaki/recipe-versions/draft", "/plan"]) {
     const { response, request } = await proxied(path)
