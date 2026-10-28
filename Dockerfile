@@ -2,7 +2,9 @@
 
 FROM node:26.12.1-alpine3.24 AS build
 WORKDIR /app
-RUN npm install --global corepack@0.36.0 && corepack enable pnpm && apk add --no-cache git
+COPY --from=ghcr.io/pnpm/pnpm:12.16.1-alpine /opt/pnpm /opt/pnpm
+RUN for bin in pnpm pn pnpx pnx; do ln -s "/opt/pnpm/$bin" "/usr/local/bin/$bin"; done \
+    && apk add --no-cache git
 
 # Copy lockfile first so dependency layer is cached independently of source changes
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .pnpmfile.cjs ./
