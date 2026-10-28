@@ -160,6 +160,8 @@ describe.skipIf(!ready)("recipe version eval (live models)", () => {
             draft = result.draft
             run.usage = {
               inputTokens: result.usage.inputTokens,
+              cachedInputTokens: result.usage.cachedInputTokens,
+              cacheWriteTokens: result.usage.cacheWriteTokens,
               outputTokens: result.usage.outputTokens,
               thinkingTokens: result.usage.thinkingTokens ?? 0,
               firstChunkMs: null,
@@ -191,12 +193,17 @@ describe.skipIf(!ready)("recipe version eval (live models)", () => {
           run.draft = draft
           run.checks = checkDraft(draft, source, example.target)
           if (judge) {
-            run.verdict = await judge
+            const graded = await judge
               .grade(draftRecipe, example.target, draft, reference)
               .catch(failure => {
                 run.judgeError = failure instanceof Error ? failure.message : String(failure)
                 return undefined
               })
+            run.verdict = graded?.verdict
+            if (graded?.usage) {
+              run.judgeUsage = graded.usage
+              run.judgeCostUsd = modelCost(graded.model, graded.usage)
+            }
           }
         } catch (failure) {
           run.error = failure instanceof Error ? failure.message : String(failure)

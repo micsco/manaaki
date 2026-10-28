@@ -59,7 +59,8 @@ streaming API.
 Each draft records how the model performed, without any recipe text:
 
 - The server logs one `recipe_version_draft` JSON line per draft (Dokploy logs) with
-  the outcome, model, input, output and thinking tokens, the time to load the recipe
+  the outcome, model, input tokens (and how many were read from or written to the
+  prompt cache), output and thinking tokens, the time to load the recipe
   from Mealie, time to the model's first streamed chunk (`firstChunkMs`, usually a thought
   summary, so roughly connection plus reading the prompt), time to the first word of
   the draft (`firstTokenMs`), model time, checks time and total
@@ -114,6 +115,10 @@ the provider can change without touching the pipeline.
 4. **Escalate.** If problems remain, the escalation model gets one more patch
    attempt. Whatever is left shows up on the review page as usual.
 
+Claude calls mark the system prompt for Anthropic's prompt cache, so a second draft
+within 5 minutes reads it at a twentieth of the price. Gemini caches automatically
+only from 4,096 input tokens; drafts are about 2,100, so they aren't cached.
+
 The progress panel shows the model's thought summaries while it plans, the step
 count while it writes, and "Fixing N problems" when a repair runs.
 Each draft logs the model, setting, prompt version, model calls, repairs and escalations, and is traced in PostHog with an `$ai_generation` event for every model call (see `docs/observability.md`). The design is in
@@ -142,10 +147,14 @@ the prompt, model or thinking level. It runs on your machine, uses your own
    case uses the household's linked air fryer version. The judge uses a reference
    to check temperatures, times and approach without marking down other methods
    that would also work.
+   The Claude judge marks everything before the draft (appliance, original recipe and
+   reference) for a 1-hour prompt cache, so each recipe's later drafts read it at a
+   twentieth of the price.
 4. It writes `evals/results/<time>/report.html` (summary by drafter with time,
    tokens, cost at current and 2027 prices, checks and scores, then each recipe side
    by side with scores, checks, issues and the steps) and `results.json`. Prices are
-   in `evals/recipe-versions/prices.ts`. The summary also counts, for each
+   in `evals/recipe-versions/prices.ts`, including cache reads and writes. The summary
+   also shows the judge's cost per draft and how much of its input came from the cache. The summary also counts, for each
    drafter, the recipes it scored better, worse or the same on than the first
    drafter, and the issues per draft in each category. Overall differences under
    about 0.15 are noise; per-recipe counts and the categories show more.

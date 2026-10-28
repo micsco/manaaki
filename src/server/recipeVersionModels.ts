@@ -15,6 +15,8 @@ export type ModelConfig = {
 export type CallUsage = {
   calls: number
   inputTokens: number
+  cachedInputTokens: number
+  cacheWriteTokens: number
   outputTokens: number
   thinkingTokens: number | null
   ms: number
@@ -60,6 +62,8 @@ export function addUsage(total: CallUsage, part: CallUsage): CallUsage {
   return {
     calls: total.calls + part.calls,
     inputTokens: total.inputTokens + part.inputTokens,
+    cachedInputTokens: total.cachedInputTokens + part.cachedInputTokens,
+    cacheWriteTokens: total.cacheWriteTokens + part.cacheWriteTokens,
     outputTokens: total.outputTokens + part.outputTokens,
     thinkingTokens:
       total.thinkingTokens === null || part.thinkingTokens === null
@@ -73,6 +77,7 @@ export function addUsage(total: CallUsage, part: CallUsage): CallUsage {
 
 type Usage = {
   promptTokens?: number
+  promptTokensDetails?: { cachedTokens?: number; cacheWriteTokens?: number }
   completionTokens?: number
   completionTokensDetails?: { reasoningTokens?: number }
 }
@@ -93,6 +98,10 @@ export function createDraftingModel(config: ModelConfig, apiKey: string): Drafti
     config.provider === "gemini"
       ? createGeminiChat(config.model as never, apiKey)
       : createAnthropicChat(config.model as never, apiKey)
+  const cachedSystem = (system: string) =>
+    config.provider === "claude"
+      ? [{ content: system, metadata: { cache_control: { type: "ephemeral" } } }]
+      : [system]
   const modelOptions =
     config.provider === "gemini" ? { maxOutputTokens: 32000 } : { max_tokens: 32000 }
   return {
@@ -111,7 +120,7 @@ export function createDraftingModel(config: ModelConfig, apiKey: string): Drafti
       try {
         const stream = chat({
           adapter,
-          systemPrompts: [system],
+          systemPrompts: cachedSystem(system),
           messages: [{ role: "user", content: prompt }],
           threadId: crypto.randomUUID(),
           outputSchema:
@@ -159,6 +168,8 @@ export function createDraftingModel(config: ModelConfig, apiKey: string): Drafti
         usage: {
           calls: 1,
           inputTokens: usage?.promptTokens ?? 0,
+          cachedInputTokens: usage?.promptTokensDetails?.cachedTokens ?? 0,
+          cacheWriteTokens: usage?.promptTokensDetails?.cacheWriteTokens ?? 0,
           outputTokens: usage?.completionTokens ?? 0,
           thinkingTokens:
             config.provider === "gemini"

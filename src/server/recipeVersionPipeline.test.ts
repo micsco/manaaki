@@ -13,6 +13,8 @@ import type { StructuredDraft, TaggedStep } from "./recipeVersionSteps"
 const usage = (): CallUsage => ({
   calls: 1,
   inputTokens: 100,
+  cachedInputTokens: 0,
+  cacheWriteTokens: 0,
   outputTokens: 50,
   thinkingTokens: 0,
   ms: 10,

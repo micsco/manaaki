@@ -127,6 +127,30 @@ describe("costs", () => {
     )
     expect(claude.meanCostUsd).toBeCloseTo(0.02)
   })
+
+  it("reports the judge's cost per draft and how much of its input came from the cache", () => {
+    const judgeUsage = (input: number, cached: number) => ({
+      inputTokens: input,
+      cachedInputTokens: cached,
+      outputTokens: 900,
+      thinkingTokens: 0,
+      firstChunkMs: null,
+      firstTokenMs: null,
+      modelMs: 0,
+    })
+    const [summary] = summarise(
+      [
+        run("claude", { judgeCostUsd: 0.04, judgeUsage: judgeUsage(2000, 0) }),
+        run("claude", { repeat: 1, judgeCostUsd: 0.02, judgeUsage: judgeUsage(2000, 1500) }),
+      ],
+      ["claude"]
+    )
+    expect(summary.meanJudgeCostUsd).toBeCloseTo(0.03)
+    expect(summary.judgeCachedShare).toBeCloseTo(0.375)
+    expect(renderReport([run("claude", { judgeCostUsd: 0.04 })], ["claude"], {})).toContain(
+      "Mean judge cost per draft"
+    )
+  })
 })
 
 describe("renderReport", () => {

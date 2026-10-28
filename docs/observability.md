@@ -41,7 +41,9 @@ older or newer tabs by route. The proxy strips this header too.
 Recipe version drafts call models through TanStack AI. Every call (the draft, any
 repair and any escalation) records an `$ai_generation` event through `@posthog/ai`'s
 `captureAiGeneration`, with the prompt, the reply, tokens, latency and a `purpose`
-property (`draft`, `repair` or `escalation`). The event's `$ai_trace_id` is the
+property (`draft`, `repair` or `escalation`). Cache reads and writes are sent as
+`$ai_cache_read_input_tokens` and `$ai_cache_creation_input_tokens`, with input tokens
+counting them too (`$ai_cache_reporting_exclusive` is false). The event's `$ai_trace_id` is the
 draft's trace ID, and it carries the browser's distinct ID and `$session_id`. Claude
 calls don't report thinking tokens separately; they are included in output tokens.
 
@@ -62,7 +64,7 @@ one query; see PostHog's
 | `mealie.upstream.failures` | counter | `reason` (`busy`, `timeout`, `unreachable`) |
 | `recipe_version.drafts` | counter | `target`, `model`, `outcome` (`ok`, `error`, `abandoned`), `status` |
 | `recipe_version.draft.duration` | histogram (ms) | `target`, `model`, `outcome` |
-| `recipe_version.draft.tokens` | histogram | `model`, `kind` (`input`, `output`, `thinking`) |
+| `recipe_version.draft.tokens` | histogram | `model`, `kind` (`input`, `cached_input`, `cache_write`, `output`, `thinking`) |
 
 `mealie.slots.active` staying at `MEALIE_CONCURRENCY_LIMIT` while `mealie.slots.waiting`
 climbs is the early sign of Mealie's connection pool wedging. Keep metric attributes

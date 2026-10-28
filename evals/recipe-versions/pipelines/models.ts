@@ -50,6 +50,8 @@ export function meteredModel(config: ModelConfig, keys: Keys, meter: CostMeter):
           : meter.costUsd +
             costOf(price, {
               inputTokens: result.usage.inputTokens,
+              cachedInputTokens: result.usage.cachedInputTokens,
+              cacheWriteTokens: result.usage.cacheWriteTokens,
               outputTokens: result.usage.outputTokens,
               thinkingTokens: result.usage.thinkingTokens ?? 0,
               firstChunkMs: null,

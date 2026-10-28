@@ -74,6 +74,8 @@ function recordDraftOutcome(
 function recordDraftTokens(usage: DraftMetrics) {
   const tokens = {
     input: usage.inputTokens,
+    cached_input: usage.cachedInputTokens,
+    cache_write: usage.cacheWriteTokens,
     output: usage.outputTokens,
     thinking: usage.thinkingTokens,
   }
@@ -222,6 +224,8 @@ export async function recipeVersionDraftHandler(request: Request): Promise<Respo
             promptVersion: usage.promptVersion,
             firstChunkMs: usage.firstChunkMs,
             inputTokens: usage.inputTokens,
+            cachedInputTokens: usage.cachedInputTokens,
+            cacheWriteTokens: usage.cacheWriteTokens,
             outputTokens: usage.outputTokens,
             thinkingTokens: usage.thinkingTokens,
             mealieMs,
@@ -245,6 +249,8 @@ export async function recipeVersionDraftHandler(request: Request): Promise<Respo
           span.setAttributes({
             "gen_ai.request.model": usage.model,
             "gen_ai.usage.input_tokens": usage.inputTokens,
+            "gen_ai.usage.cache_read.input_tokens": usage.cachedInputTokens,
+            "gen_ai.usage.cache_creation.input_tokens": usage.cacheWriteTokens,
             "gen_ai.usage.output_tokens": usage.outputTokens,
             "recipe_version.thinking_level": usage.thinkingLevel,
             "recipe_version.thinking_tokens": usage.thinkingTokens ?? undefined,

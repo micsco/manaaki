@@ -275,6 +275,8 @@ export function RecipeVersionPage({ recipe }: { recipe: RecipeOutput }) {
         prompt_version: result.metrics?.promptVersion,
         first_chunk_ms: result.metrics?.firstChunkMs,
         input_tokens: result.metrics?.inputTokens,
+        cached_input_tokens: result.metrics?.cachedInputTokens,
+        cache_write_tokens: result.metrics?.cacheWriteTokens,
         output_tokens: result.metrics?.outputTokens,
         thinking_tokens: result.metrics?.thinkingTokens,
         mealie_ms: result.metrics?.mealieMs,

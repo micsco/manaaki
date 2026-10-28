@@ -317,6 +317,8 @@ export type DraftMetrics = {
   promptVersion: string
   firstChunkMs: number | null
   inputTokens: number
+  cachedInputTokens: number
+  cacheWriteTokens: number
   outputTokens: number
   thinkingTokens: number | null
   mealieMs: number

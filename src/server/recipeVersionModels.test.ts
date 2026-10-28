@@ -46,6 +46,7 @@ describe("createDraftingModel", () => {
           { steps: ["one"], quantity: null },
           {
             promptTokens: 1000,
+            promptTokensDetails: { cachedTokens: 600 },
             completionTokens: 300,
             completionTokensDetails: { reasoningTokens: 700 },
           }
@@ -62,6 +63,8 @@ describe("createDraftingModel", () => {
     expect(result.usage).toMatchObject({
       calls: 1,
       inputTokens: 1000,
+      cachedInputTokens: 600,
+      cacheWriteTokens: 0,
       outputTokens: 300,
       thinkingTokens: 700,
     })
@@ -79,16 +82,33 @@ describe("createDraftingModel", () => {
     )
   })
 
-  it("passes the zod schema to Claude and leaves its thinking tokens unknown", async () => {
+  it("passes the zod schema to Claude, caches its system prompt and leaves its thinking tokens unknown", async () => {
     chat.mockReturnValue(
-      streamOf(...done({ steps: ["one"], quantity: 2 }, { promptTokens: 10, completionTokens: 20 }))
+      streamOf(
+        ...done(
+          { steps: ["one"], quantity: 2 },
+          {
+            promptTokens: 1500,
+            promptTokensDetails: { cachedTokens: 1000, cacheWriteTokens: 200 },
+            completionTokens: 20,
+          }
+        )
+      )
     )
     const model = createDraftingModel(modelConfig("claude-sonnet-5-5", null), "key")
     const result = await model.structured("system", "prompt", schema)
     expect(chat.mock.calls[0][0].outputSchema).toBe(schema)
     expect(chat.mock.calls[0][0]).not.toHaveProperty("reasoning")
     expect(chat.mock.calls[0][0].modelOptions).toEqual({ max_tokens: 32000 })
-    expect(result.usage.thinkingTokens).toBeNull()
+    expect(chat.mock.calls[0][0].systemPrompts).toEqual([
+      { content: "system", metadata: { cache_control: { type: "ephemeral" } } },
+    ])
+    expect(result.usage).toMatchObject({
+      inputTokens: 1500,
+      cachedInputTokens: 1000,
+      cacheWriteTokens: 200,
+      thinkingTokens: null,
+    })
   })
 
   it.each([

@@ -82,6 +82,8 @@ beforeEach(() => {
     stepTags: goodAirFryerStepTags,
     usage: {
       inputTokens: 1,
+      cachedInputTokens: 4,
+      cacheWriteTokens: 5,
       outputTokens: 2,
       thinkingTokens: 3,
       model: "gemini-3.8-flash",
@@ -122,6 +124,8 @@ describe("recipeVersionDraftHandler", () => {
     expect(body.metrics).toMatchObject({
       model: "gemini-3.8-flash",
       inputTokens: 1,
+      cachedInputTokens: 4,
+      cacheWriteTokens: 5,
       outputTokens: 2,
       thinkingTokens: 3,
       firstTokenMs: 40,
@@ -156,6 +160,8 @@ describe("recipeVersionDraftHandler", () => {
           stepTags: goodAirFryerStepTags,
           usage: {
             inputTokens: 1,
+            cachedInputTokens: 0,
+            cacheWriteTokens: 0,
             outputTokens: 2,
             thinkingTokens: 3,
             model: "gemini-3.8-flash",
@@ -447,6 +453,8 @@ describe("recipeVersionDraftHandler", () => {
         stepTags: goodAirFryerStepTags,
         usage: {
           inputTokens: 1,
+          cachedInputTokens: 0,
+          cacheWriteTokens: 0,
           outputTokens: 2,
           thinkingTokens: 0,
           model: "m",

@@ -4,6 +4,9 @@ import { CRITERIA, ISSUE_CATEGORIES, type IssueCategory, type JudgeVerdict } fro
 
 export type EvalUsage = {
   inputTokens: number
+  cachedInputTokens?: number
+  cacheWriteTokens?: number
+  cacheWrite1hTokens?: number
   outputTokens: number
   thinkingTokens: number
   firstChunkMs: number | null
@@ -22,6 +25,8 @@ export type EvalRun = {
   checks?: DraftCheck[]
   verdict?: JudgeVerdict
   judgeError?: string
+  judgeUsage?: EvalUsage
+  judgeCostUsd?: number | null
   usage?: EvalUsage
   costUsd?: number | null
   costUsd2027?: number | null
@@ -48,6 +53,8 @@ export type DrafterSummary = {
   meanScores: Record<string, number | null>
   meanCostUsd: number | null
   meanCostUsd2027: number | null
+  meanJudgeCostUsd: number | null
+  judgeCachedShare: number | null
   meanCalls: number | null
   repairsRan: number
   repairsFixed: number
@@ -91,6 +98,12 @@ export function mean(values: number[]): number | null {
   return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null
 }
 
+export function cachedShare(usages: EvalUsage[]): number | null {
+  const input = usages.reduce((sum, usage) => sum + usage.inputTokens, 0)
+  const cached = usages.reduce((sum, usage) => sum + (usage.cachedInputTokens ?? 0), 0)
+  return input ? cached / input : null
+}
+
 export function summarise(runs: EvalRun[], drafters: string[]): DrafterSummary[] {
   return drafters.map(drafter => {
     const forLevel = runs.filter(run => run.drafter === drafter)
@@ -123,6 +136,10 @@ export function summarise(runs: EvalRun[], drafters: string[]): DrafterSummary[]
       ),
       meanCostUsd: costs.length === ok.length ? mean(costs) : null,
       meanCostUsd2027: costs2027.length === ok.length ? mean(costs2027) : null,
+      meanJudgeCostUsd: mean(
+        ok.flatMap(run => (typeof run.judgeCostUsd === "number" ? [run.judgeCostUsd] : []))
+      ),
+      judgeCachedShare: cachedShare(ok.flatMap(run => (run.judgeUsage ? [run.judgeUsage] : []))),
       meanCalls: mean(ok.map(run => run.pipeline?.calls ?? 1)),
       repairsRan: ok.filter(run => run.pipeline?.repairRan).length,
       repairsFixed: ok.filter(run => run.pipeline?.repairFixed).length,
@@ -163,6 +180,14 @@ function summaryTable(summaries: DrafterSummary[]): string {
     ["Median time to first word", s => seconds(s.medianFirstTokenMs)],
     ["Median thinking tokens", s => number(s.medianThinkingTokens)],
     ["Mean cost per draft", s => (s.meanCostUsd === null ? "–" : `$${s.meanCostUsd.toFixed(4)}`)],
+    [
+      "Mean judge cost per draft",
+      s => (s.meanJudgeCostUsd === null ? "–" : `$${s.meanJudgeCostUsd.toFixed(4)}`),
+    ],
+    [
+      "Judge input read from cache",
+      s => (s.judgeCachedShare === null ? "–" : `${Math.round(s.judgeCachedShare * 100)}%`),
+    ],
     [
       "Mean cost from 2027",
       s => (s.meanCostUsd2027 === null ? "–" : `$${s.meanCostUsd2027.toFixed(4)}`),

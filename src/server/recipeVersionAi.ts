@@ -119,6 +119,8 @@ export function buildPrompt(
 
 export type DraftUsage = {
   inputTokens: number
+  cachedInputTokens: number
+  cacheWriteTokens: number
   outputTokens: number
   thinkingTokens: number | null
   model: string
@@ -203,6 +205,9 @@ export function withAiTelemetry(model: DraftingModel, target: CookingMethod): Dr
           usage: {
             inputTokens: result.usage.inputTokens,
             outputTokens: result.usage.outputTokens,
+            cacheReadInputTokens: result.usage.cachedInputTokens,
+            cacheCreationInputTokens: result.usage.cacheWriteTokens,
+            cacheReportingExclusive: false,
             ...(result.usage.thinkingTokens
               ? { reasoningTokens: result.usage.thinkingTokens }
               : {}),
@@ -254,6 +259,8 @@ export async function generateRecipeVersionDraft({
     stepTags: outcome.stepTags,
     usage: {
       inputTokens: outcome.usage.inputTokens,
+      cachedInputTokens: outcome.usage.cachedInputTokens,
+      cacheWriteTokens: outcome.usage.cacheWriteTokens,
       outputTokens: outcome.usage.outputTokens,
       thinkingTokens: outcome.usage.thinkingTokens,
       model: draftConfig.model,

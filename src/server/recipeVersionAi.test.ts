@@ -68,6 +68,8 @@ beforeEach(() => {
     usage: {
       calls: 2,
       inputTokens: 3000,
+      cachedInputTokens: 0,
+      cacheWriteTokens: 0,
       outputTokens: 900,
       thinkingTokens: 0,
       ms: 13000,
@@ -185,6 +187,8 @@ describe("withAiTelemetry", () => {
             usage: {
               calls: 1,
               inputTokens: 1200,
+              cachedInputTokens: 800,
+              cacheWriteTokens: 100,
               outputTokens: 300,
               thinkingTokens: null,
               ms: 2500,
@@ -204,6 +208,9 @@ describe("withAiTelemetry", () => {
         $ai_provider: "anthropic",
         $ai_input_tokens: 1200,
         $ai_output_tokens: 300,
+        $ai_cache_read_input_tokens: 800,
+        $ai_cache_creation_input_tokens: 100,
+        $ai_cache_reporting_exclusive: false,
         $ai_latency: 2.5,
         feature: "recipe_version_draft",
         target: "slowCooker",
