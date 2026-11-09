@@ -746,6 +746,11 @@ describe("unitLabel", () => {
     expect(unitLabel({ name: "cup", pluralName: "cups" }, 2)).toBe("cups")
     expect(unitLabel({ name: "cup", pluralName: "cups" }, 1)).toBe("cup")
   })
+
+  it("uses the singular for less than one", () => {
+    expect(unitLabel({ name: "cup", pluralName: "cups" }, 0.5)).toBe("cup")
+    expect(unitLabel({ name: "jar", pluralName: "jars" }, 1 / 3)).toBe("jar")
+  })
 })
 
 describe("formatAmount", () => {

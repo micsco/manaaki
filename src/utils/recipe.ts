@@ -391,7 +391,7 @@ export function formatQuantity(
 }
 
 export function unitLabel(unit: IngredientUnit, quantity: number | null | undefined): string {
-  const isPlural = quantity != null && quantity !== 1
+  const isPlural = quantity != null && quantity > 1
 
   const useAbbr = "useAbbreviation" in unit ? unit.useAbbreviation : false
   if (useAbbr) {

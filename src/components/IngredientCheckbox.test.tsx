@@ -68,6 +68,19 @@ describe("IngredientCheckbox", () => {
       expect(screen.getByText("kg")).toBeInTheDocument()
     })
 
+    it("uses the singular unit for less than one", () => {
+      render(
+        <IngredientCheckbox
+          {...defaultProps}
+          food={{ name: "milk" }}
+          quantity={0.5}
+          unit={{ name: "cup", pluralName: "cups" }}
+        />
+      )
+      expect(screen.getByText("cup")).toBeInTheDocument()
+      expect(screen.queryByText("cups")).not.toBeInTheDocument()
+    })
+
     it("renders structured ingredient: formatted quantity", () => {
       render(<IngredientCheckbox {...defaultProps} food={{ name: "butter" }} quantity={0.5} />)
       expect(screen.getByText("½")).toBeInTheDocument()
