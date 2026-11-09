@@ -4,12 +4,15 @@ import { useState } from "react"
 import { usePersistentDraft } from "../hooks/usePersistentDraft"
 import { useShoppingListDetail } from "../hooks/useShoppingList"
 import { useAddManualItem, useDeleteItem, useToggleItem } from "../hooks/useShoppingMutations"
+import { useUnitPreference } from "../hooks/useUnitPreference"
 import { trackPendingWrite } from "../pwa/updateHolds"
 import { useOnline } from "../pwa/useOnline"
 import { groupItemsByAisle } from "../utils/shopping"
+import { isConvertible } from "../utils/unitConversion"
 import { ShoppingListItemRow } from "./ShoppingListItemRow"
 import { ShoppingListRecipes } from "./ShoppingListRecipes"
 import { ShoppingSyncStatus } from "./ShoppingSyncStatus"
+import { UnitSystemSelect } from "./ui/UnitSystemSelect"
 
 export function ShoppingListView({ listId }: { listId: string }) {
   const { data: list, isLoading } = useShoppingListDetail(listId)
@@ -20,12 +23,14 @@ export function ShoppingListView({ listId }: { listId: string }) {
   const [draft, setDraft] = usePersistentDraft(`shopping-list:${listId}:new-item`, "")
   const [adding, setAdding] = useState(false)
   const [addError, setAddError] = useState("")
+  const [unitPreference, setUnitPreference] = useUnitPreference()
 
   if (isLoading || !list) return <p className="p-6 text-gray-500">Loading…</p>
 
   const items = list.listItems ?? []
   const groups = groupItemsByAisle(items, list.labelSettings ?? [])
   const allChecked = items.length > 0 && items.every(i => i.checked)
+  const hasConvertibleItems = items.some(isConvertible)
 
   async function addDraft() {
     const submitted = draft
@@ -84,6 +89,12 @@ export function ShoppingListView({ listId }: { listId: string }) {
       <ShoppingSyncStatus />
       <ShoppingListRecipes refs={list.recipeReferences ?? []} />
 
+      {hasConvertibleItems && (
+        <div className="mt-4 flex justify-end">
+          <UnitSystemSelect value={unitPreference} onChange={setUnitPreference} />
+        </div>
+      )}
+
       {allChecked && (
         <p className="rounded-lg bg-green-900/30 px-4 py-3 text-green-300">
           All done — everything's checked off. 🎉
@@ -102,6 +113,7 @@ export function ShoppingListView({ listId }: { listId: string }) {
                 item={item}
                 disabled={pendingIds.has(item.id)}
                 deleteDisabled={!online}
+                unitPreference={unitPreference}
                 onToggle={() => toggle(item)}
                 onDelete={() => remove(item.id)}
               />

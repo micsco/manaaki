@@ -14,6 +14,7 @@ import {
   formatQuantity,
   ingredientStorageKey,
   type IngredientAlternatives,
+  unitLabel,
 } from "../utils/recipe"
 import { Icon } from "./Icon"
 
@@ -27,23 +28,6 @@ interface IngredientCheckboxProps {
   note?: string | null
   alternatives?: IngredientAlternatives
   className?: string
-}
-
-function unitLabel(
-  unit: IngredientUnitOutput | CreateIngredientUnit,
-  quantity: number | null | undefined
-): string {
-  const isPlural = quantity != null && quantity !== 1
-
-  const useAbbr = "useAbbreviation" in unit ? unit.useAbbreviation : false
-  if (useAbbr) {
-    const abbr =
-      isPlural && "pluralAbbreviation" in unit ? unit.pluralAbbreviation : unit.abbreviation
-    if (abbr) return abbr
-  }
-
-  const plural = "pluralName" in unit ? unit.pluralName : undefined
-  return (isPlural && plural) || unit.name
 }
 
 interface StructuredIngredientProps {
@@ -71,7 +55,7 @@ function StructuredIngredient({
       <span className="flex flex-wrap items-baseline gap-x-1.5 leading-relaxed">
         {(hasQuantity || unit != null) && (
           <span className={`font-normal ${isChecked ? "" : "text-gray-400"}`}>
-            {formatQuantity(quantity)}
+            {formatQuantity(quantity, { useFractions: unit?.fraction !== false })}
             {unit && <span className="ml-1">{unitLabel(unit, quantity)}</span>}
           </span>
         )}

@@ -11,6 +11,7 @@ import {
   groupItemsByAisle,
   itemUpdateFromOutput,
   shoppingDayRange,
+  shoppingItemLabel,
   shouldStartNewList,
 } from "./shopping"
 
@@ -179,5 +180,49 @@ describe("shouldStartNewList", () => {
   })
   it("true when > 48h old", () => {
     expect(shouldStartNewList("2026-06-26T11:59:59Z", now)).toBe(true)
+  })
+})
+
+describe("shoppingItemLabel", () => {
+  const butter = {
+    id: "b",
+    shoppingListId: "l1",
+    groupId: "g1",
+    householdId: "h1",
+    display: "8 ounces butter",
+    quantity: 8,
+    unit: {
+      id: "oz",
+      name: "ounce",
+      pluralName: "ounces",
+      standardQuantity: 1,
+      standardUnit: "ounce",
+    },
+    food: { id: "butter", name: "butter" },
+    note: "softened",
+  } as ShoppingListItemOutOutput
+
+  it("rebuilds the label in metric", () => {
+    expect(shoppingItemLabel(butter, "metric")).toBe("230 g butter softened")
+  })
+
+  it("keeps Mealie's text when showing as written", () => {
+    expect(shoppingItemLabel(butter, "as-written")).toBe("8 ounces butter")
+  })
+
+  it("keeps Mealie's text when the item cannot convert", () => {
+    expect(shoppingItemLabel({ ...butter, unit: null }, "metric")).toBe("8 ounces butter")
+  })
+
+  it("falls back to the note, then a placeholder", () => {
+    const noteOnly = { ...butter, display: undefined, unit: null, note: "bin bags" }
+    expect(shoppingItemLabel(noteOnly, "metric")).toBe("bin bags")
+    expect(shoppingItemLabel({ ...noteOnly, note: null }, "metric")).toBe("Item")
+  })
+
+  it("leaves the stored item untouched", () => {
+    const before = structuredClone(butter)
+    shoppingItemLabel(butter, "metric")
+    expect(butter).toEqual(before)
   })
 })

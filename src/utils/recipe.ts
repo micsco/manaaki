@@ -6,6 +6,7 @@ import type {
   RecipeStep,
   RecipeSummary,
 } from "../api/generated/types.gen"
+import type { Amount, IngredientUnit } from "./unitConversion"
 
 const MEALIE_BASE_URL =
   import.meta.env.VITE_PUBLIC_MEALIE_BASE_URL ?? "https://mealie.scottfamily.nz"
@@ -368,9 +369,13 @@ const FRACTIONS: Record<number, string> = {
   0.875: "⅞",
 }
 
-export function formatQuantity(quantity: number | null | undefined): string {
+export function formatQuantity(
+  quantity: number | null | undefined,
+  { useFractions = true }: { useFractions?: boolean } = {}
+): string {
   if (quantity == null) return ""
   if (quantity === 0) return ""
+  if (!useFractions) return String(Math.round(quantity * 100) / 100)
 
   const whole = Math.floor(quantity)
   const decimal = quantity - whole
@@ -383,4 +388,24 @@ export function formatQuantity(quantity: number | null | undefined): string {
 
   const rounded = Math.round(quantity * 100) / 100
   return rounded % 1 === 0 ? String(rounded) : String(rounded)
+}
+
+export function unitLabel(unit: IngredientUnit, quantity: number | null | undefined): string {
+  const isPlural = quantity != null && quantity !== 1
+
+  const useAbbr = "useAbbreviation" in unit ? unit.useAbbreviation : false
+  if (useAbbr) {
+    const abbr =
+      isPlural && "pluralAbbreviation" in unit ? unit.pluralAbbreviation : unit.abbreviation
+    if (abbr) return abbr
+  }
+
+  const plural = "pluralName" in unit ? unit.pluralName : undefined
+  return (isPlural && plural) || unit.name
+}
+
+export function formatAmount({ quantity, unit }: Amount): string {
+  const formatted = formatQuantity(quantity, { useFractions: unit?.fraction !== false })
+  if (!unit) return formatted
+  return [formatted, unitLabel(unit, quantity)].filter(Boolean).join(" ")
 }

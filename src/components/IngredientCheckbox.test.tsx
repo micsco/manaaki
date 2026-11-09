@@ -55,6 +55,19 @@ describe("IngredientCheckbox", () => {
       expect(screen.getByText("flour")).toBeInTheDocument()
     })
 
+    it("shows decimals for units that turn fractions off", () => {
+      render(
+        <IngredientCheckbox
+          {...defaultProps}
+          food={{ name: "flour" }}
+          quantity={1.5}
+          unit={{ name: "kilogram", abbreviation: "kg", useAbbreviation: true, fraction: false }}
+        />
+      )
+      expect(screen.getByText("1.5")).toBeInTheDocument()
+      expect(screen.getByText("kg")).toBeInTheDocument()
+    })
+
     it("renders structured ingredient: formatted quantity", () => {
       render(<IngredientCheckbox {...defaultProps} food={{ name: "butter" }} quantity={0.5} />)
       expect(screen.getByText("½")).toBeInTheDocument()

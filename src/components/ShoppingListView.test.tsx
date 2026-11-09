@@ -113,3 +113,45 @@ describe("ShoppingListView add item", () => {
     expect(screen.getByLabelText("Add an item")).toHaveValue("Oat milk")
   })
 })
+
+describe("ShoppingListView units", () => {
+  const butter = {
+    id: "b",
+    shoppingListId: "l1",
+    display: "8 ounces butter",
+    checked: false,
+    quantity: 8,
+    unit: { id: "oz", name: "ounce", standardQuantity: 1, standardUnit: "ounce" },
+    food: { id: "butter", name: "butter" },
+  }
+
+  it("shows items in metric by default and offers the units switch", () => {
+    render(<ShoppingListView listId="l1" />, {
+      wrapper: wrap({ ...emptyList, listItems: [butter] }),
+    })
+    expect(screen.getByText("230 g butter")).toBeVisible()
+    expect(screen.getByRole("combobox", { name: "Units: Metric. Tap to change" })).toBeVisible()
+  })
+
+  it("switches items back to Mealie's text", async () => {
+    const user = userEvent.setup()
+    render(<ShoppingListView listId="l1" />, {
+      wrapper: wrap({ ...emptyList, listItems: [butter] }),
+    })
+
+    await user.click(screen.getByRole("combobox", { name: /units/i }))
+    await user.click(await screen.findByRole("option", { name: /as written/i }))
+
+    expect(screen.getByText("8 ounces butter")).toBeVisible()
+  })
+
+  it("hides the units switch when no item can convert", () => {
+    render(<ShoppingListView listId="l1" />, {
+      wrapper: wrap({
+        ...emptyList,
+        listItems: [{ id: "m", shoppingListId: "l1", display: "Milk", checked: false }],
+      }),
+    })
+    expect(screen.queryByRole("combobox", { name: /units/i })).not.toBeInTheDocument()
+  })
+})

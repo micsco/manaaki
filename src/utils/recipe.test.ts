@@ -4,6 +4,7 @@ import type { RecipeIngredientOutput, RecipeStep } from "../api/generated/types.
 import {
   describeAlternatives,
   displayDomain,
+  formatAmount,
   formatQuantity,
   formatTime,
   groupByTitle,
@@ -19,6 +20,7 @@ import {
   scaleQuantity,
   shouldPluralizeFood,
   UNGROUPED_INGREDIENTS_TITLE,
+  unitLabel,
 } from "./recipe"
 
 describe("displayDomain", () => {
@@ -719,5 +721,50 @@ describe("recipeWaitingNote", () => {
     expect(recipeWaitingNote(undefined)).toBeNull()
     expect(recipeWaitingNote({ waitingTime: " " })).toBeNull()
     expect(recipeWaitingNote({ waitingTime: 3 })).toBeNull()
+  })
+})
+
+describe("formatQuantity without fractions", () => {
+  it("shows decimals instead of fraction symbols", () => {
+    expect(formatQuantity(1.5, { useFractions: false })).toBe("1.5")
+    expect(formatQuantity(0.25, { useFractions: false })).toBe("0.25")
+  })
+
+  it("rounds to two decimal places", () => {
+    expect(formatQuantity(1.15000001, { useFractions: false })).toBe("1.15")
+  })
+})
+
+describe("unitLabel", () => {
+  const gram = { name: "gram", pluralName: "grams", abbreviation: "g", useAbbreviation: true }
+
+  it("uses the abbreviation when the unit asks for it", () => {
+    expect(unitLabel(gram, 200)).toBe("g")
+  })
+
+  it("uses the plural name for more than one", () => {
+    expect(unitLabel({ name: "cup", pluralName: "cups" }, 2)).toBe("cups")
+    expect(unitLabel({ name: "cup", pluralName: "cups" }, 1)).toBe("cup")
+  })
+})
+
+describe("formatAmount", () => {
+  it("joins quantity and unit", () => {
+    expect(
+      formatAmount({
+        quantity: 1.5,
+        unit: { name: "litre", pluralName: "litres", fraction: false },
+      })
+    ).toBe("1.5 litres")
+  })
+
+  it("uses fractions unless the unit turns them off", () => {
+    expect(formatAmount({ quantity: 1.5, unit: { name: "cup", pluralName: "cups" } })).toBe(
+      "1½ cups"
+    )
+  })
+
+  it("shows just the quantity without a unit", () => {
+    expect(formatAmount({ quantity: 2, unit: null })).toBe("2")
   })
 })

@@ -237,3 +237,87 @@ test.describe("Recipe detail", () => {
     await expect(page.getByRole("link", { name: /all recipes/i })).toBeVisible()
   })
 })
+
+test.describe("Recipe units", () => {
+  const cup = {
+    id: "cup",
+    name: "cup",
+    pluralName: "cups",
+    standardQuantity: 1,
+    standardUnit: "cup",
+  }
+  const ounce = {
+    id: "oz",
+    name: "ounce",
+    pluralName: "ounces",
+    abbreviation: "oz",
+    useAbbreviation: true,
+    standardQuantity: 1,
+    standardUnit: "ounce",
+  }
+  const teaspoon = {
+    id: "tsp",
+    name: "teaspoon",
+    pluralName: "teaspoons",
+    abbreviation: "tsp",
+    useAbbreviation: true,
+    standardQuantity: 1 / 6,
+    standardUnit: "fluid_ounce",
+  }
+  const ingredient = (referenceId: string, quantity: number, unit: object, food: string) => ({
+    referenceId,
+    display: `${quantity} ${food}`,
+    quantity,
+    unit,
+    food: { name: food },
+    note: null,
+    title: null,
+  })
+
+  test.beforeEach(async ({ page }) => {
+    await page.route(`/api/recipes/${RECIPE_1_ID}`, route =>
+      route.fulfill({
+        json: {
+          ...mockRecipeDetail,
+          recipeServings: 4,
+          recipeIngredient: [
+            ingredient("milk", 1, cup, "milk"),
+            ingredient("butter", 8, ounce, "butter"),
+            ingredient("salt", 1, teaspoon, "salt"),
+          ],
+        },
+      })
+    )
+  })
+
+  test("shows customary amounts in metric, keeping spoon measures", async ({ page }) => {
+    await page.goto(RECIPE_1_URL)
+    const ingredients = page.locator("section", {
+      has: page.getByRole("heading", { name: "Ingredients" }),
+    })
+    await expect(ingredients.getByRole("listitem").filter({ hasText: "milk" })).toContainText(
+      /240\s*ml/
+    )
+    await expect(ingredients.getByRole("listitem").filter({ hasText: "butter" })).toContainText(
+      /230\s*g/
+    )
+    await expect(ingredients.getByRole("listitem").filter({ hasText: "salt" })).toContainText(
+      /1\s*tsp/
+    )
+  })
+
+  test("switches back to the units the recipe was written in", async ({ page }) => {
+    await page.goto(RECIPE_1_URL)
+    await page.getByRole("combobox", { name: /units: metric/i }).click()
+    await page.getByRole("option", { name: /as written/i }).click()
+    const ingredients = page.locator("section", {
+      has: page.getByRole("heading", { name: "Ingredients" }),
+    })
+    await expect(ingredients.getByRole("listitem").filter({ hasText: "milk" })).toContainText(
+      /1\s*cup/
+    )
+    await expect(ingredients.getByRole("listitem").filter({ hasText: "butter" })).toContainText(
+      /8\s*oz/
+    )
+  })
+})

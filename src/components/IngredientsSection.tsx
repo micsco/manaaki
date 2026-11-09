@@ -1,6 +1,7 @@
 import type { RecipeIngredientOutput, RecipeStep } from "../api/generated/types.gen"
 import { useCookMode } from "../contexts/CookModeContext"
 import { useCookingStorage } from "../hooks/useCookingStorage"
+import { useUnitPreference } from "../hooks/useUnitPreference"
 import {
   groupIngredients,
   ingredientAlternatives,
@@ -8,37 +9,42 @@ import {
   shouldPluralizeFood,
   servingsStorageKey,
 } from "../utils/recipe"
+import { convertAmount, isConvertible, type UnitPreference } from "../utils/unitConversion"
 import { IngredientCheckbox } from "./IngredientCheckbox"
 import { IngredientParsingAction } from "./IngredientParsingAction"
 import { IngredientSectionHeader } from "./IngredientSectionHeader"
 import { ServingsSelect } from "./ui/ServingsSelect"
+import { UnitSystemSelect } from "./ui/UnitSystemSelect"
 
 function IngredientItem({
   ing,
   index,
   recipeId,
   scale,
+  unitPreference,
 }: {
   ing: RecipeIngredientOutput
   index: number
   recipeId: string
   scale: number
+  unitPreference: UnitPreference
 }) {
   const text = ing.display || ing.originalText || ""
-  const quantity = scaleQuantity(ing.quantity, scale)
+  const scaled = { quantity: scaleQuantity(ing.quantity, scale), unit: ing.unit }
+  const { quantity, unit } = convertAmount(scaled, unitPreference) ?? scaled
   return (
     <IngredientCheckbox
       ingredient={text}
       recipeId={recipeId}
       ingredientIndex={index}
       quantity={quantity}
-      unit={ing.unit}
+      unit={unit}
       food={ing.food}
       note={ing.note}
       alternatives={ingredientAlternatives(
         ing,
         undefined,
-        shouldPluralizeFood(quantity, Boolean(ing.unit))
+        shouldPluralizeFood(quantity, Boolean(unit))
       )}
     />
   )
@@ -69,6 +75,8 @@ export function IngredientsSection({
     hasServings ? defaultServings : 1
   )
   const scale = hasServings ? servings / defaultServings : 1
+  const [unitPreference, setUnitPreference] = useUnitPreference()
+  const hasConvertibleIngredients = ingredients.some(isConvertible)
 
   const className = isCookMode ? "overflow-y-auto px-4 py-6 lg:pr-10" : "pr-0 md:pr-10"
 
@@ -78,15 +86,20 @@ export function IngredientsSection({
         <h2 className="font-sans text-xs font-semibold tracking-widest text-gray-500 uppercase">
           Ingredients
         </h2>
-        {hasServings && (
-          <ServingsSelect
-            value={servings}
-            defaultServings={defaultServings}
-            onChange={v => {
-              if (v != null) setServings(v)
-            }}
-          />
-        )}
+        <div className="flex items-center gap-4">
+          {hasConvertibleIngredients && (
+            <UnitSystemSelect value={unitPreference} onChange={setUnitPreference} />
+          )}
+          {hasServings && (
+            <ServingsSelect
+              value={servings}
+              defaultServings={defaultServings}
+              onChange={v => {
+                if (v != null) setServings(v)
+              }}
+            />
+          )}
+        </div>
       </div>
       {!isCookMode && !hasParsedIngredients && (
         <IngredientParsingAction recipe={{ id: recipeId, recipeIngredient: ingredients }} />
@@ -115,6 +128,7 @@ export function IngredientsSection({
                     index={index}
                     recipeId={recipeId}
                     scale={scale}
+                    unitPreference={unitPreference}
                   />
                 ))}
               </ul>
@@ -130,6 +144,7 @@ export function IngredientsSection({
               index={i}
               recipeId={recipeId}
               scale={scale}
+              unitPreference={unitPreference}
             />
           ))}
         </ul>

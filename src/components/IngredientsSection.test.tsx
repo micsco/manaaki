@@ -1,3 +1,4 @@
+import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
 import type { RecipeIngredientOutput, RecipeStep } from "../api/generated/types.gen"
@@ -353,4 +354,62 @@ it("keeps the parsing prompt for unparsed ingredients alongside empty section ro
     />
   )
   expect(screen.getByRole("button", { name: "Parse ingredients with AI" })).toBeVisible()
+})
+
+describe("unit conversion", () => {
+  const milk: RecipeIngredientOutput = {
+    display: "1 cup milk",
+    quantity: 1,
+    unit: { id: "cup", name: "cup", pluralName: "cups", standardQuantity: 1, standardUnit: "cup" },
+    food: { name: "milk" },
+    referenceId: "milk",
+  }
+  const salt: RecipeIngredientOutput = {
+    display: "1 teaspoon salt",
+    quantity: 1,
+    unit: {
+      id: "tsp",
+      name: "teaspoon",
+      pluralName: "teaspoons",
+      standardQuantity: 1 / 6,
+      standardUnit: "fluid_ounce",
+    },
+    food: { name: "salt" },
+    referenceId: "salt",
+  }
+
+  it("shows customary amounts in metric by default", () => {
+    render(<IngredientsSection ingredients={[milk, salt]} recipeId="recipe" />)
+    expect(screen.getByText("240")).toBeVisible()
+    expect(screen.getByText("ml")).toBeVisible()
+    expect(screen.queryByText("cup")).not.toBeInTheDocument()
+  })
+
+  it("keeps teaspoons as written in metric", () => {
+    render(<IngredientsSection ingredients={[milk, salt]} recipeId="recipe" />)
+    expect(screen.getByText("teaspoon")).toBeVisible()
+  })
+
+  it("converts after scaling servings", () => {
+    localStorage.setItem("manaaki:cooking:v1:recipe-recipe-servings", "20")
+    render(<IngredientsSection ingredients={[milk]} recipeId="recipe" defaultServings={4} />)
+    expect(screen.getByText("1.2")).toBeVisible()
+    expect(screen.getByText("litres")).toBeVisible()
+  })
+
+  it("shows the recipe as written when chosen", async () => {
+    const user = userEvent.setup()
+    render(<IngredientsSection ingredients={[milk]} recipeId="recipe" />)
+
+    await user.click(screen.getByRole("combobox", { name: /units: metric/i }))
+    await user.click(await screen.findByRole("option", { name: /as written/i }))
+
+    expect(screen.getByText("cup")).toBeVisible()
+    expect(screen.queryByText("ml")).not.toBeInTheDocument()
+  })
+
+  it("hides the units switch when nothing can convert", () => {
+    render(<IngredientsSection ingredients={[salt]} recipeId="recipe" />)
+    expect(screen.queryByRole("combobox", { name: /units/i })).not.toBeInTheDocument()
+  })
 })

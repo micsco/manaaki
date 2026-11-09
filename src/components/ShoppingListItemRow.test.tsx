@@ -86,3 +86,31 @@ describe("ShoppingListItemRow", () => {
     )
   })
 })
+
+describe("ShoppingListItemRow units", () => {
+  const butter = {
+    ...base,
+    display: "8 ounces butter",
+    quantity: 8,
+    unit: { id: "oz", name: "ounce", standardQuantity: 1, standardUnit: "ounce" },
+    food: { id: "butter", name: "butter" },
+  } satisfies ShoppingListItemOutOutput
+
+  it("shows the item in the chosen units", () => {
+    render(
+      <ShoppingListItemRow
+        item={butter}
+        unitPreference="metric"
+        onToggle={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    )
+    expect(screen.getByRole("button", { name: "230 g butter" })).toBeVisible()
+    expect(screen.getByRole("button", { name: "Remove 230 g butter" })).toBeVisible()
+  })
+
+  it("shows Mealie's text by default", () => {
+    render(<ShoppingListItemRow item={butter} onToggle={vi.fn()} onDelete={vi.fn()} />)
+    expect(screen.getByText("8 ounces butter")).toBeVisible()
+  })
+})

@@ -4,6 +4,8 @@ import { useState } from "react"
 import type { ShoppingListItemOutOutput } from "../api/generated"
 import { useRecipeNameMap } from "../hooks/useRecipeNameMap"
 import { recipeUrl } from "../utils/recipe"
+import { shoppingItemLabel } from "../utils/shopping"
+import type { UnitPreference } from "../utils/unitConversion"
 import { Icon } from "./Icon"
 
 export function ShoppingListItemRow({
@@ -12,15 +14,17 @@ export function ShoppingListItemRow({
   onDelete,
   disabled,
   deleteDisabled,
+  unitPreference = "as-written",
 }: {
   item: ShoppingListItemOutOutput
   onToggle: () => void
   onDelete: () => void
   disabled?: boolean
   deleteDisabled?: boolean
+  unitPreference?: UnitPreference
 }) {
   const checked = item.checked ?? false
-  const label = item.display ?? item.note ?? "Item"
+  const label = shoppingItemLabel(item, unitPreference)
   const names = useRecipeNameMap()
   const recipeIds = [...new Set((item.recipeReferences ?? []).map(r => r.recipeId))]
   const [expanded, setExpanded] = useState(false)

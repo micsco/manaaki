@@ -5,6 +5,8 @@ import type {
   ShoppingListMultiPurposeLabelOut,
 } from "../api/generated"
 import { toIsoDateString } from "../hooks/useMealPlan"
+import { formatAmount } from "./recipe"
+import { convertAmount, type UnitPreference } from "./unitConversion"
 
 export type GatheredRecipe = {
   recipeId: string
@@ -115,4 +117,13 @@ export function groupItemsByAisle(
     if (pa !== pb) return pa - pb
     return a.name.localeCompare(b.name)
   })
+}
+
+export function shoppingItemLabel(
+  item: ShoppingListItemOutOutput,
+  unitPreference: UnitPreference
+): string {
+  const converted = convertAmount(item, unitPreference)
+  if (!converted) return item.display ?? item.note ?? "Item"
+  return [formatAmount(converted), item.food?.name, item.note].filter(Boolean).join(" ")
 }
