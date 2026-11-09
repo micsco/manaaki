@@ -62,6 +62,38 @@ describe("convertAmount to metric", () => {
   })
 })
 
+describe("imperial units defined in metric", () => {
+  const imperialPint = unit("pint", 568.26125, "milliliter")
+  const imperialFluidOunce = unit("fluid ounce", 28.413063, "milliliter")
+  const imperialGallon = unit("gallon", 4.54609, "liter")
+  const metricTeaspoon = unit("teaspoon", 5, "milliliter")
+  const metricTablespoon = unit("tablespoon", 15, "milliliter")
+  const milligram = unit("milligram", 0.001, "gram")
+
+  it.each([
+    [1, imperialPint, "560 millilitre"],
+    [2, imperialFluidOunce, "56 millilitre"],
+    [1, imperialGallon, "4.6 litre"],
+  ])("shows %s %s as %s in metric", (quantity, from, expected) => {
+    expect(shown(quantity, from, "metric")).toBe(expected)
+  })
+
+  it("keeps them as written in US", () => {
+    expect(convertAmount({ quantity: 1, unit: imperialPint }, "us")).toBeNull()
+  })
+
+  it("leaves spoon measures as written in both systems", () => {
+    for (const spoon of [metricTeaspoon, metricTablespoon]) {
+      expect(isConvertible({ quantity: 1, unit: spoon })).toBe(false)
+    }
+  })
+
+  it("treats power-of-ten metric units as metric", () => {
+    expect(convertAmount({ quantity: 500, unit: milligram }, "metric")).toBeNull()
+    expect(shown(500, milligram, "us")).not.toBeNull()
+  })
+})
+
 describe("convertAmount to US", () => {
   it.each([
     [250, gram, "9 ounce"],

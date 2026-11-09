@@ -131,7 +131,16 @@ function standardOf(unit: IngredientUnit | null | undefined) {
   if (!unit?.standardUnit || !unit.standardQuantity) return null
   const standard = STANDARD_UNITS[unit.standardUnit]
   if (!standard) return null
-  return { ...standard, baseAmount: standard.baseAmount * unit.standardQuantity }
+  return {
+    ...standard,
+    baseAmount: standard.baseAmount * unit.standardQuantity,
+    customary: standard.customary || !isPowerOfTen(unit.standardQuantity),
+  }
+}
+
+function isPowerOfTen(value: number) {
+  const exponent = Math.log10(value)
+  return Math.abs(exponent - Math.round(exponent)) < 1e-9
 }
 
 function isSpoonMeasure({ dimension, customary, baseAmount }: StandardUnit) {
