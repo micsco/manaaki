@@ -48,7 +48,11 @@ function assertSecurityHeaders(response, label) {
     "nosniff",
     `${label} missing X-Content-Type-Options`
   )
-  assert.equal(response.headers.get("x-frame-options"), "DENY", `${label} missing X-Frame-Options`)
+  assert.equal(
+    response.headers.get("x-frame-options"),
+    null,
+    `${label} should rely on CSP frame-ancestors instead of X-Frame-Options`
+  )
   assert.equal(
     response.headers.get("referrer-policy"),
     "strict-origin-when-cross-origin",
@@ -56,8 +60,8 @@ function assertSecurityHeaders(response, label) {
   )
   assert.match(
     response.headers.get("content-security-policy") ?? "",
-    /default-src 'self'/,
-    `${label} missing Content-Security-Policy`
+    /frame-ancestors 'self' https:\/\/jarvis\.77bb\.digikiwi\.net/,
+    `${label} missing expected Content-Security-Policy frame-ancestors`
   )
   assert.match(
     response.headers.get("permissions-policy") ?? "",

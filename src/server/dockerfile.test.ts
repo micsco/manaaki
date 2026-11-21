@@ -6,6 +6,10 @@ const dockerfile = readFileSync(new URL("../../Dockerfile", import.meta.url), "u
 const entrypoint = readFileSync(new URL("../../docker-entrypoint.sh", import.meta.url), "utf8")
 const serverEntry = readFileSync(new URL("../../server.js", import.meta.url), "utf8")
 const nginxConf = readFileSync(new URL("../../nginx.conf.template", import.meta.url), "utf8")
+const securityHeaders = readFileSync(
+  new URL("../../nginx-security-headers.conf", import.meta.url),
+  "utf8"
+)
 
 function finalStage(contents: string): string {
   const stages = contents.split(/^FROM /m)
@@ -32,4 +36,6 @@ it("includes security headers and blocks .map files in nginx", () => {
   expect(dockerfile).toContain("nginx-security-headers.conf")
   expect(nginxConf).toContain("include /etc/nginx/snippets/security-headers.conf;")
   expect(nginxConf).toMatch(/location ~\* \\\.map\$/)
+  expect(securityHeaders).toContain("frame-ancestors 'self' https://jarvis.77bb.digikiwi.net")
+  expect(securityHeaders).not.toContain("X-Frame-Options")
 })
