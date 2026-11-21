@@ -37,7 +37,7 @@ RUN GIT_SHA=$(git rev-parse HEAD 2>/dev/null || echo unknown) && \
 #   `docker build` succeed without the secret — the step then no-ops.
 ARG POSTHOG_PROJECT_ID
 ARG POSTHOG_HOST=https://eu.posthog.com
-ARG POSTHOG_CLI_VERSION=0.20.1
+ARG POSTHOG_CLI_VERSION=0.20.0
 RUN --mount=type=secret,id=POSTHOG_CLI_API_KEY,required=false \
     if [ -s /run/secrets/POSTHOG_CLI_API_KEY ] && [ -n "$POSTHOG_PROJECT_ID" ]; then \
       export POSTHOG_CLI_TOKEN="$(cat /run/secrets/POSTHOG_CLI_API_KEY)"; \
