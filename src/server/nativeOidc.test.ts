@@ -72,6 +72,7 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
+  delete process.env.PUBLIC_ORIGIN
   await new Promise<void>(resolve => server.close(() => resolve()))
 })
 
@@ -203,6 +204,17 @@ describe("beginNativeLogin", () => {
       second.location.searchParams.get("state")
     )
     expect(first.cookie).not.toBe(second.cookie)
+  })
+
+  it("prefers PUBLIC_ORIGIN over the Host header when configured", async () => {
+    process.env.PUBLIC_ORIGIN = "https://manaaki.micsco.nz"
+    const res = await beginNativeLogin(
+      new Request("https://app/api/auth/oauth", {
+        headers: { host: "spoofed.example", "x-forwarded-proto": "http" },
+      })
+    )
+    const location = new URL(res.headers.get("location") ?? "")
+    expect(location.searchParams.get("redirect_uri")).toBe("https://manaaki.micsco.nz/login")
   })
 })
 

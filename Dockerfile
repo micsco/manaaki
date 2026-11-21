@@ -29,17 +29,15 @@ RUN GIT_SHA=$(git rev-parse HEAD 2>/dev/null || echo unknown) && \
     VITE_BUILD_TIME="$BUILD_TIME" \
     pnpm build
 
-# Inject chunkIds + upload source maps to PostHog.
+# Inject chunkIds + upload source maps to PostHog with a pinned CLI version,
+# then delete all .map files so source maps are never shipped in /app/html.
 # - POSTHOG_PROJECT_ID is a non-secret build arg (Dokploy: Build Args).
 # - POSTHOG_CLI_API_KEY comes via a BuildKit secret mount (Dokploy: Build Secrets),
 #   so the value never lands in image layers or ENV. required=false lets local
 #   `docker build` succeed without the secret — the step then no-ops.
-# The CLI reads credentials from POSTHOG_CLI_TOKEN/POSTHOG_CLI_PROJECT_ID/POSTHOG_CLI_HOST
-# env vars; we export them so both `inject` and `upload` invocations inherit them
-# (the CLI runs a credentials precheck before subcommand processing, so per-command
-# `--project-id` flags don't satisfy it).
 ARG POSTHOG_PROJECT_ID
 ARG POSTHOG_HOST=https://eu.posthog.com
+ARG POSTHOG_CLI_VERSION=0.20.1
 RUN --mount=type=secret,id=POSTHOG_CLI_API_KEY,required=false \
     if [ -s /run/secrets/POSTHOG_CLI_API_KEY ] && [ -n "$POSTHOG_PROJECT_ID" ]; then \
       export POSTHOG_CLI_TOKEN="$(cat /run/secrets/POSTHOG_CLI_API_KEY)"; \
@@ -47,13 +45,14 @@ RUN --mount=type=secret,id=POSTHOG_CLI_API_KEY,required=false \
       export POSTHOG_CLI_HOST="$POSTHOG_HOST"; \
       GIT_SHA=$(git rev-parse HEAD 2>/dev/null || echo unknown); \
       echo "Uploading source maps to PostHog (release: $GIT_SHA)"; \
-      pnpm dlx @posthog/cli@latest sourcemap inject --directory dist/client && \
-      pnpm dlx @posthog/cli@latest sourcemap upload --directory dist/client \
+      pnpm dlx "@posthog/cli@${POSTHOG_CLI_VERSION}" sourcemap inject --directory dist/client && \
+      pnpm dlx "@posthog/cli@${POSTHOG_CLI_VERSION}" sourcemap upload --directory dist/client \
         --release-name manaaki \
         --release-version "$GIT_SHA"; \
     else \
       echo "Skipping PostHog source map upload (POSTHOG_CLI_API_KEY/POSTHOG_PROJECT_ID not set)"; \
-    fi
+    fi && \
+    find dist/client -name '*.map' -delete
 
 RUN pnpm prune --prod --ignore-scripts
 
@@ -61,18 +60,14 @@ FROM nginx:1.30.5-alpine3.24 AS serve
 
 ENV NODE_ENV=production
 
-RUN apk add --no-cache libatomic libstdc++
+RUN apk add --no-cache libatomic libstdc++ su-exec
 COPY --from=build /usr/local/bin/node /usr/local/bin/node
 
-# Templates go in conf-templates/, not /etc/nginx/templates/, to prevent the
-# nginx image's built-in entrypoint from running envsubst and clobbering nginx
-# variables like $host and $uri. docker-entrypoint.sh handles substitution with
-# an explicit variable allowlist.
-COPY nginx.conf.template /etc/nginx/conf-templates/nginx.conf.template
+COPY nginx-security-headers.conf /etc/nginx/snippets/security-headers.conf
+COPY nginx.conf.template /etc/nginx/conf.d/default.conf
 COPY scripts/test-nginx.mjs /tmp/test-nginx.mjs
-RUN node /tmp/test-nginx.mjs /etc/nginx/conf-templates/nginx.conf.template && \
+RUN node /tmp/test-nginx.mjs /etc/nginx/conf.d/default.conf && \
     rm /tmp/test-nginx.mjs
-# (mealie-proxy-headers template removed — the node BFF owns Mealie auth)
 
 COPY --chmod=755 docker-entrypoint.sh /docker-entrypoint.sh
 
@@ -80,7 +75,6 @@ COPY --from=build /app/node_modules /app/node_modules
 COPY --from=build /app/dist /app/dist
 COPY --from=build /app/dist/client /app/html
 COPY --from=build /app/server.js /app/server.js
-
 
 EXPOSE 80
 

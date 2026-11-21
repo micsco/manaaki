@@ -13,6 +13,9 @@ describe("parseCookie", () => {
     expect(parseCookie("a=1", "missing")).toBeUndefined()
     expect(parseCookie(null, "t")).toBeUndefined()
   })
+  it("returns undefined instead of throwing on malformed percent-encoding", () => {
+    expect(parseCookie("manaaki_session=%E0%A4%A", "manaaki_session")).toBeUndefined()
+  })
 })
 
 describe("serializeCookie", () => {

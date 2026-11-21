@@ -1,10 +1,22 @@
 #!/bin/sh
 set -eu
 
-envsubst '${MEALIE_INTERNAL_URL}' \
-  < /etc/nginx/conf-templates/nginx.conf.template \
-  > /etc/nginx/conf.d/default.conf
+su-exec nginx node /app/server.js &
+node_pid=$!
 
-node /app/server.js &
+nginx -g 'daemon off;' &
+nginx_pid=$!
 
-exec nginx -g 'daemon off;'
+terminate() {
+  kill -TERM "$nginx_pid" "$node_pid" 2>/dev/null || true
+}
+trap terminate INT TERM
+
+while kill -0 "$node_pid" 2>/dev/null && kill -0 "$nginx_pid" 2>/dev/null; do
+  sleep 1
+done
+
+terminate
+wait "$node_pid" 2>/dev/null || true
+wait "$nginx_pid" 2>/dev/null || true
+exit 1

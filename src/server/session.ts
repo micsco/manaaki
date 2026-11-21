@@ -6,23 +6,23 @@ import { sessionSecret } from "./env"
 const ALGO = "aes-256-gcm"
 const IV_LEN = 12
 const TAG_LEN = 16
-// Default cookie lifetime cap (seconds); Mealie's own JWT exp governs real validity.
 const MAX_AGE = 60 * 60 * 24 * 14
+const SESSION_PURPOSE = "session"
 
 function key(): Buffer {
-  // Derive a fixed 32-byte key from any-length secret.
   return createHash("sha256").update(sessionSecret()).digest()
 }
 
-export function sealJson(value: unknown): string {
+export function sealJson(value: unknown, purpose = ""): string {
   const iv = randomBytes(IV_LEN)
   const cipher = createCipheriv(ALGO, key(), iv)
+  if (purpose) cipher.setAAD(Buffer.from(purpose, "utf8"))
   const enc = Buffer.concat([cipher.update(JSON.stringify(value), "utf8"), cipher.final()])
   const tag = cipher.getAuthTag()
   return Buffer.concat([iv, tag, enc]).toString("base64url")
 }
 
-export function unsealJson(sealed: string): unknown {
+export function unsealJson(sealed: string, purpose = ""): unknown {
   try {
     const raw = Buffer.from(sealed, "base64url")
     if (raw.length < IV_LEN + TAG_LEN) return null
@@ -30,6 +30,7 @@ export function unsealJson(sealed: string): unknown {
     const tag = raw.subarray(IV_LEN, IV_LEN + TAG_LEN)
     const enc = raw.subarray(IV_LEN + TAG_LEN)
     const decipher = createDecipheriv(ALGO, key(), iv)
+    if (purpose) decipher.setAAD(Buffer.from(purpose, "utf8"))
     decipher.setAuthTag(tag)
     return JSON.parse(Buffer.concat([decipher.update(enc), decipher.final()]).toString("utf8"))
   } catch {
@@ -38,27 +39,38 @@ export function unsealJson(sealed: string): unknown {
 }
 
 export function sealSession(token: string): string {
-  return sealJson({ t: token })
+  return sealJson({ t: token }, SESSION_PURPOSE)
 }
 
 export function unsealSession(sealed: string): string | null {
-  const parsed = unsealJson(sealed) as { t?: unknown } | null
+  const parsed = unsealJson(sealed, SESSION_PURPOSE) as { t?: unknown } | null
   return typeof parsed?.t === "string" ? parsed.t : null
 }
 
 export type JwtTiming = { exp: number; iat: number | null }
 
-export function decodeJwtTiming(token: string): JwtTiming | null {
+function decodeJwtClaims(token: string): Record<string, unknown> | null {
   try {
     const payload = token.split(".")[1]
     if (!payload) return null
-    const json = Buffer.from(payload, "base64url").toString("utf8")
-    const claims = JSON.parse(json) as { exp?: unknown; iat?: unknown }
-    if (typeof claims.exp !== "number") return null
-    return { exp: claims.exp, iat: typeof claims.iat === "number" ? claims.iat : null }
+    const parsed: unknown = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"))
+    return typeof parsed === "object" && parsed !== null
+      ? (parsed as Record<string, unknown>)
+      : null
   } catch {
     return null
   }
+}
+
+export function decodeJwtTiming(token: string): JwtTiming | null {
+  const claims = decodeJwtClaims(token)
+  if (!claims || typeof claims.exp !== "number") return null
+  return { exp: claims.exp, iat: typeof claims.iat === "number" ? claims.iat : null }
+}
+
+export function decodeJwtSubject(token: string): string | null {
+  const claims = decodeJwtClaims(token)
+  return typeof claims?.sub === "string" && claims.sub ? claims.sub : null
 }
 
 export function isSecureRequest(request: Request): boolean {

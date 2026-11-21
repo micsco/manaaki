@@ -496,6 +496,41 @@ describe("recipeVersionDraftHandler", () => {
     }
   })
 
+  it("keeps the hourly rate limit across refreshed JWTs for the same user", async () => {
+    process.env.RECIPE_VERSION_DRAFTS_PER_HOUR = "1"
+    mealieReturns(200)
+    const jwt = (iat: number) => {
+      const b64 = (value: unknown) => Buffer.from(JSON.stringify(value)).toString("base64url")
+      return `${b64({ alg: "HS256" })}.${b64({ sub: "cook-1", iat, exp: iat + 3600 })}.sig`
+    }
+    const cookieFor = (token: string) =>
+      `manaaki_session=${buildSessionSetCookie(token, false).split(";")[0].split("=").slice(1).join("=")}`
+
+    expect((await post(valid, { cookie: cookieFor(jwt(1000)) })).status).toBe(200)
+    expect((await post(valid, { cookie: cookieFor(jwt(2000)) })).status).toBe(429)
+  })
+
+  it("rejects oversized streamed request bodies without Content-Length", async () => {
+    const chunk = new Uint8Array(2048).fill(97)
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(chunk)
+        controller.enqueue(chunk)
+        controller.enqueue(chunk)
+        controller.close()
+      },
+    })
+    const request = new Request("http://app/api/manaaki/recipe-versions/draft", {
+      method: "POST",
+      headers: { "content-type": "application/json", cookie: cookie() },
+      body: stream,
+      // @ts-expect-error duplex is required by Node's undici Request for ReadableStream bodies
+      duplex: "half",
+    })
+    const response = await recipeVersionDraftHandler(request)
+    expect(response.status).toBe(413)
+  })
+
   it.each([
     [new AiNotConfiguredError(), 503, /isn't set up/],
     [new AiDraftError("The AI returned an empty draft."), 502, /empty draft/],

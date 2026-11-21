@@ -1,12 +1,13 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto"
 
 import { parseCookie, serializeCookie } from "./cookies"
-import { mealieInternalUrl } from "./env"
+import { mealieInternalUrl, publicOriginOverride } from "./env"
 import { mealieFetch } from "./mealieUpstream"
 import { isSecureRequest, sealJson, unsealJson } from "./session"
 import { buildSilentAttemptMarkerCookie, readKnownDevice, safeReturnPath } from "./silentLogin"
 
 const ATTEMPT_MAX_AGE_SECONDS = 600
+const OIDC_PURPOSE = "oidc"
 
 export type LoginAttempt = {
   state: string
@@ -38,6 +39,8 @@ async function fetchProviderConfig(): Promise<ProviderConfig> {
 }
 
 function publicOrigin(request: Request): string {
+  const configured = publicOriginOverride()
+  if (configured) return configured
   const host = request.headers.get("host")
   if (!host) throw new Error("Missing Host header")
   return `${isSecureRequest(request) ? "https" : "http"}://${host}`
@@ -87,7 +90,7 @@ export async function beginNativeLogin(request: Request): Promise<Response> {
     "Set-Cookie",
     serializeCookie(
       attemptCookieName(secure),
-      sealJson(attempt),
+      sealJson(attempt, OIDC_PURPOSE),
       attemptCookieOptions(secure, ATTEMPT_MAX_AGE_SECONDS)
     )
   )
@@ -101,7 +104,7 @@ export function readLoginAttempt(request: Request): LoginAttempt | null {
     attemptCookieName(isSecureRequest(request))
   )
   if (!sealed) return null
-  const parsed = unsealJson(sealed) as Partial<LoginAttempt> | null
+  const parsed = unsealJson(sealed, OIDC_PURPOSE) as Partial<LoginAttempt> | null
   if (
     !parsed ||
     typeof parsed.state !== "string" ||

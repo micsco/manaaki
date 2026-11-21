@@ -7,6 +7,13 @@ allowBuilds:
   protobufjs: false
 
 autoDedupe: true
+blockExoticSubdeps: true
+minimumReleaseAge: 4320
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  - semver@6.3.1
+  - seroval@1.7.2
+  - seroval-plugins@1.7.2
 
 minimumReleaseAgeExclude:
   - "@pnpm/exe.android-arm64@12.16.1"

@@ -32,6 +32,17 @@ describe("RecipeFooter", () => {
     expect(screen.queryByText(/source:/i)).not.toBeInTheDocument()
   })
 
+  it("does not render a source link when orgURL uses a dangerous scheme", () => {
+    render(<RecipeFooter recipe={{ ...recipe, orgURL: "javascript:alert(1)" }} />)
+    expect(screen.queryByText(/source:/i)).not.toBeInTheDocument()
+  })
+
+  it("renders plain text instead of a link when orgURL is not an http(s) URL", () => {
+    render(<RecipeFooter recipe={{ ...recipe, orgURL: "Grandma's cookbook" }} />)
+    expect(screen.getByText("Grandma's cookbook")).toBeInTheDocument()
+    expect(screen.queryByRole("link", { name: "Grandma's cookbook" })).not.toBeInTheDocument()
+  })
+
   it("renders a 'View in Mealie' link with the correct URL", () => {
     render(<RecipeFooter recipe={recipe} />)
     const link = screen.getByRole("link", { name: /view in mealie/i })

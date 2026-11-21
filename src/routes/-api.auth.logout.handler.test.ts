@@ -11,6 +11,7 @@ describe("logoutHandler", () => {
       })
     )
     expect(res.status).toBe(204)
+    expect(res.headers.get("cache-control")).toBe("no-store")
     const cookies = res.headers.getSetCookie()
     expect(cookies.find(c => c.startsWith("__Host-manaaki_session="))).toContain("Max-Age=0")
     expect(cookies.find(c => c.startsWith("__Host-manaaki_known="))).toContain("Max-Age=0")

@@ -1,5 +1,6 @@
 import { createMiddleware, createStart } from "@tanstack/react-start"
 
+import { handleCsrfRequest } from "./server/csrf"
 import { handleSilentLoginRequest } from "./server/silentLogin"
 
 const tracingMiddleware = createMiddleware({ type: "request" }).server(
@@ -17,10 +18,14 @@ const timingMiddleware = createMiddleware({ type: "request" }).server(async ({ r
   )
 })
 
+const csrfMiddleware = createMiddleware({ type: "request" }).server(
+  ({ request, next }) => handleCsrfRequest(request) ?? next()
+)
+
 const silentLoginMiddleware = createMiddleware({ type: "request" }).server(
   ({ request, handlerType, next }) => handleSilentLoginRequest(request, handlerType) ?? next()
 )
 
 export const startInstance = createStart(() => ({
-  requestMiddleware: [tracingMiddleware, timingMiddleware, silentLoginMiddleware],
+  requestMiddleware: [tracingMiddleware, timingMiddleware, csrfMiddleware, silentLoginMiddleware],
 }))

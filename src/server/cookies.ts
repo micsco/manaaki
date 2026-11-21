@@ -5,7 +5,11 @@ export function parseCookie(header: string | null, name: string): string | undef
     if (eq === -1) continue
     const key = part.slice(0, eq).trim()
     if (key === name) {
-      return decodeURIComponent(part.slice(eq + 1).trim())
+      try {
+        return decodeURIComponent(part.slice(eq + 1).trim())
+      } catch {
+        return undefined
+      }
     }
   }
   return undefined

@@ -17,6 +17,7 @@ import {
   recipeTotalMinutes,
   recipeWaitingNote,
   recipeImageUrl,
+  safeExternalUrl,
   scaleQuantity,
   shouldPluralizeFood,
   UNGROUPED_INGREDIENTS_TITLE,
@@ -46,6 +47,33 @@ describe("displayDomain", () => {
 
   it("falls back to the raw string when it is not a valid URL", () => {
     expect(displayDomain("not a url")).toBe("not a url")
+  })
+
+  it("rejects unsafe URI schemes", () => {
+    expect(displayDomain("javascript:alert(1)")).toBeNull()
+    expect(displayDomain("data:text/html,<script>alert(1)</script>")).toBeNull()
+  })
+})
+
+describe("safeExternalUrl", () => {
+  it("allows http and https URLs", () => {
+    expect(safeExternalUrl("https://www.bbcgoodfood.com/recipes/pasta")).toBe(
+      "https://www.bbcgoodfood.com/recipes/pasta"
+    )
+    expect(safeExternalUrl("http://example.com/recipe")).toBe("http://example.com/recipe")
+  })
+
+  it.each([
+    null,
+    undefined,
+    "",
+    "not a url",
+    "javascript:alert(1)",
+    "data:text/html,hi",
+    "vbscript:msgbox(1)",
+    "/relative/path",
+  ])("rejects non-http(s) value: %s", value => {
+    expect(safeExternalUrl(value)).toBeNull()
   })
 })
 

@@ -8,7 +8,25 @@ function required(name: string): string {
 
 export const mealieInternalUrl = (): string => required("MEALIE_INTERNAL_URL")
 export const readonlyToken = (): string => required("MEALIE_READONLY_TOKEN")
-export const sessionSecret = (): string => required("SESSION_SECRET")
+export const sessionSecret = (): string => {
+  const secret = required("SESSION_SECRET")
+  if (globalThis.process?.env?.NODE_ENV === "production" && secret.length < 16) {
+    throw new Error("SESSION_SECRET must be at least 16 characters in production")
+  }
+  return secret
+}
+
+export const publicOriginOverride = (): string | null => {
+  const raw = globalThis.process?.env?.PUBLIC_ORIGIN?.trim()
+  if (!raw) return null
+  try {
+    const parsed = new URL(raw)
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null
+    return parsed.origin
+  } catch {
+    return null
+  }
+}
 
 function positiveInteger(name: string, fallback: number): number {
   const value = Number(globalThis.process?.env?.[name])

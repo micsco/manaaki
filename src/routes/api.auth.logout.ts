@@ -5,7 +5,7 @@ import { buildClearKnownDeviceCookie } from "../server/silentLogin"
 
 export function logoutHandler(request: Request): Response {
   const secure = isSecureRequest(request)
-  const headers = new Headers()
+  const headers = new Headers({ "Cache-Control": "no-store" })
   headers.append("Set-Cookie", buildClearSessionCookie(secure))
   headers.append("Set-Cookie", buildClearKnownDeviceCookie(secure))
   return new Response(null, { status: 204, headers })

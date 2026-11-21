@@ -42,6 +42,30 @@ const server = [
 
 const credentials = { Cookie: "__Host-manaaki_session=sealed", Authorization: "Bearer secret" }
 
+function assertSecurityHeaders(response, label) {
+  assert.equal(
+    response.headers.get("x-content-type-options"),
+    "nosniff",
+    `${label} missing X-Content-Type-Options`
+  )
+  assert.equal(response.headers.get("x-frame-options"), "DENY", `${label} missing X-Frame-Options`)
+  assert.equal(
+    response.headers.get("referrer-policy"),
+    "strict-origin-when-cross-origin",
+    `${label} missing Referrer-Policy`
+  )
+  assert.match(
+    response.headers.get("content-security-policy") ?? "",
+    /default-src 'self'/,
+    `${label} missing Content-Security-Policy`
+  )
+  assert.match(
+    response.headers.get("permissions-policy") ?? "",
+    /camera=\(\)/,
+    `${label} missing Permissions-Policy`
+  )
+}
+
 async function proxied(path) {
   upstreamRequests.length = 0
   const response = await fetch(`http://127.0.0.1:18080${path}`, { headers: credentials })
@@ -52,6 +76,7 @@ async function proxied(path) {
 }
 await mkdir(join(root, "assets"), { recursive: true })
 await writeFile(join(root, "assets", "existing.css"), "body { color: red; }")
+await writeFile(join(root, "assets", "existing.js.map"), '{"version":3}')
 await writeFile(
   configuration,
   `pid ${directory}/nginx.pid;
@@ -74,7 +99,14 @@ try {
   assert.equal(missing.status, 404)
   assert.equal(missing.headers.get("cache-control"), "no-store")
   assert.equal(missing.headers.get("expires"), null)
+  assertSecurityHeaders(missing, "missing asset")
   await missing.arrayBuffer()
+
+  const sourceMap = await fetch("http://127.0.0.1:18080/assets/existing.js.map")
+  assert.equal(sourceMap.status, 404)
+  assertSecurityHeaders(sourceMap, "source map 404")
+  await sourceMap.arrayBuffer()
+
   await writeFile(join(root, "assets", "new.css"), "body { color: blue; }")
   for (const name of ["existing", "new"]) {
     const response = await fetch(`http://127.0.0.1:18080/assets/${name}.css`)
@@ -82,9 +114,10 @@ try {
     assert.match(response.headers.get("content-type"), /text\/css/)
     assert.match(response.headers.get("cache-control"), /immutable/)
     assert.doesNotMatch(response.headers.get("cache-control"), /no-store/)
+    assertSecurityHeaders(response, `asset ${name}`)
     assert.match(await response.text(), /body/)
   }
-  console.log("nginx asset cache checks passed")
+  console.log("nginx asset cache and security header checks passed")
 
   for (const [path, upstreamPath, upstreamHost] of [
     ["/ingest/e/?ip=0", "/e/?ip=0", "eu.i.posthog.com"],
@@ -126,6 +159,7 @@ try {
     assert.equal(request.url, path)
     assert.equal(request.headers.cookie, credentials.Cookie)
     assert.deepEqual(response.headers.getSetCookie(), ["upstream=1; Path=/"])
+    assertSecurityHeaders(response, path)
   }
   console.log("nginx app proxy session cookie checks passed")
 } finally {

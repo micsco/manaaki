@@ -87,6 +87,7 @@ describe("completeHandler", () => {
     const res = await completeHandler(completeRequest(state, cookie))
 
     expect(res.status).toBe(302)
+    expect(res.headers.get("cache-control")).toBe("no-store")
     expect(res.headers.get("location")).toBe("/recipes")
     const cookies = setCookies(res)
     const session = cookies.find(c => c.startsWith("__Host-manaaki_session="))
@@ -140,6 +141,7 @@ describe("completeHandler", () => {
     const res = await completeHandler(completeRequest(state, cookie, "error=login_required"))
 
     expect(res.status).toBe(302)
+    expect(res.headers.get("cache-control")).toBe("no-store")
     expect(res.headers.get("location")).toBe("/recipes")
   })
 
@@ -149,14 +151,17 @@ describe("completeHandler", () => {
   ])(
     "ignores a disguised returnTo already sealed into the attempt cookie on %s",
     async (_case, query) => {
-      const sealedAttempt = sealJson({
-        state: "known-state",
-        nonce: "nonce",
-        codeVerifier: "verifier",
-        redirectUri: "https://manaaki.micsco.nz/login",
-        returnTo: "/\t/evil.example",
-        silent: true,
-      })
+      const sealedAttempt = sealJson(
+        {
+          state: "known-state",
+          nonce: "nonce",
+          codeVerifier: "verifier",
+          redirectUri: "https://manaaki.micsco.nz/login",
+          returnTo: "/\t/evil.example",
+          silent: true,
+        },
+        "oidc"
+      )
 
       const res = await completeHandler(
         completeRequest("known-state", `__Host-manaaki_oidc=${sealedAttempt}`, query)

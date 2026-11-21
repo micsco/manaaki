@@ -11,7 +11,7 @@ import { upstreamFailureResponse } from "./mealieUpstream"
 import { AiDraftError, AiNotConfiguredError, generateRecipeVersionDraft } from "./recipeVersionAi"
 import { ModelBusyError, ModelCallError } from "./recipeVersionModels"
 import { toDraftRecipe, toSource } from "./recipeVersionSource"
-import { readSessionToken } from "./session"
+import { decodeJwtSubject, readSessionToken } from "./session"
 import { metrics, traced } from "./telemetry"
 
 const MAX_BODY_BYTES = 4096
@@ -118,6 +118,30 @@ function failureEvent(failure: unknown, signal: AbortSignal): { status: number; 
   return { status: 500, error: "Something went wrong creating the draft. Try again." }
 }
 
+async function readTextWithLimit(request: Request, maxBytes: number): Promise<string | null> {
+  if (!request.body) return ""
+  const reader = request.body.getReader()
+  const decoder = new TextDecoder()
+  let totalBytes = 0
+  let text = ""
+  try {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      totalBytes += value.byteLength
+      if (totalBytes > maxBytes) {
+        await reader.cancel()
+        return null
+      }
+      text += decoder.decode(value, { stream: true })
+    }
+    text += decoder.decode()
+    return text
+  } finally {
+    reader.releaseLock()
+  }
+}
+
 export async function recipeVersionDraftHandler(request: Request): Promise<Response> {
   const startedAt = performance.now()
   const elapsed = () => Math.round(performance.now() - startedAt)
@@ -126,8 +150,8 @@ export async function recipeVersionDraftHandler(request: Request): Promise<Respo
 
   const declaredLength = Number(request.headers.get("content-length") ?? 0)
   if (declaredLength > MAX_BODY_BYTES) return error(413, "That request is too large.")
-  const raw = await request.text()
-  if (raw.length > MAX_BODY_BYTES) return error(413, "That request is too large.")
+  const raw = await readTextWithLimit(request, MAX_BODY_BYTES)
+  if (raw === null) return error(413, "That request is too large.")
   let body: unknown
   try {
     body = JSON.parse(raw)
@@ -165,7 +189,10 @@ export async function recipeVersionDraftHandler(request: Request): Promise<Respo
     return error(409, "This recipe already has a version for that method.")
   }
 
-  const sessionKey = createHash("sha256").update(token).digest("hex")
+  const subject = decodeJwtSubject(token)
+  const sessionKey = subject
+    ? `sub:${subject}`
+    : `tok:${createHash("sha256").update(token).digest("hex")}`
   const retryAfter = takeDraftSlot(sessionKey)
   if (retryAfter !== null) {
     return error(429, "You've made a lot of drafts this hour. Try again later.", {

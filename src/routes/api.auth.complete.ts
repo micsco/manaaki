@@ -30,7 +30,7 @@ export async function completeHandler(request: Request): Promise<Response> {
   const returnTo = safeReturnPath(attempt?.returnTo)
   const failurePath = attempt?.silent ? returnTo : LOGIN_ERROR_PATH
 
-  const headers = new Headers()
+  const headers = new Headers({ "Cache-Control": "no-store" })
   headers.append("Set-Cookie", buildClearLoginAttemptCookie(secure))
 
   if (new URL(request.url).searchParams.has("error")) {

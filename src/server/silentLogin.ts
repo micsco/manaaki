@@ -3,6 +3,7 @@ import { isSecureRequest, readSessionToken, sealJson, unsealJson } from "./sessi
 
 const KNOWN_DEVICE_MAX_AGE_SECONDS = 365 * 24 * 60 * 60
 const SILENT_ATTEMPT_MAX_AGE_SECONDS = 600
+const KNOWN_DEVICE_PURPOSE = "known"
 const DEFAULT_RETURN_PATH = "/recipes"
 const RETURN_PATH_BASE = "https://return-path.invalid"
 const MAX_RETURN_PATH_LENGTH = 2048
@@ -28,7 +29,7 @@ function cookieOptions(secure: boolean, maxAge: number) {
 export function buildKnownDeviceSetCookie(email: string, secure: boolean): string {
   return serializeCookie(
     knownDeviceCookieName(secure),
-    sealJson({ e: email }),
+    sealJson({ e: email }, KNOWN_DEVICE_PURPOSE),
     cookieOptions(secure, KNOWN_DEVICE_MAX_AGE_SECONDS)
   )
 }
@@ -43,7 +44,7 @@ export function readKnownDevice(request: Request): KnownDevice | null {
     knownDeviceCookieName(isSecureRequest(request))
   )
   if (!sealed) return null
-  const parsed = unsealJson(sealed) as { e?: unknown } | null
+  const parsed = unsealJson(sealed, KNOWN_DEVICE_PURPOSE) as { e?: unknown } | null
   return typeof parsed?.e === "string" && parsed.e ? { email: parsed.e } : null
 }
 

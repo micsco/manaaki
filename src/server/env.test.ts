@@ -11,15 +11,18 @@ import {
   mealieInternalUrl,
   posthogIngestionHost,
   posthogProjectToken,
+  publicOriginOverride,
   readonlyToken,
   recipeVersionDraftsPerHour,
   sessionSecret,
 } from "./env"
 
 const KEYS = [
+  "NODE_ENV",
   "MEALIE_INTERNAL_URL",
   "MEALIE_READONLY_TOKEN",
   "SESSION_SECRET",
+  "PUBLIC_ORIGIN",
   "GEMINI_API_KEY",
   "GEMINI_MODEL",
   "GEMINI_THINKING_LEVEL",
@@ -57,6 +60,25 @@ describe("server env", () => {
   it("throws when a required var is missing", () => {
     process.env.SESSION_SECRET = ""
     expect(() => sessionSecret()).toThrow(/SESSION_SECRET/)
+  })
+
+  it("rejects short SESSION_SECRET values in production", () => {
+    process.env.NODE_ENV = "production"
+    process.env.SESSION_SECRET = "too-short"
+    expect(() => sessionSecret()).toThrow(/at least 16/)
+    process.env.SESSION_SECRET = "a-sufficiently-long-production-secret"
+    expect(sessionSecret()).toBe("a-sufficiently-long-production-secret")
+  })
+
+  it("reads and validates optional PUBLIC_ORIGIN", () => {
+    delete process.env.PUBLIC_ORIGIN
+    expect(publicOriginOverride()).toBeNull()
+    process.env.PUBLIC_ORIGIN = "https://manaaki.micsco.nz/extra"
+    expect(publicOriginOverride()).toBe("https://manaaki.micsco.nz")
+    process.env.PUBLIC_ORIGIN = "javascript:alert(1)"
+    expect(publicOriginOverride()).toBeNull()
+    process.env.PUBLIC_ORIGIN = "not a url"
+    expect(publicOriginOverride()).toBeNull()
   })
 
   it("reads the optional AI settings with safe defaults", () => {

@@ -1,7 +1,7 @@
 import type { RecipeOutput } from "../api/generated/types.gen"
 import { usePostHog } from "../contexts/AnalyticsContext"
 import { useGroupSlug } from "../hooks/useGroupSlug"
-import { displayDomain, mealieRecipeUrl } from "../utils/recipe"
+import { displayDomain, mealieRecipeUrl, safeExternalUrl } from "../utils/recipe"
 import { MealieLogo } from "./MealieLogo"
 import { RecipeNotes } from "./RecipeNotes"
 
@@ -9,6 +9,7 @@ export function RecipeFooter({ recipe }: { recipe: RecipeOutput }) {
   const groupSlug = useGroupSlug()
   const mealieUrl = mealieRecipeUrl(recipe.slug, groupSlug)
   const sourceDomain = displayDomain(recipe.orgURL)
+  const sourceUrl = safeExternalUrl(recipe.orgURL)
   const posthog = usePostHog()
 
   return (
@@ -19,14 +20,18 @@ export function RecipeFooter({ recipe }: { recipe: RecipeOutput }) {
           {sourceDomain && (
             <span className="text-gray-500">
               Source:{" "}
-              <a
-                href={recipe.orgURL ?? undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-orange-400 underline hover:text-orange-300"
-              >
-                {sourceDomain}
-              </a>
+              {sourceUrl ? (
+                <a
+                  href={sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-orange-400 underline hover:text-orange-300"
+                >
+                  {sourceDomain}
+                </a>
+              ) : (
+                <span className="font-medium text-gray-300">{sourceDomain}</span>
+              )}
             </span>
           )}
           {mealieUrl && (

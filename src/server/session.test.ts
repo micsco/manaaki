@@ -3,11 +3,14 @@ import { beforeEach, describe, expect, it } from "vitest"
 import {
   buildClearSessionCookie,
   buildSessionSetCookie,
+  decodeJwtSubject,
   decodeJwtTiming,
   isSecureRequest,
   readSessionToken,
   SESSION_COOKIE_NAME,
+  sealJson,
   sealSession,
+  unsealJson,
   unsealSession,
 } from "./session"
 
@@ -34,6 +37,20 @@ describe("seal/unseal", () => {
   })
   it("returns null on garbage", () => {
     expect(unsealSession("not-base64!!")).toBeNull()
+  })
+  it("prevents cross-purpose cookie replay via AAD", () => {
+    const oidcPayload = sealJson({ t: "forged-jwt" }, "oidc")
+    expect(unsealSession(oidcPayload)).toBeNull()
+    expect(unsealJson(oidcPayload, "known")).toBeNull()
+    expect(unsealJson(oidcPayload, "oidc")).toEqual({ t: "forged-jwt" })
+  })
+})
+
+describe("decodeJwtSubject", () => {
+  it("reads the sub claim when present", () => {
+    expect(decodeJwtSubject(fakeJwt({ sub: "user-42", exp: 1893456000 }))).toBe("user-42")
+    expect(decodeJwtSubject(fakeJwt({ exp: 1893456000 }))).toBeNull()
+    expect(decodeJwtSubject("opaque-token")).toBeNull()
   })
 })
 

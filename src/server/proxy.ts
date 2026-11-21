@@ -4,7 +4,7 @@ import { request as httpRequest } from "node:http"
 import { request as httpsRequest } from "node:https"
 import { Readable } from "node:stream"
 
-import { isAnonymousAllowed } from "./allowlist"
+import { canonicalizeApiPath, isAnonymousAllowed, isAuthenticatedAllowed } from "./allowlist"
 import { mealieInternalUrl, readonlyToken } from "./env"
 import type { MealieSlot } from "./mealieLimiter"
 import {
@@ -39,18 +39,25 @@ const STRIP_REQUEST_HEADERS = new Set([
   "host",
   "connection",
   "content-length",
+  "forwarded",
+  "via",
+  "x-forwarded-for",
+  "x-forwarded-host",
+  "x-forwarded-proto",
+  "x-real-ip",
   ...CLIENT_TELEMETRY_HEADERS,
 ])
 
 // node:http does NOT auto-decompress the upstream body (unlike undici/fetch), so
 // content-encoding and content-length describe the actual bytes being streamed.
-// Pass them through unchanged. Strip only true hop-by-hop headers.
+// Pass them through unchanged. Strip hop-by-hop headers and upstream cookies.
 const STRIP_RESPONSE_HEADERS = new Set([
   "connection",
   "keep-alive",
   "transfer-encoding",
   "upgrade",
   "proxy-connection",
+  "set-cookie",
 ])
 
 type SessionToken =
@@ -83,10 +90,15 @@ function buildResponseHeaders(incoming: http.IncomingMessage): Headers {
   return headers
 }
 
-const DATABASE_FREE_PATH_PREFIX = "/api/media/"
+const DATABASE_FREE_PATH_PREFIX = "/api/media/recipes/"
 
-async function forward(request: Request, token: string, pathWithQuery: string): Promise<Response> {
-  const slot = pathWithQuery.startsWith(DATABASE_FREE_PATH_PREFIX)
+async function forward(
+  request: Request,
+  token: string,
+  canonicalPathname: string,
+  pathWithQuery: string
+): Promise<Response> {
+  const slot = canonicalPathname.startsWith(DATABASE_FREE_PATH_PREFIX)
     ? null
     : await acquireMealieSlot(request.signal)
   try {
@@ -210,17 +222,17 @@ function clearSessionHeaders(request: Request, initial?: Headers): Headers {
 
 async function recoverInvalidSession(
   request: Request,
-  pathname: string,
+  canonicalPathname: string,
   pathWithQuery: string
 ): Promise<Response> {
-  if (!isAnonymousAllowed(request.method, pathname)) {
+  if (!isAnonymousAllowed(request.method, canonicalPathname)) {
     return new Response("Unauthorized", {
       status: 401,
       headers: clearSessionHeaders(request),
     })
   }
 
-  const response = await forward(request, readonlyToken(), pathWithQuery)
+  const response = await forward(request, readonlyToken(), canonicalPathname, pathWithQuery)
   return responseWithHeaders(response, clearSessionHeaders(request, new Headers(response.headers)))
 }
 
@@ -237,19 +249,27 @@ export async function handleApiProxy(request: Request): Promise<Response> {
 
 async function proxyToMealie(request: Request): Promise<Response> {
   const url = new URL(request.url)
+  const canonicalPathname = canonicalizeApiPath(url.pathname)
+  if (!canonicalPathname) {
+    return new Response("Bad Request", { status: 400 })
+  }
   const pathWithQuery = url.pathname + url.search
   const userToken = readSessionToken(request)
 
   if (userToken) {
-    const sessionToken = await resolveSessionToken(userToken)
-    if (sessionToken.state === "invalid") {
-      return recoverInvalidSession(request, url.pathname, pathWithQuery)
+    if (!isAuthenticatedAllowed(request.method, url.pathname)) {
+      return new Response("Forbidden", { status: 403 })
     }
 
-    const res = await forward(request, sessionToken.token, pathWithQuery)
+    const sessionToken = await resolveSessionToken(userToken)
+    if (sessionToken.state === "invalid") {
+      return recoverInvalidSession(request, canonicalPathname, pathWithQuery)
+    }
+
+    const res = await forward(request, sessionToken.token, canonicalPathname, pathWithQuery)
     if (res.status === 401) {
       await res.body?.cancel()
-      return recoverInvalidSession(request, url.pathname, pathWithQuery)
+      return recoverInvalidSession(request, canonicalPathname, pathWithQuery)
     }
 
     // Build a fresh Response so we can mutate headers (forwarded Response headers
@@ -268,5 +288,5 @@ async function proxyToMealie(request: Request): Promise<Response> {
   if (!isAnonymousAllowed(request.method, url.pathname)) {
     return new Response("Forbidden", { status: 403 })
   }
-  return forward(request, readonlyToken(), pathWithQuery)
+  return forward(request, readonlyToken(), canonicalPathname, pathWithQuery)
 }

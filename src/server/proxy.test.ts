@@ -273,30 +273,88 @@ describe("handleApiProxy — anonymous", () => {
     expect(res.status).toBe(403)
     expect(lastUpstreamRequest).toBeNull()
   })
+
+  it("rejects traversal and malformed paths without calling Mealie", async () => {
+    const doubleEncoded = await handleApiProxy(
+      new Request("https://app/api/recipes/%252e%252e/households/mealplans", {
+        headers: { host: "manaaki.micsco.nz" },
+      })
+    )
+    expect(doubleEncoded.status).toBe(400)
+    expect(lastUpstreamRequest).toBeNull()
+
+    const repeatedSlash = await handleApiProxy(
+      new Request("https://app/api/recipes//timeline/events", {
+        headers: { host: "manaaki.micsco.nz" },
+      })
+    )
+    expect(repeatedSlash.status).toBe(400)
+    expect(lastUpstreamRequest).toBeNull()
+
+    const encodedSlash = await handleApiProxy(
+      new Request("https://app/api/recipes/..%2fhouseholds/mealplans", {
+        headers: { host: "manaaki.micsco.nz" },
+      })
+    )
+    expect(encodedSlash.status).toBe(400)
+    expect(lastUpstreamRequest).toBeNull()
+  })
 })
 
 describe("handleApiProxy — authed", () => {
-  it("forwards with the user token, strips client Authorization and cookie, sets Cache-Control", async () => {
+  it("forwards with the user token, strips client Authorization, cookie, and forwarding headers, sets Cache-Control", async () => {
     const jwt = farFutureJwt()
-    setNextResponse({ status: 200, body: "{}" })
+    setNextResponse({
+      status: 200,
+      headers: { "set-cookie": "mealie_session=leaked; Path=/" },
+      body: "{}",
+    })
     const res = await handleApiProxy(
       new Request("https://app/api/households/mealplans", {
         headers: {
           host: "manaaki.micsco.nz",
           "x-forwarded-proto": "https",
+          "x-forwarded-for": "1.2.3.4",
+          "x-forwarded-host": "evil.example",
+          "x-real-ip": "1.2.3.4",
+          forwarded: "for=1.2.3.4",
           cookie: sessionCookieHeader(jwt),
           authorization: "Bearer attacker",
         },
       })
     )
     expect(res.status).toBe(200)
-    // JWT from session, not the attacker token
     expect(lastUpstreamRequest?.headers.authorization).toBe(`Bearer ${jwt}`)
-    // Cookie must be stripped
     expect(lastUpstreamRequest?.headers.cookie).toBeUndefined()
+    expect(lastUpstreamRequest?.headers["x-forwarded-for"]).toBeUndefined()
+    expect(lastUpstreamRequest?.headers["x-forwarded-host"]).toBeUndefined()
+    expect(lastUpstreamRequest?.headers["x-real-ip"]).toBeUndefined()
+    expect(lastUpstreamRequest?.headers.forwarded).toBeUndefined()
     expect(lastUpstreamRequest?.headers.host).toBe(`127.0.0.1:${serverPort}`)
-    // Authed responses must be private
     expect(res.headers.get("Cache-Control")).toBe("private, no-store")
+    expect(res.headers.get("set-cookie")).toBeNull()
+  })
+
+  it("blocks admin and unused Mealie endpoints for signed-in users with 403", async () => {
+    const jwt = farFutureJwt()
+    for (const [method, path] of [
+      ["GET", "/api/admin/users"],
+      ["POST", "/api/users/api-tokens"],
+      ["DELETE", "/api/recipes/banana-bread"],
+    ]) {
+      const res = await handleApiProxy(
+        new Request(`https://app${path}`, {
+          method,
+          headers: {
+            host: "manaaki.micsco.nz",
+            "x-forwarded-proto": "https",
+            cookie: sessionCookieHeader(jwt),
+          },
+        })
+      )
+      expect(res.status).toBe(403)
+      expect(lastUpstreamRequest).toBeNull()
+    }
   })
 })
 
