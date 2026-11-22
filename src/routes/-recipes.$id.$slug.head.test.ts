@@ -50,8 +50,31 @@ describe("recipe route head discovery metadata", () => {
           type: "text/markdown",
           href: expect.stringContaining(`/recipes/${ENCODED_ID}/swedish-meatballs.md`),
         }),
+        expect.objectContaining({
+          rel: "describedby",
+          href: expect.stringMatching(/\/llms\.txt$/),
+        }),
       ])
     )
+    expect(head.meta).not.toContainEqual(expect.objectContaining({ name: "robots" }))
+  })
+
+  it("marks recipes saved from other websites noindex and credits the source in JSON-LD", () => {
+    const loaderData: RecipeOutput = {
+      id: RECIPE_ID,
+      name: "Swedish Meatballs",
+      slug: "swedish-meatballs",
+      orgURL: "https://www.recipetineats.com/swedish-meatballs/",
+    }
+
+    const head = RecipeDetailRoute.options.head!({ loaderData } as never) as {
+      meta?: Record<string, unknown>[]
+    }
+
+    expect(head.meta).toContainEqual({ name: "robots", content: "noindex" })
+    expect(head.meta?.find(entry => "script:ld+json" in entry)?.["script:ld+json"]).toMatchObject({
+      isBasedOn: "https://www.recipetineats.com/swedish-meatballs/",
+    })
   })
 
   it("advertises /llms.txt from the /recipes index head", () => {
@@ -62,7 +85,7 @@ describe("recipe route head discovery metadata", () => {
     expect(head.links).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          rel: "alternate",
+          rel: "describedby",
           type: "text/plain",
           href: expect.stringMatching(/\/llms\.txt$/),
         }),

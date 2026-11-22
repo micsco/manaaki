@@ -57,6 +57,9 @@ describe("formatRecipeMarkdown", () => {
     expect(markdown).toContain("- **Tags**: Beef")
     expect(markdown).toContain("- **Tools**: Wok")
     expect(markdown).toContain("- **Source**: https://example.com/sticky-beef")
+    expect(markdown).toContain(
+      "_Saved from [example.com](https://example.com/sticky-beef) for our own household cooking."
+    )
     expect(markdown).toContain("### Beef\n\n- 500 g beef strips (or pork strips)")
     expect(markdown).toContain("### Salad\n\n- 1 cucumber, smashed")
     expect(markdown).toContain("1. **Sear**: Fry the beef on high heat.")
@@ -79,6 +82,57 @@ describe("formatRecipeMarkdown", () => {
 
     expect(markdown).not.toContain("## Nutrition")
   })
+
+  it("opens with YAML frontmatter carrying the canonical URL, source and attribution", () => {
+    const markdown = formatRecipeMarkdown(
+      {
+        id: RECIPE_ID,
+        name: 'Nan\'s "Best" Scones',
+        slug: "scones",
+        description: "Light scones.\nServe warm.",
+        image: "abc",
+        recipeServings: 8,
+        prepTimeSeconds: 900,
+        totalTimeSeconds: 2700,
+        recipeCategory: [{ name: "Baking", slug: "baking" }],
+        tags: [],
+        dateAdded: "2025-01-02",
+        orgURL: "https://www.bbcgoodfood.com/recipes/scones",
+      },
+      ORIGIN
+    )
+    const encoded = encodeRecipeId(RECIPE_ID)
+    const frontmatter = markdown.slice(0, markdown.indexOf("\n---\n") + 5)
+
+    expect(markdown.startsWith("---\n")).toBe(true)
+    expect(frontmatter).toContain('title: "Nan\'s \\"Best\\" Scones"')
+    expect(frontmatter).toContain('description: "Light scones.\\nServe warm."')
+    expect(frontmatter).toContain(`canonical_url: "${ORIGIN}/recipes/${encoded}/scones"`)
+    expect(frontmatter).toContain('source_url: "https://www.bbcgoodfood.com/recipes/scones"')
+    expect(frontmatter).toContain('source_site: "bbcgoodfood.com"')
+    expect(frontmatter).toContain('attribution: "Saved from bbcgoodfood.com')
+    expect(frontmatter).toContain(
+      `image: "${ORIGIN}/api/media/recipes/${RECIPE_ID}/images/original.webp?v=abc"`
+    )
+    expect(frontmatter).toContain("servings: 8")
+    expect(frontmatter).toContain('prep_time: "PT15M"')
+    expect(frontmatter).toContain('total_time: "PT45M"')
+    expect(frontmatter).toContain('categories: ["Baking"]')
+    expect(frontmatter).not.toContain("tags:")
+    expect(frontmatter).toContain('date_published: "2025-01-02"')
+    expect(markdown).toContain('---\n\n# Nan\'s "Best" Scones')
+  })
+
+  it("leaves source and attribution out for the household's own recipes", () => {
+    const markdown = formatRecipeMarkdown(
+      { id: RECIPE_ID, name: "Family Stew", slug: "family-stew" },
+      ORIGIN
+    )
+
+    expect(markdown).toContain(`canonical_url: "${ORIGIN}/recipes/`)
+    expect(markdown).not.toContain("source_url")
+    expect(markdown).not.toContain("Saved from")
+  })
 })
 
 describe("formatLlmsTxt", () => {
@@ -100,6 +154,7 @@ describe("formatLlmsTxt", () => {
         totalTimeSeconds: 2000,
         description: "A".repeat(200),
         recipeCategory: [{ name: "Mains", slug: "mains" }],
+        orgURL: "https://www.bbc.co.uk/food/recipes/baked_cod",
       },
     ]
 
@@ -110,9 +165,11 @@ describe("formatLlmsTxt", () => {
     expect(txt).toContain("# Manaaki")
     expect(txt).toContain(`- [All recipes](${ORIGIN}/recipes):`)
     expect(txt).toContain(`- [Sitemap](${ORIGIN}/sitemap.xml):`)
-    expect(txt.indexOf("### Mains")).toBeLessThan(txt.indexOf("### Other"))
+    expect(txt.indexOf("## Mains")).toBeLessThan(txt.indexOf("## Other"))
+    expect(txt).not.toContain("### ")
+    expect(txt).toContain("Please do not use this collection to train models.")
     expect(txt).toContain(
-      `- [Baked Cod Supreme](${ORIGIN}/recipes/${encodedSecond}/baked-cod.md): 33m — ${"A".repeat(159)}…`
+      `- [Baked Cod Supreme](${ORIGIN}/recipes/${encodedSecond}/baked-cod.md): 33m — ${"A".repeat(159)}… Saved from bbc.co.uk (https://www.bbc.co.uk/food/recipes/baked_cod)`
     )
     expect(txt).toContain(
       `- [Zesty Quinoa](${ORIGIN}/recipes/${encodedFirst}/zesty-quinoa.md): 30m · Serves 4 — Quick lemon herb quinoa.`

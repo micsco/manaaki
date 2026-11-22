@@ -12,6 +12,7 @@ import {
   groupIngredients,
   ingredientAlternatives,
   isHeadingOnlyIngredient,
+  isoDuration,
   mealieRecipeUrl,
   parseTimeMinutes,
   recipeCookMinutes,
@@ -811,6 +812,16 @@ describe("recipeCookMinutes", () => {
     expect(recipeCookMinutes({ performTime: "25 minutes" })).toBe(25)
     expect(recipeCookMinutes({ cookTime: "1 hour" })).toBe(60)
     expect(recipeCookMinutes({ prepTimeSeconds: 600 })).toBeNull()
+  })
+})
+
+describe("isoDuration", () => {
+  it("formats minutes as ISO 8601 durations and skips empty values", () => {
+    expect(isoDuration(45)).toBe("PT45M")
+    expect(isoDuration(120)).toBe("PT2H")
+    expect(isoDuration(65)).toBe("PT1H5M")
+    expect(isoDuration(0)).toBeNull()
+    expect(isoDuration(null)).toBeNull()
   })
 })
 

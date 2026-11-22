@@ -15,6 +15,7 @@ import { useRecipeNav } from "../hooks/useRecipeNav"
 import { recipeNavHotkeys } from "../lib/recipeHotkeys"
 import { markRecipeNavigation } from "../lib/recipeTransition"
 import { decodeRecipeId, recipeImageUrl, recipeTimes, recipeUrl } from "../utils/recipe"
+import { isSavedFromElsewhere } from "../utils/recipeProvenance"
 import { buildRecipeJsonLd } from "../utils/recipeStructuredData"
 
 async function loader({ params }: { params: { id: string; slug: string } }): Promise<RecipeOutput> {
@@ -79,6 +80,9 @@ export const Route = createFileRoute("/recipes/$id/$slug")({
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: description },
         { name: "twitter:image", content: ogImage },
+        ...(loaderData && isSavedFromElsewhere(loaderData)
+          ? [{ name: "robots", content: "noindex" }]
+          : []),
         ...(loaderData ? [{ "script:ld+json": buildRecipeJsonLd(loaderData, host) }] : []),
       ],
       links: ogUrl
@@ -90,6 +94,7 @@ export const Route = createFileRoute("/recipes/$id/$slug")({
               href: `${ogUrl}.md`,
               title: `${loaderData?.name ?? "Recipe"} (Markdown)`,
             },
+            { rel: "describedby", type: "text/plain", href: resolveAbsoluteUrl("/llms.txt") },
           ]
         : [],
     }

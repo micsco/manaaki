@@ -76,6 +76,40 @@ describe("robots.txt and sitemap.xml formatting", () => {
     expect(robots).toContain("Sitemap: https://manaaki.micsco.nz/sitemap.xml")
   })
 
+  it("explains the policy, blocks AI training crawlers, and signals no training for everyone else", () => {
+    const robots = formatRobotsTxt("https://manaaki.micsco.nz")
+    const groups = robots.split("\n\n")
+    const trainingGroup = groups.find(group => group.includes("User-agent: GPTBot"))
+    const defaultGroup = groups.find(group => group.includes("User-agent: *"))
+
+    expect(robots).toMatch(/^# Manaaki is one household's personal recipe collection\./)
+    expect(robots).toContain("# More detail: https://manaaki.micsco.nz/llms.txt")
+    for (const agent of ["GPTBot", "ClaudeBot", "Google-Extended", "CCBot"]) {
+      expect(trainingGroup).toContain(`User-agent: ${agent}\n`)
+    }
+    expect(trainingGroup).toMatch(/\nDisallow: \/$/)
+    expect(trainingGroup).not.toContain("OAI-SearchBot")
+    expect(defaultGroup).toContain("Content-Signal: search=yes, ai-input=yes, ai-train=no")
+  })
+
+  it("lists only the household's own recipes in sitemap.xml", () => {
+    const xml = formatSitemapXml(
+      [
+        { id: RECIPE_ID, slug: "family-stew" },
+        {
+          id: "6c436b4e-8d2e-4669-9342-ec6ec931ba73",
+          slug: "bbc-chilli",
+          orgURL: "https://www.bbcgoodfood.com/recipes/chilli",
+        },
+      ],
+      "https://manaaki.micsco.nz"
+    )
+
+    expect(xml).toContain("family-stew")
+    expect(xml).not.toContain("bbc-chilli")
+    expect(xml).toContain("<!-- Lists only the household's own recipes.")
+  })
+
   it("lets crawlers fetch the recipe images that JSON-LD and og:image point at", () => {
     const robots = formatRobotsTxt("https://manaaki.micsco.nz")
     const imagePath = recipeImageUrl(RECIPE_ID, "original") ?? ""
@@ -186,6 +220,7 @@ describe("discovery HTTP handlers", () => {
     const llms = await llmsRes.text()
     expect(llms).toContain("[Swedish Meatballs]")
     expect(llms).toContain("[Baked Cod]")
+    expect(llmsRes.headers.get("Content-Signal")).toBe("search=yes, ai-input=yes, ai-train=no")
     expect(fetchSpy).toHaveBeenCalledTimes(2)
   })
 
@@ -234,12 +269,38 @@ describe("handleRecipeMarkdownRequest", () => {
     expect(res!.status).toBe(200)
     expect(res!.headers.get("Content-Type")).toBe("text/markdown; charset=utf-8")
     expect(res!.headers.get("Link")).toBe(
-      `<https://manaaki.micsco.nz/recipes/${ENCODED_ID}/swedish-meatballs>; rel="canonical"`
+      `<https://manaaki.micsco.nz/recipes/${ENCODED_ID}/swedish-meatballs>; rel="canonical", <https://manaaki.micsco.nz/llms.txt>; rel="describedby"`
     )
+    expect(res!.headers.get("Content-Signal")).toBe("search=yes, ai-input=yes, ai-train=no")
+    expect(res!.headers.get("X-Robots-Tag")).toBeNull()
     const body = await res!.text()
     expect(body).toContain("# Swedish Meatballs")
     expect(body).toContain("- 500g beef mince")
     expect(body).toContain("1. Roll into balls and bake.")
+  })
+
+  it("marks Markdown for recipes saved from elsewhere as noindex", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          id: RECIPE_ID,
+          name: "Swedish Meatballs",
+          slug: "swedish-meatballs",
+          orgURL: "https://www.recipetineats.com/swedish-meatballs/",
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    )
+
+    const res = await handleRecipeMarkdownRequest(
+      new Request(`https://manaaki.micsco.nz/recipes/${ENCODED_ID}/swedish-meatballs.md`),
+      { id: ENCODED_ID, slug: "swedish-meatballs.md" }
+    )
+
+    expect(res!.headers.get("X-Robots-Tag")).toBe("noindex")
+    expect(await res!.text()).toContain(
+      'source_url: "https://www.recipetineats.com/swedish-meatballs/"'
+    )
   })
 
   it("serves Markdown when Accept prefers text/markdown", async () => {

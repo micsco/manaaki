@@ -54,7 +54,7 @@ export const Route = createFileRoute("/recipes/")({
       links: [
         { rel: "canonical", href: ogUrl },
         {
-          rel: "alternate",
+          rel: "describedby",
           type: "text/plain",
           href: resolveAbsoluteUrl("/llms.txt"),
           title: "LLMs.txt recipe index",

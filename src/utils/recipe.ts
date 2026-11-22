@@ -161,6 +161,15 @@ export function recipeCookMinutes(recipe: TimedRecipe): number | null {
   return seconds === null ? null : wholeMinutes(seconds)
 }
 
+export function isoDuration(minutes: number | null): string | null {
+  if (minutes == null || !Number.isFinite(minutes) || minutes <= 0) return null
+  const hours = Math.floor(minutes / 60)
+  const remainder = minutes % 60
+  if (hours && remainder) return `PT${hours}H${remainder}M`
+  if (hours) return `PT${hours}H`
+  return `PT${remainder}M`
+}
+
 export function recipeWaitingNote(
   extras: Record<string, unknown> | null | undefined
 ): string | null {

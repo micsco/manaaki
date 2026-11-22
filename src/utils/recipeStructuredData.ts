@@ -7,25 +7,17 @@ import type {
 import {
   formatIngredientLine,
   groupByTitle,
+  isoDuration,
   recipeCookMinutes,
   recipeHandsOnMinutes,
   recipeImageUrl,
   recipeTotalMinutes,
   recipeUrl,
-  safeExternalUrl,
 } from "./recipe"
+import { attributionText, savedRecipeSource } from "./recipeProvenance"
 
 export type JsonLdValue = string | number | boolean | null | JsonLdObject | JsonLdValue[]
 export type JsonLdObject = { [key: string]: JsonLdValue }
-
-function formatIsoDuration(minutes: number | null): string | null {
-  if (minutes == null || !Number.isFinite(minutes) || minutes <= 0) return null
-  const hours = Math.floor(minutes / 60)
-  const remainder = minutes % 60
-  if (hours && remainder) return `PT${hours}H${remainder}M`
-  if (hours) return `PT${hours}H`
-  return `PT${remainder}M`
-}
 
 function parseNumber(value: string | null | undefined, allowZero = false): number | null {
   if (!value) return null
@@ -149,13 +141,13 @@ export function buildRecipeJsonLd(recipe: RecipeOutput, origin: string): JsonLdO
   const dateModified = recipe.dateUpdated || recipe.updatedAt
   if (dateModified) jsonLd.dateModified = dateModified
 
-  const prepTime = formatIsoDuration(recipeHandsOnMinutes(recipe))
+  const prepTime = isoDuration(recipeHandsOnMinutes(recipe))
   if (prepTime) jsonLd.prepTime = prepTime
 
-  const cookTime = formatIsoDuration(recipeCookMinutes(recipe))
+  const cookTime = isoDuration(recipeCookMinutes(recipe))
   if (cookTime) jsonLd.cookTime = cookTime
 
-  const totalTime = formatIsoDuration(recipeTotalMinutes(recipe))
+  const totalTime = isoDuration(recipeTotalMinutes(recipe))
   if (totalTime) jsonLd.totalTime = totalTime
 
   const recipeYield = buildRecipeYield(recipe)
@@ -187,8 +179,11 @@ export function buildRecipeJsonLd(recipe: RecipeOutput, origin: string): JsonLdO
   const nutrition = buildNutritionJsonLd(recipe.nutrition, recipe.settings)
   if (nutrition) jsonLd.nutrition = nutrition
 
-  const sourceUrl = safeExternalUrl(recipe.orgURL)
-  if (sourceUrl) jsonLd.isBasedOn = sourceUrl
+  const source = savedRecipeSource(recipe)
+  if (source) {
+    jsonLd.isBasedOn = source.url
+    jsonLd.creditText = attributionText(source)
+  }
 
   return jsonLd
 }

@@ -91,6 +91,7 @@ describe("buildRecipeJsonLd", () => {
         sodiumContent: "620 mg",
       },
       isBasedOn: "https://www.recipetineats.com/swedish-meatballs/",
+      creditText: expect.stringContaining("Saved from recipetineats.com"),
     })
   })
 
@@ -144,5 +145,6 @@ describe("buildRecipeJsonLd", () => {
     expect(jsonLd.recipeCategory).toEqual(["Breakfast", "Quick"])
     expect(jsonLd.nutrition).toBeUndefined()
     expect(jsonLd.isBasedOn).toBeUndefined()
+    expect(jsonLd.creditText).toBeUndefined()
   })
 })

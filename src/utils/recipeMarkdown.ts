@@ -8,11 +8,16 @@ import {
   formatIngredientLine,
   groupByTitle,
   isHeadingOnlyIngredient,
+  isoDuration,
+  recipeCookMinutes,
+  recipeHandsOnMinutes,
+  recipeImageUrl,
   recipeTimes,
+  recipeTotalMinutes,
   recipeUrl,
   recipeWaitingNote,
-  safeExternalUrl,
 } from "./recipe"
+import { attributionText, savedRecipeSource } from "./recipeProvenance"
 
 const MAX_LLMS_DESCRIPTION_LENGTH = 160
 
@@ -72,9 +77,65 @@ function namedList(items: { name?: string | null }[] | null | undefined): string
   ]
 }
 
+type FrontmatterValue = string | number | string[] | null | undefined
+
+function yamlScalar(value: string | number): string {
+  return JSON.stringify(value)
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029")
+}
+
+function formatFrontmatter(fields: [string, FrontmatterValue][]): string {
+  const lines = fields.flatMap(([key, value]) => {
+    if (value == null || value === "") return []
+    if (Array.isArray(value)) {
+      return value.length > 0 ? [`${key}: [${value.map(yamlScalar).join(", ")}]`] : []
+    }
+    return [`${key}: ${yamlScalar(value)}`]
+  })
+  return ["---", ...lines, "---"].join("\n")
+}
+
+function absoluteUrl(baseOrigin: string, path: string | null): string | null {
+  return path ? `${baseOrigin}${path}` : null
+}
+
+function recipeFrontmatter(
+  recipe: RecipeOutput,
+  baseOrigin: string,
+  canonicalUrl: string | null
+): string {
+  const source = savedRecipeSource(recipe)
+  const servings =
+    recipe.recipeServings != null && recipe.recipeServings > 0 ? recipe.recipeServings : null
+  return formatFrontmatter([
+    ["title", recipe.name?.trim() || "Recipe"],
+    ["description", recipe.description?.trim()],
+    ["canonical_url", canonicalUrl],
+    ["source_url", source?.url],
+    ["source_site", source?.site],
+    ["attribution", source ? attributionText(source) : null],
+    ["image", absoluteUrl(baseOrigin, recipeImageUrl(recipe.id, "original", recipe.image))],
+    ["servings", servings],
+    ["yield", recipe.recipeYield?.trim()],
+    ["prep_time", isoDuration(recipeHandsOnMinutes(recipe))],
+    ["cook_time", isoDuration(recipeCookMinutes(recipe))],
+    ["total_time", isoDuration(recipeTotalMinutes(recipe))],
+    ["categories", namedList(recipe.recipeCategory)],
+    ["tags", namedList(recipe.tags)],
+    ["date_published", recipe.dateAdded || recipe.createdAt],
+    ["date_modified", recipe.dateUpdated || recipe.updatedAt],
+  ])
+}
+
 export function formatRecipeMarkdown(recipe: RecipeOutput, origin: string): string {
   const baseOrigin = normalizeOrigin(origin)
-  const sections: string[] = [`# ${recipe.name?.trim() || "Recipe"}`]
+  const canonicalUrl =
+    recipe.id && recipe.slug ? `${baseOrigin}${recipeUrl(recipe.id, recipe.slug)}` : null
+  const sections: string[] = [
+    recipeFrontmatter(recipe, baseOrigin, canonicalUrl),
+    `# ${recipe.name?.trim() || "Recipe"}`,
+  ]
 
   const description = recipe.description?.trim()
   if (description) {
@@ -86,10 +147,16 @@ export function formatRecipeMarkdown(recipe: RecipeOutput, origin: string): stri
     )
   }
 
-  const meta: string[] = []
-  if (recipe.id && recipe.slug) {
-    meta.push(`- **URL**: ${baseOrigin}${recipeUrl(recipe.id, recipe.slug)}`)
+  const source = savedRecipeSource(recipe)
+  if (source) {
+    sections.push(
+      `_Saved from [${source.site}](${source.url}) for our own household cooking. Credit for this recipe belongs to its original author. Please cite and link the original when you use it._`
+    )
   }
+
+  const meta: string[] = []
+  if (canonicalUrl) meta.push(`- **URL**: ${canonicalUrl}`)
+  if (source) meta.push(`- **Source**: ${source.url}`)
   const servings = formatServings(recipe)
   if (servings) meta.push(`- **Servings**: ${servings}`)
 
@@ -111,9 +178,6 @@ export function formatRecipeMarkdown(recipe: RecipeOutput, origin: string): stri
 
   const tools = namedList(recipe.tools)
   if (tools.length > 0) meta.push(`- **Tools**: ${tools.join(", ")}`)
-
-  const sourceUrl = safeExternalUrl(recipe.orgURL)
-  if (sourceUrl) meta.push(`- **Source**: ${sourceUrl}`)
 
   if (meta.length > 0) sections.push(meta.join("\n"))
 
@@ -203,8 +267,11 @@ function recipeSummaryBlurbs(recipe: RecipeSummary): string {
   }
   const description = condenseDescription(recipe.description)
   const meta = details.join(" · ")
-  if (meta && description) return `${meta} — ${description}`
-  return meta || description
+  const summary = meta && description ? `${meta} — ${description}` : meta || description
+  const source = savedRecipeSource(recipe)
+  if (!source) return summary
+  const credit = `Saved from ${source.site} (${source.url})`
+  return summary ? `${summary} ${credit}` : credit
 }
 
 export function formatLlmsTxt(recipes: RecipeSummary[], origin: string): string {
@@ -212,12 +279,14 @@ export function formatLlmsTxt(recipes: RecipeSummary[], origin: string): string 
   const lines: string[] = [
     "# Manaaki",
     "",
-    "> Self-hosted recipe collection powered by Mealie. Every recipe page embeds schema.org/Recipe JSON-LD and is available as clean Markdown via `.md` URLs or `Accept: text/markdown`.",
+    "> One household's personal recipe collection, served from our self-hosted Mealie. Each recipe is available as Markdown: add `.md` to its URL or send `Accept: text/markdown`. The YAML frontmatter gives its canonical URL and, for recipes saved from other websites, the original source and attribution.",
+    "",
+    "Most of these recipes were saved from other websites for our own cooking. They are listed here so our own assistants and agents can find them. If you use one, credit and link its original source. Please do not use this collection to train models. Recipes saved from elsewhere carry `noindex` and are left out of the sitemap, so search engines send people to the original.",
     "",
     "## Discovery",
     "",
     `- [All recipes](${baseOrigin}/recipes): Browse and filter the recipe collection`,
-    `- [Sitemap](${baseOrigin}/sitemap.xml): XML sitemap of all canonical recipe URLs`,
+    `- [Sitemap](${baseOrigin}/sitemap.xml): Canonical URLs of the household's own recipes`,
   ]
 
   const grouped = new Map<string, RecipeSummary[]>()
@@ -235,20 +304,17 @@ export function formatLlmsTxt(recipes: RecipeSummary[], origin: string): string 
     return a.localeCompare(b)
   })
 
-  if (categories.length > 0) {
-    lines.push("", "## Recipes")
-    for (const category of categories) {
-      const items = [...(grouped.get(category) ?? [])].sort((a, b) =>
-        (a.name ?? "").localeCompare(b.name ?? "")
-      )
-      lines.push("", `### ${category}`, "")
-      for (const recipe of items) {
-        if (!recipe.id || !recipe.slug) continue
-        const label = escapeLinkLabel(recipe.name?.trim() || recipe.slug)
-        const url = `${baseOrigin}${recipeUrl(recipe.id, recipe.slug)}.md`
-        const blurb = recipeSummaryBlurbs(recipe)
-        lines.push(blurb ? `- [${label}](${url}): ${blurb}` : `- [${label}](${url})`)
-      }
+  for (const category of categories) {
+    const items = [...(grouped.get(category) ?? [])].sort((a, b) =>
+      (a.name ?? "").localeCompare(b.name ?? "")
+    )
+    lines.push("", `## ${category}`, "")
+    for (const recipe of items) {
+      if (!recipe.id || !recipe.slug) continue
+      const label = escapeLinkLabel(recipe.name?.trim() || recipe.slug)
+      const url = `${baseOrigin}${recipeUrl(recipe.id, recipe.slug)}.md`
+      const blurb = recipeSummaryBlurbs(recipe)
+      lines.push(blurb ? `- [${label}](${url}): ${blurb}` : `- [${label}](${url})`)
     }
   }
 

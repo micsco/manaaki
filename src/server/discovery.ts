@@ -5,6 +5,7 @@ import type {
 } from "../api/generated/types.gen"
 import { encodeRecipeId, recipeUrl, tryDecodeRecipeId } from "../utils/recipe"
 import { formatLlmsTxt, formatRecipeMarkdown } from "../utils/recipeMarkdown"
+import { CONTENT_SIGNAL, isSavedFromElsewhere } from "../utils/recipeProvenance"
 import { mealieInternalUrl, publicOriginOverride, readonlyToken } from "./env"
 import { MealieUnreachableError, mealieFetch, upstreamFailureResponse } from "./mealieUpstream"
 import { isSecureRequest } from "./session"
@@ -14,6 +15,16 @@ const DISCOVERY_CACHE_TTL_MS = 5 * 60 * 1000
 const MEALIE_PAGE_SIZE = 100
 const MAX_SITEMAP_PAGES = 100
 const DISCOVERY_CACHE_CONTROL = "public, max-age=300, stale-while-revalidate=600"
+const AI_TRAINING_CRAWLERS = [
+  "GPTBot",
+  "ClaudeBot",
+  "Google-Extended",
+  "Applebot-Extended",
+  "CCBot",
+  "meta-externalagent",
+  "Bytespider",
+  "cohere-training-data-crawler",
+]
 
 interface RecipeListCache {
   recipes: RecipeSummary[]
@@ -105,7 +116,18 @@ function parseLastMod(
 export function formatRobotsTxt(origin: string): string {
   const baseOrigin = origin.replace(/\/+$/, "")
   return [
+    "# Manaaki is one household's personal recipe collection.",
+    "# Most recipes were saved from other websites for our own cooking. Each one",
+    "# credits and links its original source and carries noindex, so search",
+    "# engines send people to the original. Search and answering a person's",
+    "# question are welcome; training models on this collection is not.",
+    `# More detail: ${baseOrigin}/llms.txt`,
+    "",
+    ...AI_TRAINING_CRAWLERS.map(agent => `User-agent: ${agent}`),
+    "Disallow: /",
+    "",
     "User-agent: *",
+    `Content-Signal: ${CONTENT_SIGNAL}`,
     "Allow: /recipes",
     "Allow: /llms.txt",
     "Allow: /api/media/recipes/",
@@ -126,7 +148,7 @@ export function formatSitemapXml(recipes: RecipeSummary[], origin: string): stri
   let latestMod: string | null = null
 
   for (const recipe of recipes) {
-    if (!recipe.id || !recipe.slug) continue
+    if (!recipe.id || !recipe.slug || isSavedFromElsewhere(recipe)) continue
     const lastmod = parseLastMod(recipe)
     if (lastmod && (!latestMod || lastmod > latestMod)) {
       latestMod = lastmod
@@ -148,6 +170,7 @@ export function formatSitemapXml(recipes: RecipeSummary[], origin: string): stri
 
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
+    "<!-- Lists only the household's own recipes. Recipes saved from other websites credit their source and carry noindex. -->",
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     body,
     "</urlset>",
@@ -277,6 +300,7 @@ export async function handleLlmsTxt(request: Request): Promise<Response> {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": DISCOVERY_CACHE_CONTROL,
+        "Content-Signal": CONTENT_SIGNAL,
       },
     })
   } catch (error) {
@@ -332,12 +356,16 @@ export async function handleRecipeMarkdownRequest(
   const headers = new Headers({
     "Content-Type": "text/markdown; charset=utf-8",
     "Cache-Control": DISCOVERY_CACHE_CONTROL,
+    "Content-Signal": CONTENT_SIGNAL,
     Vary: "Accept",
   })
+  if (isSavedFromElsewhere(recipe)) headers.set("X-Robots-Tag", "noindex")
 
+  const links = [`<${origin}/llms.txt>; rel="describedby"`]
   if (recipe.id && recipe.slug) {
-    headers.set("Link", `<${origin}${recipeUrl(recipe.id, recipe.slug)}>; rel="canonical"`)
+    links.unshift(`<${origin}${recipeUrl(recipe.id, recipe.slug)}>; rel="canonical"`)
   }
+  headers.set("Link", links.join(", "))
 
   return new Response(markdown, { status: 200, headers })
 }
