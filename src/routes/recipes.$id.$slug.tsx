@@ -15,6 +15,7 @@ import { useRecipeNav } from "../hooks/useRecipeNav"
 import { recipeNavHotkeys } from "../lib/recipeHotkeys"
 import { markRecipeNavigation } from "../lib/recipeTransition"
 import { decodeRecipeId, recipeImageUrl, recipeTimes, recipeUrl } from "../utils/recipe"
+import { buildRecipeJsonLd } from "../utils/recipeStructuredData"
 
 async function loader({ params }: { params: { id: string; slug: string } }): Promise<RecipeOutput> {
   configureApiClient()
@@ -31,18 +32,29 @@ async function loader({ params }: { params: { id: string; slug: string } }): Pro
 }
 
 export const Route = createFileRoute("/recipes/$id/$slug")({
+  server: {
+    handlers: {
+      GET: async ({ request, params, next }) => {
+        const { handleRecipeMarkdownRequest } = await import("../server/discovery")
+        return (await handleRecipeMarkdownRequest(request, params)) ?? next()
+      },
+    },
+  },
+  headers: () => ({ Vary: "Accept" }),
   head: ({ loaderData }) => {
     const title = `${loaderData?.name ?? "Recipe"} · Manaaki`
     const description = loaderData?.description || "Check out this recipe on Manaaki!"
+    const host =
+      typeof window !== "undefined"
+        ? window.location.origin
+        : globalThis.process?.env?.PUBLIC_ORIGIN ||
+          globalThis.process?.env?.VITE_PUBLIC_APP_URL ||
+          "https://manaaki.micsco.nz"
 
     const resolveAbsoluteUrl = (path: string | null | undefined): string => {
       if (!path) return ""
       if (path.startsWith("http://") || path.startsWith("https://")) return path
-      const host =
-        typeof window !== "undefined"
-          ? window.location.origin
-          : globalThis.process?.env?.VITE_PUBLIC_APP_URL || "https://manaaki.micsco.nz"
-      return `${host}${path}`
+      return `${host.replace(/\/+$/, "")}${path}`
     }
 
     const imagePath = loaderData
@@ -57,6 +69,7 @@ export const Route = createFileRoute("/recipes/$id/$slug")({
     return {
       meta: [
         { title },
+        { name: "description", content: description },
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:image", content: ogImage },
@@ -66,7 +79,19 @@ export const Route = createFileRoute("/recipes/$id/$slug")({
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: description },
         { name: "twitter:image", content: ogImage },
+        ...(loaderData ? [{ "script:ld+json": buildRecipeJsonLd(loaderData, host) }] : []),
       ],
+      links: ogUrl
+        ? [
+            { rel: "canonical", href: ogUrl },
+            {
+              rel: "alternate",
+              type: "text/markdown",
+              href: `${ogUrl}.md`,
+              title: `${loaderData?.name ?? "Recipe"} (Markdown)`,
+            },
+          ]
+        : [],
     }
   },
   loader,

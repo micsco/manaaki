@@ -10,11 +10,14 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PlanRouteImport } from './routes/plan'
 import { Route as RecipesRouteImport } from './routes/recipes'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as ShareRouteImport } from './routes/share'
 import { Route as ShoppingRouteImport } from './routes/shopping'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ApiSplatRouteImport } from './routes/api.$'
 import { Route as RecipesIndexRouteImport } from './routes/recipes.index'
 import { Route as RecipesSlugRouteImport } from './routes/recipes.$slug'
@@ -29,6 +32,11 @@ import { Route as RecipesIdSlugNewVersionRouteImport } from './routes/recipes.$i
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -46,6 +54,11 @@ const RecipesRoute = RecipesRouteImport.update({
   path: '/recipes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShareRoute = ShareRouteImport.update({
   id: '/share',
   path: '/share',
@@ -54,6 +67,11 @@ const ShareRoute = ShareRouteImport.update({
 const ShoppingRoute = ShoppingRouteImport.update({
   id: '/shopping',
   path: '/shopping',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSplatRoute = ApiSplatRouteImport.update({
@@ -110,11 +128,14 @@ const RecipesIdSlugNewVersionRoute = RecipesIdSlugNewVersionRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/login': typeof LoginRoute
   '/plan': typeof PlanRoute
   '/recipes': typeof RecipesRouteWithChildren
+  '/robots.txt': typeof RobotsDottxtRoute
   '/share': typeof ShareRoute
   '/shopping': typeof ShoppingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/$': typeof ApiSplatRoute
   '/recipes/$slug': typeof RecipesSlugRoute
   '/recipes/': typeof RecipesIndexRoute
@@ -128,10 +149,13 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/login': typeof LoginRoute
   '/plan': typeof PlanRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/share': typeof ShareRoute
   '/shopping': typeof ShoppingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/$': typeof ApiSplatRoute
   '/recipes/$slug': typeof RecipesSlugRoute
   '/recipes': typeof RecipesIndexRoute
@@ -146,11 +170,14 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/login': typeof LoginRoute
   '/plan': typeof PlanRoute
   '/recipes': typeof RecipesRouteWithChildren
+  '/robots.txt': typeof RobotsDottxtRoute
   '/share': typeof ShareRoute
   '/shopping': typeof ShoppingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/$': typeof ApiSplatRoute
   '/recipes/$slug': typeof RecipesSlugRoute
   '/recipes/': typeof RecipesIndexRoute
@@ -166,11 +193,14 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/llms.txt'
     | '/login'
     | '/plan'
     | '/recipes'
+    | '/robots.txt'
     | '/share'
     | '/shopping'
+    | '/sitemap.xml'
     | '/api/$'
     | '/recipes/$slug'
     | '/recipes/'
@@ -184,10 +214,13 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/llms.txt'
     | '/login'
     | '/plan'
+    | '/robots.txt'
     | '/share'
     | '/shopping'
+    | '/sitemap.xml'
     | '/api/$'
     | '/recipes/$slug'
     | '/recipes'
@@ -201,11 +234,14 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/llms.txt'
     | '/login'
     | '/plan'
     | '/recipes'
+    | '/robots.txt'
     | '/share'
     | '/shopping'
+    | '/sitemap.xml'
     | '/api/$'
     | '/recipes/$slug'
     | '/recipes/'
@@ -220,11 +256,14 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LlmsDottxtRoute: typeof LlmsDottxtRoute
   LoginRoute: typeof LoginRoute
   PlanRoute: typeof PlanRoute
   RecipesRoute: typeof RecipesRouteWithChildren
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   ShareRoute: typeof ShareRoute
   ShoppingRoute: typeof ShoppingRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiSplatRoute: typeof ApiSplatRoute
   ApiAuthCompleteRoute: typeof ApiAuthCompleteRoute
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
@@ -240,6 +279,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -263,6 +309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecipesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/share': {
       id: '/share'
       path: '/share'
@@ -275,6 +328,13 @@ declare module '@tanstack/react-router' {
       path: '/shopping'
       fullPath: '/shopping'
       preLoaderRoute: typeof ShoppingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/$': {
@@ -369,11 +429,14 @@ const RecipesRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LlmsDottxtRoute: LlmsDottxtRoute,
   LoginRoute: LoginRoute,
   PlanRoute: PlanRoute,
   RecipesRoute: RecipesRouteWithChildren,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   ShareRoute: ShareRoute,
   ShoppingRoute: ShoppingRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiSplatRoute: ApiSplatRoute,
   ApiAuthCompleteRoute: ApiAuthCompleteRoute,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,

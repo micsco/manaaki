@@ -5,11 +5,14 @@ const NUMBER = /^\d+$/
 const PAGE_ROOTS = new Set([
   "",
   "api",
+  "llms.txt",
   "login",
   "plan",
   "recipes",
+  "robots.txt",
   "share",
   "shopping",
+  "sitemap.xml",
   "_serverFn",
 ])
 const MEALIE_RECIPE_COLLECTIONS = new Set([
@@ -30,7 +33,8 @@ function pageTemplate(segments: string[]): string[] {
   if (segments[0] !== "recipes" || segments.length < 2) return segments
   const [, , second, ...rest] = segments
   if (second === undefined) return ["recipes", "{slug}"]
-  return ["recipes", "{id}", "{slug}", ...rest]
+  const slugSegment = rest.length === 0 && second.endsWith(".md") ? "{slug}.md" : "{slug}"
+  return ["recipes", "{id}", slugSegment, ...rest]
 }
 
 function apiTemplate(segments: string[]): string[] {

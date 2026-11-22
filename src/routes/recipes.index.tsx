@@ -28,8 +28,10 @@ export const Route = createFileRoute("/recipes/")({
       const host =
         typeof window !== "undefined"
           ? window.location.origin
-          : globalThis.process?.env?.VITE_PUBLIC_APP_URL || "https://manaaki.micsco.nz"
-      return `${host}${path}`
+          : globalThis.process?.env?.PUBLIC_ORIGIN ||
+            globalThis.process?.env?.VITE_PUBLIC_APP_URL ||
+            "https://manaaki.micsco.nz"
+      return `${host.replace(/\/+$/, "")}${path}`
     }
 
     const ogImage = resolveAbsoluteUrl("/manaaki-512.png")
@@ -48,6 +50,15 @@ export const Route = createFileRoute("/recipes/")({
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: description },
         { name: "twitter:image", content: ogImage },
+      ],
+      links: [
+        { rel: "canonical", href: ogUrl },
+        {
+          rel: "alternate",
+          type: "text/plain",
+          href: resolveAbsoluteUrl("/llms.txt"),
+          title: "LLMs.txt recipe index",
+        },
       ],
     }
   },

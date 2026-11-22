@@ -8,11 +8,16 @@ describe("routeTemplate", () => {
   it.each([
     ["/", "/"],
     ["/plan", "/plan"],
+    ["/robots.txt", "/robots.txt"],
+    ["/sitemap.xml", "/sitemap.xml"],
+    ["/llms.txt", "/llms.txt"],
     ["/recipes", "/recipes"],
     ["/recipes/chicken-fajitas", "/recipes/{slug}"],
     [`/recipes/${RECIPE_ID}/chicken-fajitas`, "/recipes/{id}/{slug}"],
+    [`/recipes/${RECIPE_ID}/chicken-fajitas.md`, "/recipes/{id}/{slug}.md"],
     [`/recipes/${RECIPE_ID}/chicken-fajitas/new-version`, "/recipes/{id}/{slug}/new-version"],
     ["/recipes/OFMhUL-aT5afeiIpxbt8Iw/chicken-fajitas", "/recipes/{id}/{slug}"],
+    ["/recipes/OFMhUL-aT5afeiIpxbt8Iw/chicken-fajitas.md", "/recipes/{id}/{slug}.md"],
     [
       "/recipes/OFMhUL-aT5afeiIpxbt8Iw/chicken-fajitas/new-version",
       "/recipes/{id}/{slug}/new-version",

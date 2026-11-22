@@ -39,3 +39,11 @@ it("includes security headers and blocks .map files in nginx", () => {
   expect(securityHeaders).toContain("frame-ancestors 'self' https://jarvis.77bb.digikiwi.net")
   expect(securityHeaders).not.toContain("X-Frame-Options")
 })
+
+it("rate-limits discovery endpoints and compresses markdown and xml in nginx", () => {
+  expect(nginxConf).toContain("zone=discovery_limit")
+  expect(nginxConf).toContain("location = /sitemap.xml")
+  expect(nginxConf).toContain("location = /llms.txt")
+  expect(nginxConf).toMatch(/gzip_types[^\n]*text\/markdown/)
+  expect(nginxConf).toMatch(/gzip_types[^\n]*application\/xml/)
+})

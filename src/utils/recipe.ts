@@ -156,6 +156,11 @@ export function recipeHandsOnMinutes(recipe: TimedRecipe): number | null {
   return seconds === null ? null : wholeMinutes(seconds)
 }
 
+export function recipeCookMinutes(recipe: TimedRecipe): number | null {
+  const seconds = durationSeconds(recipe.performTimeSeconds, recipe.performTime || recipe.cookTime)
+  return seconds === null ? null : wholeMinutes(seconds)
+}
+
 export function recipeWaitingNote(
   extras: Record<string, unknown> | null | undefined
 ): string | null {
@@ -319,7 +324,7 @@ export function describeAlternatives({ recipe, food }: IngredientAlternatives) {
 
 export const UNGROUPED_INGREDIENTS_TITLE = "Recipe ingredients"
 
-function isHeadingOnlyIngredient(ingredient: RecipeIngredientOutput): boolean {
+export function isHeadingOnlyIngredient(ingredient: RecipeIngredientOutput): boolean {
   if (ingredient.food || ingredient.unit || ingredient.quantity || ingredient.referencedRecipe)
     return false
   const heading = headingText(ingredient.title)
@@ -327,6 +332,38 @@ function isHeadingOnlyIngredient(ingredient: RecipeIngredientOutput): boolean {
     const content = headingText(text)
     return !content || content === heading
   })
+}
+
+export function formatIngredientLine(
+  ingredient: RecipeIngredientOutput,
+  { includeAlternatives = false }: { includeAlternatives?: boolean } = {}
+): string {
+  if (isHeadingOnlyIngredient(ingredient)) return ""
+  const hasStructured = Boolean(
+    ingredient.food || ingredient.unit || (ingredient.quantity != null && ingredient.quantity !== 0)
+  )
+  const base = hasStructured
+    ? [
+        formatQuantity(ingredient.quantity, { useFractions: ingredient.unit?.fraction !== false }),
+        ingredient.unit ? unitLabel(ingredient.unit, ingredient.quantity) : "",
+        ingredient.food?.name?.trim() ?? "",
+        ingredient.note?.trim() ?? "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+    : (ingredient.display || ingredient.note || ingredient.originalText || "").trim()
+
+  if (!base) return ""
+  if (!includeAlternatives) return base
+
+  const alternatives = describeAlternatives(
+    ingredientAlternatives(
+      ingredient,
+      undefined,
+      shouldPluralizeFood(ingredient.quantity, Boolean(ingredient.unit))
+    )
+  )
+  return alternatives.recipe ? `${base} (${alternatives.recipe})` : base
 }
 
 function headingText(text: string | null | undefined): string {

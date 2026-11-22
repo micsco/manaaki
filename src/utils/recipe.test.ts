@@ -5,13 +5,16 @@ import {
   describeAlternatives,
   displayDomain,
   formatAmount,
+  formatIngredientLine,
   formatQuantity,
   formatTime,
   groupByTitle,
   groupIngredients,
   ingredientAlternatives,
+  isHeadingOnlyIngredient,
   mealieRecipeUrl,
   parseTimeMinutes,
+  recipeCookMinutes,
   recipeHandsOnMinutes,
   recipeTimes,
   recipeTotalMinutes,
@@ -799,5 +802,39 @@ describe("formatAmount", () => {
 
   it("shows just the quantity without a unit", () => {
     expect(formatAmount({ quantity: 2, unit: null })).toBe("2")
+  })
+})
+
+describe("recipeCookMinutes", () => {
+  it("reads structured performTimeSeconds, falling back to performTime or cookTime", () => {
+    expect(recipeCookMinutes({ performTimeSeconds: 1800 })).toBe(30)
+    expect(recipeCookMinutes({ performTime: "25 minutes" })).toBe(25)
+    expect(recipeCookMinutes({ cookTime: "1 hour" })).toBe(60)
+    expect(recipeCookMinutes({ prepTimeSeconds: 600 })).toBeNull()
+  })
+})
+
+describe("isHeadingOnlyIngredient and formatIngredientLine", () => {
+  it("skips heading-only rows and formats structured or unstructured lines", () => {
+    expect(isHeadingOnlyIngredient({ title: "Sauce", display: "Sauce:" })).toBe(true)
+    expect(formatIngredientLine({ title: "Sauce", display: "Sauce:" })).toBe("")
+    expect(
+      formatIngredientLine({
+        quantity: 2,
+        unit: { name: "tbsp", abbreviation: "tbsp", useAbbreviation: true },
+        food: { name: "olive oil" },
+        note: "divided",
+      })
+    ).toBe("2 tbsp olive oil divided")
+    expect(formatIngredientLine({ display: "Pinch of sea salt" })).toBe("Pinch of sea salt")
+    expect(
+      formatIngredientLine(
+        {
+          food: { name: "butter" },
+          substitutions: [{ substituteFood: { id: "sub-1", name: "ghee" } }],
+        },
+        { includeAlternatives: true }
+      )
+    ).toBe("butter (or ghee)")
   })
 })

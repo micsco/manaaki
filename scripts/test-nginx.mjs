@@ -158,7 +158,14 @@ try {
   )
   console.log("nginx analytics proxy body buffer checks passed")
 
-  for (const path of ["/api/auth/me", "/api/manaaki/recipe-versions/draft", "/plan"]) {
+  for (const path of [
+    "/api/auth/me",
+    "/api/manaaki/recipe-versions/draft",
+    "/plan",
+    "/robots.txt",
+    "/sitemap.xml",
+    "/llms.txt",
+  ]) {
     const { response, request } = await proxied(path)
     assert.equal(request.url, path)
     assert.equal(request.headers.cookie, credentials.Cookie)
