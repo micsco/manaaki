@@ -216,6 +216,11 @@ describe("RecipeCardToolBadges", () => {
 })
 
 const mockGetAll = vi.mocked(sdk.getAllApiRecipesGet)
+const useLoaderDataSpy = vi.spyOn(Route, "useLoaderData")
+
+beforeEach(() => {
+  useLoaderDataSpy.mockReturnValue(undefined)
+})
 
 function RecipeListWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -427,5 +432,21 @@ describe("household cooking suggestions", () => {
     expect(screen.queryByRole("list", { name: "Recently popular" })).not.toBeInTheDocument()
     expect(sdk.getAllApiRecipesTimelineEventsGet).toHaveBeenCalledTimes(2)
     client.clear()
+  })
+})
+
+describe("RecipeList SSR preloaded recipes", () => {
+  it("renders preloaded recipes immediately without showing the loading skeleton", () => {
+    useLoaderDataSpy.mockReturnValueOnce([baseRecipe])
+    mockGetAll.mockReturnValue(new Promise(() => undefined) as never)
+
+    render(<RecipeListWrapper />)
+
+    expect(screen.queryByRole("status", { name: /loading recipes/i })).not.toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Banana Bread" })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /banana bread/i })).toHaveAttribute(
+      "href",
+      expect.stringContaining("/banana-bread")
+    )
   })
 })

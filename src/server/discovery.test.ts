@@ -5,6 +5,7 @@ import {
   formatRobotsTxt,
   formatSitemapXml,
   handleLlmsTxt,
+  handleRecipeListMarkdownRequest,
   handleRecipeMarkdownRequest,
   handleRobotsTxt,
   handleSitemapXml,
@@ -84,11 +85,12 @@ describe("robots.txt and sitemap.xml formatting", () => {
 
     expect(robots).toMatch(/^# Manaaki is one household's personal recipe collection\./)
     expect(robots).toContain("# More detail: https://manaaki.micsco.nz/llms.txt")
-    for (const agent of ["GPTBot", "ClaudeBot", "Google-Extended", "CCBot"]) {
+    for (const agent of ["GPTBot", "ClaudeBot", "CCBot"]) {
       expect(trainingGroup).toContain(`User-agent: ${agent}\n`)
     }
     expect(trainingGroup).toMatch(/\nDisallow: \/$/)
     expect(trainingGroup).not.toContain("OAI-SearchBot")
+    expect(trainingGroup).not.toContain("Google-Extended")
     expect(defaultGroup).toContain("Content-Signal: search=yes, ai-input=yes, ai-train=no")
   })
 
@@ -366,5 +368,49 @@ describe("handleRecipeMarkdownRequest", () => {
       { id: ENCODED_ID, slug: "missing.md" }
     )
     expect(missingRes!.status).toBe(404)
+  })
+})
+
+describe("handleRecipeListMarkdownRequest", () => {
+  it("returns null for HTML requests so /recipes falls through to SSR", async () => {
+    const res = await handleRecipeListMarkdownRequest(
+      new Request("https://manaaki.micsco.nz/recipes", {
+        headers: { Accept: "text/html,application/xhtml+xml,*/*;q=0.8" },
+      })
+    )
+    expect(res).toBeNull()
+  })
+
+  it("serves Markdown recipe index when Accept prefers text/markdown", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          page: 1,
+          total_pages: 1,
+          items: [{ id: RECIPE_ID, name: "Swedish Meatballs", slug: "swedish-meatballs" }],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    )
+
+    const res = await handleRecipeListMarkdownRequest(
+      new Request("https://manaaki.micsco.nz/recipes", {
+        headers: {
+          host: "manaaki.micsco.nz",
+          "x-forwarded-proto": "https",
+          Accept: "text/markdown",
+        },
+      })
+    )
+
+    expect(res).not.toBeNull()
+    expect(res!.status).toBe(200)
+    expect(res!.headers.get("Content-Type")).toBe("text/markdown; charset=utf-8")
+    expect(res!.headers.get("Vary")).toBe("Accept")
+    expect(res!.headers.get("Content-Signal")).toBe("search=yes, ai-input=yes, ai-train=no")
+    expect(res!.headers.get("Link")).toBe(
+      '<https://manaaki.micsco.nz/recipes>; rel="canonical", <https://manaaki.micsco.nz/llms.txt>; rel="describedby"'
+    )
+    expect(await res!.text()).toContain("[Swedish Meatballs]")
   })
 })

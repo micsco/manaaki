@@ -14,13 +14,14 @@ This way search engines send people to the original author rather than to our co
 
 ## Crawlers
 
-`robots.txt` explains the policy in comments. Crawlers that collect training data (`GPTBot`, `ClaudeBot`, `Google-Extended`, `Applebot-Extended`, `CCBot`, `meta-externalagent`, `Bytespider`, `cohere-training-data-crawler`) are disallowed everywhere. All other crawlers get [Content Signals](https://contentsignals.org/) of `search=yes, ai-input=yes, ai-train=no`. Markdown and `llms.txt` responses send the same value in a `Content-Signal` header.
+`robots.txt` explains the policy in comments. Crawlers that only collect training data (`GPTBot`, `ClaudeBot`, `Applebot-Extended`, `CCBot`, `meta-externalagent`, `Bytespider`, `cohere-training-data-crawler`) are disallowed everywhere. `Google-Extended` is intentionally not disallowed because Google uses the same token to gate live Gemini URL fetching and grounding; our no-training preference for all other crawlers is declared via [Content Signals](https://contentsignals.org/) (`search=yes, ai-input=yes, ai-train=no`) in `robots.txt` and as a `Content-Signal` header on Markdown and `llms.txt` responses.
 
 ## Formats
 
 | URL | What it is |
 |-----|------------|
 | `/llms.txt` | [llms.txt](https://llmstxt.org/) index: a summary of the policy, then one H2 section per category linking each recipe's `.md` |
+| `/recipes` | Server-rendered HTML recipe list (also serves Markdown via `Accept: text/markdown`) and `rel="describedby"` pointing at `/llms.txt` |
 | `/recipes/<id>/<slug>.md`, or the page URL with `Accept: text/markdown` | Markdown with YAML frontmatter (`title`, `description`, `canonical_url`, `source_url`, `source_site`, `attribution`, `image`, `servings`, `yield`, ISO 8601 `prep_time`/`cook_time`/`total_time`, `categories`, `tags`, `date_published`, `date_modified`) |
 | Recipe HTML | schema.org `Recipe` JSON-LD, `rel="canonical"`, `rel="alternate" type="text/markdown"` and `rel="describedby"` pointing at `/llms.txt` |
 | `/sitemap.xml` | The household's own recipes only |

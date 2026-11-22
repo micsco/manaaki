@@ -5,6 +5,7 @@ import { useHydrated } from "@tanstack/react-router"
 import { useState } from "react"
 
 import { configureApiClient } from "../api/client"
+import type { RecipeSummary } from "../api/generated/types.gen"
 import { Icon } from "../components/Icon"
 import { LazyImportRecipeModal } from "../components/LazyDialogs"
 import { RecipeCard } from "../components/RecipeCard"
@@ -17,7 +18,18 @@ import { usePersistentDraft } from "../hooks/usePersistentDraft"
 import { useRecipeFilters } from "../hooks/useRecipeFilters"
 import { recipeListQueryOptions } from "../hooks/useRecipeList"
 
+const SSR_RECIPE_LIST_STALE_MS = 5 * 60_000
+
 export const Route = createFileRoute("/recipes/")({
+  server: {
+    handlers: {
+      GET: async ({ request, next }) => {
+        const { handleRecipeListMarkdownRequest } = await import("../server/discovery")
+        return (await handleRecipeListMarkdownRequest(request)) ?? next()
+      },
+    },
+  },
+  headers: () => ({ Vary: "Accept" }),
   head: () => {
     const title = "Recipes · Manaaki"
     const description = "Manaaki - An alternative, high-performance web frontend for Mealie."
@@ -62,9 +74,16 @@ export const Route = createFileRoute("/recipes/")({
       ],
     }
   },
-  loader: ({ context: { queryClient } }) => {
+  loader: async ({ context: { queryClient } }): Promise<RecipeSummary[] | undefined> => {
     configureApiClient()
-    return void queryClient.ensureQueryData(recipeListQueryOptions).catch(_e => {})
+    if (typeof window === "undefined") {
+      if (!globalThis.process?.env?.MEALIE_INTERNAL_URL) return undefined
+      return queryClient
+        .fetchQuery({ ...recipeListQueryOptions, staleTime: SSR_RECIPE_LIST_STALE_MS })
+        .catch(() => undefined)
+    }
+    void queryClient.ensureQueryData(recipeListQueryOptions).catch(() => {})
+    return queryClient.getQueryData(recipeListQueryOptions.queryKey)
   },
   component: RecipeList,
   pendingComponent: RecipeListSkeleton,
@@ -121,7 +140,11 @@ function RecipeListSkeleton() {
 }
 
 function RecipeList() {
-  const { data, isError, isFetching, isLoading, refetch } = useQuery(recipeListQueryOptions)
+  const initialRecipes = Route.useLoaderData()
+  const { data, isError, isFetching, isLoading, refetch } = useQuery({
+    ...recipeListQueryOptions,
+    initialData: initialRecipes,
+  })
   const recipes = data ?? []
   const current = useCurrentUser()
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -131,7 +154,7 @@ function RecipeList() {
   )
   const isMounted = useHydrated()
 
-  const showSkeleton = isLoading || !isMounted
+  const showSkeleton = isLoading || (!isMounted && !initialRecipes)
 
   const {
     search,

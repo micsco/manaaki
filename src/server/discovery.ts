@@ -18,7 +18,6 @@ const DISCOVERY_CACHE_CONTROL = "public, max-age=300, stale-while-revalidate=600
 const AI_TRAINING_CRAWLERS = [
   "GPTBot",
   "ClaudeBot",
-  "Google-Extended",
   "Applebot-Extended",
   "CCBot",
   "meta-externalagent",
@@ -301,6 +300,29 @@ export async function handleLlmsTxt(request: Request): Promise<Response> {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": DISCOVERY_CACHE_CONTROL,
         "Content-Signal": CONTENT_SIGNAL,
+      },
+    })
+  } catch (error) {
+    const failure = upstreamFailureResponse(error)
+    if (failure) return failure
+    throw error
+  }
+}
+
+export async function handleRecipeListMarkdownRequest(request: Request): Promise<Response | null> {
+  if (!prefersMarkdown(request.headers.get("accept"))) return null
+
+  const origin = resolvePublicOrigin(request)
+  try {
+    const recipes = await getCachedPublicRecipes()
+    return new Response(formatLlmsTxt(recipes, origin), {
+      status: 200,
+      headers: {
+        "Content-Type": "text/markdown; charset=utf-8",
+        "Cache-Control": DISCOVERY_CACHE_CONTROL,
+        "Content-Signal": CONTENT_SIGNAL,
+        Vary: "Accept",
+        Link: `<${origin}/recipes>; rel="canonical", <${origin}/llms.txt>; rel="describedby"`,
       },
     })
   } catch (error) {
