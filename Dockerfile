@@ -56,7 +56,7 @@ RUN --mount=type=secret,id=POSTHOG_CLI_API_KEY,required=false \
 
 RUN pnpm prune --prod --ignore-scripts
 
-FROM nginx:1.30.5-alpine3.24 AS serve
+FROM nginx:1.31.8-alpine3.24 AS serve
 
 ENV NODE_ENV=production
 
