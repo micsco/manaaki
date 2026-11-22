@@ -108,6 +108,7 @@ export function formatRobotsTxt(origin: string): string {
     "User-agent: *",
     "Allow: /recipes",
     "Allow: /llms.txt",
+    "Allow: /api/media/recipes/",
     "Disallow: /plan",
     "Disallow: /shopping",
     "Disallow: /login",

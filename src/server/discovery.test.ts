@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { encodeRecipeId } from "../utils/recipe"
+import { encodeRecipeId, recipeImageUrl } from "../utils/recipe"
 import {
   formatRobotsTxt,
   formatSitemapXml,
@@ -74,6 +74,18 @@ describe("robots.txt and sitemap.xml formatting", () => {
     expect(robots).toContain("Disallow: /shopping")
     expect(robots).toContain("Disallow: /api/")
     expect(robots).toContain("Sitemap: https://manaaki.micsco.nz/sitemap.xml")
+  })
+
+  it("lets crawlers fetch the recipe images that JSON-LD and og:image point at", () => {
+    const robots = formatRobotsTxt("https://manaaki.micsco.nz")
+    const imagePath = recipeImageUrl(RECIPE_ID, "original") ?? ""
+    const allowedPrefix = robots
+      .split("\n")
+      .filter(line => line.startsWith("Allow: "))
+      .map(line => line.slice("Allow: ".length))
+      .find(prefix => imagePath.startsWith(prefix))
+    expect(imagePath).toMatch(/^\/api\//)
+    expect(allowedPrefix?.length ?? 0).toBeGreaterThan("/api/".length)
   })
 
   it("escapes XML entities and sets lastmod in sitemap.xml", () => {
