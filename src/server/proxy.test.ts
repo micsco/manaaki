@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
 import { installTestPostHog } from "../test/serverPostHog"
 import { handleApiProxy } from "./proxy"
-import { buildSessionSetCookie, unsealSession } from "./session"
+import { buildSessionSetCookie, readSession, unsealSession } from "./session"
 import { withServerTiming } from "./timing"
 
 // ---------------------------------------------------------------------------
@@ -151,18 +151,18 @@ function refreshedSessionToken(res: Response): string | null {
   return unsealSession(cookieValue)
 }
 
-function authedRequest(path: string, jwt: string): Request {
+function authedRequest(path: string, jwt: string, authenticatedAt?: number): Request {
   return new Request(`https://app${path}`, {
     headers: {
       host: "manaaki.micsco.nz",
       "x-forwarded-proto": "https",
-      cookie: sessionCookieHeader(jwt),
+      cookie: sessionCookieHeader(jwt, authenticatedAt),
     },
   })
 }
 
-function sessionCookieHeader(jwt: string): string {
-  const setCookie = buildSessionSetCookie(jwt, true)
+function sessionCookieHeader(jwt: string, authenticatedAt?: number): string {
+  const setCookie = buildSessionSetCookie(jwt, true, authenticatedAt)
   const value = setCookie.split(";")[0].split("=").slice(1).join("=")
   return `__Host-manaaki_session=${value}`
 }
@@ -359,6 +359,28 @@ describe("handleApiProxy — authed", () => {
 })
 
 describe("handleApiProxy — invalid session recovery", () => {
+  const fifteenDaysAgo = () => Math.floor(Date.now() / 1000) - 15 * 24 * 3600
+
+  it("treats a session past its absolute lifetime as invalid on a private request", async () => {
+    const res = await handleApiProxy(
+      authedRequest("/api/households/mealplans", jwtIssuedHoursAgo(1, 48), fifteenDaysAgo())
+    )
+
+    expect(res.status).toBe(401)
+    expect(res.headers.get("set-cookie")).toContain("Max-Age=0")
+    expect(upstreamRequests).toEqual([])
+  })
+
+  it("serves a public request anonymously once the session is past its lifetime", async () => {
+    const res = await handleApiProxy(
+      authedRequest("/api/recipes", jwtIssuedHoursAgo(1, 48), fifteenDaysAgo())
+    )
+
+    expect(res.status).toBe(200)
+    expect(res.headers.get("set-cookie")).toContain("Max-Age=0")
+    expect(lastUpstreamRequest?.headers.authorization).toBe("Bearer ro-token")
+  })
+
   it("falls back to the read-only token for an expired public session", async () => {
     setPathResponse("/api/auth/refresh", { status: 401 })
     setNextResponse({ status: 200, body: "[]" })
@@ -538,6 +560,36 @@ describe("handleApiProxy — sliding refresh policy", () => {
     expect(res.status).toBe(200)
     expect(refreshedSessionToken(res)).toBe("refreshed-jwt")
     expect(lastUpstreamRequest?.headers.authorization).toBe("Bearer refreshed-jwt")
+  })
+
+  it("shares one refresh between requests that arrive together", async () => {
+    const jwt = jwtIssuedHoursAgo(30, 48)
+    const responses = await Promise.all(
+      ["/api/households/mealplans", "/api/recipes", "/api/foods"].map(path =>
+        handleApiProxy(authedRequest(path, jwt))
+      )
+    )
+
+    expect(responses.map(res => res.status)).toEqual([200, 200, 200])
+    expect(responses.map(refreshedSessionToken)).toEqual([
+      "refreshed-jwt",
+      "refreshed-jwt",
+      "refreshed-jwt",
+    ])
+    expect(upstreamRequests.filter(r => r.url === "/api/auth/refresh")).toHaveLength(1)
+  })
+
+  it("keeps the original sign-in time so refreshing never extends the session", async () => {
+    const thirteenDaysAgo = Math.floor(Date.now() / 1000) - 13 * 24 * 3600
+    const res = await handleApiProxy(
+      authedRequest("/api/households/mealplans", jwtIssuedHoursAgo(30, 48), thirteenDaysAgo)
+    )
+
+    const refreshed = (res.headers.get("set-cookie") ?? "").split(";")[0]
+    const session = readSession(
+      new Request("https://app/", { headers: { cookie: refreshed, "x-forwarded-proto": "https" } })
+    )
+    expect(session).toMatchObject({ token: "refreshed-jwt", authenticatedAt: thirteenDaysAgo })
   })
 
   it("leaves a token alone before half its lifetime has elapsed", async () => {

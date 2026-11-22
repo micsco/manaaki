@@ -43,7 +43,11 @@ describe("AddToShoppingListButton", () => {
   })
 
   it("hides shopping when anonymous", () => {
-    vi.spyOn(currentUser, "useCurrentUser").mockReturnValue({ user: null, isAnonymous: true })
+    vi.spyOn(currentUser, "useCurrentUser").mockReturnValue({
+      user: null,
+      isAnonymous: true,
+      groupSlug: null,
+    })
     const listSpy = vi.spyOn(shoppingList, "useCurrentShoppingList").mockReturnValue(null)
     render(<AddToShoppingListButton recipe={recipe} />, { wrapper: wrap() })
     expect(screen.queryByRole("link")).not.toBeInTheDocument()

@@ -7,7 +7,7 @@ describe("canonicalizeApiPath", () => {
     expect(canonicalizeApiPath("/api/recipes/cr%C3%A8me-br%C3%BBl%C3%A9e")).toBe(
       "/api/recipes/crème-brûlée"
     )
-    expect(canonicalizeApiPath("/api/users/self")).toBe("/api/users/self")
+    expect(canonicalizeApiPath("/api/foods")).toBe("/api/foods")
   })
 
   it.each([
@@ -28,31 +28,46 @@ describe("canonicalizeApiPath", () => {
   })
 })
 
+const RECIPE = "00000000-0000-4000-8000-000000000001"
+
 describe("isAnonymousAllowed", () => {
-  it("allows GET recipes, users/self, media", () => {
-    expect(isAnonymousAllowed("GET", "/api/recipes")).toBe(true)
-    expect(isAnonymousAllowed("GET", "/api/recipes/abc")).toBe(true)
-    expect(isAnonymousAllowed("GET", "/api/users/self")).toBe(true)
-    expect(isAnonymousAllowed("GET", "/api/media/recipes/x.png")).toBe(true)
+  it.each([
+    "/api/recipes",
+    "/api/recipes/pasta-carbonara",
+    "/api/recipes/cr%C3%A8me-br%C3%BBl%C3%A9e",
+    `/api/media/recipes/${RECIPE}/images/original.webp`,
+    `/api/media/recipes/${RECIPE}/images/min-original.webp`,
+  ])("allows the public recipe reads Manaaki makes: %s", path => {
+    expect(isAnonymousAllowed("GET", path)).toBe(true)
   })
-  it("no longer proxies Mealie's own OAuth endpoints for anonymous users", () => {
-    expect(isAnonymousAllowed("GET", "/api/auth/oauth")).toBe(false)
-    expect(isAnonymousAllowed("GET", "/api/auth/oauth/callback")).toBe(false)
+
+  it.each([
+    "/api/users/self",
+    "/api/recipes/exports",
+    "/api/recipes/suggestions",
+    "/api/recipes/bulk-actions/export",
+    "/api/recipes/shared/token",
+    "/api/recipes/Exports",
+    "/api/recipes/%65xports",
+    "/api/recipes/slug/comments",
+    "/api/recipes/slug/exports",
+    `/api/media/recipes/${RECIPE}/assets/file.pdf`,
+    `/api/media/recipes/${RECIPE}/images`,
+    "/api/media/recipes/x.png",
+    "/api/households/mealplans",
+    "/api/admin/users",
+    "/api/auth/oauth",
+    "/api/auth/oauth/callback",
+    "/api/recipesX",
+  ])("denies everything else: %s", path => {
+    expect(isAnonymousAllowed("GET", path)).toBe(false)
   })
-  it("denies meal plans for anonymous", () => {
-    expect(isAnonymousAllowed("GET", "/api/households/mealplans")).toBe(false)
-  })
+
   it("denies non-GET even on allowed paths", () => {
     expect(isAnonymousAllowed("POST", "/api/recipes")).toBe(false)
     expect(isAnonymousAllowed("DELETE", "/api/recipes/abc")).toBe(false)
   })
-  it("denies unlisted paths", () => {
-    expect(isAnonymousAllowed("GET", "/api/admin/users")).toBe(false)
-  })
-  it("denies paths with no segment boundary", () => {
-    expect(isAnonymousAllowed("GET", "/api/recipesX")).toBe(false)
-    expect(isAnonymousAllowed("GET", "/api/auth/oauthcallback")).toBe(false)
-  })
+
   it.each([
     "/api/recipes/%2e%2e/households/mealplans",
     "/api/recipes/../users/self",
@@ -68,6 +83,8 @@ it.each([
   "/api/recipes/timeline/events",
   "/api/recipes/timeline/events/123/image",
   "/api/recipes/%74imeline/events",
+  "/api/recipes/%74imeline",
+  "/api/recipes/TIMELINE",
   "/api/recipes/TIMELINE/events",
   "/api/recipes//timeline/events",
   "/api/recipes/%2e/timeline/events",
@@ -79,21 +96,26 @@ it.each([
 describe("isAuthenticatedAllowed", () => {
   it.each([
     ["GET", "/api/recipes"],
+    ["GET", "/api/recipes/pasta-carbonara"],
     ["GET", "/api/recipes/timeline/events"],
-    ["GET", "/api/media/recipes/abc/images/original.webp"],
-    ["GET", "/api/users/self"],
+    ["GET", `/api/media/recipes/${RECIPE}/images/original.webp`],
     ["GET", "/api/households/mealplans"],
     ["POST", "/api/households/mealplans"],
     ["PUT", "/api/households/mealplans/123"],
     ["DELETE", "/api/households/mealplans/123"],
+    ["GET", "/api/households/shopping/lists"],
     ["GET", "/api/households/shopping/lists/123"],
+    ["POST", "/api/households/shopping/lists"],
+    ["DELETE", "/api/households/shopping/lists/123"],
     ["POST", "/api/households/shopping/lists/123/recipe"],
+    ["POST", `/api/households/shopping/lists/123/recipe/${RECIPE}/delete`],
+    ["GET", "/api/households/shopping/items/123"],
     ["POST", "/api/households/shopping/items/create-bulk"],
     ["PUT", "/api/households/shopping/items/123"],
     ["DELETE", "/api/households/shopping/items/123"],
     ["POST", "/api/recipes/create/url"],
-    ["POST", "/api/recipes/slug/duplicate"],
-    ["PATCH", "/api/recipes/slug"],
+    ["POST", "/api/recipes/pasta-carbonara/duplicate"],
+    ["PATCH", "/api/recipes/pasta-carbonara"],
     ["POST", "/api/parser/ingredients"],
     ["GET", "/api/foods"],
     ["POST", "/api/foods"],
@@ -108,12 +130,31 @@ describe("isAuthenticatedAllowed", () => {
     ["GET", "/api/admin/users"],
     ["POST", "/api/admin/backups"],
     ["POST", "/api/users/api-tokens"],
+    ["GET", "/api/users/self"],
     ["DELETE", "/api/users/self"],
     ["GET", "/api/users"],
     ["GET", "/api/groups/self"],
     ["POST", "/api/households/webhooks"],
     ["POST", "/api/auth/token"],
     ["DELETE", "/api/recipes/slug"],
+    ["PUT", "/api/recipes/slug"],
+    ["POST", "/api/recipes"],
+    ["PATCH", "/api/recipes"],
+    ["PATCH", "/api/recipes/timeline"],
+    ["POST", "/api/recipes/bulk-actions/delete"],
+    ["POST", "/api/recipes/bulk-actions/tag"],
+    ["POST", "/api/recipes/create/zip"],
+    ["POST", "/api/recipes/create/url/bulk"],
+    ["POST", "/api/recipes/test-scrape-url"],
+    ["POST", "/api/recipes/slug/assets"],
+    ["POST", "/api/recipes/slug/image"],
+    ["POST", "/api/recipes/timeline/events"],
+    ["PUT", "/api/recipes/timeline/events/123"],
+    ["POST", "/api/recipes/timeline/duplicate"],
+    ["GET", "/api/recipes/exports"],
+    ["GET", "/api/recipes/slug/comments"],
+    ["GET", `/api/media/recipes/${RECIPE}/assets/file.pdf`],
+    ["GET", "/api/households/shopping/lists/123/extra"],
     ["GET", "/api/recipes/%2e%2e/admin/users"],
   ])("blocks admin, token, and unused Mealie endpoints: %s %s", (method, path) => {
     expect(isAuthenticatedAllowed(method, path)).toBe(false)

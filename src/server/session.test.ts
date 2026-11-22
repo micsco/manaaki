@@ -6,8 +6,11 @@ import {
   decodeJwtSubject,
   decodeJwtTiming,
   isSecureRequest,
+  hasLiveSession,
+  readSession,
   readSessionToken,
   SESSION_COOKIE_NAME,
+  SESSION_LIFETIME_SECONDS,
   sealJson,
   sealSession,
   unsealJson,
@@ -43,6 +46,76 @@ describe("seal/unseal", () => {
     expect(unsealSession(oidcPayload)).toBeNull()
     expect(unsealJson(oidcPayload, "known")).toBeNull()
     expect(unsealJson(oidcPayload, "oidc")).toEqual({ t: "forged-jwt" })
+  })
+})
+
+describe("absolute session lifetime", () => {
+  const now = () => Math.floor(Date.now() / 1000)
+
+  it("accepts a session signed in within the lifetime", () => {
+    expect(unsealSession(sealSession("my-jwt", now() - SESSION_LIFETIME_SECONDS + 60))).toBe(
+      "my-jwt"
+    )
+  })
+
+  it("rejects a session signed in longer ago than the lifetime, however often it refreshed", () => {
+    expect(unsealSession(sealSession("my-jwt", now() - SESSION_LIFETIME_SECONDS))).toBeNull()
+  })
+
+  it("rejects sessions sealed before sign-in times were recorded", () => {
+    expect(unsealSession(sealJson({ t: "my-jwt" }, "session"))).toBeNull()
+  })
+
+  it("still reads an over-age session as present so the proxy can clear it", () => {
+    const sealed = buildSessionSetCookie("my-jwt", false, now() - SESSION_LIFETIME_SECONDS)
+    const value = sealed.split(";")[0].split("=").slice(1).join("=")
+    const request = new Request("http://x/", { headers: { cookie: `manaaki_session=${value}` } })
+    expect(readSession(request)).toMatchObject({ token: "my-jwt", expired: true })
+    expect(readSessionToken(request)).toBeNull()
+  })
+
+  it("keeps the cookie long enough for the server to see and clear an over-age session", () => {
+    expect(buildSessionSetCookie("jwt", true, now() - SESSION_LIFETIME_SECONDS + 3600)).toContain(
+      `Max-Age=${SESSION_LIFETIME_SECONDS}`
+    )
+  })
+})
+
+describe("hasLiveSession", () => {
+  const requestWith = (jwt: string) => {
+    const value = buildSessionSetCookie(jwt, false).split(";")[0].split("=").slice(1).join("=")
+    return new Request("http://x/", { headers: { cookie: `manaaki_session=${value}` } })
+  }
+  const now = () => Math.floor(Date.now() / 1000)
+
+  it("is true for an unexpired Mealie token", () => {
+    expect(hasLiveSession(requestWith(fakeJwt({ exp: now() + 3600 })))).toBe(true)
+  })
+
+  it("is false once the Mealie token inside the cookie has expired", () => {
+    expect(hasLiveSession(requestWith(fakeJwt({ exp: now() - 1 })))).toBe(false)
+  })
+
+  it("treats a token without an expiry as live", () => {
+    expect(hasLiveSession(requestWith("opaque-token"))).toBe(true)
+  })
+
+  it("is false once the session has passed its absolute lifetime", () => {
+    const value = buildSessionSetCookie(
+      fakeJwt({ exp: now() + 3600 }),
+      false,
+      now() - SESSION_LIFETIME_SECONDS
+    )
+      .split(";")[0]
+      .split("=")
+      .slice(1)
+      .join("=")
+    const request = new Request("http://x/", { headers: { cookie: `manaaki_session=${value}` } })
+    expect(hasLiveSession(request)).toBe(false)
+  })
+
+  it("is false without a session cookie", () => {
+    expect(hasLiveSession(new Request("http://x/"))).toBe(false)
   })
 })
 

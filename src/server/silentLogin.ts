@@ -1,5 +1,5 @@
 import { parseCookie, serializeCookie } from "./cookies"
-import { isSecureRequest, readSessionToken, sealJson, unsealJson } from "./session"
+import { hasLiveSession, isSecureRequest, sealJson, unsealJson } from "./session"
 
 const KNOWN_DEVICE_MAX_AGE_SECONDS = 365 * 24 * 60 * 60
 const SILENT_ATTEMPT_MAX_AGE_SECONDS = 600
@@ -91,7 +91,7 @@ function isPageRequest(request: Request, pathname: string): boolean {
 export function silentLoginRedirect(request: Request): string | null {
   const url = new URL(request.url)
   if (!isPageRequest(request, url.pathname)) return null
-  if (readSessionToken(request)) return null
+  if (hasLiveSession(request)) return null
   if (!readKnownDevice(request)) return null
   if (hasRecentSilentAttempt(request)) return null
   const returnTo = encodeURIComponent(url.pathname + url.search)

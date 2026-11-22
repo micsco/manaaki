@@ -16,7 +16,7 @@ import { render, screen, waitFor } from "../test/render"
 import { Route } from "./recipes.index"
 
 vi.mock("../hooks/useCurrentUser", () => ({
-  useCurrentUser: vi.fn(() => ({ user: null, isAnonymous: false })),
+  useCurrentUser: vi.fn(() => ({ user: null, isAnonymous: false, groupSlug: null })),
 }))
 vi.mock("../components/ImportRecipeModal", () => ({
   ImportRecipeModal: ({
@@ -330,7 +330,7 @@ describe("RecipeList error state", () => {
 })
 
 it("hides import for visitors", () => {
-  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true })
+  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true, groupSlug: null })
   mockGetAll.mockReturnValue(new Promise(() => undefined) as any)
   render(<RecipeListWrapper />)
   expect(screen.queryByRole("button", { name: /import recipe/i })).not.toBeInTheDocument()
@@ -369,7 +369,7 @@ describe("household cooking suggestions", () => {
   })
 
   it("does not request private history for anonymous visitors", async () => {
-    vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true })
+    vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true, groupSlug: null })
     render(<RecipeListWrapper />)
     expect(await screen.findByRole("heading", { name: "Banana Bread" })).toBeInTheDocument()
     expect(sdk.getAllApiRecipesTimelineEventsGet).not.toHaveBeenCalled()
@@ -419,7 +419,7 @@ describe("household cooking suggestions", () => {
     expect(
       client.getQueryCache().findAll({ queryKey: ["recipeDiscovery", "other", "other-home"] })
     ).toHaveLength(1)
-    vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true })
+    vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true, groupSlug: null })
     rerender(view())
     expect(
       screen.queryByRole("status", { name: "Loading cooking suggestions" })

@@ -14,13 +14,24 @@ export const Route = createFileRoute("/login")({
     const href = loginCompletionHref(search)
     if (href) throw redirect({ href })
   },
-  component: LoginPage,
+  component: LoginRoute,
 })
 
-export function LoginPage() {
+function LoginRoute() {
+  const { error } = Route.useSearch()
+  return <LoginPage failed={error !== undefined} />
+}
+
+export function LoginPage({ failed = false }: Readonly<{ failed?: boolean }>) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gray-950 px-6 text-center text-gray-100">
       <h1 className="text-3xl font-bold">Sign in to Manaaki</h1>
+      {failed && (
+        <p role="alert" className="max-w-sm text-amber-400">
+          Signing in didn't work. Try again, and if it keeps failing, check that you are using your
+          household's Google account.
+        </p>
+      )}
       <p className="max-w-sm text-gray-400">
         Browsing recipes is open to everyone. Sign in to use your meal planner and household
         features.

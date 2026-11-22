@@ -166,6 +166,37 @@ try {
     assertSecurityHeaders(response, path)
   }
   console.log("nginx app proxy session cookie checks passed")
+
+  const signIn = forwardedFor =>
+    fetch("http://127.0.0.1:18080/api/auth/oauth", {
+      headers: { "X-Forwarded-For": forwardedFor },
+      redirect: "manual",
+    }).then(async response => {
+      await response.arrayBuffer()
+      return response.status
+    })
+
+  upstreamRequests.length = 0
+  assert.equal(await signIn("203.0.113.7, 172.18.0.4"), 200)
+  assert.equal(upstreamRequests[0].headers["x-real-ip"], "203.0.113.7")
+
+  const busyVisitor = "203.0.113.10"
+  let limited = false
+  for (let attempt = 0; attempt < 40 && !limited; attempt++) {
+    limited = (await signIn(`${busyVisitor}, 172.18.0.4`)) === 429
+  }
+  assert.ok(limited, "sign-in was never rate limited for one visitor")
+  assert.equal(
+    await signIn(`198.51.100.20, ${busyVisitor}, 172.18.0.4`),
+    429,
+    "a forged leading X-Forwarded-For entry escaped the rate limit"
+  )
+  assert.equal(
+    await signIn("198.51.100.30, 172.18.0.4"),
+    200,
+    "one visitor's rate limit blocked another visitor"
+  )
+  console.log("nginx per-visitor sign-in rate limit checks passed")
 } finally {
   if (started) execFileSync("nginx", ["-s", "quit", ...args], { stdio: "inherit" })
   for (let attempt = 0; attempt < 50; attempt++) {

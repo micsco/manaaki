@@ -87,11 +87,12 @@ function startRequest(query = "", cookie?: string): Request {
 }
 
 function attemptFrom(res: Response) {
+  const state = new URL(res.headers.get("location") ?? "").searchParams.get("state")
   return readLoginAttempt(
-    new Request("https://app/x", {
+    new Request(`https://app/x?state=${state}`, {
       headers: {
         "x-forwarded-proto": "https",
-        cookie: (res.headers.getSetCookie().find(c => c.includes("manaaki_oidc=")) ?? "").split(
+        cookie: (res.headers.getSetCookie().find(c => c.includes("manaaki_oidc_")) ?? "").split(
           ";"
         )[0],
       },
@@ -140,7 +141,7 @@ describe("beginNativeLogin", () => {
     expect(location.searchParams.get("code_challenge_method")).toBe("S256")
 
     const attempt = readLoginAttempt(
-      new Request("https://app/x", {
+      new Request(`https://app/x?state=${location.searchParams.get("state")}`, {
         headers: {
           "x-forwarded-proto": "https",
           cookie: cookieHeaderFrom(res.headers.get("set-cookie") ?? ""),
@@ -159,7 +160,8 @@ describe("beginNativeLogin", () => {
     const res = await beginNativeLogin(startRequest())
     const setCookie = res.headers.get("set-cookie") ?? ""
 
-    expect(setCookie).toMatch(/^__Host-manaaki_oidc=/)
+    const state = new URL(res.headers.get("location") ?? "").searchParams.get("state")
+    expect(setCookie.startsWith(`__Host-manaaki_oidc_${state}=`)).toBe(true)
     expect(setCookie).toContain("HttpOnly")
     expect(setCookie).toContain("Secure")
     expect(setCookie).toContain("SameSite=Lax")
@@ -223,7 +225,9 @@ describe("completeNativeLogin", () => {
     const { location, cookie } = await startLogin()
     const state = location.searchParams.get("state") ?? ""
     const attempt = readLoginAttempt(
-      new Request("https://app/x", { headers: { "x-forwarded-proto": "https", cookie } })
+      new Request(`https://app/x?state=${state}`, {
+        headers: { "x-forwarded-proto": "https", cookie },
+      })
     )
 
     const token = await completeNativeLogin(
@@ -243,12 +247,39 @@ describe("completeNativeLogin", () => {
 
   it("rejects a state that does not match the stored attempt without contacting Mealie", async () => {
     const { cookie } = await startLogin()
+    const forged = "forged-state-0123456789"
+    const relabelled = cookie.replace(
+      /^__Host-manaaki_oidc_[^=]+=/,
+      `__Host-manaaki_oidc_${forged}=`
+    )
     upstreamRequests = []
 
     await expect(
-      completeNativeLogin(completeRequest("code=auth-code&state=forged", cookie))
-    ).rejects.toThrow(/state/i)
+      completeNativeLogin(completeRequest(`code=auth-code&state=${forged}`, relabelled))
+    ).rejects.toThrow(/state mismatch/i)
     expect(upstreamRequests).toEqual([])
+  })
+
+  it("finds no attempt for a state it never started", async () => {
+    const { cookie } = await startLogin()
+    upstreamRequests = []
+
+    await expect(
+      completeNativeLogin(completeRequest("code=auth-code&state=forged-state-0123456789", cookie))
+    ).rejects.toThrow(/no login attempt/i)
+    expect(upstreamRequests).toEqual([])
+  })
+
+  it("keeps two sign-ins started together independent", async () => {
+    const first = await startLogin()
+    const second = await startLogin()
+    const bothCookies = `${first.cookie}; ${second.cookie}`
+    const firstState = first.location.searchParams.get("state") ?? ""
+    expect(first.cookie.split("=")[0]).not.toBe(second.cookie.split("=")[0])
+
+    await expect(
+      completeNativeLogin(completeRequest(`code=auth-code&state=${firstState}`, bothCookies))
+    ).resolves.toBe("mealie-jwt")
   })
 
   it("rejects when no login attempt cookie is present", async () => {
@@ -272,8 +303,8 @@ describe("completeNativeLogin", () => {
 
 describe("buildClearLoginAttemptCookie", () => {
   it("expires the attempt cookie under the same name and flags", () => {
-    const cleared = buildClearLoginAttemptCookie(true)
-    expect(cleared).toMatch(/^__Host-manaaki_oidc=;/)
+    const cleared = buildClearLoginAttemptCookie(true, "state-0123456789abcdef")
+    expect(cleared).toMatch(/^__Host-manaaki_oidc_state-0123456789abcdef=;/)
     expect(cleared).toContain("Max-Age=0")
     expect(cleared).toContain("Secure")
   })

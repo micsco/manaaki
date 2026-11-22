@@ -46,6 +46,7 @@ beforeEach(() => {
   vi.mocked(useCurrentUser).mockReturnValue({
     user: { fullName: "Mike Scott" } as never,
     isAnonymous: false,
+    groupSlug: null,
   })
 })
 
@@ -71,7 +72,7 @@ it("provides the same labelled destinations and account on regular pages", () =>
   )
 })
 
-it.each([undefined, { user: null, isAnonymous: true }])(
+it.each([undefined, { user: null, isAnonymous: true, groupSlug: null }])(
   "does not expose private destinations before authentication: %s",
   current => {
     vi.mocked(useCurrentUser).mockReturnValue(current)
@@ -87,7 +88,7 @@ it.each([undefined, { user: null, isAnonymous: true }])(
 )
 
 it("keeps a plain sign-in entry that returns to the requested recipe", () => {
-  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true })
+  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true, groupSlug: null })
   route.href = "/recipes/abc/soup"
   render(
     <AppShell>
@@ -166,7 +167,7 @@ it("returns from a recipe to the same plan date and restores navigation after re
 
 it("does not reveal a remembered private origin when signed out", () => {
   sessionStorage.setItem("navigation-origin", JSON.stringify("/shopping?list=private"))
-  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true })
+  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true, groupSlug: null })
   Object.assign(route, { pathname: "/recipes/abc/soup", searchStr: "", href: "/recipes/abc/soup" })
   render(
     <NavigationHarness>

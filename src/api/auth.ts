@@ -3,7 +3,7 @@ import { createIsomorphicFn, createServerFn } from "@tanstack/react-start"
 import { withClientBuild } from "./clientBuild"
 import type { UserOut } from "./generated"
 
-export type CurrentUser = { user: UserOut | null; isAnonymous: boolean }
+export type CurrentUser = { user: UserOut | null; isAnonymous: boolean; groupSlug: string | null }
 
 // A server function: runs on the server during SSR (so the /plan and /shopping
 // beforeLoad guards resolve identity from the request cookie directly, with no

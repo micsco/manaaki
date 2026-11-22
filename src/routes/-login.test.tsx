@@ -11,4 +11,14 @@ describe("LoginPage", () => {
       "/api/auth/oauth"
     )
   })
+
+  it("says nothing went wrong on a normal visit", () => {
+    render(<LoginPage />)
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+  })
+
+  it("explains that the last sign-in failed", () => {
+    render(<LoginPage failed />)
+    expect(screen.getByRole("alert")).toHaveTextContent(/signing in didn't work/i)
+  })
 })

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 // AddToShoppingListButton uses React Query hooks; this test tree has no
 // QueryClientProvider, so stub them (mirrors RecipeBody's test setup).
 vi.mock("../hooks/useCurrentUser", () => ({
-  useCurrentUser: vi.fn(() => ({ user: null, isAnonymous: true })),
+  useCurrentUser: vi.fn(() => ({ user: null, isAnonymous: true, groupSlug: null })),
 }))
 vi.mock("../hooks/useRecipeList", () => ({ useRecipeList: vi.fn(() => []) }))
 vi.mock("../hooks/useShoppingList", () => ({
@@ -196,7 +196,7 @@ describe("RecipeHeader", () => {
 })
 
 it("keeps recipe photography and exposes planning to signed-in readers", () => {
-  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: false })
+  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: false, groupSlug: null })
   render(<RecipeHeader recipe={minimalRecipe} img="/salad.webp" />)
   expect(screen.getByRole("img", { name: "Banana Bread" })).toHaveAttribute("src", "/salad.webp")
   expect(screen.getByRole("button", { name: "Add to meal plan" })).toBeInTheDocument()

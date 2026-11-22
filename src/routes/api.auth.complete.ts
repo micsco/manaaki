@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router"
 
 import { getLoggedInUserApiUsersSelfGet } from "../api/generated"
+import { reportLoginFailure } from "../server/loginFailures"
 import { createMealieClient } from "../server/mealieClient"
 import {
   buildClearLoginAttemptCookie,
   completeNativeLogin,
+  loginAttemptState,
   readLoginAttempt,
 } from "../server/nativeOidc"
 import { buildSessionSetCookie, isSecureRequest } from "../server/session"
@@ -31,9 +33,12 @@ export async function completeHandler(request: Request): Promise<Response> {
   const failurePath = attempt?.silent ? returnTo : LOGIN_ERROR_PATH
 
   const headers = new Headers({ "Cache-Control": "no-store" })
-  headers.append("Set-Cookie", buildClearLoginAttemptCookie(secure))
+  const state = loginAttemptState(request)
+  if (state) headers.append("Set-Cookie", buildClearLoginAttemptCookie(secure, state))
 
-  if (new URL(request.url).searchParams.has("error")) {
+  const providerError = new URL(request.url).searchParams.get("error")
+  if (providerError !== null) {
+    if (!attempt?.silent) reportLoginFailure("provider", providerError)
     headers.set("Location", failurePath)
     return new Response(null, { status: 302, headers })
   }
@@ -44,7 +49,8 @@ export async function completeHandler(request: Request): Promise<Response> {
     headers.append("Set-Cookie", buildSessionSetCookie(token, secure))
     const email = await signedInEmail(token)
     if (email) headers.append("Set-Cookie", buildKnownDeviceSetCookie(email, secure))
-  } catch {
+  } catch (error) {
+    reportLoginFailure("complete", error)
     headers.set("Location", failurePath)
   }
   return new Response(null, { status: 302, headers })

@@ -152,6 +152,15 @@ describe("silentLoginRedirect", () => {
     ).toBeNull()
   })
 
+  it("signs a known device back in when its session cookie holds an expired Mealie token", () => {
+    const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url")
+    const expired = `${b64({ alg: "HS256" })}.${b64({ exp: Math.floor(Date.now() / 1000) - 60 })}.sig`
+    const staleSession = cookiePair(buildSessionSetCookie(expired, true))
+    expect(silentLoginRedirect(pageRequest("/plan", [knownCookie(), staleSession]))).toBe(
+      "/api/auth/oauth?silent=1&returnTo=%2Fplan"
+    )
+  })
+
   it("does nothing while a recent silent attempt marker is present", () => {
     expect(silentLoginRedirect(pageRequest("/recipes", [knownCookie(), markerCookie()]))).toBeNull()
   })

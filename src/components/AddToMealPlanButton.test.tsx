@@ -14,18 +14,18 @@ vi.mock("./MealPlanDialog", () => ({
   ),
 }))
 it("opens dated planning for a signed-in recipe reader", async () => {
-  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: false })
+  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: false, groupSlug: null })
   render(<AddToMealPlanButton recipe={{ id: "salad" }} />)
   await userEvent.setup().click(screen.getByRole("button", { name: "Add to meal plan" }))
   expect(await screen.findByText("Choose a day")).toBeInTheDocument()
 })
 it("does not offer a write action to anonymous readers", () => {
-  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true })
+  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true, groupSlug: null })
   render(<AddToMealPlanButton recipe={{ id: "salad" }} />)
   expect(screen.queryByRole("button")).not.toBeInTheDocument()
 })
 it("reopens planning for the same recipe after a reload until it is closed", async () => {
-  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: false })
+  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: false, groupSlug: null })
   const user = userEvent.setup()
   const first = render(<AddToMealPlanButton recipe={{ id: "salad" }} />)
   await user.click(screen.getByRole("button", { name: "Add to meal plan" }))

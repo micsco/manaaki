@@ -16,17 +16,16 @@ function sessionCookieHeader(jwt: string): string {
 }
 
 describe("meHandler", () => {
-  it("anonymous: uses read-only token, returns isAnonymous true with groupSlug", async () => {
+  it("anonymous: returns only the group slug, never the service account's profile", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ groupSlug: "home", username: "shared" }), {
+      new Response(JSON.stringify({ groupSlug: "home", username: "shared", email: "ro@x" }), {
         status: 200,
         headers: { "content-type": "application/json" },
       })
     )
     const res = await meHandler(new Request("https://app/api/auth/me"))
     const body = await res.json()
-    expect(body.isAnonymous).toBe(true)
-    expect(body.user.groupSlug).toBe("home")
+    expect(body).toEqual({ user: null, isAnonymous: true, groupSlug: "home" })
     vi.restoreAllMocks()
   })
 
@@ -79,12 +78,13 @@ describe("meHandler", () => {
     vi.restoreAllMocks()
   })
 
-  it("still fails loudly on an identity error that is not Mealie being overloaded", async () => {
+  it("answers 502 when Mealie fails the identity lookup", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 500 }))
 
-    await expect(meHandler(new Request("https://app/api/auth/me"))).rejects.toThrow(
-      "Failed to resolve current user"
-    )
+    const res = await meHandler(new Request("https://app/api/auth/me"))
+
+    expect(res.status).toBe(502)
+    expect(res.headers.get("Cache-Control")).toBe("no-store")
     vi.restoreAllMocks()
   })
 })

@@ -10,12 +10,14 @@ vi.mock("@tanstack/react-router", () => ({
   redirect: (options: unknown) => options,
 }))
 vi.mock("../components/WeeklyMealPlan", () => ({ WeeklyMealPlan: () => null }))
-beforeEach(() => vi.mocked(fetchCurrentUser).mockResolvedValue({ user: null, isAnonymous: true }))
+beforeEach(() =>
+  vi.mocked(fetchCurrentUser).mockResolvedValue({ user: null, isAnonymous: true, groupSlug: null })
+)
 it.each([
   [true, "/recipes"],
   [false, "/plan"],
 ])("opens the appropriate landing page for anonymous=%s", async (isAnonymous, to) => {
-  vi.mocked(fetchCurrentUser).mockResolvedValue({ user: null, isAnonymous })
+  vi.mocked(fetchCurrentUser).mockResolvedValue({ user: null, isAnonymous, groupSlug: null })
   await expect((Home.options.beforeLoad as any)()).rejects.toEqual({ to })
 })
 it.each([
@@ -27,7 +29,7 @@ it.each([
   })
 })
 it("allows signed-in plan access", async () => {
-  vi.mocked(fetchCurrentUser).mockResolvedValue({ user: null, isAnonymous: false })
+  vi.mocked(fetchCurrentUser).mockResolvedValue({ user: null, isAnonymous: false, groupSlug: null })
   await expect(
     (Plan.options.beforeLoad as any)({ location: { href: "/plan" } })
   ).resolves.toBeUndefined()

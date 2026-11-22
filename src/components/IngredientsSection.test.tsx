@@ -6,7 +6,7 @@ import { CookModeWrapper, render, screen } from "../test/render"
 import { IngredientsSection } from "./IngredientsSection"
 
 vi.mock("../hooks/useCurrentUser", () => ({
-  useCurrentUser: () => ({ user: { id: "user" }, isAnonymous: false }),
+  useCurrentUser: () => ({ user: { id: "user" }, isAnonymous: false, groupSlug: null }),
 }))
 
 const ingredients: RecipeIngredientOutput[] = [

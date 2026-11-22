@@ -64,7 +64,7 @@ async function startedLogin(query = ""): Promise<{ state: string; cookie: string
     })
   )
   const state = new URL(res.headers.get("location") ?? "").searchParams.get("state") ?? ""
-  const cookie = (res.headers.getSetCookie().find(c => c.includes("manaaki_oidc=")) ?? "").split(
+  const cookie = (res.headers.getSetCookie().find(c => c.includes("manaaki_oidc_")) ?? "").split(
     ";"
   )[0]
   return { state, cookie }
@@ -94,7 +94,7 @@ describe("completeHandler", () => {
     expect(unsealSession(session?.split(";")[0].split("=").slice(1).join("=") ?? "")).toBe(
       "mealie-jwt"
     )
-    expect(cookies.find(c => c.startsWith("__Host-manaaki_oidc="))).toContain("Max-Age=0")
+    expect(cookies.find(c => c.startsWith("__Host-manaaki_oidc_"))).toContain("Max-Age=0")
   })
 
   it("remembers the signed-in email in the known-device cookie for later silent logins", async () => {
@@ -131,7 +131,7 @@ describe("completeHandler", () => {
     expect(res.headers.get("location")).toBe("/shopping")
     const cookies = setCookies(res)
     expect(cookies.some(c => c.startsWith("__Host-manaaki_session="))).toBe(false)
-    expect(cookies.find(c => c.startsWith("__Host-manaaki_oidc="))).toContain("Max-Age=0")
+    expect(cookies.find(c => c.startsWith("__Host-manaaki_oidc_"))).toContain("Max-Age=0")
     expect(upstreamPaths).not.toContain("/api/auth/oauth/native/token")
   })
 
@@ -153,7 +153,7 @@ describe("completeHandler", () => {
     async (_case, query) => {
       const sealedAttempt = sealJson(
         {
-          state: "known-state",
+          state: "known-state-0123456789",
           nonce: "nonce",
           codeVerifier: "verifier",
           redirectUri: "https://manaaki.micsco.nz/login",
@@ -164,7 +164,11 @@ describe("completeHandler", () => {
       )
 
       const res = await completeHandler(
-        completeRequest("known-state", `__Host-manaaki_oidc=${sealedAttempt}`, query)
+        completeRequest(
+          "known-state-0123456789",
+          `__Host-manaaki_oidc_known-state-0123456789=${sealedAttempt}`,
+          query
+        )
       )
 
       expect(res.status).toBe(302)
@@ -199,6 +203,6 @@ describe("completeHandler", () => {
     expect(res.headers.get("location")).toBe("/login?error=oauth")
     const cookies = setCookies(res)
     expect(cookies.some(c => c.startsWith("__Host-manaaki_session="))).toBe(false)
-    expect(cookies.find(c => c.startsWith("__Host-manaaki_oidc="))).toContain("Max-Age=0")
+    expect(cookies.find(c => c.startsWith("__Host-manaaki_oidc_"))).toContain("Max-Age=0")
   })
 })

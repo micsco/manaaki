@@ -89,7 +89,11 @@ beforeEach(async () => {
     if (offline) throw new TypeError("Offline")
     const path = new URL(absolute(input)).pathname
     if (path === "/api/auth/me")
-      return Response.json({ user: { id: account, fullName: "Cook" }, isAnonymous: false })
+      return Response.json({
+        user: { id: account, fullName: "Cook" },
+        isAnonymous: false,
+        groupSlug: null,
+      })
     if (path === "/api/households/mealplans")
       return Response.json({ items: [{ recipeId: "planned" }] })
     if (path.startsWith("/api/media/")) return new Response("image")
@@ -224,7 +228,7 @@ it("replays the desired check while preserving the latest server fields", async 
   offline = false
   fetchMock.mockImplementation(async (input: string | Request, init?: RequestInit) => {
     if (absolute(input).endsWith("/api/auth/me"))
-      return Response.json({ user: { id: account }, isAnonymous: false })
+      return Response.json({ user: { id: account }, isAnonymous: false, groupSlug: null })
     if (init?.method === "PUT") return Response.json({ updatedItems: [] })
     return Response.json({
       id: "item",
@@ -256,7 +260,7 @@ it("keeps the queue when the server rejects synchronization", async () => {
   offline = false
   fetchMock.mockImplementation(async (input: string | Request) =>
     absolute(input).endsWith("/api/auth/me")
-      ? Response.json({ user: { id: account }, isAnonymous: false })
+      ? Response.json({ user: { id: account }, isAnonymous: false, groupSlug: null })
       : new Response(null, { status: 403 })
   )
   await syncShopping()
@@ -285,7 +289,7 @@ it("serves a cached recipe instantly, then refreshes it and tells the page when 
   fetchMock.mockImplementation(async (input: string | Request) =>
     new URL(absolute(input)).pathname === "/api/recipes/soup"
       ? Response.json({ id: "soup", name: "Edited in Mealie", image: "123" })
-      : Response.json({ user: { id: account }, isAnonymous: false })
+      : Response.json({ user: { id: account }, isAnonymous: false, groupSlug: null })
   )
   expect(await (await request("/api/recipes/soup"))?.json()).toMatchObject({ name: "Soup" })
   expect(postMessage).toHaveBeenCalledWith({

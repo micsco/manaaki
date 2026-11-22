@@ -33,6 +33,7 @@ describe("UserMenu", () => {
     vi.spyOn(auth, "fetchCurrentUser").mockResolvedValue({
       user: null,
       isAnonymous: true,
+      groupSlug: null,
     })
     render(<UserMenu />, { wrapper })
     await waitFor(() =>
@@ -47,6 +48,7 @@ describe("UserMenu", () => {
     vi.spyOn(auth, "fetchCurrentUser").mockResolvedValue({
       user: { fullName: "Mike Scott", username: "micsco" } as never,
       isAnonymous: false,
+      groupSlug: null,
     })
 
     render(<UserMenu />, { wrapper })
@@ -66,6 +68,7 @@ describe("UserMenu", () => {
     vi.spyOn(auth, "fetchCurrentUser").mockResolvedValue({
       user: { fullName: "Mike Scott", username: "micsco" } as never,
       isAnonymous: false,
+      groupSlug: null,
     })
 
     render(<UserMenu onOpenAbout={onOpenAbout} />, { wrapper })
@@ -94,6 +97,7 @@ describe("UserMenu", () => {
     vi.spyOn(auth, "fetchCurrentUser").mockResolvedValue({
       user: { username: "chef" } as never,
       isAnonymous: false,
+      groupSlug: null,
     })
 
     render(<UserMenu />, { wrapper })
@@ -112,7 +116,11 @@ describe("UserMenu", () => {
 })
 
 it("lets anonymous users open installation guidance through About", async () => {
-  vi.spyOn(auth, "fetchCurrentUser").mockResolvedValue({ user: null, isAnonymous: true })
+  vi.spyOn(auth, "fetchCurrentUser").mockResolvedValue({
+    user: null,
+    isAnonymous: true,
+    groupSlug: null,
+  })
   const onOpenAbout = vi.fn()
   render(<UserMenu onOpenAbout={onOpenAbout} />, { wrapper })
   await userEvent.click(await screen.findByRole("button", { name: "About Manaaki" }))

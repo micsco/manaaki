@@ -43,7 +43,11 @@ const suggestion = {
   },
 }
 beforeEach(() => {
-  vi.mocked(useCurrentUser).mockReturnValue({ user: { id: "user" } as never, isAnonymous: false })
+  vi.mocked(useCurrentUser).mockReturnValue({
+    user: { id: "user" } as never,
+    isAnonymous: false,
+    groupSlug: null,
+  })
   vi.mocked(useOnline).mockReturnValue(true)
   vi.mocked(parsing.parseRecipeIngredients).mockResolvedValue({ recipe, parsed: [suggestion] })
   vi.mocked(parsing.saveReviewedIngredients).mockResolvedValue(recipe)
@@ -236,10 +240,14 @@ it("reuses the automatic import draft for the current account only", async () =>
   expect(parsing.parseRecipeIngredients).not.toHaveBeenCalled()
 })
 it("hides the prompt for anonymous users or already structured ingredients", () => {
-  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true })
+  vi.mocked(useCurrentUser).mockReturnValue({ user: null, isAnonymous: true, groupSlug: null })
   const { rerender } = render(<IngredientParsingAction recipe={recipe} />)
   expect(screen.queryByRole("button")).not.toBeInTheDocument()
-  vi.mocked(useCurrentUser).mockReturnValue({ user: { id: "user" } as never, isAnonymous: false })
+  vi.mocked(useCurrentUser).mockReturnValue({
+    user: { id: "user" } as never,
+    isAnonymous: false,
+    groupSlug: null,
+  })
   rerender(
     <IngredientParsingAction
       recipe={{

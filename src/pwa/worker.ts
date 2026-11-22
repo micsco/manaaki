@@ -104,7 +104,10 @@ async function identityResponse(allowOffline = true): Promise<Response> {
     : null
   await (
     await caches.open(sessionCache)
-  ).put(identityUrl, Response.json({ user, isAnonymous: current.isAnonymous }))
+  ).put(
+    identityUrl,
+    Response.json({ user, isAnonymous: current.isAnonymous, groupSlug: current.groupSlug ?? null })
+  )
   identityPromise = Promise.resolve(scope(current))
   return response
 }

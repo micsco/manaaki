@@ -6,8 +6,16 @@ import { sessionSecret } from "./env"
 const ALGO = "aes-256-gcm"
 const IV_LEN = 12
 const TAG_LEN = 16
-const MAX_AGE = 60 * 60 * 24 * 14
+export const SESSION_LIFETIME_SECONDS = 60 * 60 * 24 * 14
 const SESSION_PURPOSE = "session"
+
+const COOKIE_MAX_AGE_SECONDS = SESSION_LIFETIME_SECONDS
+
+export type Session = { token: string; authenticatedAt: number; expired: boolean }
+
+export function nowInSeconds(): number {
+  return Math.floor(Date.now() / 1000)
+}
 
 function key(): Buffer {
   return createHash("sha256").update(sessionSecret()).digest()
@@ -38,13 +46,27 @@ export function unsealJson(sealed: string, purpose = ""): unknown {
   }
 }
 
-export function sealSession(token: string): string {
-  return sealJson({ t: token }, SESSION_PURPOSE)
+export function sealSession(token: string, authenticatedAt = nowInSeconds()): string {
+  return sealJson({ t: token, a: authenticatedAt }, SESSION_PURPOSE)
+}
+
+function openSession(sealed: string): Session | null {
+  const parsed = unsealJson(sealed, SESSION_PURPOSE) as { t?: unknown; a?: unknown } | null
+  if (typeof parsed?.t !== "string") return null
+  const authenticatedAt = typeof parsed.a === "number" ? parsed.a : 0
+  return {
+    token: parsed.t,
+    authenticatedAt,
+    expired: nowInSeconds() - authenticatedAt >= SESSION_LIFETIME_SECONDS,
+  }
+}
+
+function usableToken(session: Session | null): string | null {
+  return session && !session.expired ? session.token : null
 }
 
 export function unsealSession(sealed: string): string | null {
-  const parsed = unsealJson(sealed, SESSION_PURPOSE) as { t?: unknown } | null
-  return typeof parsed?.t === "string" ? parsed.t : null
+  return usableToken(openSession(sealed))
 }
 
 export type JwtTiming = { exp: number; iat: number | null }
@@ -81,15 +103,30 @@ export function SESSION_COOKIE_NAME(secure: boolean): string {
   return secure ? "__Host-manaaki_session" : "manaaki_session"
 }
 
-export function readSessionToken(request: Request): string | null {
+export function readSession(request: Request): Session | null {
   const secure = isSecureRequest(request)
   const sealed = parseCookie(request.headers.get("cookie"), SESSION_COOKIE_NAME(secure))
-  return sealed ? unsealSession(sealed) : null
+  return sealed ? openSession(sealed) : null
 }
 
-export function buildSessionSetCookie(token: string, secure: boolean): string {
-  return serializeCookie(SESSION_COOKIE_NAME(secure), sealSession(token), {
-    maxAge: MAX_AGE,
+export function readSessionToken(request: Request): string | null {
+  return usableToken(readSession(request))
+}
+
+export function hasLiveSession(request: Request): boolean {
+  const token = readSessionToken(request)
+  if (!token) return false
+  const timing = decodeJwtTiming(token)
+  return timing === null || timing.exp > nowInSeconds()
+}
+
+export function buildSessionSetCookie(
+  token: string,
+  secure: boolean,
+  authenticatedAt = nowInSeconds()
+): string {
+  return serializeCookie(SESSION_COOKIE_NAME(secure), sealSession(token, authenticatedAt), {
+    maxAge: COOKIE_MAX_AGE_SECONDS,
     httpOnly: true,
     secure,
     sameSite: "lax",

@@ -13,6 +13,17 @@ server {
     listen 80;
     root /app/html;
 
+    # Traefik and cloudflared reach this container from private Docker
+    # addresses, so the visitor is the last untrusted X-Forwarded-For hop.
+    # Without this, rate limits key on Traefik's address and apply to everyone.
+    set_real_ip_from 10.0.0.0/8;
+    set_real_ip_from 172.16.0.0/12;
+    set_real_ip_from 192.168.0.0/16;
+    set_real_ip_from 127.0.0.1;
+    set_real_ip_from fc00::/7;
+    real_ip_header X-Forwarded-For;
+    real_ip_recursive on;
+
     server_tokens off;
     client_max_body_size 2m;
     client_header_timeout 10s;

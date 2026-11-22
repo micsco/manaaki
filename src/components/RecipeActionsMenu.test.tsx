@@ -16,7 +16,9 @@ vi.mock("./AddToShoppingListButton", () => ({
   AddToShoppingListButton: () => <button>Add to shopping list</button>,
 }))
 beforeEach(() =>
-  vi.mocked(useCurrentUser).mockReturnValue({ user: {} as never, isAnonymous: false })
+  vi
+    .mocked(useCurrentUser)
+    .mockReturnValue({ user: {} as never, isAnonymous: false, groupSlug: null })
 )
 it("reveals secondary shopping actions and dismisses with Escape", async () => {
   const user = userEvent.setup()
@@ -29,7 +31,7 @@ it("reveals secondary shopping actions and dismisses with Escape", async () => {
   expect(screen.queryByRole("button", { name: "Add to shopping list" })).not.toBeInTheDocument()
   expect(screen.getByRole("button", { name: "Recipe actions" })).toHaveFocus()
 })
-it.each([undefined, { user: null, isAnonymous: true }])(
+it.each([undefined, { user: null, isAnonymous: true, groupSlug: null }])(
   "hides private actions without authentication: %s",
   current => {
     vi.mocked(useCurrentUser).mockReturnValue(current)

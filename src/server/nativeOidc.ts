@@ -8,6 +8,7 @@ import { buildSilentAttemptMarkerCookie, readKnownDevice, safeReturnPath } from 
 
 const ATTEMPT_MAX_AGE_SECONDS = 600
 const OIDC_PURPOSE = "oidc"
+const STATE_PATTERN = /^[A-Za-z0-9_-]{16,64}$/
 
 export type LoginAttempt = {
   state: string
@@ -24,8 +25,13 @@ type ProviderConfig = {
   scope: string
 }
 
-function attemptCookieName(secure: boolean): string {
-  return secure ? "__Host-manaaki_oidc" : "manaaki_oidc"
+function attemptCookieName(secure: boolean, state: string): string {
+  return `${secure ? "__Host-" : ""}manaaki_oidc_${state}`
+}
+
+export function loginAttemptState(request: Request): string | null {
+  const state = new URL(request.url).searchParams.get("state")
+  return state && STATE_PATTERN.test(state) ? state : null
 }
 
 function attemptCookieOptions(secure: boolean, maxAge: number) {
@@ -89,7 +95,7 @@ export async function beginNativeLogin(request: Request): Promise<Response> {
   headers.append(
     "Set-Cookie",
     serializeCookie(
-      attemptCookieName(secure),
+      attemptCookieName(secure, attempt.state),
       sealJson(attempt, OIDC_PURPOSE),
       attemptCookieOptions(secure, ATTEMPT_MAX_AGE_SECONDS)
     )
@@ -99,9 +105,11 @@ export async function beginNativeLogin(request: Request): Promise<Response> {
 }
 
 export function readLoginAttempt(request: Request): LoginAttempt | null {
+  const state = loginAttemptState(request)
+  if (!state) return null
   const sealed = parseCookie(
     request.headers.get("cookie"),
-    attemptCookieName(isSecureRequest(request))
+    attemptCookieName(isSecureRequest(request), state)
   )
   if (!sealed) return null
   const parsed = unsealJson(sealed, OIDC_PURPOSE) as Partial<LoginAttempt> | null
@@ -124,8 +132,8 @@ export function readLoginAttempt(request: Request): LoginAttempt | null {
   }
 }
 
-export function buildClearLoginAttemptCookie(secure: boolean): string {
-  return serializeCookie(attemptCookieName(secure), "", attemptCookieOptions(secure, 0))
+export function buildClearLoginAttemptCookie(secure: boolean, state: string): string {
+  return serializeCookie(attemptCookieName(secure, state), "", attemptCookieOptions(secure, 0))
 }
 
 export async function completeNativeLogin(request: Request): Promise<string> {

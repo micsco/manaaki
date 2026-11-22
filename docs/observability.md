@@ -62,6 +62,7 @@ one query; see PostHog's
 | `mealie.slots.active`, `mealie.slots.waiting` | gauge | — |
 | `mealie.slot_wait.duration` | histogram (ms) | — |
 | `mealie.upstream.failures` | counter | `reason` (`busy`, `timeout`, `unreachable`) |
+| `auth.login.failures` | counter | `stage` (`start`, `provider`, `complete`) |
 | `recipe_version.drafts` | counter | `target`, `model`, `outcome` (`ok`, `error`, `abandoned`), `status` |
 | `recipe_version.draft.duration` | histogram (ms) | `target`, `model`, `outcome` |
 | `recipe_version.draft.tokens` | histogram | `model`, `kind` (`input`, `cached_input`, `cache_write`, `output`, `thinking`) |

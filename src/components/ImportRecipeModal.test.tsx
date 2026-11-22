@@ -67,6 +67,7 @@ describe("ImportRecipeModal", () => {
     vi.spyOn(currentUserHook, "useCurrentUser").mockReturnValue({
       user: { id: "user-1", username: "chef" } as never,
       isAnonymous: false,
+      groupSlug: null,
     })
     vi.spyOn(importRecipeHook, "useImportRecipe").mockReturnValue({
       mutateAsync: mockMutateAsync,
@@ -85,7 +86,11 @@ describe("ImportRecipeModal", () => {
   })
 
   it("preserves the shared page through sign-in", () => {
-    vi.spyOn(currentUserHook, "useCurrentUser").mockReturnValue({ user: null, isAnonymous: true })
+    vi.spyOn(currentUserHook, "useCurrentUser").mockReturnValue({
+      user: null,
+      isAnonymous: true,
+      groupSlug: null,
+    })
     const returnTo = "/share?text=https%3A%2F%2Fyoutu.be%2Frecipe"
     render(<ImportRecipeModal open returnTo={returnTo} onOpenChange={vi.fn()} />)
     expect(screen.getByRole("link", { name: /sign in with mealie/i })).toHaveAttribute(
@@ -125,6 +130,7 @@ describe("ImportRecipeModal", () => {
     vi.spyOn(currentUserHook, "useCurrentUser").mockReturnValue({
       user: null,
       isAnonymous: true,
+      groupSlug: null,
     })
 
     render(<ImportRecipeModal open={true} onOpenChange={onOpenChange} />)

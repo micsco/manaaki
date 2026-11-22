@@ -26,7 +26,8 @@ import {
   decodeJwtTiming,
   type JwtTiming,
   isSecureRequest,
-  readSessionToken,
+  nowInSeconds,
+  readSession,
 } from "./session"
 import { measureServerTiming } from "./timing"
 
@@ -179,13 +180,23 @@ function isPastRefreshPoint({ exp, iat }: JwtTiming, now: number): boolean {
   return now >= iat + (exp - iat) / 2
 }
 
+const refreshesInFlight = new Map<string, Promise<SessionToken>>()
+
 async function resolveSessionToken(token: string): Promise<SessionToken> {
   const timing = decodeJwtTiming(token)
   if (timing === null) return { state: "valid", token }
-  const now = Math.floor(Date.now() / 1000)
+  const now = nowInSeconds()
   if (timing.exp <= now) return { state: "invalid" }
   if (!isPastRefreshPoint(timing, now)) return { state: "valid", token }
 
+  const inFlight = refreshesInFlight.get(token)
+  if (inFlight) return inFlight
+  const refresh = refreshSessionToken(token).finally(() => refreshesInFlight.delete(token))
+  refreshesInFlight.set(token, refresh)
+  return refresh
+}
+
+async function refreshSessionToken(token: string): Promise<SessionToken> {
   try {
     const res = await measureServerTiming("session_refresh", () =>
       mealieFetch(`${mealieInternalUrl()}/api/auth/refresh`, {
@@ -254,14 +265,16 @@ async function proxyToMealie(request: Request): Promise<Response> {
     return new Response("Bad Request", { status: 400 })
   }
   const pathWithQuery = url.pathname + url.search
-  const userToken = readSessionToken(request)
+  const session = readSession(request)
 
-  if (userToken) {
+  if (session) {
     if (!isAuthenticatedAllowed(request.method, url.pathname)) {
       return new Response("Forbidden", { status: 403 })
     }
 
-    const sessionToken = await resolveSessionToken(userToken)
+    const sessionToken = session.expired
+      ? ({ state: "invalid" } as const)
+      : await resolveSessionToken(session.token)
     if (sessionToken.state === "invalid") {
       return recoverInvalidSession(request, canonicalPathname, pathWithQuery)
     }
@@ -279,7 +292,7 @@ async function proxyToMealie(request: Request): Promise<Response> {
     if (sessionToken.state === "refreshed") {
       outHeaders.append(
         "Set-Cookie",
-        buildSessionSetCookie(sessionToken.token, isSecureRequest(request))
+        buildSessionSetCookie(sessionToken.token, isSecureRequest(request), session.authenticatedAt)
       )
     }
     return responseWithHeaders(res, outHeaders)

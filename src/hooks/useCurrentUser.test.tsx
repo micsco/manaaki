@@ -16,6 +16,7 @@ describe("useCurrentUser", () => {
     vi.spyOn(auth, "fetchCurrentUser").mockResolvedValue({
       user: { groupSlug: "home" } as never,
       isAnonymous: true,
+      groupSlug: null,
     })
     const { result } = renderHook(() => useCurrentUser(), { wrapper })
     await waitFor(() => expect(result.current?.isAnonymous).toBe(true))
