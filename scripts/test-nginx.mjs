@@ -60,7 +60,7 @@ function assertSecurityHeaders(response, label) {
   )
   assert.match(
     response.headers.get("content-security-policy") ?? "",
-    /frame-ancestors 'self' https:\/\/jarvis\.77bb\.digikiwi\.net/,
+    /frame-ancestors 'self' https:\/\/jarvis\.77bb\.digikiwi\.net http:\/\/127\.0\.0\.1:2325;/,
     `${label} missing expected Content-Security-Policy frame-ancestors`
   )
   assert.match(

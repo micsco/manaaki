@@ -36,7 +36,9 @@ it("includes security headers and blocks .map files in nginx", () => {
   expect(dockerfile).toContain("nginx-security-headers.conf")
   expect(nginxConf).toContain("include /etc/nginx/snippets/security-headers.conf;")
   expect(nginxConf).toMatch(/location ~\* \\\.map\$/)
-  expect(securityHeaders).toContain("frame-ancestors 'self' https://jarvis.77bb.digikiwi.net")
+  expect(securityHeaders).toContain(
+    "frame-ancestors 'self' https://jarvis.77bb.digikiwi.net http://127.0.0.1:2325;"
+  )
   expect(securityHeaders).not.toContain("X-Frame-Options")
 })
 
